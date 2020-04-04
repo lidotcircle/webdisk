@@ -13,8 +13,7 @@ import * as fs    from 'fs';
 import * as util from './util';
 
 import { ServerConfig } from './server_config';
-
-import { URL } from 'url';
+import { URL }          from 'url';
 
 interface IHttpServer
 {
@@ -40,7 +39,10 @@ export class HttpServer extends event.EventEmitter {
     constructor (configFile: string) {
         super();
         this.config = new ServerConfig(configFile);
-        this.config.ParseFile().then(() => this.emit("configParsed"), err => {throw err;});
+        this.config.ParseFile((err) => {
+            if (err) throw err;
+            this.emit("configParsed")
+        });
 
         this.httpServer.on("request", (req, res) => this.emit("request", req, res));
         this.httpServer.on("close", () => this.emit("close"));
@@ -85,7 +87,7 @@ export class HttpServer extends event.EventEmitter {
                 res.end();
                 return;
             }
-            util.writeToWritable(path, startposition, res, content_length, 1024, (err, nbytes) => {
+            util.writeToWritable(path, startposition, res, content_length, 1024, true, (err, nbytes) => {
                 if (err != null)
                     res.statusCode = 500;
                 else 

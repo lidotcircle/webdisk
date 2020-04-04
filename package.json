@@ -11,7 +11,17 @@
   "dependencies": {
     "@types/node": "^13.11.0",
     "@types/node-getopt": "^0.2.31",
+    "merge2": "^1.3.0",
     "node-getopt": "^0.3.2",
-    "winston": "^3.2.1"
+    "rimraf": "^3.0.2",
+    "smart-buffer": "^4.1.0",
+    "typescript": "^3.8.3",
+    "winston": "^3.2.1",
+    "yarg": "^1.0.8"
+  },
+  "devDependencies": {
+    "gulp": "^4.0.2",
+    "gulp-sourcemaps": "^2.6.5",
+    "gulp-typescript": "^6.0.0-alpha.1"
   }
 }

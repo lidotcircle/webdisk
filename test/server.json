@@ -1,0 +1,16 @@
+{
+ "Users": [
+  {
+   "UserName": "webdisk",
+   "DocRoot": "/root",
+   "SID": "FFFFFFFFFF",
+   "Password": "12345678"
+  },
+  {
+   "UserName": "hello",
+   "DocRoot": "/",
+   "SID": "",
+   "Password": ""
+  }
+ ]
+}

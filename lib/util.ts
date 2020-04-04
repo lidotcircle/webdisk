@@ -5,7 +5,7 @@ import * as fs from 'fs';
 import { Writable } from 'stream';
 
 export function fwriteToWritable(fd: number, startPosition: number, writer: Writable, length: number = -1,
-                         chunksize: number = 1024, cb?: (err, nbytes) => void): void //{
+                         chunksize: number = 1024, callend: boolean = true, cb?: (err, nbytes) => void): void //{
 {
     if (chunksize <= 0) {
         return cb(new Error("bad chunksize"), 0);
@@ -44,12 +44,14 @@ export function fwriteToWritable(fd: number, startPosition: number, writer: Writ
             if (n == 0) {
                 if (writed < length)
                     return wrap_cb(new Error(`EOF but can't read length of ${length}`), writed);
+                if (callend) writer.end();
                 return wrap_cb(null, writed);
             }
             if (n != chunks) { // last nonempty chunk
                 let lb = new Buffer(n);
                 buf.copy(lb, 0, 0, n - 1);
-                writer.write(lb);
+                if (callend) writer.end(lb);
+                else writer.write(lb);
                 if (writed < length)
                     return wrap_cb(new Error(`EOF but can't read length of ${length}`), writed);
                 return wrap_cb(null, writed);
@@ -65,12 +67,12 @@ export function fwriteToWritable(fd: number, startPosition: number, writer: Writ
 } //}
 
 export function writeToWritable(path: string, startPosition: number, writer: Writable, length: number = -1,
-                         chunksize: number = 1024, cb?: (err, nbytes) => void): void //{
+                         chunksize: number = 1024, callend: boolean = true, cb?: (err, nbytes) => void): void //{
 {
     fs.open(path, "r", (err, fd) => {
         if (err != null)
             return cb(err, 0);
-        fwriteToWritable(fd, startPosition, writer, length, chunksize, cb);
+        fwriteToWritable(fd, startPosition, writer, length, chunksize, callend, cb);
     });
 } //}
 
@@ -85,4 +87,3 @@ export function parseCookie(cookie: string): Map<string, string> //{
     }
     return ret;
 } //}
-
