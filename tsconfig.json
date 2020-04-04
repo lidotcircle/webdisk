@@ -1,0 +1,27 @@
+{
+    "version": "2.0.2",
+    "compilerOptions": {
+        "lib": ["es2015"],
+        "target": "es2019",
+        "module": "commonjs",
+        "rootDirs": ["./"],
+        "typeRoots": [
+            "node_modules/@types"
+        ],
+        "outDir": "dist",
+        "moduleResolution": "node",
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
+        "declaration": false,
+        "sourceMap": true
+    },
+    "include": [
+        "src/**/*",
+        "test/**/*"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}
