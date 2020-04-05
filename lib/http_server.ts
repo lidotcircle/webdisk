@@ -13,6 +13,9 @@ import * as fs    from 'fs';
 import * as path  from 'path';
 import * as utilx from 'util';
 import * as stream from 'stream';
+import * as pathx from 'path';
+
+import * as smartbuffer from 'smart-buffer';
 
 import { ServerConfig } from './server_config';
 import { URL }          from 'url';
@@ -20,17 +23,49 @@ import * as util        from './util';
 import * as constants   from './constants';
 import * as parser      from './parse_html_inlinejs';
 
+import * as annautils from 'annautils';
+
 const disk_prefix: string = "/disk";
 
-class ResponseWrapper extends stream.Writable {
-    private response: http.ServerResponse;
-    constructor(response: http.ServerResponse) {
+class BufferStream extends stream.Writable {
+    private buffer: Buffer;
+    private static initsize: number = 1024;;
+    private size: number;
+    private capacity: number;
+    constructor() {
         super();
-        this.response = response;
+        this.size = 0;
+        this.capacity = BufferStream.initsize;
+        this.buffer = new Buffer(this.capacity);
     }
-    _write(chunk, enc, next) {
-        this.response.write(chunk);
+    _write(chunk: Buffer | string, enc: string, next) {
+        let buf: Buffer = chunk as Buffer;
+        enc = enc || "utf8";
+        if (!Buffer.isEncoding(enc)) enc = "utf8";
+        
+        if (utilx.isString(chunk)) {
+            let xx = Buffer.from(chunk as string, enc as any);
+        }
+        let new_size: number = buf.length + this.size;
+        if (new_size > this.capacity) {
+            let new_capacity: number = this.capacity * 2;
+            while (new_size > new_capacity) {
+                new_capacity *= 2;
+            }
+            let new_buf = new Buffer(new_capacity);
+            this.buffer.copy(new_buf, 0, 0, this.size > 0 ? this.size - 1 : 0);
+            this.buffer = new_buf;
+            this.capacity = new_capacity;
+        }
+        buf.copy(this.buffer, this.size, 0);
+        this.size = new_size;
         next();
+    }
+    public RawBuffer() {
+        return this.buffer.slice(0, this.size);
+    }
+    public length() {
+        return this.size;
     }
 }
 
@@ -93,6 +128,10 @@ export class HttpServer extends event.EventEmitter {
             }
             res.setHeader("Accept-Ranges", "bytes");
             res.setHeader("Content-Length", content_length);
+            let file_extension: string = pathx.extname(path);
+            let content_type: string   = constants.FILE_TYPE_MAP.get(file_extension) || constants.FILE_TYPE_MAP.get("unknown");
+            res.setHeader("Content-Type", content_type);
+            res.setHeader("Last-Modified", filestat.mtime.toUTCString());
             if(range != null) {
                 if (range[1] != -1)
                     res.setHeader("Content-Range", `bytes ${range[0]}-${range[1]}/${filestat.size}`);
@@ -104,12 +143,19 @@ export class HttpServer extends event.EventEmitter {
                 res.end();
                 return;
             }
-            util.writeToWritable(path, startposition, res, content_length, 1024, true, (err, nbytes) => {
-                if (err != null)
-                    res.statusCode = 500;
-                else 
-                    res.statusCode = success;
-                return res.end();
+            fs.open(path, "r", (err, fd) => {
+                if (err) {
+                    res.writeHead(500);
+                    return res.end();
+                }
+                res.writeHead(success);
+                util.fwriteToWritable(fd, startposition, res, content_length, 1024, false, (err, nbytes) => {
+                    if (err != null) {
+                        res.statusCode = 500;
+                        return res.end();
+                    }
+                    res.end();
+                });
             });
         } catch (err) {
             res.statusCode = 404;
@@ -157,7 +203,6 @@ export class HttpServer extends event.EventEmitter {
                 response.statusCode = 200;
                 response.setHeader("content-type", "text/html");
                 if (header) return response.end();
-                let responseWrapper = new ResponseWrapper(response);
                 parser.parseHTMLNewProc(fileName, 
                     {REQ: util.httpRequestToAcyclic(request), CONFIG: this.config},
                     response, null, (err_) => {

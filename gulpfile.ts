@@ -11,6 +11,8 @@ import * as rimraf from 'rimraf';
 import * as proc from 'process';
 import * as child_proc from 'child_process';
 
+import * as annautils from 'annautils';
+
 const release_root = "./release";
 const test_root    = "./testme";
 const project_name = "webdisk";
@@ -121,7 +123,7 @@ let compile_bin_ts = compile_ts_dir(
 );
 
 function chmod_bin_js() {
-    return chmodFiles(path.join(release_root, project_name, "bin"), "777", 1, /.*/).then((num) => {
+    return annautils.fs.promisify.chmodRecursive(path.join(release_root, project_name, "bin"), "777", 1, /.*/).then((num) => {
         console.log(`change ${num} files to permission '777'`);
     }, (err) => {
         console.log(err);

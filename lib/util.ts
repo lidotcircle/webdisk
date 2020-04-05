@@ -5,6 +5,8 @@ import * as path from 'path';
 import * as util from 'util';
 import * as http from 'http';
 
+import * as proc from 'process';
+
 import { Writable } from 'stream';
 
 export function fwriteToWritable(fd: number, startPosition: number, writer: Writable, length: number = -1,
@@ -17,7 +19,7 @@ export function fwriteToWritable(fd: number, startPosition: number, writer: Writ
     let writed: number = 0;
     let write_error: Error = null;
     let writer_onerror = (err) => {
-        write_error = err;
+        write_error = err || write_error;
     };
     writer.on("error", writer_onerror);
 
@@ -50,18 +52,21 @@ export function fwriteToWritable(fd: number, startPosition: number, writer: Writ
                 if (callend) writer.end();
                 return wrap_cb(null, writed);
             }
-            if (n != chunks) { // last nonempty chunk
+            if (n != chunksize) { // last nonempty chunk
                 let lb = new Buffer(n);
                 buf.copy(lb, 0, 0, n - 1);
-                if (callend) writer.end(lb);
-                else writer.write(lb);
+                writer.write(lb, writer_onerror);
+                if (callend) writer.end();
                 if (writed < length)
                     return wrap_cb(new Error(`EOF but can't read length of ${length}`), writed);
                 return wrap_cb(null, writed);
-            } else
-                cont = writer.write(buf);
+            } else {
+                cont = writer.write(buf, writer_onerror);
+            }
             if (cont)
-                func();
+                // why direct call this function will cause in ServerResponse stream last chunk be writed twice,
+                // but when change to other Writable stream without this error.
+                proc.nextTick(func); 
             else
                 writer.once("drain", func);
         });
