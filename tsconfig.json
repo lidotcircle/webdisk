@@ -1,6 +1,7 @@
 {
-    "version": "2.0.2",
+    "version": "3.8.3",
     "compilerOptions": {
+        "downlevelIteration": true,
         "lib": ["es2015"],
         "target": "es2019",
         "module": "commonjs",
@@ -23,7 +24,7 @@
         "sourceMap": true
     },
     "include": [
-        "src/**/*",
+        "lib/**/*",
         "test/**/*"
     ],
     "exclude": [

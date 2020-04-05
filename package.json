@@ -4,22 +4,21 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node ./release/webdisk/bin/main.js"
   },
-  "author": "",
+  "author": "analyman",
   "license": "ISC",
   "dependencies": {
-    "@types/node": "^13.11.0",
-    "@types/node-getopt": "^0.2.31",
-    "merge2": "^1.3.0",
     "node-getopt": "^0.3.2",
-    "rimraf": "^3.0.2",
     "smart-buffer": "^4.1.0",
-    "typescript": "^3.8.3",
-    "winston": "^3.2.1",
-    "yarg": "^1.0.8"
+    "winston": "^3.2.1"
   },
   "devDependencies": {
+    "@types/node": "^13.11.0",
+    "@types/node-getopt": "^0.2.31",
+    "typescript": "^3.8.3",
+    "merge2": "^1.3.0",
+    "rimraf": "^3.0.2",
     "gulp": "^4.0.2",
     "gulp-sourcemaps": "^2.6.5",
     "gulp-typescript": "^6.0.0-alpha.1"

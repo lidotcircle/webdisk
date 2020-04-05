@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import * as http_server   from 'webdisk/lib/http_server';
 import * as util          from 'webdisk/lib/util';
 import * as constants     from 'webdisk/lib/constants';

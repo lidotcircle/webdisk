@@ -2,7 +2,6 @@
 
 /* write html to writable stream, default is stdout */
 
-import * as proc    from 'process';
 import * as stream  from 'stream';
 import * as fs      from 'fs';
 import * as sbuffer from 'smart-buffer';
@@ -11,11 +10,23 @@ import * as decoder from 'string_decoder';
 
 import * as child_process from 'child_process';
 
+import * as timers from 'timers';
+
+import proc from 'process';
+
 /*                  ***       <      %     %        > ***   */
 enum ParseState {/* HTML, */LArrow, JS, RPercent, HTML};
 /*
  * if   (returnParseState == Common) html code 
  * else can be treated as JS code
+ */
+
+/*
+ * HTML variables
+ * HTMLWriter: stream.Writable;
+ * JSENV: any;
+ *  |-  MSG: any;
+ *       |-  REQ: any;
  */
 
 function include(htmlPath: string, jsenv: any = null) //{
@@ -72,7 +83,6 @@ export class HTMLInlineJSParser //{
     private writer: stream.Writable;
     private parserState: ParseState;
     private jsbuffer: sbuffer.SmartBuffer;
-    private callend: boolean;
     private JsEnv: any;
 
     constructor (htmlPath: string, writer: stream.Writable = proc.stdout, jsenv: any = null) {
@@ -92,6 +102,8 @@ export class HTMLInlineJSParser //{
         HTMLWriter = this.writer;
         PrecedeHTMLPath.push(path.dirname(this.htmlPath));
         let JSENV = this.JsEnv;
+        let MSG = JSENV && JSENV["MSG"];
+        let REQ = MSG && MSG["REQ"];
         let save_cwd = proc.cwd();
         proc.chdir(path.dirname(this.htmlPath));
         try {
@@ -213,11 +225,60 @@ export class HTMLInlineJSParser //{
     }
 } //}
 
-export function parseHTMLNewProc(htmlPath: string)
+export function parseHTMLNewProc(htmlPath: string, msg: any, outstream: stream.Writable, 
+    errstream: stream.Writable = null, cb: (err) => void = null)
 {
+    let cproc: child_process.ChildProcess;
+    cproc = child_process.spawn("node", [__filename, htmlPath], {stdio: ["ipc", "pipe", "pipe"]});
+    /*
+    if (errstream == null) {
+        cproc = child_process.spawn("node", [__filename, htmlPath], {stdio: ["ipc", outstream, "pipe"]});
+        cproc.stderr.on("readable", () => {
+            let buf = cproc.stderr.read();
+            if (buf != null)
+                cproc.emit("error", new Error("\n----------------------------------\nstderr output:" + buf.toString('utf8') + 
+                                              "----------------------------------"));
+        });
+    } else {
+        cproc = child_process.spawn("node", [__filename, htmlPath], {stdio: ["ipc", outstream, errstream]});
+    }
+    */
+    if (errstream == null) {
+        cproc.stderr.on("readable", () => {
+            let buf = cproc.stderr.read();
+            if (buf != null)
+                cproc.emit("error", new Error("\n----------------------------------\nstderr output:" + buf.toString('utf8') + 
+                    "----------------------------------"));
+        });
+    } else {
+        cproc.stderr.pipe(errstream);
+    }
+    cproc.stdout.pipe(outstream);
+
+    let safe_callback = (err) => {
+        if (cproc != null && !cproc.killed) cproc.kill("SIGABRT");
+        if (cb == null && err != null) throw err;
+        cb(err);
+    };
+    cproc.on("error", safe_callback);
+    cproc.send(msg, (err) => {
+        if (err) throw err;
+    });
+    return;
 }
 
 function main() {
+    if (proc.argv.length != 3) throw new Error("bad command line arguments");
+    let check = timers.setTimeout(() => {
+        throw new Error("wait message timeout");
+    }, 100);
+    proc.once("message", (msg) => {
+        timers.clearTimeout(check);
+        let parser = new HTMLInlineJSParser(proc.argv[2], proc.stdout, {MSG: msg});
+        parser.Parse((err) => {
+            if (err) throw err;
+        });
+    });
 }
 
 if (require.main === module) 

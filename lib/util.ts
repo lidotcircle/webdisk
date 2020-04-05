@@ -1,6 +1,9 @@
 /* UTILS */
 
-import * as fs from 'fs';
+import * as fs   from 'fs';
+import * as path from 'path';
+import * as util from 'util';
+import * as http from 'http';
 
 import { Writable } from 'stream';
 
@@ -87,3 +90,94 @@ export function parseCookie(cookie: string): Map<string, string> //{
     }
     return ret;
 } //}
+
+export function chmod_files(dir: string, mode: any, level: number = 1/* start with 1 */, 
+                            filematch: RegExp = /.*/, cb: (err: Error, num: number) => void = null): void {
+    let num: number = 0;
+    let nerr: number = 0;
+    let callback_m = (err, num: number) => {
+        if (err) throw err;
+    }
+    let error: Error = null;
+    let cn: number = 0;
+    cb = cb || callback_m;
+    let callback_x = (err) => {
+        error = err;
+        dec_cn();
+    }
+    let inc_cn = () => {
+        cn += 1;
+    }
+    let dec_cn = () => {
+        cn -= 1;
+        if(cn == 0) cb(error, num);
+    }
+    let ffff = (d, l) => {
+        if (l == 0) return;
+        inc_cn();
+        fs.readdir(d, "utf8", (err, files) => {
+            if(err) nerr += 1;
+            if(err || error) return callback_x(err || error);
+            for (let file of files) {
+                let new_path = path.join(dir, file);
+                inc_cn();
+                fs.stat(new_path, (err, stat) => {
+                    if(err) nerr += 1;
+                    if(err || error) return callback_x(err || error);
+                    if(stat.isDirectory()) {
+                        ffff(new_path, l - 1);
+                    } else if (stat.isFile()) {
+                        if (!filematch.test(new_path)) return dec_cn();
+                        inc_cn();
+                        fs.chmod(new_path, mode, (err) => {
+                            if (!err) num += 1;
+                            if(err) nerr += 1;
+                            if(err || error) return callback_x(err || error);
+                            dec_cn();
+                        });
+                    }
+                    dec_cn();
+                });
+            }
+            dec_cn();
+        });
+    }
+    ffff(dir, level);
+}
+
+export const chmodFiles: (dir: string, mode: any, level: number, filematch: RegExp) => Promise<number>
+    = util.promisify(chmod_files);
+
+export function httpRequestToAcyclic(request: http.IncomingMessage) {
+    return {
+        headers: request.headers,
+        httpVersion: request.httpVersion,
+        httpVersionMajo: request.httpVersionMajor,
+        httpVersionMino: request.httpVersionMinor,
+        method: request.method,
+        rawHeaders: request.rawHeaders,
+        rawTrailers: request.rawTrailers,
+        statusCode: request.statusCode,
+        statusMessage: request.statusMessage,
+        trailers: request.trailers,
+        url: request.url
+    }
+}
+
+// range: 'bytes' '=' '#num' '-' ['#num']
+export function parseRangeField(range: string): [number, number] {
+    if(range == null || range.length < 8 || !range.startsWith("bytes=")) return null;
+    let nnn = range.substring(6);
+    let fff = nnn.split("-");
+    if (fff.length != 2) return null;
+    let r1: number, r2: number;
+    r1 = parseInt(fff[0]);
+    if (r1 < 0 || r1 == NaN) return null;
+    if (fff[1] == "") {
+        return [r1, -1];
+    } else {
+        r2 = parseInt(fff[1]);
+        if(r1 <= r2) return [r1, r2];
+    }
+    return null;
+}
