@@ -2,7 +2,7 @@
 
 import * as fs from 'fs';
 
-class User {
+export class User {
     public UserName: string;
     public Password: string;
     public SID:      string;

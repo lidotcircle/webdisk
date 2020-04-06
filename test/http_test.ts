@@ -3,6 +3,8 @@ import * as util from 'webdisk/lib/util';
 import * as fs   from 'fs';
 import * as stream from 'stream';
 import * as proc   from 'process';
+import * as net    from 'net';
+import * as event  from 'events';
 
 let server = http.createServer();
 
@@ -33,6 +35,9 @@ function writeToStream(fd: number, writer: stream.Writable, bufsize: number, cb:
     }
     func();
 }
+
+server.on("upgrade", (req, socket, head) => {
+});
 
 server.on("request", (req, res: http.ServerResponse) => {
     fs.stat("./hello.html", (err, stat) => {

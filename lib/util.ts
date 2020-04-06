@@ -9,6 +9,21 @@ import * as proc from 'process';
 
 import { Writable } from 'stream';
 
+import * as winston from 'winston';
+
+const logger = winston.createLogger({
+    level: "debug",
+    format: winston.format.label(),
+    defaultMeta: {application: "webdisk"},
+    transports: [
+        new winston.transports.File({filename: path.join(proc.cwd(), "webdisk.log")})
+    ]
+});
+
+export function debug(msg) {
+    logger.debug(msg);
+}
+
 export function fwriteToWritable(fd: number, startPosition: number, writer: Writable, length: number = -1,
                          chunksize: number = 1024, callend: boolean = true, cb?: (err, nbytes) => void): void //{
 {

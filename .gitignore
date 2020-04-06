@@ -2,3 +2,4 @@ node_modules/*
 dist/*
 release/*
 testme/*
+gulpfile.js
