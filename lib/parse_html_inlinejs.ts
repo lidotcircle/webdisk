@@ -27,9 +27,10 @@ enum ParseState {/* HTML, */LArrow, JS, RPercent, HTML};
  * JSENV: any;
  *  |-  MSG: any;
  *       |-  REQ: any;
+ *       |-  CONFIG: config;
  */
 
-function include(htmlPath: string, jsenv: any = null) //{
+export function include(htmlPath: string, jsenv: any = null) //{
 {
     let absPath: string;
     if(path.isAbsolute(htmlPath))
@@ -104,6 +105,7 @@ export class HTMLInlineJSParser //{
         let JSENV = this.JsEnv;
         let MSG = JSENV && JSENV["MSG"];
         let REQ = MSG && MSG["REQ"];
+        let CONFIG = MSG && MSG["CONFIG"];
         let save_cwd = proc.cwd();
         proc.chdir(path.dirname(this.htmlPath));
         try {

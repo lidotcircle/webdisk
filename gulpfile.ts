@@ -1,80 +1,24 @@
 import * as gulp   from 'gulp';
 import * as srcmap from 'gulp-sourcemaps';
 import * as ts     from 'gulp-typescript';
-import * as path   from 'path';
 import * as merge  from 'merge2';
 
-import * as fs from 'fs';
-import * as util from 'util';
-import * as rimraf from 'rimraf';
-
-import * as proc from 'process';
+import * as fs         from 'fs';
+import * as util       from 'util';
+import * as path       from 'path';
+import * as proc       from 'process';
 import * as child_proc from 'child_process';
 
+import * as rimraf from 'rimraf';
+
 import * as annautils from 'annautils';
+
+import * as web from './gulp-web';
+web.doit();
 
 const release_root = "./release";
 const test_root    = "./testme";
 const project_name = "webdisk";
-
-// function chmod_files() //{
-function chmod_files(dir: string, mode: any, level: number = 1/* start with 1 */, 
-                            filematch: RegExp = /.*/, cb: (err: Error, num: number) => void = null): void {
-    let num: number = 0;
-    let nerr: number = 0;
-    let callback_m = (err, num: number) => {
-        if (err) throw err;
-    }
-    let error: Error = null;
-    let cn: number = 0;
-    cb = cb || callback_m;
-    let callback_x = (err) => {
-        error = err;
-        dec_cn();
-    }
-    let inc_cn = () => {
-        cn += 1;
-    }
-    let dec_cn = () => {
-        cn -= 1;
-        if(cn == 0) cb(error, num);
-    }
-    let ffff = (d, l) => {
-        if (l == 0) return;
-        inc_cn();
-        fs.readdir(d, "utf8", (err, files) => {
-            if(err) nerr += 1;
-            if(err || error) return callback_x(err || error);
-            for (let file of files) {
-                let new_path = path.join(dir, file);
-                inc_cn();
-                fs.stat(new_path, (err, stat) => {
-                    if(err) nerr += 1;
-                    if(err || error) return callback_x(err || error);
-                    if(stat.isDirectory()) {
-                        ffff(new_path, l - 1);
-                    } else if (stat.isFile()) {
-                        if (!filematch.test(new_path)) return dec_cn();
-                        inc_cn();
-                        fs.chmod(new_path, mode, (err) => {
-                            if (!err) num += 1;
-                            if(err) nerr += 1;
-                            if(err || error) return callback_x(err || error);
-                            dec_cn();
-                        });
-                    }
-                    dec_cn();
-                });
-            }
-            dec_cn();
-        });
-    }
-    ffff(dir, level);
-}
-
-const chmodFiles: (dir: string, mode: any, level: number, filematch: RegExp) => Promise<number>
-    = util.promisify(chmod_files);
-//}
 
 function onerror(err) {
     console.log(err.toString());
@@ -222,4 +166,3 @@ gulp.task("clean", () => {
     }
     return Promise.resolve(true);
 });
-
