@@ -4,7 +4,7 @@ import * as fs   from 'fs';
 import * as path from 'path';
 import * as util from 'util';
 import * as http from 'http';
-import * as crypto from 'crypto';
+import { createHash } from 'crypto';
 import * as stream from 'stream';
 
 import * as proc from 'process';
@@ -102,7 +102,7 @@ export function WebSocketAcceptKey(in_key: string): string //{
     if (key.length != 16)
         throw new Error("argument error, doesn't meet expection");
     let concat = in_key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-    let sha1Hash = crypto.createHash("sha1");
+    let sha1Hash = createHash("sha1");
     sha1Hash.update(concat);
     return sha1Hash.digest('base64');
 } //}

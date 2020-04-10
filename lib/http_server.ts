@@ -14,7 +14,6 @@ import * as path  from 'path';
 import * as utilx from 'util';
 import * as stream from 'stream';
 import * as pathx from 'path';
-import * as crypto from 'crypto';
 
 import * as smartbuffer from 'smart-buffer';
 import * as formidable  from 'formidable';
@@ -291,7 +290,6 @@ export class HttpServer extends event.EventEmitter //{
             }));
             return;
         }
-        console.log(sid); return;
         // Accept
         let response = util.simpleHttpResponse(101, {
             Server: constants.ServerName,
@@ -300,6 +298,8 @@ export class HttpServer extends event.EventEmitter //{
             Connection: "Upgrade",
             "Sec-WebSocket-Accept": util.WebSocketAcceptKey(en_ws_key)
         });
+        console.log(sid);
+        console.log(response.toString());
     } //}
 
     /** helper function of @see listen */
