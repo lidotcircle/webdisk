@@ -1,6 +1,6 @@
-/* execute inline javascript in html surround by <% /js code/ %>*/
-
-/* write html to writable stream, default is stdout */
+/**
+ * provide a mechanism that executes inline javascript in html surround by <% JS CODE %>.
+ */
 
 import * as stream  from 'stream';
 import * as fs      from 'fs';
@@ -17,6 +17,7 @@ import * as timers from 'timers';
 import proc from 'process';
 import * as annautils from 'annautils';
 
+/** FIXME */
 function debug(msg)
 {
 //    console.log(msg);
@@ -40,6 +41,11 @@ enum ParseState {/* HTML, */LArrow, JS, RPercent, HTML};
  *       |-  CONFIG: config;
  */
 
+/**
+ * function used to include other html
+ * @param htmlPath relative or absolute path of html
+ * @param jsenv parameter passes to evaluate JS
+ */
 export function include(htmlPath: string, jsenv: any = null) //{
 {
     debug(`call include(${htmlPath}, jsenv)`);
@@ -52,6 +58,10 @@ export function include(htmlPath: string, jsenv: any = null) //{
     parser.ParseSync();
 } //}
 
+/**  FIXME
+ * an annoying bug when import this function from other module will cause error,
+ * that makes message passed to child process loss.
+ */
 function fwriteToWritableSync(fd: number, startPosition: number, writer: stream.Writable, 
                     length: number = -1, chunksize: number = 1024, callend: boolean = true): number //{
 {
@@ -89,6 +99,10 @@ function writeToWritableSync(path: string, startPosition: number, writer: stream
     return fwriteToWritableSync(fd, startPosition, writer, length, chunksize, callend);
 } //}
 
+/**
+ * function used to include other plain text resources, such as svg images
+ * @param docpath path of resouces
+ */
 export function include_plain(docpath: string) //{
 {
     debug(`call include_plain(${docpath})`);
@@ -100,6 +114,11 @@ export function include_plain(docpath: string) //{
     writeToWritableSync(absPath, 0, HTMLWriter, -1, 1024, false);
 } //}
 
+/**
+ * transition function of automata to parse <%%> syntax
+ * @param state current state
+ * @param char  next input
+ */
 function StateTransition(state: ParseState, char: string): [ParseState, string] //{
 {
     if (char.length != 1) throw new Error("argument error");
@@ -135,12 +154,19 @@ function StateTransition(state: ParseState, char: string): [ParseState, string] 
     }
 } //}
 
-let HTMLWriter: stream.Writable; // use this in inline JS
+/** the parser will save writer in this global variable so that javascript that is inline in html 
+ *  can access the writer */
+let HTMLWriter: stream.Writable;
+/** used to save path of include stack */
 let PrecedeHTMLPath: string[] = [];
+/** the last include */
 function lastDir() {
     return PrecedeHTMLPath.length > 0 ? PrecedeHTMLPath[PrecedeHTMLPath.length - 1] : null;
 }
 
+/**
+ * @class HTMLInlineJSParser represent a html inline <% JSCode %> parser
+ */
 export class HTMLInlineJSParser //{
 {
     private htmlPath: string;
@@ -149,21 +175,36 @@ export class HTMLInlineJSParser //{
     private jsbuffer: sbuffer.SmartBuffer;
     private JsEnv: any;
 
-    constructor (htmlPath: string, writer: stream.Writable = proc.stdout, jsenv: any = null) {
+    /**
+     * @param htmlPath path of html need be parsed
+     * @param writer   a writable string
+     * @param jsenv
+     */
+    constructor (htmlPath: string, writer: stream.Writable = proc.stdout, jsenv: any = null) //{
+    {
         debug("call new HTMLInlineJSParser(...)");
         this.htmlPath = path.resolve(htmlPath);
         this.writer = writer;
         this.parserState = ParseState.HTML;
         this.jsbuffer = null;
         this.JsEnv = jsenv;
-    }
+    } //}
 
-    public newFile(htmlPath: string): void {
+    /**
+     * reuse this parser by specify new html document
+     */
+    public newFile(htmlPath: string): void //{
+    {
         this.htmlPath = path.resolve(htmlPath);
         this.parserState = ParseState.HTML;
-    }
+    } //}
 
-    private eval_js(errcallback: (err) => void): boolean {
+    /**
+     * evaluate buffered Javascript code
+     * @param errcallback called when error occur, when no error occur it will never be called
+     */
+    private eval_js(errcallback?: (err) => void): boolean //{
+    {
         debug(`call eval_js()`);
         PrecedeHTMLPath.push(path.dirname(this.htmlPath));
         let require = (modulex: string) => {
@@ -196,15 +237,21 @@ export class HTMLInlineJSParser //{
                 CWD: proc.cwd()
             }, null, 1) + "</code>");
             this.writer.write(`<h1>${err.toString()}</h1>`);
+            if (errcallback == null)
+                throw err;
             errcallback(err);
         } finally {
             PrecedeHTMLPath.pop();
             this.jsbuffer = new sbuffer.SmartBuffer();
         }
         return this.writer.write("");
-    }
+    } //}
 
-    private write_to_writer(buf: string, cb: (err) => void): boolean {
+    /**
+     * auxiliary function to seperate JS and html
+     */
+    private write_to_writer(buf: string, cb: (err) => void): boolean //{
+    {
         debug(`call write_to_writer(${buf})`);
         let writer_buffer_not_full: boolean = true;
         let len = buf.length;
@@ -224,9 +271,13 @@ export class HTMLInlineJSParser //{
             }
         }
         return writer_buffer_not_full;
-    }
+    } //}
 
-    public Parse(cb_: (err) => void = null): void {
+    /**
+     * Parse html and evaluate js, this is an async function
+     */
+    public Parse(cb_: (err) => void = null): void //{
+    {
         debug(`call HTMLInlineJSParser.Parse()`);
         this.jsbuffer = new sbuffer.SmartBuffer();
         let writer_not_full: boolean = true;
@@ -284,9 +335,13 @@ export class HTMLInlineJSParser //{
                 }
             });
         });
-    }
+    } //}
 
-    public ParseSync() {
+    /**
+     * synchronous version of Parse() function
+     */
+    public ParseSync() //{
+    {
         debug(`call HTMLInlineJSParser.ParseSync()`);
         let buf_decoder = new decoder.StringDecoder("utf8");
         let fd = fs.openSync(this.htmlPath, "r");
@@ -311,11 +366,19 @@ export class HTMLInlineJSParser //{
         }
         if (this.parserState != ParseState.HTML)
             throw new Error("unclosed javascript");
-    }
+    } //}
 } //}
 
+/**
+ * @param { string } htmlPath path of html
+ * @param { any } message passes to child process, this can be something like http request
+ * @param { Writable } outstream stdout of child process will pipe to this stream
+ * @param { Writable } errstream if this argument presents, stderr of child process will pipe to this stream, 
+ *                               otherwise when errstream has data will emit an error in child process, then kill it
+ * @param { callback } cb error handle, called only when error occurs
+ */
 export function parseHTMLNewProc(htmlPath: string, msg: any, outstream: stream.Writable, 
-    errstream: stream.Writable = null, cb: (err) => void = null)
+    errstream: stream.Writable = null, cb: (err) => void = null) //{
 {
     debug(`call parseHTMLNewProc(${htmlPath}, msg, outstream, errstream, cb)`);
     let cproc: child_process.ChildProcess;
@@ -344,9 +407,10 @@ export function parseHTMLNewProc(htmlPath: string, msg: any, outstream: stream.W
         if (err) throw err;
     });
     return;
-}
+} //}
 
-function main() {
+function main() //{
+{
     debug("call html inline js parser main()");
     if (proc.argv.length != 3) throw new Error("bad command line arguments");
     let check = timers.setTimeout(() => {
@@ -361,7 +425,7 @@ function main() {
             if (err) throw err;
         });
     });
-}
+} //}
 
 if (require.main === module) 
     main();
