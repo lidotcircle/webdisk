@@ -3,5 +3,6 @@ dist/*
 release/*
 testme/*
 docroot/*
+*.log
 gulpfile.js
 gulp-web.js
