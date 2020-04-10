@@ -14,6 +14,7 @@ import * as path  from 'path';
 import * as utilx from 'util';
 import * as stream from 'stream';
 import * as pathx from 'path';
+import * as crypto from 'crypto';
 
 import * as smartbuffer from 'smart-buffer';
 import * as formidable  from 'formidable';
@@ -24,61 +25,18 @@ import * as util        from './util';
 import * as constants   from './constants';
 import * as parser      from './parse_html_inlinejs';
 
+import * as WSSession from './file_server';
+
 import * as annautils from 'annautils';
 
 const disk_prefix: string = "/disk";
-
-/**
- * @class BufferStream it's a writable stream, used for save something in memory
- */
-class BufferStream extends stream.Writable //{
-{
-    private buffer: Buffer;
-    private static initsize: number = 1024;;
-    private size: number;
-    private capacity: number;
-    constructor() {
-        super();
-        this.size = 0;
-        this.capacity = BufferStream.initsize;
-        this.buffer = new Buffer(this.capacity);
-    }
-    _write(chunk: Buffer | string, enc: string, next) {
-        let buf: Buffer = chunk as Buffer;
-        enc = enc || "utf8";
-        if (!Buffer.isEncoding(enc)) enc = "utf8";
-        
-        if (utilx.isString(chunk)) {
-            let xx = Buffer.from(chunk as string, enc as any);
-        }
-        let new_size: number = buf.length + this.size;
-        if (new_size > this.capacity) {
-            let new_capacity: number = this.capacity * 2;
-            while (new_size > new_capacity) {
-                new_capacity *= 2;
-            }
-            let new_buf = new Buffer(new_capacity);
-            this.buffer.copy(new_buf, 0, 0, this.size > 0 ? this.size - 1 : 0);
-            this.buffer = new_buf;
-            this.capacity = new_capacity;
-        }
-        buf.copy(this.buffer, this.size, 0);
-        this.size = new_size;
-        next();
-    }
-    public RawBuffer() {
-        return this.buffer.slice(0, this.size);
-    }
-    public length() {
-        return this.size;
-    }
-} //}
 
 /**
  * @class HttpServer delegate of underlying http server
  * @event configParsed
  * @event configParsed
  * @event request
+ * @event upgrade
  * @event listening
  * @event close
  * @event error
@@ -98,14 +56,16 @@ export class HttpServer extends event.EventEmitter //{
         this.httpServer = new http.Server();
 
         this.httpServer.on("request", (req, res) => this.emit("request", req, res));
+        this.httpServer.on("upgrade", (inc, sock, buf) => this.emit("upgrade", inc, sock, buf));
         this.httpServer.on("close", ()  => this.emit("close"));
         this.httpServer.on("error", err => this.emit("error", err));
         this.httpServer.on("listening", () => this.emit("listening"));
 
         this.on("request", this.onrequest);
+        this.on("upgrade", this.onupgrade);
     } //}
 
-    /** response client with nothing, default status code is 405, unauthicated */
+    /** response client with nothing, default status code is 405, methold not allow */
     private write_empty_response(res: http.ServerResponse, sc: number = 405) //{
     {
         res.statusCode = sc;
@@ -212,7 +172,7 @@ export class HttpServer extends event.EventEmitter //{
     /** default listener of request event */
     protected onrequest(request: http.IncomingMessage, response: http.ServerResponse) //{
     {
-        response.setHeader("Server", "webdisk/0.0.1");
+        response.setHeader("Server", constants.ServerName);
         let url = new URL(request.url, `http:\/\/${request.headers.host}`);
         if (request.method.toLowerCase() != "get" && request.method.toLowerCase() != "header") {
             if (request.method.toLowerCase() == "post" && (url.pathname == "/" || url.pathname == "/index.html"))
@@ -224,10 +184,11 @@ export class HttpServer extends event.EventEmitter //{
         if(url.pathname.startsWith(disk_prefix)) { // RETURN FILE
             if (request.headers.cookie == null || request.headers.cookie == "")
                 return this.write_empty_response(response, 401);
-            let sid_pair = request.headers.cookie.split("=");
-            if (sid_pair[0] != "SID" || sid_pair[1] == null)
+            let cookie__ = util.parseCookie(request.headers.cookie);
+            let sid = cookie__ && (cookie__.get("SID") || cookie__.get("sid"));
+            if (sid == null)
                 return this.write_empty_response(response, 401);
-            let user = this.config.LookupUserRootBySID(request.headers.cookie);
+            let user = this.config.LookupUserRootBySID(sid);
             if (user == null)
                 return this.write_empty_response(response, 401);
             let docRoot = user.DocRoot;
@@ -263,10 +224,82 @@ export class HttpServer extends event.EventEmitter //{
         }
     } //}
 
+    /*
+     * HTTP/1.1 101 Switching Protocols
+     * Upgrade: websocket
+     * Connection: Upgrade
+     * Sec-Websocket-Accept: ...
+     */
     /** default listener of request event */
     protected onupgrade(inc: http.IncomingMessage, socket: net.Socket, buf: Buffer) //{
     {
-        console.log("an upgrade request");
+        let date = (new Date()).toUTCString();
+        if (inc.url != "/") {
+            socket.end(util.simpleHttpResponse(404, {
+                Server: constants.ServerName,
+                Date: date,
+                Connection: "close",
+            }));
+            return;
+        }
+        if (new URL(inc.headers["origin"] as string).host != inc.headers.host) {
+            socket.end(util.simpleHttpResponse(403, {
+                Server: constants.ServerName,
+                Date: date,
+                Connection: "close",
+            }));
+            return;
+        }
+        if (inc.headers.connection != "Upgrade" || inc.headers.upgrade != "websocket" ) {
+            socket.end(util.simpleHttpResponse(406, {
+                Server: constants.ServerName,
+                Date: date,
+                Connection: "close",
+            }));
+            return;
+        }
+        let en_ws_key: string = inc.headers["sec-websocket-key"] as string;
+        try {
+            let ws_key = Buffer.from(en_ws_key || "", 'base64').toString('ascii');
+            if(ws_key.length != 16)
+                throw new Error("sec-websocket-key fault");
+        } catch (err) {
+            socket.end(util.simpleHttpResponse(406, {
+                Server: constants.ServerName,
+                Date: date,
+                Connection: "close",
+            }));
+            return;
+        }
+        if (parseInt(inc.headers["sec-websocket-version"] as string) != 13) {
+            socket.end(util.simpleHttpResponse(426, {
+                Server: constants.ServerName,
+                "Sec-WebSocket-Version": 13,
+                Date: date,
+                Connection: "close",
+            }));
+            return;
+        }
+        let cookie__ = util.parseCookie(inc.headers.cookie);
+        let sid = cookie__ && (cookie__.get("SID") || cookie__.get("sid"));
+        let user = this.config.LookupUserRootBySID(sid);
+        if (user == null) {
+            socket.end(util.simpleHttpResponse(401, {
+                Server: constants.ServerName,
+                Date: date,
+                Connection: "close",
+            }));
+            return;
+        }
+        console.log(sid); return;
+        // Accept
+        let response = util.simpleHttpResponse(101, {
+            Server: constants.ServerName,
+            Date: date,
+            Upgrade: "websocket",
+            Connection: "Upgrade",
+            "Sec-WebSocket-Accept": util.WebSocketAcceptKey(en_ws_key)
+        });
     } //}
 
     /** helper function of @see listen */
