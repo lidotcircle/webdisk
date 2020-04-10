@@ -18,8 +18,19 @@ export type FileStat = {
     ctime: Date,
     birthtime: Date,
     filename: string,
-    type: string,
+    type: FileType,
 };
+
+export enum FileType {
+    reg = "reg",
+    dir = "dir",
+    block = "block",
+    socket = "socket",
+    char = "char",
+    fifo = "fifo",
+    symbol = "symbol",
+    unknown = "unknown"
+}
 
 export type User = {
     UserName: string;
@@ -27,4 +38,3 @@ export type User = {
     SID:      string;
     DocRoot:  string;
 };
-

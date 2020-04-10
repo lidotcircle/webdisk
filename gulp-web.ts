@@ -40,8 +40,8 @@ function browser_compile_ts_dir(entry: string, destination: string, sourceMaps: 
 
         if (sourceMaps)
             return sm.pipe(vinyl_buffer())
-                .pipe(sourcemaps.init())
-                .pipe(sourcemaps.write("./"))
+                .pipe(sourcemaps.init({loadMaps: true}))
+                .pipe(sourcemaps.write())
                 .pipe(gulp.dest(destination));
         else
             return sm.pipe(gulp.dest(destination));
