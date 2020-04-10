@@ -1,5 +1,6 @@
 import * as gulp       from 'gulp';
 import * as sass       from 'gulp-sass';
+sass.compiler = require('dart-sass');
 import * as sourcemaps from 'gulp-sourcemaps';
 import * as merge      from 'merge2';
 import * as rimraf     from 'rimraf';
@@ -33,8 +34,8 @@ function browser_compile_ts_dir(entry: string, destination: string, sourceMaps: 
     return function() {
         let sm = browserify()
         .add(entry)
-        .plugin("tsify", {target: 'es6'})
-        .bundle()
+        .plugin("tsify", {target: 'es6', project: tsconfig}).on("error", onerror)
+        .bundle().on("error", onerror)
         .pipe(vinyl_source_stream(path.basename(entry.replace(".ts", ".js"))));
 
         if (sourceMaps)
@@ -74,7 +75,7 @@ function compile_server_ts() {
 
 // styles - sass and css - sytles__() //{
 function sass_compile_move() {
-    return gulp.src(path.join(project_root, "styles/*.sass"))
+    return gulp.src(path.join(project_root, "styles/*.scss"))
     .pipe(sass().on("error", onerror))
     .pipe(gulp.dest(path.join(doc_root, "styles/")));
 }
@@ -82,10 +83,15 @@ function css_copy() {
     return gulp.src(path.join(project_root, "styles/*.css"))
     .pipe(gulp.dest(path.join(doc_root, "styles/")));
 }
+function bootstrap_copy() {
+    return gulp.src("./node_modules/bootstrap/dist/css/bootstrap.css")
+    .pipe(gulp.dest(path.join(doc_root, "styles/")));
+}
 function styles__() {
     return merge([
         sass_compile_move(),
         css_copy()
+//        bootstrap_copy()
     ]);
 }
 //}
@@ -99,15 +105,20 @@ function images_copy() {
 
 // html - htmls_copy() //{
 function htmls_template_copy() {
-    return gulp.src(path.join(project_root, "template/*.html"))
+    return gulp.src(path.join(project_root, "template/**/*.html"))
     .pipe(gulp.dest(path.join(doc_root, "template/")));
 }
 function htmls_index_copy() {
     return gulp.src(path.join(project_root, "index.html"))
     .pipe(gulp.dest(doc_root));
 }
+function svgs_copy() {
+    return gulp.src(path.join(project_root, "template/**/*.svg"))
+    .pipe(gulp.dest(path.join(doc_root, "template/")));
+}
 function htmls_copy() {
     return merge([
+        svgs_copy(),
         htmls_template_copy(),
         htmls_index_copy()
     ]);
@@ -121,11 +132,11 @@ gulp.task("app", gulp.parallel(compile_webdisk_ts, compile_server_ts, styles__, 
 // watch //{
 gulp.task("xwatch", () => {
     let watcher = gulp.watch([
-        "ts/**/*.ts", "styles/*.sass", 
-        "template/*.html", "template/*.ts",
-        "imgs/*",
-        "index.html",
-        "index.ts"
+        "ts/**/*.ts", "styles/*.scss", 
+        "template/**/*.html", "template/**/*.ts",
+        "template/**/*.svg",
+        "imgs/**",
+        "index*"
     ].map(x => path.join(project_root, x)));
     let handle = (fp: string, stat) => {
         console.log(`[${fp}] fires event`);
@@ -141,7 +152,10 @@ gulp.task("xwatch", () => {
             case "index.html":
             case "index.ts":
                 if (fp.endsWith("html")) {
-                    console.log("html template");
+                    console.log("copy html");
+                    return htmls_copy();
+                } else if (fp.endsWith("svg")) {
+                    console.log("copy svg");
                     return htmls_copy();
                 } else if (fp.endsWith("ts")) {
                     console.log("server typescript");

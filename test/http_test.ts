@@ -6,6 +6,8 @@ import * as proc   from 'process';
 import * as net    from 'net';
 import * as event  from 'events';
 
+import * as annautils from 'annautils';
+
 let server = http.createServer();
 
 function writeToStream(fd: number, writer: stream.Writable, bufsize: number, cb: (err) => void) {
@@ -56,7 +58,7 @@ server.on("request", (req, res: http.ServerResponse) => {
         res.write("<h3>DDDDDDDDDDDDDDDD</h3>");
         res.end();
         */
-        util.writeToWritable("./hello.html", 0, res, -1, 210, false, (err, n) => {
+        annautils.stream.pathWriteToWritable("./hello.html", 0, res, -1, 210, false, (err, n) => {
             console.log("write " + n);
             return res.end();
         });

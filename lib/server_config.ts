@@ -154,4 +154,8 @@ export class ServerConfig implements IServerConfig {
         }
         return null;
     }
+
+    public getUsers() {
+        return new Map<string, User>(this.users);
+    }
 }

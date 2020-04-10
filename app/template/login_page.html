@@ -1,0 +1,28 @@
+<!-- login page, this page is inside of body element -->
+<form action="/" method="post" enctype="multipart/form-data" class="login-form" action="">
+    <div class="d-flex flex-column justify-content-center align-items-left">
+        <label class="p-2" for="login">Login</label>
+        <table>
+            <tr>
+                <td>
+                    <label for="username">Username</label>
+                    <input name="username" id="login-username" type="text">
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="password">Password</label>
+                    <input name="password" id="login-password" type="password">
+                </td>
+            </tr>
+        </table>
+        <div>
+            <input id="login-submit" type="submit">
+            <input id="login-reset"  type="reset">
+        </div>
+    </div>
+</form>
+
+<%
+const login = require("./login");
+%>

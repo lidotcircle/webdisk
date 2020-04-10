@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 18.1.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="43px"
+	 height="31px" viewBox="0 0 43 31" enable-background="new 0 0 43 31" xml:space="preserve">
+<g id="Icons_Outline" display="none">
+	<g display="inline">
+		<rect x="0.5" y="0.5" fill="#FFFFFF" stroke="#666666" stroke-linejoin="round" stroke-miterlimit="10" width="42" height="30"/>
+		<rect x="4" y="4" fill="#666666" stroke="#666666" stroke-linejoin="round" stroke-miterlimit="10" width="35" height="23"/>
+		<path fill="#FFFFFF" d="M10.5,6.5c1.6568546,0,3,1.3431458,3,3s-1.3431454,3-3,3s-3-1.3431454-3-3S8.8431454,6.5,10.5,6.5z
+			 M6.5,24.5h30l-2-9l-4,2.0155754L25.5,6.5l-6,12.4361362L14.5,15.5L6.5,24.5z"/>
+	</g>
+</g>
+<g id="expanded">
+	<g>
+		<path fill="#FFFFFF" d="M1,30h41V1H1V30z M4,4.5C4,4.2236328,4.2236328,4,4.5,4h34C38.7763672,4,39,4.2236328,39,4.5v22
+			c0,0.2763672-0.2236328,0.5-0.5,0.5h-34C4.2236328,27,4,26.7763672,4,26.5V4.5z"/>
+		<path d="M42.5,0h-42C0.2236328,0,0,0.2236328,0,0.5v30C0,30.7763672,0.2236328,31,0.5,31h42c0.2763672,0,0.5-0.2236328,0.5-0.5
+			v-30C43,0.2236328,42.7763672,0,42.5,0z M42,30H1V1h41V30z"/>
+		<path fill="#7FBC49" d="M38,5H5v21h33V5z M10.5,6.5c1.6568604,0,3,1.3431396,3,3s-1.3431396,3-3,3s-3-1.3431396-3-3
+			S8.8431396,6.5,10.5,6.5z M6.5,24.5l8-9l5,3.4360962L25.5,6.5l5,11.015564L34.5,15.5l2,9H6.5z"/>
+		<path d="M4.5,27h34c0.2763672,0,0.5-0.2236328,0.5-0.5v-22C39,4.2236328,38.7763672,4,38.5,4h-34C4.2236328,4,4,4.2236328,4,4.5
+			v22C4,26.7763672,4.2236328,27,4.5,27z M5,5h33v21H5V5z"/>
+		<circle fill="#FFFFFF" cx="10.5" cy="9.5" r="3"/>
+		<polygon fill="#FFFFFF" points="30.5,17.515564 25.5,6.5 19.5,18.9360962 14.5,15.5 6.5,24.5 36.5,24.5 34.5,15.5 		"/>
+	</g>
+</g>
+<g id="Icons" display="none">
+	<g display="inline">
+		<rect x="0.5" y="0.5" fill="#FFFFFF" stroke="#000000" stroke-linejoin="round" stroke-miterlimit="10" width="42" height="30"/>
+		
+			<rect x="4.5" y="4.5" fill="#7FBC49" stroke="#000000" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" width="34" height="22"/>
+		<path fill="#FFFFFF" d="M10.5,6.5c1.6568546,0,3,1.3431458,3,3s-1.3431454,3-3,3s-3-1.3431454-3-3S8.8431454,6.5,10.5,6.5z
+			 M6.5,24.5h30l-2-9l-4,2.0155754L25.5,6.5l-6,12.4361362L14.5,15.5L6.5,24.5z"/>
+	</g>
+</g>
+</svg>

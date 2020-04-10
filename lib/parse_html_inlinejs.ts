@@ -8,11 +8,18 @@ import * as sbuffer from 'smart-buffer';
 import * as path    from 'path';
 import * as decoder from 'string_decoder';
 
+import * as config from './server_config';
+
 import * as child_process from 'child_process';
 
 import * as timers from 'timers';
 
 import proc from 'process';
+import * as annautils from 'annautils';
+
+import { debug } from './util';
+
+let xrequire = require;
 
 /*                  ***       <      %     %        > ***   */
 enum ParseState {/* HTML, */LArrow, JS, RPercent, HTML};
@@ -32,13 +39,25 @@ enum ParseState {/* HTML, */LArrow, JS, RPercent, HTML};
 
 export function include(htmlPath: string, jsenv: any = null) //{
 {
+    debug(`call include(${htmlPath}, ${jsenv.toString()}`);
     let absPath: string;
     if(path.isAbsolute(htmlPath))
         absPath = htmlPath;
     else
-        absPath = path.resolve(PrecedeHTMLPath[PrecedeHTMLPath.length - 1], htmlPath);
+        absPath = path.resolve(lastDir(), htmlPath);
     let parser = new HTMLInlineJSParser(absPath, HTMLWriter, jsenv);
     parser.ParseSync();
+} //}
+
+export function include_plain(docpath: string) //{
+{
+    debug(`call include_plain(${docpath})`);
+    let absPath: string;
+    if(path.isAbsolute(docpath))
+        absPath = docpath;
+    else
+        absPath = path.resolve(lastDir(), docpath);
+    annautils.stream.pathWriteToWritableSync(absPath, 0, HTMLWriter, -1, 1024, false);
 } //}
 
 function StateTransition(state: ParseState, char: string): [ParseState, string] //{
@@ -78,6 +97,10 @@ function StateTransition(state: ParseState, char: string): [ParseState, string] 
 
 let HTMLWriter: stream.Writable; // use this in inline JS
 let PrecedeHTMLPath: string[] = [];
+function lastDir() {
+    return PrecedeHTMLPath.length > 0 ? PrecedeHTMLPath[PrecedeHTMLPath.length - 1] : null;
+}
+
 export class HTMLInlineJSParser //{
 {
     private htmlPath: string;
@@ -87,6 +110,7 @@ export class HTMLInlineJSParser //{
     private JsEnv: any;
 
     constructor (htmlPath: string, writer: stream.Writable = proc.stdout, jsenv: any = null) {
+        debug(`call new HTMLInlineJSParser(${htmlPath}, writer, ${jsenv.toString()})`);
         this.htmlPath = path.resolve(htmlPath);
         this.writer = writer;
         this.parserState = ParseState.HTML;
@@ -100,27 +124,48 @@ export class HTMLInlineJSParser //{
     }
 
     private eval_js(errcallback: (err) => void): boolean {
-        HTMLWriter = this.writer;
+        debug(`call eval_js()`);
         PrecedeHTMLPath.push(path.dirname(this.htmlPath));
+        let require = (modulex: string) => {
+            let error;
+            try {
+                return xrequire(modulex)
+            } catch (err) {
+                error = err;
+            }
+            try {
+                return xrequire(path.join(lastDir(), modulex));
+            } catch (err_) {
+                throw err_;
+            }
+        }
+        HTMLWriter = this.writer;
         let JSENV = this.JsEnv;
         let MSG = JSENV && JSENV["MSG"];
         let REQ = MSG && MSG["REQ"];
-        let CONFIG = MSG && MSG["CONFIG"];
-        let save_cwd = proc.cwd();
-        proc.chdir(path.dirname(this.htmlPath));
+        let CONFIG: config.ServerConfig = MSG && MSG["CONFIG"];
         try {
             eval(this.jsbuffer.toString());
         } catch (err) {
+            this.writer.write("<code style='dispaly: block; white-space: pre-wrap;'>" + JSON.stringify({
+                JSENV: JSENV,
+                MSG: MSG,
+                REQ: REQ,
+                CONFIG: CONFIG,
+                DIR_STACK: PrecedeHTMLPath,
+                CWD: proc.cwd()
+            }, null, 1) + "</code>");
+            this.writer.write(`<h1>${err.toString()}</h1>`);
             errcallback(err);
         } finally {
             PrecedeHTMLPath.pop();
             this.jsbuffer = new sbuffer.SmartBuffer();
-            proc.chdir(save_cwd);
         }
         return this.writer.write("");
     }
 
     private write_to_writer(buf: string, cb: (err) => void): boolean {
+        debug(`call write_to_writer(${buf})`);
         let writer_buffer_not_full: boolean = true;
         let len = buf.length;
         for (let i = 0; i<len; i++) {
@@ -133,7 +178,7 @@ export class HTMLInlineJSParser //{
                 continue;
             }
             if (this.parserState == ParseState.HTML) {
-                writer_buffer_not_full = this.writer.write(o) && writer_buffer_not_full;
+                writer_buffer_not_full = this.writer.write(Buffer.from(o, "utf8")) && writer_buffer_not_full;
             } else if (o.length != 0) {
                 this.jsbuffer.insertString(o, this.jsbuffer.length, "utf8");
             }
@@ -142,6 +187,7 @@ export class HTMLInlineJSParser //{
     }
 
     public Parse(cb_: (err) => void = null): void {
+        debug(`call HTMLInlineJSParser.Parse()`);
         this.jsbuffer = new sbuffer.SmartBuffer();
         let writer_not_full: boolean = true;
         let cb = (err) => {
@@ -201,6 +247,7 @@ export class HTMLInlineJSParser //{
     }
 
     public ParseSync() {
+        debug(`call HTMLInlineJSParser.ParseSync()`);
         let buf_decoder = new decoder.StringDecoder("utf8");
         let fd = fs.openSync(this.htmlPath, "r");
         this.jsbuffer = new sbuffer.SmartBuffer();
@@ -230,6 +277,7 @@ export class HTMLInlineJSParser //{
 export function parseHTMLNewProc(htmlPath: string, msg: any, outstream: stream.Writable, 
     errstream: stream.Writable = null, cb: (err) => void = null)
 {
+    debug(`call parseHTMLNewProc(${htmlPath}, msg, outstream, errstream, cb)`);
     let cproc: child_process.ChildProcess;
     cproc = child_process.spawn("node", [__filename, htmlPath], {stdio: ["ipc", "pipe", "pipe"]});
     /*
@@ -258,23 +306,30 @@ export function parseHTMLNewProc(htmlPath: string, msg: any, outstream: stream.W
     cproc.stdout.pipe(outstream);
 
     let safe_callback = (err) => {
+        debug(`${module.filename}#parseHTMLNewProc(): ${err.toString()}`);
         if (cproc != null && !cproc.killed) cproc.kill("SIGABRT");
         if (cb == null && err != null) throw err;
         cb(err);
     };
     cproc.on("error", safe_callback);
-    cproc.send(msg, (err) => {
-        if (err) throw err;
+    proc.nextTick(() => {
+        cproc.send(msg, (err) => {
+            debug(`${module.filename}#parseHTMLNewProc(): send message`);
+            if (err) throw err;
+        });
     });
     return;
 }
 
 function main() {
+    debug("call html inline js parser main()");
     if (proc.argv.length != 3) throw new Error("bad command line arguments");
     let check = timers.setTimeout(() => {
+        debug(`${module.filename}#main(): message timeout`);
         throw new Error("wait message timeout");
     }, 100);
     proc.once("message", (msg) => {
+        debug(`${module.filename}#main(): recieve message`);
         timers.clearTimeout(check);
         let parser = new HTMLInlineJSParser(proc.argv[2], proc.stdout, {MSG: msg});
         parser.Parse((err) => {

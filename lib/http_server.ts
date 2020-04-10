@@ -16,6 +16,7 @@ import * as stream from 'stream';
 import * as pathx from 'path';
 
 import * as smartbuffer from 'smart-buffer';
+import * as formidable  from 'formidable';
 
 import { ServerConfig } from './server_config';
 import { URL }          from 'url';
@@ -149,7 +150,7 @@ export class HttpServer extends event.EventEmitter {
                     return res.end();
                 }
                 res.writeHead(success);
-                util.fwriteToWritable(fd, startposition, res, content_length, 1024, false, (err, nbytes) => {
+                annautils.stream.fdWriteToWritable(fd, startposition, res, content_length, 1024, false, (err, nbytes) => {
                     if (err != null) {
                         res.statusCode = 500;
                         return res.end();
@@ -164,15 +165,40 @@ export class HttpServer extends event.EventEmitter {
         }
     } //}
 
+    protected trylogin(request: http.IncomingMessage, response: http.ServerResponse) //{
+    {
+        let formdata = new formidable.IncomingForm();
+        formdata.parse(request, (err, fields, files) => {
+            let username: string = fields["username"] as string;
+            let password: string = fields["password"] as string;
+            let userprofile = this.config.GetProfile(username);
+            request.method = "GET";
+            if (utilx.isNullOrUndefined(userprofile) || utilx.isNullOrUndefined(password) || userprofile.Password != password) {
+                request["BAD_POST"] = true;
+                return this.onrequest(request, response);
+            } else {
+                let sid = util.makeid(32);
+                response.setHeader("Set-Cookie", "SID=" + sid);
+                request.headers["cookie"] = "SID=" + sid;
+                this.config.set(username, "SID", sid);
+                this.config.WriteBack((err) => {
+                    return this.onrequest(request, response);
+                });
+            }
+        });
+    } //}
+
     protected onrequest(request: http.IncomingMessage, response: http.ServerResponse) //{
     {
         response.setHeader("Server", "webdisk/0.0.1");
+        let url = new URL(request.url, `http:\/\/${request.headers.host}`);
         if (request.method.toLowerCase() != "get" && request.method.toLowerCase() != "header") {
+            if (request.method.toLowerCase() == "post" && (url.pathname == "/" || url.pathname == "/index.html"))
+                return this.trylogin(request, response);
             this.write_empty_response(response);
             return;
         }
         let header: boolean = request.method.toLowerCase() == "header";
-        let url = new URL(request.url, `http:\/\/${request.headers.host}`);
         if(url.pathname.startsWith(disk_prefix)) { // RETURN FILE
             if (request.headers.cookie == null || request.headers.cookie == "")
                 return this.write_empty_response(response, 401);
@@ -194,17 +220,19 @@ export class HttpServer extends event.EventEmitter {
             if (url.pathname == "/") url.pathname = "/index.html";
             let fileName = path.resolve(constants.WebResourceRoot, url.pathname.substring(1));
             if (!fileName.endsWith(".html")) {
-                response.removeHeader("Connection");
                 return this.write_file_response(fileName, response, header, util.parseRangeField(request.headers.range));
             }
             fs.stat(fileName, (err, stat) => {
                 if (err)
                     return this.write_empty_response(response, 404);
-                response.statusCode = 200;
                 response.setHeader("content-type", "text/html");
+                response.writeHead(200);
                 if (header) return response.end();
+                let configx = [];
+                for (let i of this.config.getUsers())
+                    configx.push(i[1]);
                 parser.parseHTMLNewProc(fileName, 
-                    {REQ: util.httpRequestToAcyclic(request), CONFIG: this.config},
+                    {REQ: util.httpRequestToAcyclic(request), CONFIG: configx},
                     response, null, (err_) => {
                         if(err_) return this.write_empty_response(response, 404);
                         response.end();

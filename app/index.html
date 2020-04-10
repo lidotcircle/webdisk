@@ -1,4 +1,20 @@
+<!doctype html>
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<head>
+    <link rel="stylesheet" href="/styles/webdisk.css"/>
+    <script src="/webdisk.js"></script>
+</head>
+<body>
+<% include("./template/svg_template.html") %>
 <%
-const indexjs = require("./index");
-indexjs.__login__();
+require("./index").__login__({
+    REQ: REQ,
+    MSG: MSG,
+    JSENV: JSENV,
+    HTMLWriter: HTMLWriter,
+    CONFIG: CONFIG
+});
 %>
+</body>
+</html>

@@ -3,14 +3,14 @@
   {
    "UserName": "webdisk",
    "DocRoot": "/root",
-   "SID": "FFFFFFFFFF",
+   "SID": "B0L3AIOezYQQ0Lh8vupCUAea7csRCwAi",
    "Password": "12345678"
   },
   {
    "UserName": "hello",
    "DocRoot": "/",
-   "SID": "",
-   "Password": ""
+   "SID": "0Nf0fHsDwyhzUbD4MB1J6i4xSNbgrK7N",
+   "Password": "world"
   }
  ]
 }
