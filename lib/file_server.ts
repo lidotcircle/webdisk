@@ -173,7 +173,8 @@ function statusCodeToJSON(sc: StatusCode) //{
  * @class FileControlSession
  * use to control a authenticated session
  */
-class FileControlSession {
+class FileControlSession
+{
     private websocket: WebsocketM;
     private user: config.User;
     private current_loc: string;

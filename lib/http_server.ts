@@ -28,7 +28,11 @@ import * as annautils from 'annautils';
 
 const disk_prefix: string = "/disk";
 
-class BufferStream extends stream.Writable {
+/**
+ * @class BufferStream it's a writable stream, used for save something in memory
+ */
+class BufferStream extends stream.Writable //{
+{
     private buffer: Buffer;
     private static initsize: number = 1024;;
     private size: number;
@@ -68,21 +72,27 @@ class BufferStream extends stream.Writable {
     public length() {
         return this.size;
     }
-}
+} //}
 
-/* events
- * |> configParsed
- * |> configWrited
- * |> request
- * |> listening
- * |> close
- * |> error
+/**
+ * @class HttpServer delegate of underlying http server
+ * @event configParsed
+ * @event configParsed
+ * @event request
+ * @event listening
+ * @event close
+ * @event error
  */
-export class HttpServer extends event.EventEmitter {
+export class HttpServer extends event.EventEmitter //{
+{
     private config: ServerConfig;
     private httpServer: http.Server;
 
-    constructor (configFile: string) {
+    /**
+     * @param {string} configFile a json file that specify configuration of this server, such as users information
+     */
+    constructor (configFile: string) //{
+    {
         super();
         this.config = new ServerConfig(configFile);
         this.httpServer = new http.Server();
@@ -93,13 +103,23 @@ export class HttpServer extends event.EventEmitter {
         this.httpServer.on("listening", () => this.emit("listening"));
 
         this.on("request", this.onrequest);
-    }
+    } //}
 
-    private write_empty_response(res: http.ServerResponse, sc: number = 405) {
+    /** response client with nothing, default status code is 405, unauthicated */
+    private write_empty_response(res: http.ServerResponse, sc: number = 405) //{
+    {
         res.statusCode = sc;
         res.end();
-    }
+    } //}
 
+    /** 
+     * response a file or partial file that is in server to client, 
+     * if whole file status code is [200 OK], if partial file status code is [206 partial content]
+     * @param { string } path file path
+     * @param { ServerResponse } res response stream
+     * @param { boolean } header if true just response with HTTP header
+     * @param { [number, number] } range range of file, null represent whole file
+     */
     private async write_file_response(path: string, res: http.ServerResponse, header: boolean, range: [number, number] = null) //{
     {
         if (path == null) {
@@ -165,6 +185,7 @@ export class HttpServer extends event.EventEmitter {
         }
     } //}
 
+    /** user login */
     protected trylogin(request: http.IncomingMessage, response: http.ServerResponse) //{
     {
         let formdata = new formidable.IncomingForm();
@@ -188,6 +209,7 @@ export class HttpServer extends event.EventEmitter {
         });
     } //}
 
+    /** default listener of request event */
     protected onrequest(request: http.IncomingMessage, response: http.ServerResponse) //{
     {
         response.setHeader("Server", "webdisk/0.0.1");
@@ -241,11 +263,20 @@ export class HttpServer extends event.EventEmitter {
         }
     } //}
 
-    private __listen(port: number, addr: string) {
+    /** default listener of request event */
+    protected onupgrade(inc: http.IncomingMessage, socket: net.Socket, buf: Buffer) //{
+    {
+        console.log("an upgrade request");
+    } //}
+
+    /** helper function of @see listen */
+    private __listen(port: number, addr: string) //{
+    {
         if (!this.config.parsed()) this.emit("error", new Error("config file need be parsed before listen"));
         this.httpServer.listen(port, addr);
-    }
+    } //}
 
+    /** listen */
     public listen(port: number, addr: string) //{
     {
         if (!this.config.parsed()) {
@@ -257,4 +288,4 @@ export class HttpServer extends event.EventEmitter {
         } else 
             this.__listen(port, addr);
     } //}
-};
+}; //}

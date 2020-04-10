@@ -68,11 +68,11 @@ function fwriteToWritableSync(fd: number, startPosition: number, writer: stream.
     if (chunksize <= 0 || (length != -1 && length < 0)) {
         throw new Error("argument error");
     }
-    let buf = Buffer.alloc(chunksize);
     let writed: number = 0;
-    while(writed < length || length == -1) {
+    while(writed <= length || length == -1) {
+        let buf = Buffer.alloc(chunksize);
         let chunks;
-        if (writed + chunks >= length || length == -1)
+        if (writed + chunksize <= length || length == -1)
             chunks = chunksize;
         else
             chunks = length - writed;
@@ -86,6 +86,8 @@ function fwriteToWritableSync(fd: number, startPosition: number, writer: stream.
                 buf.copy(nbuf, 0, 0, nn);
                 writer.write(nbuf);
             }
+            if (writed != length && length != -1)
+                throw new Error("write length error");
             if (callend) writer.end();
             break;
         }
@@ -96,7 +98,9 @@ function writeToWritableSync(path: string, startPosition: number, writer: stream
                          chunksize: number = 1024, callend: boolean = true): number //{
 {
     let fd = fs.openSync(path, "r");
-    return fwriteToWritableSync(fd, startPosition, writer, length, chunksize, callend);
+    let n = fwriteToWritableSync(fd, startPosition, writer, length, chunksize, callend);
+    fs.closeSync(fd);
+    return n;
 } //}
 
 /**

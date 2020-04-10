@@ -1,6 +1,8 @@
 import * as constants from './constants';
 import * as types from './types';
 import * as util from './util';
+import * as event from 'events';
+import * as register from './register';
 
 /**
  * @class DetailItem represent a file
@@ -40,11 +42,13 @@ export class DetailItem //{
                 else if (["gz, tar, xz"].indexOf(this.extension) >= 0)
                     svg_template = constants.svg.filetype.zip;
                 else
-                    svg_template = constants.svg.filetype.html; // TODO
+                    svg_template = constants.svg.filetype.html;
             } else
                 svg_template = mm;
         }
-        result.prepend(svg_template); // TODO
+        let xx = util.createNodeFromHtmlString("<div class='file-icon'></div>");
+        xx.prepend(svg_template.content.cloneNode(true));
+        result.prepend(xx);
         this._element = result;
         return result;
     } //}
@@ -60,16 +64,17 @@ export function SortByName(d1: DetailItem, d2: DetailItem): number //{
 {
     if(d1.Stat.type == "dir" && d2.Stat.type != "dir") return 1;
     if(d2.Stat.type == "dir" && d1.Stat.type != "dir") return -1;
-    if(d1.Basename.localeCompare(d2.Basename) >= 0) return 1;
-    return -1;
+    if(d1.Basename.localeCompare(d2.Basename) >= 0) return -1;
+    return 1;
 } //}
 
 export type FileSortFunc = (d1: DetailItem, d2: DetailItem) => number;
 
 /**
  * @class Detail represent a file details panel
+ * @event reconstruct fires when reconstruct function is called and finished
  */
-export class Detail //{
+export class Detail extends event.EventEmitter//{
 {
     /**
      * @property {string} currentLoc location of current panel, which should be a valid path
@@ -83,17 +88,21 @@ export class Detail //{
     private _classname: string;
     private _order: boolean;
     private sortFunc: FileSortFunc;
+    private reg_func: register.RegisterFunction;
 
     /**
-     * @param elem which object be attached
+     * @param {HTMLDivElement} elem which object be attached
+     * @param {Function} reg call for every HTMLElement object
      */
-    constructor(elem: HTMLDivElement) //{
+    constructor(elem: HTMLDivElement, reg: register.RegisterFunction = register.dummyRegister) //{
     {
+        super();
         this.attachElem = elem;
         this.currentLoc = null;
         this.children = [];
         this._classname = null;
         this.sortFunc = SortByName;
+        this.reg_func = reg;
     } //}
 
     get ClassName() {return this._classname;}
@@ -133,8 +142,18 @@ export class Detail //{
             return this.sortFunc(d2, d1);
         });
         this.children.map( x => {
-            this.attachElem.append(x.toHtmlElement());
+            let ee = x.toHtmlElement();
+            this.reg_func(ee);
+            this.attachElem.append(ee);
         });
+        this.emit("reconstruct");
     } //}
+
+    get AttachElement() {return this.attachElem;}
+
+    // TODO
+    async chdir(path: string): Promise<boolean> {
+        return false;
+    }
 }; //}
 
