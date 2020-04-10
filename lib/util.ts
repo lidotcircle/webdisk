@@ -16,13 +16,14 @@ const logger = winston.createLogger({
     format: winston.format.json(),
     defaultMeta: {application: "webdisk", pid: proc.pid},
     transports: [
-        new winston.transports.File({filename: path.join(proc.cwd(), "webdisk.log")}),
+//        new winston.transports.File({filename: path.join("webdisk.log")}),
         new winston.transports.Console()
     ]
 });
 
-export function debug(msg) {
-    logger.debug(msg);
+export function debug(msg)
+{
+    console.log(msg);
 }
 
 export function parseCookie(cookie: string): Map<string, string> //{

@@ -17,7 +17,10 @@ import * as timers from 'timers';
 import proc from 'process';
 import * as annautils from 'annautils';
 
-import { debug } from './util';
+function debug(msg)
+{
+//    console.log(msg);
+}
 
 let xrequire = require;
 
@@ -39,7 +42,7 @@ enum ParseState {/* HTML, */LArrow, JS, RPercent, HTML};
 
 export function include(htmlPath: string, jsenv: any = null) //{
 {
-    debug(`call include(${htmlPath}, ${jsenv.toString()}`);
+    debug(`call include(${htmlPath}, jsenv)`);
     let absPath: string;
     if(path.isAbsolute(htmlPath))
         absPath = htmlPath;
@@ -47,6 +50,43 @@ export function include(htmlPath: string, jsenv: any = null) //{
         absPath = path.resolve(lastDir(), htmlPath);
     let parser = new HTMLInlineJSParser(absPath, HTMLWriter, jsenv);
     parser.ParseSync();
+} //}
+
+function fwriteToWritableSync(fd: number, startPosition: number, writer: stream.Writable, 
+                    length: number = -1, chunksize: number = 1024, callend: boolean = true): number //{
+{
+    if (chunksize <= 0 || (length != -1 && length < 0)) {
+        throw new Error("argument error");
+    }
+    let buf = Buffer.alloc(chunksize);
+    let writed: number = 0;
+    while(writed < length || length == -1) {
+        let chunks;
+        if (writed + chunks >= length || length == -1)
+            chunks = chunksize;
+        else
+            chunks = length - writed;
+        let nn = fs.readSync(fd, buf, 0, chunks, writed + startPosition);
+        writed += nn;
+        if (nn == chunksize) {
+            writer.write(buf);
+        } else { // last chunk
+            if (nn != 0) {
+                let nbuf = Buffer.alloc(nn);
+                buf.copy(nbuf, 0, 0, nn);
+                writer.write(nbuf);
+            }
+            if (callend) writer.end();
+            break;
+        }
+    }
+    return writed;
+} //}
+function writeToWritableSync(path: string, startPosition: number, writer: stream.Writable, length: number = -1,
+                         chunksize: number = 1024, callend: boolean = true): number //{
+{
+    let fd = fs.openSync(path, "r");
+    return fwriteToWritableSync(fd, startPosition, writer, length, chunksize, callend);
 } //}
 
 export function include_plain(docpath: string) //{
@@ -57,7 +97,7 @@ export function include_plain(docpath: string) //{
         absPath = docpath;
     else
         absPath = path.resolve(lastDir(), docpath);
-    annautils.stream.pathWriteToWritableSync(absPath, 0, HTMLWriter, -1, 1024, false);
+    writeToWritableSync(absPath, 0, HTMLWriter, -1, 1024, false);
 } //}
 
 function StateTransition(state: ParseState, char: string): [ParseState, string] //{
@@ -110,7 +150,7 @@ export class HTMLInlineJSParser //{
     private JsEnv: any;
 
     constructor (htmlPath: string, writer: stream.Writable = proc.stdout, jsenv: any = null) {
-        debug(`call new HTMLInlineJSParser(${htmlPath}, writer, ${jsenv.toString()})`);
+        debug("call new HTMLInlineJSParser(...)");
         this.htmlPath = path.resolve(htmlPath);
         this.writer = writer;
         this.parserState = ParseState.HTML;
@@ -143,7 +183,7 @@ export class HTMLInlineJSParser //{
         let JSENV = this.JsEnv;
         let MSG = JSENV && JSENV["MSG"];
         let REQ = MSG && MSG["REQ"];
-        let CONFIG: config.ServerConfig = MSG && MSG["CONFIG"];
+        let CONFIG = MSG && MSG["CONFIG"];
         try {
             eval(this.jsbuffer.toString());
         } catch (err) {
@@ -178,7 +218,7 @@ export class HTMLInlineJSParser //{
                 continue;
             }
             if (this.parserState == ParseState.HTML) {
-                writer_buffer_not_full = this.writer.write(Buffer.from(o, "utf8")) && writer_buffer_not_full;
+                writer_buffer_not_full = this.writer.write(o) && writer_buffer_not_full;
             } else if (o.length != 0) {
                 this.jsbuffer.insertString(o, this.jsbuffer.length, "utf8");
             }
@@ -280,19 +320,6 @@ export function parseHTMLNewProc(htmlPath: string, msg: any, outstream: stream.W
     debug(`call parseHTMLNewProc(${htmlPath}, msg, outstream, errstream, cb)`);
     let cproc: child_process.ChildProcess;
     cproc = child_process.spawn("node", [__filename, htmlPath], {stdio: ["ipc", "pipe", "pipe"]});
-    /*
-    if (errstream == null) {
-        cproc = child_process.spawn("node", [__filename, htmlPath], {stdio: ["ipc", outstream, "pipe"]});
-        cproc.stderr.on("readable", () => {
-            let buf = cproc.stderr.read();
-            if (buf != null)
-                cproc.emit("error", new Error("\n----------------------------------\nstderr output:" + buf.toString('utf8') + 
-                                              "----------------------------------"));
-        });
-    } else {
-        cproc = child_process.spawn("node", [__filename, htmlPath], {stdio: ["ipc", outstream, errstream]});
-    }
-    */
     if (errstream == null) {
         cproc.stderr.on("readable", () => {
             let buf = cproc.stderr.read();
@@ -312,11 +339,9 @@ export function parseHTMLNewProc(htmlPath: string, msg: any, outstream: stream.W
         cb(err);
     };
     cproc.on("error", safe_callback);
-    proc.nextTick(() => {
-        cproc.send(msg, (err) => {
-            debug(`${module.filename}#parseHTMLNewProc(): send message`);
-            if (err) throw err;
-        });
+    cproc.send(msg, (err) => {
+        debug(`${module.filename}#parseHTMLNewProc(): send message`);
+        if (err) throw err;
     });
     return;
 }
