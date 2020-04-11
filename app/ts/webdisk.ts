@@ -3,13 +3,21 @@
  */
 
 import * as constants from './constants';
-import * as detail from './details';
-import { Detail, WS } from './global_vars';
+import { Detail, WS, File } from './global_vars';
 import * as register from './register';
 import * as types from './types';
 import * as util from './util';
-import * as websocket from './websocket';
 
+import * as websocket from './websocket';
+import * as detail from './details';
+import * as fm from './file_manager';
+
+// init
+websocket.SetupWS();
+fm.SetupFM();
+detail.SetupDetail();
+
+// test
 let test_path: types.FileStat = {} as types.FileStat;
 test_path.filename = "/usr/maybe.txt";
 test_path.type     = types.FileType.reg;
@@ -19,5 +27,9 @@ test_path2.type     = types.FileType.reg;
 Detail.Details.UpdateDetails([new detail.DetailItem(test_path), new detail.DetailItem(test_path2)]);
 register.upload(Detail.Details.AttachElement);
 
-websocket.SetupWS();
-
+// ws
+File.manager.on("ready", () => {
+    File.manager.getdir("/", (err, msg) => {
+        util.debug(msg);
+    });
+});

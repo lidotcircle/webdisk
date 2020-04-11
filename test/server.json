@@ -2,13 +2,13 @@
  "Users": [
   {
    "UserName": "webdisk",
-   "DocRoot": "/root",
-   "SID": "zCr2zS3yPIVuzqh9TOaPdeQIYyNMQv2Y",
+   "DocRoot": "/home/prack/test/",
+   "SID": "hXWTt4Lw5gOtKg19GzwwGWT6cTTLXRrL",
    "Password": "12345678"
   },
   {
    "UserName": "hello",
-   "DocRoot": "/",
+   "DocRoot": "/home",
    "SID": "0Nf0fHsDwyhzUbD4MB1J6i4xSNbgrK7N",
    "Password": "world"
   }

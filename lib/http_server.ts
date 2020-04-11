@@ -24,7 +24,7 @@ import * as util        from './util';
 import * as constants   from './constants';
 import * as parser      from './parse_html_inlinejs';
 
-import * as WSSession from './file_server';
+import { upgradeHandler } from './file_server';
 
 import * as annautils from 'annautils';
 
@@ -223,84 +223,12 @@ export class HttpServer extends event.EventEmitter //{
         }
     } //}
 
-    /*
-     * HTTP/1.1 101 Switching Protocols
-     * Upgrade: websocket
-     * Connection: Upgrade
-     * Sec-Websocket-Accept: ...
-     */
     /** default listener of request event */
     protected onupgrade(inc: http.IncomingMessage, socket: net.Socket, buf: Buffer) //{
     {
-        let date = (new Date()).toUTCString();
-        if (inc.url != "/") {
-            socket.end(util.simpleHttpResponse(404, {
-                Server: constants.ServerName,
-                Date: date,
-                Connection: "close",
-            }));
-            return;
-        }
-        if (new URL(inc.headers["origin"] as string).host != inc.headers.host) {
-            socket.end(util.simpleHttpResponse(403, {
-                Server: constants.ServerName,
-                Date: date,
-                Connection: "close",
-            }));
-            return;
-        }
-        if (inc.headers.connection != "Upgrade" || inc.headers.upgrade != "websocket" ) {
-            socket.end(util.simpleHttpResponse(406, {
-                Server: constants.ServerName,
-                Date: date,
-                Connection: "close",
-            }));
-            return;
-        }
-        let en_ws_key: string = inc.headers["sec-websocket-key"] as string;
-        try {
-            let ws_key = Buffer.from(en_ws_key || "", 'base64').toString('ascii');
-            if(ws_key.length != 16)
-                throw new Error("sec-websocket-key fault");
-        } catch (err) {
-            socket.end(util.simpleHttpResponse(406, {
-                Server: constants.ServerName,
-                Date: date,
-                Connection: "close",
-            }));
-            return;
-        }
-        if (parseInt(inc.headers["sec-websocket-version"] as string) != 13) {
-            socket.end(util.simpleHttpResponse(426, {
-                Server: constants.ServerName,
-                "Sec-WebSocket-Version": 13,
-                Date: date,
-                Connection: "close",
-            }));
-            return;
-        }
-        let cookie__ = util.parseCookie(inc.headers.cookie);
-        let sid = cookie__ && (cookie__.get("SID") || cookie__.get("sid"));
-        let user = this.config.LookupUserRootBySID(sid);
-        if (user == null) {
-            socket.end(util.simpleHttpResponse(401, {
-                Server: constants.ServerName,
-                Date: date,
-                Connection: "close",
-            }));
-            return;
-        }
-        // Accept
-        let response = util.simpleHttpResponse(101, {
-            Server: constants.ServerName,
-            Date: date,
-            Upgrade: "websocket",
-            Connection: "Upgrade",
-            "Sec-WebSocket-Accept": util.WebSocketAcceptKey(en_ws_key)
-        });
-        console.log(sid);
-        console.log(response.toString());
-    } //}
+        upgradeHandler(inc, socket, buf, this.config);
+    }
+     //}
 
     /** helper function of @see listen */
     private __listen(port: number, addr: string) //{

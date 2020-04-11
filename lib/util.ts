@@ -181,3 +181,12 @@ export function simpleHttpResponse(statusCode: number, headers: any, statusMessa
     return xx.RawBuffer();
 } //}
 
+function pathEqual_aux(p1: string, p2: string): boolean {
+    if (p1 == p2) return true;
+    if (p1.endsWith("/"))
+        return p1.substr(0, p1.length - 1) == p2;
+    return false;
+}
+export function pathEqual(p1: string, p2: string): boolean {
+    return pathEqual_aux(p1, p2) || pathEqual_aux(p2, p1);
+}

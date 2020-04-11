@@ -4,6 +4,10 @@ import * as stream from 'stream';
 import * as util from 'util';
 import * as proc from 'process';
 
+import { debug } from './util';
+
+let bigIntSupport = true;
+try { BigInt(0); } catch (e) {bigIntSupport = false;}
 
 /** websocket operation code */
 export enum WebsocketOPCode {
@@ -63,13 +67,19 @@ function formWsHeader(options: {
             break;
         case 2:
             viewa[1] = 126;
-            let viewb: Uint16Array = new Uint16Array(bytebuf);
-            viewb[1] = options.payload_len;
+            let viewb: DataView = new DataView(bytebuf);
+            viewb.setUint16(2, options.payload_len, false);
             break;
         case 3:
             viewa[1] = 127;
             let viewc: DataView = new DataView(bytebuf);
-            viewc.setBigUint64(2, BigInt(options.payload_len), false); // network byte order, big-endian
+            // node v8 doesn't support BigInt() FIXME
+            if (bigIntSupport) {
+                viewc.setBigUint64(2, BigInt(options.payload_len), false); // network byte order, big-endian
+            } else {
+                viewc.setUint32(2, 0, false);
+                viewc.setUint32(6, options.payload_len, false);
+            }
             break;
     }
     return Buffer.from(bytebuf);
@@ -92,7 +102,7 @@ function extractFromFrame(buffer: Buffer): [boolean, WebsocketOPCode, Buffer, Bu
     if (buffer.length < 2) throw new FrameNotComplete();
     let FIN: boolean = (buffer.readUInt8(0) & 0x80) == 0x80;
     let opcode: number = (buffer.readUInt8(0) & 0x7f);
-    if (FIN && (opcode & 0x08) != 0)
+    if (!FIN && (opcode & 0x08) != 0)
         throw new Error("control frame can't be fragmented");
     if ((buffer.readUInt8(0) & 0x70) != 0) {
         throw new Error("broken frame");
@@ -107,7 +117,15 @@ function extractFromFrame(buffer: Buffer): [boolean, WebsocketOPCode, Buffer, Bu
     } else if(len == 127) {
         if (buffer.length < (2 + 8 + 2 ** 16)) throw new FrameNotComplete();
         payloadOffset += 8;
-        len = Number(buffer.readBigUInt64BE(2));
+        if (bigIntSupport) {
+            len = Number(buffer.readBigUInt64BE(2));
+        } else {
+            let l1 = buffer.readUInt32BE(2); // FIXME to support 52bits number
+            if (l1 != 0) {
+                throw new Error("number out of range");
+            }
+            len = buffer.readUInt32BE(4);
+        }
     }
     let mask: Uint8Array = null;
     if (buffer.length < (payloadOffset + len + (Masked ? 4 : 0))) throw new FrameNotComplete();;
@@ -181,6 +199,8 @@ function extractFromFrameMulti(buffer: Buffer): [boolean[], WebsocketOPCode[], B
  * @event end
  *     @fires other endpoint send close frame
  *     @param (statusCode: number, reason: Buffer)
+ * @event timeout
+ *     @fires when underlying tcp connection timeout
  * @event close
  *     @fires underlying tcp socket is closed
  *     @param (clean: boolean) indicates whether websocket is closed cleanly
@@ -239,6 +259,12 @@ export class WebsocketM extends event.EventEmitter {
             let fin = fins.pop();
             let opc = opcs.pop();
             let msg = msgs.pop();
+            debug(JSON.stringify({
+                opc: opc,
+                fin: fin,
+                msglen: msg.length,
+                msg: msg.toString()
+            }, null, 1));
             switch(opc) {
                 case WebsocketOPCode.Binary:
                 case WebsocketOPCode.Text:    // control frame can't be fragmented
@@ -327,7 +353,8 @@ export class WebsocketM extends event.EventEmitter {
         }
     }
     private ontimeout() {
-        this.emit("error", new Error("timeout"));
+        this.state = WebsocketState.CLOSED;
+        this.emit("timeout");
     }
     private ondrain() {
         this.emit("drain");
@@ -355,7 +382,7 @@ export class WebsocketM extends event.EventEmitter {
             binary = true;
         }
         let header: Buffer = formWsHeader({
-            payload_len: buf.length,
+            payload_len: buf ? buf.length : 0,
             opcode: binary ? WebsocketOPCode.Binary : WebsocketOPCode.Text
         });
         let sendmsg: Buffer = Buffer.concat([header, buf]);
@@ -378,7 +405,7 @@ export class WebsocketM extends event.EventEmitter {
                 _msg = msg;
         }
         let header: Buffer = formWsHeader({
-            payload_len: _msg.length,
+            payload_len: _msg ? _msg.length : 0,
             opcode: WebsocketOPCode.Ping
         });
         return this.underlyingsocket.write(_msg ? Buffer.concat([header, _msg]) : header);
@@ -398,7 +425,7 @@ export class WebsocketM extends event.EventEmitter {
                 _msg = msg;
         }
         let header: Buffer = formWsHeader({
-            payload_len: _msg.length,
+            payload_len: _msg ? _msg.length : 0,
             opcode: WebsocketOPCode.Pong
         });
         return this.underlyingsocket.write(_msg ? Buffer.concat([header, _msg]) : header);
@@ -444,8 +471,8 @@ export class WebsocketM extends event.EventEmitter {
                 reason_x.copy(msg, 2, 0);
         }
         let header: Buffer = formWsHeader({
-            payload_len: msg != null ? msg.length : 0,
-            opcode: WebsocketOPCode.Ping
+            payload_len: msg ? msg.length : 0,
+            opcode: WebsocketOPCode.Close
         });
         this.underlyingsocket.write(msg != null ? Buffer.concat([header, msg]) : header);
     } //}

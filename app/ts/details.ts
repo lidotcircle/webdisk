@@ -1,4 +1,5 @@
 import * as constants from './constants';
+import * as global from './global_vars';
 import * as types from './types';
 import * as util from './util';
 import * as event from 'events';
@@ -157,3 +158,6 @@ export class Detail extends event.EventEmitter//{
     }
 }; //}
 
+export function SetupDetail() {
+    global.Detail.Details = new Detail(constants.detail_page as HTMLDivElement, register.upload);
+}
