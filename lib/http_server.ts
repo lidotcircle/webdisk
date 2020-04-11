@@ -1,7 +1,5 @@
 /* WEB DISK */
 
-// TODO BUG in download file !!!! FUCKING
-
 /*
  * A simple http server, provide basic authenticated function and return resources
  * ONLY handle GET method and HEADER method
