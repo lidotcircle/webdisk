@@ -17,6 +17,7 @@ enum FileOpcode {
     RENAME  = "rename",
     STAT    = "stat",
     TOUCH   = "touch",
+    TRUNCATE = "truncate",
     WRITE   = "write",
 };
 
@@ -138,6 +139,7 @@ export class FileManager extends EventEmitter //{
     remove(loc: string, cb: FileOpCallback = this.echoMsg) {this.operation(FileOpcode.REMOVE, {path: loc}, cb);}
     stat(loc: string, cb: FileOpCallback = this.echoMsg) {this.operation(FileOpcode.STAT, {path: loc}, cb);} // TODO
     touch(loc: string, cb: FileOpCallback = this.echoMsg) {this.operation(FileOpcode.TOUCH, {path: loc}, cb);}
+    truncate(loc: string, len: number, cb: FileOpCallback = this.echoMsg) {this.operation(FileOpcode.TRUNCATE, {path: loc, length: len}, cb);}
     write(loc: string, offset: number, hexbuf: string, cb: FileOpCallback = this.echoMsg) //{
     {
         this.operation(FileOpcode.WRITE, {

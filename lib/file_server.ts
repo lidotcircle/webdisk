@@ -78,6 +78,7 @@ enum FileOpcode {
     RENAME  = "rename",
     STAT    = "stat",
     TOUCH   = "touch",
+    TRUNCATE   = "truncate",
     WRITE   = "write",
 }
 
@@ -204,7 +205,6 @@ export function upgradeHandler(inc: http.IncomingMessage, socket: net.Socket, bu
     let ns = new FileControlSession(socket, user);
 } //}
 
-// TODO
 /**
  * @class FileControlSession
  * use to control a authenticated session
@@ -253,7 +253,6 @@ class FileControlSession //{
         this.websocket.send(msg, cb);
     }
 
-    // FIXME
     private op_chmod (msg) //{
     {
         let reqid: string = msg["id"];
@@ -283,6 +282,7 @@ class FileControlSession //{
             else    this.sendsuccess(reqid);
         });
     } //}
+    /** execute command, and return a message that contains stdout and stderr of the command */
     private op_exec  (msg) //{
     {
         let reqid: string = msg["id"];
@@ -303,6 +303,7 @@ class FileControlSession //{
             }, null, 1));
         });
     } //}
+    /** get stat of files under specified directory, the result also includes the directory */
     private op_getdir(msg) //{
     {
         let loc: string = msg["path"];
@@ -323,6 +324,7 @@ class FileControlSession //{
         });
         return; 
     } //}
+    /** just make a new direcory, if parent path is absent, will return fail */
     private op_mkdir (msg) //{
     {
         let loc: string = msg["path"];
@@ -335,6 +337,7 @@ class FileControlSession //{
             else    this.sendsuccess(reqid);
         });
     } //}
+    /** read partial content of file */
     private op_read  (msg) //{
     {
         let loc: string = msg["path"];
@@ -352,6 +355,7 @@ class FileControlSession //{
             let ll = length;
             fs.read(fd, buf, 0, ll, offset, (err, n, b) => {
                 if(err) return this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
+                fs.close(fd, (err) => {if (err) debug(`close file [${dir}] error`);});
                 let bb;
                 if(n == length)
                     bb = buf;
@@ -365,6 +369,7 @@ class FileControlSession //{
             });
         });
     } //}
+    /** similar with [rm -rf], so be careful */
     private op_remove(msg) //{
     {
         let loc: string = msg["path"];
@@ -378,6 +383,7 @@ class FileControlSession //{
         });
         return; 
     } //}
+    /** move */
     private op_rename(msg) //{
     {
         let reqid: string = msg["id"];
@@ -393,6 +399,7 @@ class FileControlSession //{
             else    this.sendsuccess(reqid);
         });
     } //}
+    /** stat a specified file */
     private op_stat  (msg) //{
     {
         let loc: string = msg["path"];
@@ -427,6 +434,7 @@ class FileControlSession //{
             }, null, 1));
         });
     } //}
+    /** similar with [touch] */
     private op_touch (msg) //{
     {
         let loc: string = msg["path"];
@@ -434,14 +442,17 @@ class FileControlSession //{
         if (!util.isString(msg["path"]) || !loc.startsWith("/"))
             return this.sendfail(reqid, StatusCode.BAD_ARGUMENTS);
         let dir: string = path.resolve(this.user.DocRoot, loc.substring(1));
+        let cur = new Date();
         fs.open(dir, "a" , (err, fd) => {
-            if(err) return this.sendfail(reqid);
-            fs.write(fd, Buffer.alloc(0), 0, null, (err, n, b) => {
-                if(err) this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
-                else    this.sendsuccess(reqid);
+            if(err) return this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
+            fs.futimes(fd, cur, cur, (err) => {
+                if(err) return this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
+                fs.close(fd, (err) => {if (err) debug(`close file [${dir}] error`);});
+                return this.sendsuccess(reqid);
             });
         });
     } //}
+    /** write content to a range of file, if file doesn't exist, send back a fail message */
     private op_write (msg) //{
     {
         let loc: string = msg["path"];
@@ -453,12 +464,27 @@ class FileControlSession //{
         let buf: Buffer = Buffer.from(msg["buf"], "hex");
         if (!util.isNumber(offset) || offset < 0)
             return this.sendfail(reqid, StatusCode.REQUEST_ERROR);
-        fs.open(dir, "w", (err, fd) => {
+        fs.open(dir, "r+", (err, fd) => {
             if(err) return this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
             fs.write(fd, buf, 0, buf.length, offset, (err, n, b) => {
                 if(err) return this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
+                fs.close(fd, (err) => {if (err) debug(`close file [${dir}] error`);});
                 return this.sendsuccess(reqid);
             });
+        });
+    } //}
+    /** truncate file */
+    private op_truncate(msg) //{
+    {
+        let loc: string = msg["path"];
+        let reqid: string = msg["id"];
+        let len: number = parseInt(msg["length"]);
+        if (!util.isString(msg["path"]) || !loc.startsWith("/") || !util.isNumber(len) || len < 0)
+            return this.sendfail(reqid, StatusCode.BAD_ARGUMENTS);
+        let path_: string = path.resolve(this.user.DocRoot, loc.substring(1));
+        fs.truncate(path_, len, (err) => {
+            if(err) return this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
+            return this.sendsuccess(reqid);
         });
     } //}
 
@@ -496,6 +522,10 @@ class FileControlSession //{
 
             /** @property {string} what["path"] */
             case FileOpcode.TOUCH: this.op_touch(what); break;
+
+            /** @property {string} what["path"]
+                @property {number} what["len"] */
+            case FileOpcode.TRUNCATE: this.op_truncate(what); break;
 
             /** @property {string} what["path"] */
             case FileOpcode.STAT:  this.op_stat(what); break;

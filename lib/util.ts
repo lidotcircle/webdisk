@@ -15,6 +15,19 @@ import * as winston from 'winston';
 
 import { getStatusText } from 'http-status-codes';
 
+function getCaller () //{
+{
+    let reg = /\s+at (\S+)( \(([^)]+)\))?/g;
+    let ee: string;
+    try {throw new Error();}
+    catch (e) {ee = e.stack;}
+    reg.exec(ee);
+    reg.exec(ee);
+    let mm = reg.exec(ee);
+    if (!mm) return null;
+    return [mm[3], mm[1]];
+}; //}
+
 const logger = winston.createLogger({
     level: "debug",
     format: winston.format.json(),
@@ -25,9 +38,11 @@ const logger = winston.createLogger({
     ]
 });
 
-export function debug(msg)
+export function debug(...msg)
 {
-    console.log(msg);
+    let caller = getCaller();
+    let mmm = caller[0] ? `[${caller[1]} (${caller[0]})]: ` : `[${caller[1]}]: `;
+//    console.debug(mmm, msg);
 }
 
 export function parseCookie(cookie: string): Map<string, string> //{
