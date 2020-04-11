@@ -1,0 +1,3 @@
+[submodule "app/template/svgs/fileicon/s2"]
+	path = app/template/svgs/fileicon/s2
+	url = https://github.com/dmhendricks/file-icon-vectors.git

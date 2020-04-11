@@ -40,16 +40,9 @@ export class DetailItem //{
             svg_template = constants.svg.folder;
         } else {
             let mm: HTMLTemplateElement = document.getElementById("svg-filetype-" + this.extension) as HTMLTemplateElement;
-            if (mm == null) {
-                if (["mp4", "mkv"].indexOf(this.extension) >= 0)
-                    svg_template = constants.svg.filetype.video;
-                else if (["ttf"].indexOf(this.extension) >= 0)
-                    svg_template = constants.svg.filetype.font;
-                else if (["gz, tar, xz"].indexOf(this.extension) >= 0)
-                    svg_template = constants.svg.filetype.zip;
-                else
-                    svg_template = constants.svg.filetype.html;
-            } else
+            if (mm == null)
+                svg_template = constants.svg.blank;
+            else
                 svg_template = mm;
         }
         let xx = util.createNodeFromHtmlString("<div class='file-icon'></div>");

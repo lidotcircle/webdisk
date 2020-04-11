@@ -140,7 +140,7 @@ export function appendSvg(dir: string, prefix: string) //{
         try {
             writeToWritableSync(pp, 0, HTMLWriter, -1, 4096, false);
         } catch (e){}
-        HTMLWriter.write("<\template>");
+        HTMLWriter.write('</template>');
     }
 } //}
 
