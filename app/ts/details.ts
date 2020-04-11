@@ -4,6 +4,7 @@ import * as types from './types';
 import * as util from './util';
 import * as event from 'events';
 import * as register from './register';
+import { debug } from './util';
 
 /**
  * @class DetailItem represent a file
@@ -23,6 +24,10 @@ export class DetailItem //{
         this.location = util.dirname (this.stat.filename);
         this.extension = util.extension(this.stat.filename);
         this._element = null;
+        debug(this);
+        window["ab"] = util.basename;
+        window["bc"] = util.dirname;
+        window["cd"] = util.extension;
     } //}
 
     toHtmlElement(): HTMLElement //{
@@ -34,7 +39,7 @@ export class DetailItem //{
         if (this.stat.type == types.FileType.dir) {
             svg_template = constants.svg.folder;
         } else {
-            let mm: HTMLTemplateElement = document.getElementById("svg-filetyp-" + this.extension) as HTMLTemplateElement;
+            let mm: HTMLTemplateElement = document.getElementById("svg-filetype-" + this.extension) as HTMLTemplateElement;
             if (mm == null) {
                 if (["mp4", "mkv"].indexOf(this.extension) >= 0)
                     svg_template = constants.svg.filetype.video;
@@ -160,4 +165,13 @@ export class Detail extends event.EventEmitter//{
 
 export function SetupDetail() {
     global.Detail.Details = new Detail(constants.detail_page as HTMLDivElement, register.upload);
+    global.File.manager.once("ready", () => {
+        let root = "/";
+        global.File.manager.getdir(root, (err, msg) => {
+            if(err) throw new Error("false"); // TODO using message bar
+            let stats: types.FileStat[] = msg;
+            let mm = stats.filter(x => x["filename"] != root).map(x => new DetailItem(x));
+            global.Detail.Details.UpdateDetails(mm);
+        });
+    });
 }

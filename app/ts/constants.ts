@@ -48,3 +48,8 @@ export namespace svg {
     }
 }
 //}
+
+// server //{
+export const server_ws: string = `ws://${location.host}`;
+//}
+

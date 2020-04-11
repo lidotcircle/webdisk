@@ -22,7 +22,7 @@ enum FileOpcode {
 };
 
 type FileOpCallback = (err: Error, data: any) => void;
-
+const minimum_retry_time = 100;
 /**
  * @class FileManager
  * Provide function call to manage remote file system
@@ -38,17 +38,28 @@ export class FileManager extends EventEmitter //{
 {
     /**
      * @property {Websocket} connection underlying websocket connection
-     * @wait_list {Map} when recieve message from server
+     * @property {Map} wait_list when recieve message from server
+     * @property {number} timeout_ms how long to wait server responses a message
+     * @property {string} serverURI ws url
      */
     private connection: WebSocket;
     private wait_list: Map<string, [FileOpcode, FileOpCallback]>;
     private timeout_ms: number;
+    private serverURI: string;
+    private retry: boolean;
+    private exp_time_ms: number;
 
-    constructor(connection: WebSocket) //{
+    /**
+     * @param {WebSocket} connection websocket connection
+     * @param {boolean}   retryOnClose whether retrying connection to server when connection closed 
+     */
+    constructor(connection: WebSocket, retryOnClose: boolean = false) //{
     {
         super();
         this.timeout_ms = 3000;
         this.connection = connection;
+        this.serverURI = connection.url;
+        this.retry = retryOnClose;
         this.setup_new_connection();
     } //}
 
@@ -60,9 +71,27 @@ export class FileManager extends EventEmitter //{
         }
         this.wait_list = new Map<string, [FileOpcode, FileOpCallback]>();
         this.connection.onmessage = (msg) => {this.onmessage(msg);}
-        this.connection.onclose = () => {this.emit("close"); this.connection = null;}
-        this.connection.onerror = (err) => {this.emit("error"); this.connection = null;}
-        this.connection.onopen = () => {this.emit("ready"); console.log("open new websocket");}
+        this.connection.onclose = () => {
+            debug("ws closed");
+            this.emit("close"); this.connection = null;
+            if (this.retry) { // try to reestablishing websocket connection
+                window.setTimeout(() => {
+                    debug(`try to reconnect to ${this.serverURI}`);
+                    this.connection = new WebSocket(this.serverURI);
+                    this.setup_new_connection();
+                }, this.exp_time_ms);
+                this.exp_time_ms *= 2;
+            }
+        }
+        this.connection.onerror = (err) => {
+            debug("ws error");
+            this.emit("error", err); this.connection = null;
+        }
+        this.connection.onopen = () => {
+            debug("ws oponed");
+            this.exp_time_ms = minimum_retry_time;
+            this.emit("ready");
+        }
     } //}
 
     get Timeout() {return this.timeout_ms;}
@@ -81,7 +110,7 @@ export class FileManager extends EventEmitter //{
     } //}
     private ready(): boolean {return this.connection && (this.connection.readyState == WebSocket.OPEN);}
     private valid(): boolean {return this.connection && (this.connection.readyState != WebSocket.CLOSED);}
-    private newid(): string {return util.makeid(16);}
+    private newid(): string  {return util.makeid(16);}
 
     private onmessage(msg: MessageEvent): void //{
     {
@@ -108,7 +137,7 @@ export class FileManager extends EventEmitter //{
 
     private operation(opcode: FileOpcode, req: any, cb: FileOpCallback) //{
     {
-        if (!this.ready()) cb(new Error("socket error"), null);
+        if (!this.ready()) cb(new Error("websocket isn't ready"), null);
         let id = this.newid();
         this.register_timeout(id);
         this.wait_list.set(id, [opcode, cb]);
@@ -137,7 +166,7 @@ export class FileManager extends EventEmitter //{
     } //}
     rename(src: string, dst: string, cb: FileOpCallback = this.echoMsg) {this.operation(FileOpcode.RENAME, {src: src, dst: dst}, cb);}
     remove(loc: string, cb: FileOpCallback = this.echoMsg) {this.operation(FileOpcode.REMOVE, {path: loc}, cb);}
-    stat(loc: string, cb: FileOpCallback = this.echoMsg) {this.operation(FileOpcode.STAT, {path: loc}, cb);} // TODO
+    stat(loc: string, cb: FileOpCallback = this.echoMsg) {this.operation(FileOpcode.STAT, {path: loc}, cb);}
     touch(loc: string, cb: FileOpCallback = this.echoMsg) {this.operation(FileOpcode.TOUCH, {path: loc}, cb);}
     truncate(loc: string, len: number, cb: FileOpCallback = this.echoMsg) {this.operation(FileOpcode.TRUNCATE, {path: loc, length: len}, cb);}
     write(loc: string, offset: number, hexbuf: string, cb: FileOpCallback = this.echoMsg) //{
@@ -149,10 +178,18 @@ export class FileManager extends EventEmitter //{
         }, cb);
     } //}
 
-    reset(ws: WebSocket) {
+    reset(ws: WebSocket, retryOnClose: boolean = false) {
         this.connection = ws;
+        this.retry = retryOnClose;
+        this.serverURI = this.connection.url;
         this.setup_new_connection();
         this.emit("reset");
+    }
+
+    close(code: number = null) {
+        this.retry = false;
+        this.connection.close(code);
+        this.connection = null;
     }
 
     private echoMsg(err, msg) {
@@ -162,6 +199,6 @@ export class FileManager extends EventEmitter //{
 }; //}
 
 export function SetupFM() {
-    File.manager = new FileManager(WS.WebsocketConnection);
+    File.manager = new FileManager(new WebSocket(constants.server_ws), true);
     window["fm"] = File.manager;
 }

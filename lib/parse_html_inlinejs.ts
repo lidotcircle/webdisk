@@ -119,6 +119,32 @@ export function include_plain(docpath: string) //{
 } //}
 
 /**
+ * @see include_plain()
+ */
+export function appendSvg(dir: string, prefix: string) //{
+{
+    debug(`call appendSvg(${dir})`);
+    let absPath: string;
+    if(path.isAbsolute(dir))
+        absPath = dir;
+    else
+        absPath = path.resolve(lastDir(), dir);
+    let files;
+    try {
+        files = fs.readdirSync(absPath, "utf8");
+    } catch (err) {return;}
+    for(let ff of files) {
+        let pp = path.join(absPath, ff);
+        if (path.extname(ff) != ".svg") continue;
+        HTMLWriter.write(`<template id="${prefix}${path.basename(ff).substr(0, ff.length - 4)}">`);
+        try {
+            writeToWritableSync(pp, 0, HTMLWriter, -1, 4096, false);
+        } catch (e){}
+        HTMLWriter.write("<\template>");
+    }
+} //}
+
+/**
  * transition function of automata to parse <%%> syntax
  * @param state current state
  * @param char  next input

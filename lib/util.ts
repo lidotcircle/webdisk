@@ -42,7 +42,7 @@ export function debug(...msg)
 {
     let caller = getCaller();
     let mmm = caller[0] ? `[${caller[1]} (${caller[0]})]: ` : `[${caller[1]}]: `;
-//    console.debug(mmm, msg);
+    console.debug(mmm, msg);
 }
 
 export function parseCookie(cookie: string): Map<string, string> //{

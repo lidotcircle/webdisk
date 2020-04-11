@@ -24,12 +24,6 @@ test_path.type     = types.FileType.reg;
 let test_path2: types.FileStat = {} as types.FileStat;
 test_path2.filename = "/usr/amaybe.txt";
 test_path2.type     = types.FileType.reg;
-Detail.Details.UpdateDetails([new detail.DetailItem(test_path), new detail.DetailItem(test_path2)]);
 register.upload(Detail.Details.AttachElement);
 
 // ws
-File.manager.on("ready", () => {
-    File.manager.getdir("/", (err, msg) => {
-        util.debug(msg);
-    });
-});
