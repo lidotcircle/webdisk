@@ -4,5 +4,6 @@ release/*
 testme/*
 docroot/*
 *.log
+core
 gulpfile.js
 gulp-web.js
