@@ -30,7 +30,20 @@ body {
     };
 };
 
-.file-icon {
-    width: 8vw;
-    height: auto;
+// detail page hierarchy
+.detail-container {
+    .file-item {
+        display: none;
+        padding: 2em, 3em;
+        width: 4vw;
+        height: auto;
+        .file-icon{
+        };
+        .file-item-name {
+        };
+    };
+};
+
+#hello {
+    height: auto;;
 }
