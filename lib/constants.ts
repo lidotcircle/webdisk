@@ -4,6 +4,7 @@ export const DEFAULT_PORT    = '5445';
 export const DEFAULT_ADDR    = '0.0.0.0';
 
 export const ServerName = 'webdisk/0.0.1';
+export const DISK_PREFIX: string = "/disk";
 
 export const FILE_TYPE_MAP = new Map<string, string>([
     [".aac",    "audio/aac"],

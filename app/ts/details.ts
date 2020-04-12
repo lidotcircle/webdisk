@@ -4,6 +4,8 @@ import * as types from './types';
 import * as util from './util';
 import * as event from 'events';
 import * as register from './register';
+import * as file_manager from './file_manager';
+
 import { debug } from './util';
 
 /**
@@ -33,19 +35,20 @@ export class DetailItem //{
     toHtmlElement(): HTMLElement //{
     {
         if(this._element) return this._element;
+        let tag = this.Stat.type == types.FileType.reg ? "a" : "div";
         let result: HTMLDivElement = util.createNodeFromHtmlString(
-            `<div class='file-item'><div class='file-item-name'>${this.basename}</div></div>`) as HTMLDivElement;
+            `<${tag} class='${constants.CSSClass.file_item}'><div class='${constants.CSSClass.file_item_name}'>${this.basename}</div></${tag}>`) as HTMLDivElement;
         let svg_template: HTMLTemplateElement;
         if (this.stat.type == types.FileType.dir) {
             svg_template = constants.svg.folder;
         } else {
-            let mm: HTMLTemplateElement = document.getElementById("svg-filetype-" + this.extension) as HTMLTemplateElement;
+            let mm: HTMLTemplateElement = document.getElementById(constants.svg.svg_filetype_prefiex + this.extension) as HTMLTemplateElement;
             if (mm == null)
                 svg_template = constants.svg.blank;
             else
                 svg_template = mm;
         }
-        let xx = util.createNodeFromHtmlString("<div class='file-icon'></div>");
+        let xx = util.createNodeFromHtmlString(`<div class='${constants.CSSClass.file_item_icon}'></div>`);
         xx.prepend(svg_template.content.cloneNode(true));
         result.prepend(xx);
         this._element = result;
@@ -88,12 +91,16 @@ export class Detail extends event.EventEmitter//{
     private _order: boolean;
     private sortFunc: FileSortFunc;
     private reg_func: register.RegisterFunction;
+    private fileManager: file_manager.FileManager;
 
     /**
      * @param {HTMLDivElement} elem which object be attached
      * @param {Function} reg call for every HTMLElement object
+     * @param {FileManager} filemanager used for providing RPC, such as [readdir, read, write, chmod ...].
+     *                                  if this parameter not supplied, any attemp to call file system function
+     *                                  call will raise error.
      */
-    constructor(elem: HTMLDivElement, reg: register.RegisterFunction = register.dummyRegister) //{
+    constructor(elem: HTMLDivElement, reg: register.RegisterFunction = register.dummyRegister, filemanager: file_manager.FileManager = null) //{
     {
         super();
         this.attachElem = elem;
@@ -102,6 +109,29 @@ export class Detail extends event.EventEmitter//{
         this._classname = null;
         this.sortFunc = SortByName;
         this.reg_func = reg;
+        this.fileManager = filemanager;
+    } //}
+
+    private UpdateDetails(children: DetailItem[]): void //{
+    {
+        this.children = children;
+        this.reconstruct();
+    } //}
+
+    private reconstruct(): void //{
+    {
+        while(this.attachElem.firstChild)
+            this.attachElem.removeChild(this.attachElem.firstChild);
+        this.children.sort((d1, d2) => {
+            if(this._order) return this.sortFunc(d1, d2);
+            return this.sortFunc(d2, d1);
+        });
+        this.children.map( x => {
+            let ee = x.toHtmlElement();
+            this.reg_func(ee, this, x);
+            this.attachElem.append(ee);
+        });
+        this.emit("reconstruct");
     } //}
 
     get ClassName() {return this._classname;}
@@ -114,11 +144,7 @@ export class Detail extends event.EventEmitter//{
             this.attachElem.classList.add(this._classname);
     } //}
 
-    UpdateDetails(children: DetailItem[]): void //{
-    {
-        this.children = children;
-        this.reconstruct();
-    } //}
+    get AttachElement() {return this.attachElem;}
 
     ReverseOrder(): void //{
     {
@@ -132,39 +158,34 @@ export class Detail extends event.EventEmitter//{
         this.reconstruct();
     } //}
 
-    reconstruct(): void //{
-    {
-        while(this.attachElem.firstChild)
-            this.attachElem.removeChild(this.attachElem.firstChild);
-        this.children.sort((d1, d2) => {
-            if(this._order) return this.sortFunc(d1, d2);
-            return this.sortFunc(d2, d1);
-        });
-        this.children.map( x => {
-            let ee = x.toHtmlElement();
-            this.reg_func(ee);
-            this.attachElem.append(ee);
-        });
-        this.emit("reconstruct");
-    } //}
+    async chdir(path_: string): Promise<void> {
+        if (this.fileManager == null) throw new Error("file manager doesn't initialize");
+        let pps = (await this.fileManager.getdirP(path_))[0];
+        pps = pps.filter(x => x.filename != path_);
+        let mm = pps.map( x => new DetailItem(x));
+        this.UpdateDetails(mm);
+        this.currentLoc = path_;
+        return;
+    }
 
-    get AttachElement() {return this.attachElem;}
-
-    // TODO
-    async chdir(path: string): Promise<boolean> {
-        return false;
+    async backDir(): Promise<void> {
+        if(this.currentLoc == "/") return;
+        return this.chdir(util.dirname(this.currentLoc));
     }
 }; //}
 
 export function SetupDetail() {
-    global.Detail.Details = new Detail(constants.detail_page as HTMLDivElement, register.upload);
+    global.Detail.Details = new Detail(constants.detail_page as HTMLDivElement, register.form_multi_functions([
+        register.dummyRegister,
+        register.dblclick_chdir,
+        register.dblclick_download
+    ]), global.File.manager);
     global.File.manager.once("ready", () => {
-        let root = "/";
-        global.File.manager.getdir(root, (err, msg) => {
-            if(err) throw new Error("false"); // TODO using message bar
-            let stats: types.FileStat[] = msg;
-            let mm = stats.filter(x => x["filename"] != root).map(x => new DetailItem(x));
-            global.Detail.Details.UpdateDetails(mm);
+        global.Detail.Details.chdir("/").then(() => {
+            debug("chdir /");
+        }, (err) => {
+            debug(err);
         });
     });
+    window["dl"] = global.Detail.Details;
 }

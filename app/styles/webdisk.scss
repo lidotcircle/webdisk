@@ -30,20 +30,36 @@ body {
     };
 };
 
+@mixin no-select() {
+    -webkit-touch-callout: none;
+    -webkit-user-select:   none;
+    -khtml-user-select:    none;
+    -moz-user-select:      none;
+    -ms-user-select:       none;
+    user-select:           none;
+};
+
 // detail page hierarchy
-.detail-container {
-    .file-item {
-        display: none;
-        padding: 2em, 3em;
-        width: 4vw;
-        height: auto;
-        .file-icon{
+#details-container {
+    & > .x-selected {
+        background-color: azure;
+    };
+    & > .file-item {
+        display: inline-flex;
+        flex-flow: column;
+        align-items: center;
+        margin: 0.1em 1em;
+        padding: 0.1em 0.2em 0.5em 0.5em;
+        width: 5vw;
+        .file-item-icon {
+            display: inline;
+            svg {
+                width: 5vw;
+            }
         };
         .file-item-name {
+            @include no-select();
+            display: inline;
         };
     };
 };
-
-#hello {
-    height: auto;;
-}

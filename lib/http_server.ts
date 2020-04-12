@@ -28,8 +28,6 @@ import { upgradeHandler } from './file_server';
 
 import * as annautils from 'annautils';
 
-const disk_prefix: string = "/disk";
-
 /**
  * @class HttpServer delegate of underlying http server
  * @event configParsed
@@ -180,23 +178,18 @@ export class HttpServer extends event.EventEmitter //{
             return;
         }
         let header: boolean = request.method.toLowerCase() == "header";
-        if(url.pathname.startsWith(disk_prefix)) { // RETURN FILE
-            if (request.headers.cookie == null || request.headers.cookie == "")
-                return this.write_empty_response(response, 401);
-            let cookie__ = util.parseCookie(request.headers.cookie);
-            let sid = cookie__ && (cookie__.get("SID") || cookie__.get("sid"));
+        if(url.pathname.startsWith(constants.DISK_PREFIX)) { // RETURN FILE
+            let sid = url.searchParams.get("sid");
             if (sid == null)
                 return this.write_empty_response(response, 401);
             let user = this.config.LookupUserRootBySID(sid);
             if (user == null)
                 return this.write_empty_response(response, 401);
             let docRoot = user.DocRoot;
-            let LID = url.searchParams.get("lid");
-            if (LID == null || user["LID"] != LID)
-                return this.write_empty_response(response, 401);
-            let fileName = path.resolve(docRoot, url.pathname.substring(1));
+            let fileName = path.resolve(docRoot, url.pathname.substring(constants.DISK_PREFIX.length + 1));
+            console.log(fileName);
+            console.log(docRoot);
             let range: [number, number] = util.parseRangeField(request.headers.range);
-            response.removeHeader("Connection");
             this.write_file_response(fileName, response, header, range);
         } else { // JUST SINGLE PAGE "/index.html" or "/", PUBLIC Resources
             if (url.pathname == "/") url.pathname = "/index.html";

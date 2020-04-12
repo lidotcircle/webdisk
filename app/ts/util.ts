@@ -102,3 +102,34 @@ export function HexToBuffer(hex: string): ArrayBuffer //{
     return ret;
 } //}
 
+export function promisify(original) //{
+{
+    if (typeof original !== 'function')
+        throw new Error('type-error');
+    function fn(...args) {
+        return new Promise((resolve, reject) => {
+            original.call(this, ...args, (err, ...values) => {
+                if (err) {
+                    return reject(err);
+                }
+                if(values && values.length > 0) resolve(values);
+                resolve();
+            });
+        });
+    }
+    return fn;
+} //}
+
+export function parseCookie(cookie: string): Map<string, string> //{
+{
+    cookie = cookie || "";
+    let ret = new Map<string, string>();
+    let s1 = cookie.split(";");
+    for (let vv of s1) {
+        let kv = vv.split("=");
+        kv[1] = kv[1] || "true";
+        ret.set(kv[0].trim(), kv[1].trim());
+    }
+    return ret;
+} //}
+
