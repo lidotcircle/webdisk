@@ -26,7 +26,7 @@ export function dirname(path: string): string //{
     let sep = path.lastIndexOf("/");
     if(sep  < 0) return null;
     if(sep == 0) return '/';
-    return path.substring(0, sep - 1);
+    return path.substring(0, sep);
 } //}
 
 export function basename(path: string): string //{

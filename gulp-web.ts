@@ -125,12 +125,8 @@ function htmls_copy() {
 }
 //}
 
-export function doit() {
-gulp.task("browserjs", compile_webdisk_ts);
-gulp.task("app", gulp.parallel(compile_webdisk_ts, compile_server_ts, styles__, images_copy, htmls_copy));
-
-// watch //{
-gulp.task("xwatch", () => {
+export function watch_B() //{
+{
     let watcher = gulp.watch([
         "ts/**/*.ts", "styles/*.scss", 
         "template/**/*.html", "template/**/*.ts",
@@ -169,8 +165,13 @@ gulp.task("xwatch", () => {
     watcher.on("add", handle);
     watcher.on("unlink", handle);
     watcher.on("error", onerror);
-});
-//}
+} //}
+
+export function doit() {
+gulp.task("browserjs", compile_webdisk_ts);
+gulp.task("app", gulp.parallel(compile_webdisk_ts, compile_server_ts, styles__, images_copy, htmls_copy));
+
+gulp.task("xwatch", () => {watch_B();})
 
 // clean //{
 gulp.task("xclean", () => {

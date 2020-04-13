@@ -39,27 +39,122 @@ body {
     user-select:           none;
 };
 
+$large: 1920px;
+$medium: 1080px;
+$small: 580px;
+
 // detail page hierarchy
 #details-container {
+    margin-top: 2.5em;
+    margin-left: 1em;
     & > .x-selected {
-        background-color: azure;
+        background-color: #AAF;
     };
+    a {
+        color: black;
+    };
+    a:hover {
+        text-decoration: none;
+    }
     & > .file-item {
         display: inline-flex;
         flex-flow: column;
         align-items: center;
-        margin: 0.1em 1em;
-        padding: 0.1em 0.2em 0.5em 0.5em;
-        width: 5vw;
+        margin: 0.25em 0.3em 0.1em 0.3em;
+        padding: 0.3em 0.6em;
+        @media (max-width: $large) {
+            width: 8vw;
+            font-size: 22px;
+        }
+        @media (max-width: $medium) {
+            width: 12vw;
+            font-size: 18px;
+        }
+        @media (max-width: $small) {
+            width: 15vw;
+            font-size: 12px;
+        }
         .file-item-icon {
-            display: inline;
+            width: 100%;
             svg {
-                width: 5vw;
+                width: 100%;
             }
         };
         .file-item-name {
             @include no-select();
-            display: inline;
+            text-align: center;
+            width: 100%;
+        };
+        .file-item-name-input {
+            width: 10%;
         };
     };
+    & > .file-item:hover {
+        background-color: #EEF;
+    }
+    & > .x-selected:hover {
+        background-color: #BBF;
+    }
 };
+
+.tool-bar {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    .tool {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 0.5em 0.3em 0.1em 0.3em;
+        svg {
+            @media (max-width: $large) {
+                width: 1.5vw;
+                height: 1.5vw;
+            }
+            @media (max-width: $medium) {
+                width: 2vw;
+                height: 2vw;
+            }
+            @media (max-width: $small) {
+                width: 4vw;
+                height: 4vw;
+            }
+        }
+        .tool-name {
+            @include no-select();
+            text-overflow: ellipsis;
+        }
+    }
+    .tool:hover {
+        background-color: #DDD;
+    }
+}
+
+#tool-address {
+    margin: 0.8em;
+    box-sizing: content-box;
+    width: 14vw;
+
+    .address-bar {
+        display: inline-flex;
+        flex-direction: row;
+        .address-bar-pa {
+            display: inline-flex;
+            flex-direction: row;
+            .address-slice {
+                display: inline-flex;
+                flex-direction: row;
+            }
+            .address-slice:hover {
+                background-color: #E5F3FF;
+            }
+        }
+    }
+};
+
+
+
+
+
+
+

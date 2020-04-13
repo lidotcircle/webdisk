@@ -114,7 +114,7 @@ gulp.task("buildtest", build_test);
 
 gulp.task("default", gulp.series("compileTypescripts", build_test));
 
-gulp.task("watch", () => {
+function watch_S() {
     let watcher = gulp.watch(["lib/**/*.ts", "test/**/*.ts", "./*.ts", "bin/*.ts"]);
     let handle = (fp: string, stat) => {
         console.log(`----- file [${fp}]`);
@@ -138,6 +138,10 @@ gulp.task("watch", () => {
     watcher.on("add", handle);
     watcher.on("unlink", handle);
     watcher.on("error", onerror);
+}
+gulp.task("watch", () => {
+    watch_S();
+    web.watch_B();
 });
 
 gulp.task("test", () => {

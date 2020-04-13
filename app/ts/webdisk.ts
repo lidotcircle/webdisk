@@ -11,12 +11,14 @@ import * as util from './util';
 import * as websocket from './websocket';
 import * as detail from './details';
 import * as fm from './file_manager';
+import * as toolbar from './toolbar';
 
 // init
 websocket.SetupWS();
 fm.SetupFM();
 detail.SetupDetail();
 register.SetupReg();
+toolbar.SetupTools();
 
 // test
 let test_path: types.FileStat = {} as types.FileStat;

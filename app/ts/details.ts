@@ -26,7 +26,6 @@ export class DetailItem //{
         this.location = util.dirname (this.stat.filename);
         this.extension = util.extension(this.stat.filename);
         this._element = null;
-        debug(this);
         window["ab"] = util.basename;
         window["bc"] = util.dirname;
         window["cd"] = util.extension;
@@ -37,7 +36,14 @@ export class DetailItem //{
         if(this._element) return this._element;
         let tag = this.Stat.type == types.FileType.reg ? "a" : "div";
         let result: HTMLDivElement = util.createNodeFromHtmlString(
-            `<${tag} class='${constants.CSSClass.file_item}'><div class='${constants.CSSClass.file_item_name}'>${this.basename}</div></${tag}>`) as HTMLDivElement;
+            `<${tag} class='${constants.CSSClass.file_item}'>
+                <div class='${constants.CSSClass.file_item_name}'>
+                    ${this.basename}
+                </div>
+                <div class="${constants.CSSClass.file_item_name_input}">
+                    <input type="text">
+                </div>
+            </${tag}>`) as HTMLDivElement;
         let svg_template: HTMLTemplateElement;
         if (this.stat.type == types.FileType.dir) {
             svg_template = constants.svg.folder;
@@ -52,6 +58,7 @@ export class DetailItem //{
         xx.prepend(svg_template.content.cloneNode(true));
         result.prepend(xx);
         this._element = result;
+        result[constants.KDetailItem] = this;
         return result;
     } //}
 
@@ -74,7 +81,8 @@ export type FileSortFunc = (d1: DetailItem, d2: DetailItem) => number;
 
 /**
  * @class Detail represent a file details panel
- * @event reconstruct fires when reconstruct function is called and finished
+ * @event chdir fires when chdir() return with success
+ *     @param {string} new directory this object resides in
  */
 export class Detail extends event.EventEmitter//{
 {
@@ -131,7 +139,6 @@ export class Detail extends event.EventEmitter//{
             this.reg_func(ee, this, x);
             this.attachElem.append(ee);
         });
-        this.emit("reconstruct");
     } //}
 
     get ClassName() {return this._classname;}
@@ -158,6 +165,8 @@ export class Detail extends event.EventEmitter//{
         this.reconstruct();
     } //}
 
+    get cwd() {return this.currentLoc;}
+
     async chdir(path_: string): Promise<void> {
         if (this.fileManager == null) throw new Error("file manager doesn't initialize");
         let pps = (await this.fileManager.getdirP(path_))[0];
@@ -165,6 +174,7 @@ export class Detail extends event.EventEmitter//{
         let mm = pps.map( x => new DetailItem(x));
         this.UpdateDetails(mm);
         this.currentLoc = path_;
+        this.emit("chdir", this.currentLoc);
         return;
     }
 
