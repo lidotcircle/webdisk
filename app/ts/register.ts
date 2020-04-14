@@ -34,14 +34,20 @@ export function upload(elem: HTMLElement, dt: details.Detail, dti: details.Detai
         ee.preventDefault();
         console.log("being draged", ee);
     });
+    elem.addEventListener("dragstart", (ee: CustomEvent) => {
+        console.log("being draged start", ee);
+    });
+    elem.addEventListener("dragend", (ee: CustomEvent) => {
+        console.log("being draged end", ee);
+    });
     elem.addEventListener("dragover", (ee: CustomEvent) => {
         ee.stopPropagation();
         ee.preventDefault();
     });
-    elem.addEventListener("drop", (ee: CustomEvent) => {
+    elem.addEventListener("drop", (ee: DragEvent) => {
         ee.stopPropagation();
         ee.preventDefault();
-        console.log("something drop", ee);
+        let mm = ee.dataTransfer.items[0].webkitGetAsEntry();
     });
 } //}
 
@@ -95,10 +101,20 @@ export function dblclick_chdir(elem: HTMLElement, dt: details.Detail, dti: detai
 } //}
 
 /** double click to download a file */
+const dblclick_delay = 500;
 export function dblclick_download(elem: HTMLElement, dt: details.Detail, dti: details.DetailItem) //{
 {
     if(elem.tagName != "A") return;
     if(dti.Stat.type == types.FileType.dir) return;
+    let clicked = false;
+    elem.addEventListener("click", (e) => {
+        if (clicked) return;
+        clicked = true;
+        setTimeout(() => {
+            clicked = false;
+        }, dblclick_delay);
+        e.preventDefault();
+    });
     let cookie_list = util.parseCookie(document.cookie);
     let sid = cookie_list.get("SID");
     let url = "http://" + document.location.host + constants.DISK_PREFIX + dti.Stat.filename + "?sid=" + sid;

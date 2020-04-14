@@ -43,6 +43,10 @@ $large: 1920px;
 $medium: 1080px;
 $small: 580px;
 
+.x-hide {
+    display: none !important;
+}
+
 // detail page hierarchy
 #details-container {
     margin-top: 2.5em;
@@ -80,14 +84,14 @@ $small: 580px;
                 width: 100%;
             }
         };
-        .file-item-name {
-            @include no-select();
-            text-align: center;
-            width: 100%;
-        };
-        .file-item-name-input {
-            width: 10%;
-        };
+        .filename-bar {
+            .filename {
+                @include no-select();
+            }
+            .filename-input {
+                width: 100%;
+            }
+        }
     };
     & > .file-item:hover {
         background-color: #EEF;
@@ -131,23 +135,46 @@ $small: 580px;
 }
 
 #tool-address {
+    @include no-select();
     margin: 0.8em;
     box-sizing: content-box;
-    width: 14vw;
+    width: min-content;
 
     .address-bar {
+        border: solid black 0.8px;
+        padding: 0em 0.3em;
+        border-radius: 0.2em;
         display: inline-flex;
         flex-direction: row;
         .address-bar-pa {
             display: inline-flex;
             flex-direction: row;
+            flex-grow: 1;
+            flex-basis: 10px;
             .address-slice {
                 display: inline-flex;
                 flex-direction: row;
+                .address-slice-arrow {
+                    svg {
+                        width: 10px;
+                    }
+                }
+                .address-slice-name {
+                    padding: 0em 0.3em;
+                }
+                .address-slice-name:hover {
+                    background-color: #E5F3FF;
+                }
             }
-            .address-slice:hover {
-                background-color: #E5F3FF;
-            }
+        }
+
+        & > input {
+            flex-grow: 1;
+            flex-basis: 10px;
+            border: none;
+        }
+        & > input:focus {
+            outline: none;
         }
     }
 };

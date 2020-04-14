@@ -22,6 +22,30 @@ export function SetupTools() {
         });
     });
 
+    /** rename */
+    constants.tool.rename.addEventListener("click", () => {
+        let vv = document.querySelectorAll(`.${constants.CSSClass.selected}`);
+        if (vv.length != 1) {
+            // TODO inform only support rename one file
+            return;
+        }
+        let ff = vv[0][constants.KFilenameControl] as controller.FilenameBar;
+        if (ff == null) {
+            debug("something wrong");
+            return;
+        }
+        ff.editName();
+    });
+    global.Detail.Details.on("change", (n, o) => {
+        global.File.manager.rename(o, n, (err) => {
+            if(err) {
+                debug(err);
+                // TODO inform error
+            }
+            constants.tool.refresh.dispatchEvent(new CustomEvent("click"));
+        });
+    });
+
     /** delete selected files */
     constants.tool.del.addEventListener("click", () => {
         let vv = document.querySelectorAll(`.${constants.CSSClass.selected}`);
@@ -40,11 +64,24 @@ export function SetupTools() {
         });
     });
 
-    constants.tool.rename.addEventListener("click", () => {
-    });
-
+    /** address bar */
     let address_bar = new controller.AddressBar(constants.CSSClass.hide_elem);
     constants.tool.address.appendChild(address_bar.Elem);
-    address_bar.setAddr("/usr/bin");
+    address_bar.setAddr("/");
+    address_bar.on("click", p => {
+        console.log(p);
+        let mm = global.Detail.Details.cwd;
+        global.Detail.Details.chdir(p).then(null, (err) => {
+            // TODO inform failure
+            debug(err);
+        });
+    });
+    address_bar.on("change", (n, o) => {
+        global.Detail.Details.chdir(n).then(null, (err) => {
+            // TODO inform failure
+            debug(err);
+        });
+    });
+    global.Detail.Details.on("chdir", dir => address_bar.setAddr(dir));
 }
 

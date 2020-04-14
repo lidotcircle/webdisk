@@ -5,13 +5,17 @@ import * as util from './util';
 import * as event from 'events';
 import * as register from './register';
 import * as file_manager from './file_manager';
+import * as controller from './controller';
 
 import { debug } from './util';
 
 /**
  * @class DetailItem represent a file
+ * @event change @fires when filename changed
+ *     @param {string} new_pathname
+ *     @param {string} old_pathname
  */
-export class DetailItem //{
+export class DetailItem extends event.EventEmitter//{
 {
     protected stat: types.FileStat;
     private basename: string;
@@ -21,6 +25,7 @@ export class DetailItem //{
 
     constructor(stat: types.FileStat) //{
     {
+        super();
         this.stat = stat;
         this.basename = util.basename(this.stat.filename);
         this.location = util.dirname (this.stat.filename);
@@ -37,13 +42,12 @@ export class DetailItem //{
         let tag = this.Stat.type == types.FileType.reg ? "a" : "div";
         let result: HTMLDivElement = util.createNodeFromHtmlString(
             `<${tag} class='${constants.CSSClass.file_item}'>
-                <div class='${constants.CSSClass.file_item_name}'>
-                    ${this.basename}
-                </div>
-                <div class="${constants.CSSClass.file_item_name_input}">
-                    <input type="text">
-                </div>
             </${tag}>`) as HTMLDivElement;
+        let fname = new controller.FilenameBar(this.basename, constants.CSSClass.hide_elem);
+        fname.on("change", (n, o) => {
+            this.emit("change", `${util.pathJoin(this.location, n)}`, `${util.pathJoin(this.location, o)}`);
+        });
+        result.prepend(fname.Elem);
         let svg_template: HTMLTemplateElement;
         if (this.stat.type == types.FileType.dir) {
             svg_template = constants.svg.folder;
@@ -59,6 +63,7 @@ export class DetailItem //{
         result.prepend(xx);
         this._element = result;
         result[constants.KDetailItem] = this;
+        result[constants.KFilenameControl] = fname;
         return result;
     } //}
 
@@ -81,8 +86,9 @@ export type FileSortFunc = (d1: DetailItem, d2: DetailItem) => number;
 
 /**
  * @class Detail represent a file details panel
- * @event chdir fires when chdir() return with success
+ * @event chdir @fires when chdir() return with success
  *     @param {string} new directory this object resides in
+ * @event change @see DetailItem#change
  */
 export class Detail extends event.EventEmitter//{
 {
@@ -135,6 +141,7 @@ export class Detail extends event.EventEmitter//{
             return this.sortFunc(d2, d1);
         });
         this.children.map( x => {
+            x.on("change", (n, o) => this.emit("change", n, o));
             let ee = x.toHtmlElement();
             this.reg_func(ee, this, x);
             this.attachElem.append(ee);
@@ -188,7 +195,8 @@ export function SetupDetail() {
     global.Detail.Details = new Detail(constants.detail_page as HTMLDivElement, register.form_multi_functions([
         register.dummyRegister,
         register.dblclick_chdir,
-        register.dblclick_download
+        register.dblclick_download,
+        register.upload
     ]), global.File.manager);
     global.File.manager.once("ready", () => {
         global.Detail.Details.chdir("/").then(() => {

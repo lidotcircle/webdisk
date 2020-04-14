@@ -18,6 +18,8 @@ import * as config from './server_config'
 import * as constants from './constants'
 import { WebsocketM, WebsocketOPCode } from './websocket';
 
+import * as upload from './upload';
+
 /** file operations //{
  *
  * support upload breakpoint resume
@@ -80,7 +82,13 @@ enum FileOpcode {
     TOUCH   = "touch",
     TRUNCATE   = "truncate",
     WRITE   = "write",
+    UPLOAD = "upload",
+    UPLOAD_WRITE = "upload_write",
+    UPLOAD_MERGE = "upload_merge",
+    NEW_FOLDER = "new_folder",
+    NEW_FILE = "new_file"
 }
+
 
 enum FileEvent {
     REMOVE = "remove",
@@ -105,6 +113,9 @@ export enum StatusCode {
     FS_REPORT_ERROR,
     REQUEST_ERROR,
 
+    EXCEED_MAX_NEW_FILE,
+    EXCEED_MAX_NEW_FOLDER,
+
     FAIL = 100,
     SUCCESS = 200,
 }
@@ -119,6 +130,8 @@ function statusCodeToString(sc: StatusCode): string //{
         case StatusCode.BAD_ID:        return "bad id";
         case StatusCode.BAD_ARGUMENTS: return "bad arguments";
         case StatusCode.REQUEST_ERROR: return "request error";
+        case StatusCode.EXCEED_MAX_NEW_FILE: return "exceed maximum number of new file";
+        case StatusCode.EXCEED_MAX_NEW_FOLDER: return "exceed maximum number of new folder";
         case StatusCode.FAIL:          return "fail";
         case StatusCode.SUCCESS:       return "success";
     }
@@ -334,7 +347,7 @@ class FileControlSession //{
         let dir: string = path.resolve(this.user.DocRoot, loc.substring(1));
         fs.mkdir(dir, {recursive: true}, (err, path) => {
             if(err) this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
-            else    this.sendsuccess(reqid);
+            else this.sendsuccess(reqid, StatusCode.SUCCESS, JSON.stringify({dir: dir}, null, 1));
         });
     } //}
     /** read partial content of file */
@@ -448,7 +461,7 @@ class FileControlSession //{
             fs.futimes(fd, cur, cur, (err) => {
                 if(err) return this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
                 fs.close(fd, (err) => {if (err) debug(`close file [${dir}] error`);});
-                return this.sendsuccess(reqid);
+                return this.sendsuccess(reqid, StatusCode.SUCCESS, JSON.stringify({file: dir}, null, 1));
             });
         });
     } //}
@@ -485,6 +498,125 @@ class FileControlSession //{
         fs.truncate(path_, len, (err) => {
             if(err) return this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
             return this.sendsuccess(reqid);
+        });
+    } //}
+    /** new file */
+    private op_newfile(msg) //{
+    {
+        let loc: string = msg["path"];
+        let reqid: string = msg["id"];
+        if (!util.isString(msg["path"]) || !loc.startsWith("/"))
+            return this.sendfail(reqid, StatusCode.BAD_ARGUMENTS);
+        let path_: string = path.resolve(this.user.DocRoot, loc.substring(1));
+        fs.readdir(path_, "utf8", (err, files) => {
+            if(err) return this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
+            let k = files.indexOf(constants.NEW_FILE_PREFIX);
+            let ffname;
+            if (k < 0) {
+                ffname = path.join(path_, constants.NEW_FILE_PREFIX);
+            } else {
+                for(let i = 0; i<constants.MAX_NEW_EXISTS; i++) {
+                    let testname = constants.NEW_FILE_PREFIX + i.toString();
+                    let m = files.indexOf(testname);
+                    if(m < 0) {
+                        ffname = path.join(path_, testname);
+                        break;
+                    }
+                }
+                if(ffname == null) return this.sendfail(reqid, StatusCode.EXCEED_MAX_NEW_FILE);
+            }
+            msg["path"] = ffname;
+            this.op_touch(msg);
+        });
+    } //}
+    /** new folder */
+    private op_newfolder(msg) //{
+    {
+        let loc: string = msg["path"];
+        let reqid: string = msg["id"];
+        if (!util.isString(msg["path"]) || !loc.startsWith("/"))
+            return this.sendfail(reqid, StatusCode.BAD_ARGUMENTS);
+        let path_: string = path.resolve(this.user.DocRoot, loc.substring(1));
+        fs.readdir(path_, "utf8", (err, files) => {
+            if(err) return this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
+            let k = files.indexOf(constants.NEW_FOLDER_PREFIX);
+            let ffname;
+            if (k < 0) {
+                ffname = path.join(path_, constants.NEW_FOLDER_PREFIX);
+            } else {
+                for(let i = 0; i<constants.MAX_NEW_EXISTS; i++) {
+                    let testname = constants.NEW_FOLDER_PREFIX + i.toString();
+                    let m = files.indexOf(testname);
+                    if(m < 0) {
+                        ffname = path.join(path_, testname);
+                        break;
+                    }
+                }
+                if(ffname == null) return this.sendfail(reqid, StatusCode.EXCEED_MAX_NEW_FILE);
+            }
+            msg["path"] = ffname;
+            this.op_mkdir(msg);
+        });
+    } //}
+    /** upload */
+    private op_upload(msg) //{
+    {
+        let loc: string = msg["path"];
+        let size: number = parseInt(msg["size"]);
+        let reqid: string = msg["id"];
+        if (!util.isString(msg["path"]) || !loc.startsWith("/") || !util.isNumber(size) || size < 0)
+            return this.sendfail(reqid, StatusCode.BAD_ARGUMENTS);
+        let path_: string = path.resolve(this.user.DocRoot, loc.substring(1));
+        fs.stat(path_, (err, stats) => {
+            if(!err) return this.sendfail(reqid, StatusCode.FAIL, (new Error(`file '${path}' already exists`)).message.toString());
+            if(size == 0) return this.op_touch(msg);
+            constants.UserUploadMaps.uploadfile(this.user.UserName, path_, size, (err, entry: upload.UploadEntry) => {
+                if(err) return this.sendfail(reqid, StatusCode.FAIL, err.message.toString());
+                entry.NeedRanges((err, ranges) => {
+                    if(err) return this.sendfail(reqid, StatusCode.FAIL, err.message.toString());
+                    return this.sendsuccess(reqid, StatusCode.SUCCESS, JSON.stringify(ranges, null, 1));
+                });
+            });
+        });
+    } //}
+    /** upload_write */
+    private on_upload_write(msg) //{
+    {
+        let loc: string = msg["path"];
+        let reqid: string = msg["id"];
+        if (!util.isString(msg["path"]) || !loc.startsWith("/"))
+            return this.sendfail(reqid, StatusCode.BAD_ARGUMENTS);
+        let dir: string = path.resolve(this.user.DocRoot, loc.substring(1));
+        let offset: number = parseInt(msg["offset"]);
+        let size: number = parseInt(msg["size"]);
+        let buf: Buffer = Buffer.from(msg["buf"], "hex");
+        if (!util.isNumber(offset) || offset < 0 || !util.isNumber(size) || size <= 0)
+            return this.sendfail(reqid, StatusCode.REQUEST_ERROR);
+        constants.UserUploadMaps.uploadfile(this.user.UserName, dir, size, (err, mm: upload.UploadEntry) => {
+            if(err) return this.sendfail(reqid, StatusCode.FAIL, err.message.toString());
+            mm.WriteRanges(buf, [offset, offset + buf.length - 1], (err) => {
+                if(err) return this.sendfail(reqid, StatusCode.FAIL, err.message.toString());
+                return this.sendsuccess(reqid);
+            });
+        });
+    } //}
+    /** upload_merge */
+    private on_upload_merge(msg) //{
+    {
+        let loc: string = msg["path"];
+        let reqid: string = msg["id"];
+        if (!util.isString(msg["path"]) || !loc.startsWith("/"))
+            return this.sendfail(reqid, StatusCode.BAD_ARGUMENTS);
+        let dir: string = path.resolve(this.user.DocRoot, loc.substring(1));
+        let size: number = parseInt(msg["size"]);
+        if (!util.isNumber(size) || size <= 0)
+            return this.sendfail(reqid, StatusCode.REQUEST_ERROR);
+        constants.UserUploadMaps.uploadfile(this.user.UserName, dir, size, (err, mm: upload.UploadEntry) => {
+            if(err) return this.sendfail(reqid, StatusCode.FAIL, err.message.toString());
+            mm.MergeTo(dir, (err) => {
+                if(err) return this.sendfail(reqid, StatusCode.FAIL, err.message.toString());
+                this.sendsuccess(reqid);
+            });
         });
     } //}
 
@@ -552,8 +684,8 @@ class FileControlSession //{
         this.send(JSON.stringify(msg, null, 1));
     }
 
-    private sendsuccess(id: string, code: StatusCode = StatusCode.SUCCESS) {
-        let msg = {id: id, msg: statusCodeToJSON(code), error: false};
+    private sendsuccess(id: string, code: StatusCode = StatusCode.SUCCESS, reason: string = null) {
+        let msg = {id: id, msg: reason ? reason : statusCodeToJSON(code), error: false};
         this.send(JSON.stringify(msg, null, 1));
     }
 } //}

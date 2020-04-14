@@ -45,6 +45,18 @@ export function extension(path: string): string //{
     return path.substring(sep + 1);
 } //}
 
+export function pathJoin(...pp: string[]): string //{
+{
+    let res = [];
+    for(let p of pp) {
+        p = p.trim();
+        if (p.endsWith('/'))
+            p = p.substring(0, p.length - 1);
+        res.push(p);
+    }
+    return res.join("/");
+} //}
+
 export function createNodeFromHtmlString(htmlText: string): HTMLElement //{
 {
     let div = document.createElement("div");

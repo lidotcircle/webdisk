@@ -1,3 +1,5 @@
+import * as upload from './upload';
+
 export const WebResourceRoot = require("process").cwd() + "/docroot";
 export const CONFIG_PATH     = require("process").cwd() + "/test/server.json";
 export const DEFAULT_PORT    = '5445';
@@ -5,6 +7,13 @@ export const DEFAULT_ADDR    = '0.0.0.0';
 
 export const ServerName = 'webdisk/0.0.1';
 export const DISK_PREFIX: string = "/disk";
+
+export const NEW_FILE_PREFIX = 'newfile';
+export const NEW_FOLDER_PREFIX = 'newfolder';
+export const MAX_NEW_EXISTS = 100;
+export const TEMP_FILE_ENTRY_NAME = 'accepts';
+
+export const UserUploadMaps = new upload.UploadMap();
 
 export const FILE_TYPE_MAP = new Map<string, string>([
     [".aac",    "audio/aac"],

@@ -1,5 +1,6 @@
 import * as events from 'events';
 import * as util from './util';
+import * as constants from './constants';
 
 class MessageBar extends events.EventEmitter //{
 {
@@ -169,9 +170,9 @@ export class FilenameBar extends events.EventEmitter //{
         this.filename_e.innerText = this.basename;
         this.input_e = this.anchorPoint.querySelector(`.${FilenameBar.ClassAB}`);
         this.input_e.classList.add(this.h_class); // hide input element
-        this.input_e.addEventListener("keydown", this.input_onkeydown);
-        this.input_e.addEventListener("blur", this.input_onblur);
-        this.input_e.addEventListener("input", this.input_oninput);
+        this.input_e.addEventListener("keydown", this.input_onkeydown.bind(this));
+        this.input_e.addEventListener("blur", this.input_onblur.bind(this));
+        this.input_e.addEventListener("input", this.input_oninput.bind(this));
     } //}
 
     /** event handlers */
@@ -180,15 +181,16 @@ export class FilenameBar extends events.EventEmitter //{
         let old_name = this.basename;
         this.basename = name;
         this.filename_e.innerText = this.basename;
-        this.input_e.classList.toggle(this.h_class);
-        this.filename_e.classList.toggle(this.h_class);
+        this.input_e.classList.add(this.h_class);
+        this.filename_e.classList.remove(this.h_class);
+        this.input_e.blur();
         if (old_name != this.basename)
             this.emit("change", this.basename, old_name);
     } //}
     private check_on_input() //{
     {
         if(!FilenameBar.validFilename.test(this.input_e.value)) {
-            window.alert("invalid filename");
+            if (this.input_e.value != "") window.alert("invalid filename");
             this.change_name(this.basename);
         } else
             this.change_name(this.input_e.value);
@@ -205,10 +207,10 @@ export class FilenameBar extends events.EventEmitter //{
         if(this.inInput) return;
         this.inInput = true;
 
-        this.input_e.classList.toggle(this.h_class);
+        this.input_e.classList.remove(this.h_class);
         this.input_e.value = this.basename;
         this.input_e.select();
-        this.filename_e.classList.toggle(this.h_class);
+        this.filename_e.classList.add(this.h_class);
     } //}
 } //}
 
@@ -225,7 +227,7 @@ class AddressSlice extends events.EventEmitter //{
     static ClassAB = 'address-slice-name';
     static HTMLTemplate = `
         <span class='${AddressSlice.ClassA}'>
-            <span class='${AddressSlice.ClassAA}'>&#8614;</span>
+            <span class='${AddressSlice.ClassAA}'></span>
             <span class='${AddressSlice.ClassAB}'></span>
         </span>`;
     private static XXElement: HTMLSpanElement = util.createNodeFromHtmlString(AddressSlice.HTMLTemplate) as HTMLSpanElement;
@@ -242,11 +244,15 @@ class AddressSlice extends events.EventEmitter //{
         this.holdElement = AddressSlice.XXElement.cloneNode(true) as HTMLDivElement;
         this.holdElementName = this.holdElement.querySelector(`.${AddressSlice.ClassAB}`);
         this.holdElementName.innerText = this.name;
-        this.holdElement.addEventListener("click", this.name_onclick);
+        this.holdElementName.addEventListener("click", this.name_onclick.bind(this));
         if(hide_arrow) this.holdElement.removeChild(this.holdElement.firstElementChild);
+        else {
+            let ff = this.holdElement.firstElementChild;
+            ff.appendChild(constants.svg.misc.rarrow.content.cloneNode(true));
+        }
     }
 
-    private name_onclick(e: MouseEvent) {e.stopPropagation(); this.emit("click", this.name);}
+    private name_onclick(e: MouseEvent) {e.stopPropagation(); this.emit("click", this.emitPara);}
 
     get Elem(): HTMLSpanElement {return this.holdElement;}
 } //}
@@ -281,10 +287,10 @@ class AddressBarPA extends events.EventEmitter //{
         for(let i=0; i<path_split.length; i++) {
             let hide = (i == 0 && startWithSlash);
             let emitPath = path_split.slice(0, i + 1).join('/');
-            if (startWithSlash) emitPath = emitPath.substring(1, 0);
+            if (startWithSlash) emitPath = emitPath.substring(1, emitPath.length);
             let elem = new AddressSlice(path_split[i], emitPath, hide);
             this.holdElement.appendChild(elem.Elem);
-            elem.on("click", this.child_onclick);
+            elem.on("click", this.child_onclick.bind(this));
         }
     } //}
 
@@ -297,12 +303,15 @@ class AddressBarPA extends events.EventEmitter //{
 /**
  * @class AddressBar
  * @event click @see AddressSlice#click
+ * @event change @fires when submmit input
+ *     @param {string} new_path
+ *     @param {string} old_path
  */
 export class AddressBar extends events.EventEmitter //{
 {
     private anchorPoint: HTMLSpanElement;
     private full_path: string;
-    private inInput: boolean;
+    private isInInputAddr: boolean;
     private h_class: string;
     private address_bar: AddressBarPA;
     private input_bar: HTMLInputElement;
@@ -319,6 +328,7 @@ export class AddressBar extends events.EventEmitter //{
     constructor(hideClass: string, id?: string) {
         super();
         this.h_class = hideClass;
+        this.isInInputAddr = false;
         this.anchorPoint = AddressBar.TTElement.cloneNode(true) as HTMLSpanElement;
         this.input_bar = this.anchorPoint.firstElementChild as HTMLInputElement;
         this.address_bar = new AddressBarPA();
@@ -326,25 +336,29 @@ export class AddressBar extends events.EventEmitter //{
 
         this.address_bar.on("click", (addr) => this.emit("click", addr));
 
-        this.input_bar.addEventListener("keydown", this.input_onkeydown);
-        this.input_bar.addEventListener("input", this.input_oninput);
-        this.input_bar.addEventListener("blur", this.input_onblur);
+        this.input_bar.addEventListener("keydown", this.input_onkeydown.bind(this));
+        this.input_bar.addEventListener("input", this.input_oninput.bind(this));
+        this.input_bar.addEventListener("blur", this.input_onblur.bind(this));
         
-        this.anchorPoint.addEventListener("click", this.__onclick);
+        this.anchorPoint.addEventListener("click", this.__onclick.bind(this));
     }
 
     /** event handlers */
     private change_name(name: string) //{
     {
         let old_name = this.full_path;
-        this.address_bar.Elem.classList.toggle(this.h_class);
+        this.setAddr(name);
+        this.address_bar.Elem.classList.remove(this.h_class);
+        this.isInInputAddr = false;
+        this.input_bar.value = "";
+        this.input_bar.blur();
         if (old_name != this.full_path)
             this.emit("change", this.full_path, old_name);
     } //}
     private check_on_input() //{
     {
         if(!AddressBar.validPathname.test(this.input_bar.value)) {
-            window.alert("invalid pathname");
+            if(this.input_bar.value.trim() != "") window.alert("invalid pathname");
             this.change_name(this.full_path);
         } else
             this.change_name(this.input_bar.value);
@@ -354,7 +368,9 @@ export class AddressBar extends events.EventEmitter //{
     private input_oninput  () {this.input_bar.value = this.input_bar.value.replace(/(\r|\n)/, "");}
 
     private __onclick() {
-        this.address_bar.Elem.classList.toggle(this.h_class);
+        if(this.isInInputAddr) return;
+        this.isInInputAddr = true;
+        this.address_bar.Elem.classList.add(this.h_class);
         this.input_bar.value = this.full_path;
         this.input_bar.select();
     }

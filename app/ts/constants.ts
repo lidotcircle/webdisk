@@ -60,6 +60,9 @@ export namespace svg {
         export const rename:   HTMLElement = document.getElementById("tool-back") as HTMLElement;
         export const settings: HTMLElement = document.getElementById("tool-back") as HTMLElement;
     }
+    export namespace misc {
+        export const rarrow: HTMLTemplateElement = document.getElementById('svg-misc-rarrow') as HTMLTemplateElement;
+    }
 }
 //}
 
@@ -80,5 +83,12 @@ export namespace CSSClass {
 
 // Symbol //{
 export const KDetailItem = Symbol("detailItem");
+export const KFilenameControl = Symbol("FilenameControl");
+//}
+
+// Regex //{
+export namespace Regex {
+    export const validPathname = /^\/([\w\-. ]+\/)*([\w\-. ]+)?$/;
+}
 //}
 
