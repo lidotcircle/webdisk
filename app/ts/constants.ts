@@ -1,7 +1,7 @@
 // General //{
 export const DISK_PREFIX = '/disk';
 //}
-//
+
 // Buttons //{
 export const login_confirm = document.getElementById("login-submit");
 export const login_reset   = document.getElementById("login-reset");
@@ -26,8 +26,8 @@ export namespace tool {
     export const address: HTMLElement     = document.getElementById("tool-address");
     export const upload: HTMLElement     = document.getElementById("tool-upload");
     export const back: HTMLElement     = document.getElementById("tool-back");
-    export const new_file: HTMLElement     = document.getElementById("tool-new-folder");
-    export const new_folder: HTMLElement     = document.getElementById("tool-new-file");
+    export const new_file: HTMLElement     = document.getElementById("tool-new-file");
+    export const new_folder: HTMLElement     = document.getElementById("tool-new-folder");
     export const copy: HTMLElement     = document.getElementById("tool-copy");
     export const cut:  HTMLElement     = document.getElementById("tool-cut");
     export const paste: HTMLElement    = document.getElementById("tool-paste");
@@ -89,6 +89,13 @@ export const KFilenameControl = Symbol("FilenameControl");
 // Regex //{
 export namespace Regex {
     export const validPathname = /^\/([\w\-. ]+\/)*([\w\-. ]+)?$/;
+}
+//}
+
+// Misc //{
+export namespace Misc {
+    export const BufferSize: number = 4096;
+    export const WindowSize: number = 100;
 }
 //}
 

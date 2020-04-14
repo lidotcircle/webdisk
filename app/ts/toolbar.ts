@@ -3,26 +3,27 @@ import * as global from './global_vars';
 import * as details from './details';
 import { debug } from './util';
 import * as controller from './controller';
+import * as util from './util';
 
 export function SetupTools() {
-    /** back parent directory */
+    /** back parent directory */ //{
     constants.tool.back.addEventListener("click", () => {
         global.Detail.Details.backDir().then(() => {
             debug("click back icon success");
         }, (err) => {
             debug("click back icon fail", err);
         });
-    });
+    }); //}
 
-    /** refresh */
+    /** refresh */ //{
     constants.tool.refresh.addEventListener("click", () => {
         global.Detail.Details.chdir(global.Detail.Details.cwd).then(() => {
         }, (err) => {
             debug("refresh error: ", err);
         });
-    });
+    }); //}
 
-    /** rename */
+    /** rename */ //{
     constants.tool.rename.addEventListener("click", () => {
         let vv = document.querySelectorAll(`.${constants.CSSClass.selected}`);
         if (vv.length != 1) {
@@ -44,9 +45,9 @@ export function SetupTools() {
             }
             constants.tool.refresh.dispatchEvent(new CustomEvent("click"));
         });
-    });
+    }); //}
 
-    /** delete selected files */
+    /** delete selected files */ //{
     constants.tool.del.addEventListener("click", () => {
         let vv = document.querySelectorAll(`.${constants.CSSClass.selected}`);
         let pp: Promise<any>[] = [];
@@ -62,9 +63,9 @@ export function SetupTools() {
             debug(err);
             // TODO inform failure
         });
-    });
+    }); //}
 
-    /** address bar */
+    /** address bar */ //{
     let address_bar = new controller.AddressBar(constants.CSSClass.hide_elem);
     constants.tool.address.appendChild(address_bar.Elem);
     address_bar.setAddr("/");
@@ -83,5 +84,53 @@ export function SetupTools() {
         });
     });
     global.Detail.Details.on("chdir", dir => address_bar.setAddr(dir));
-}
+    //}
 
+    /** new file */ //{
+    constants.tool.new_file.addEventListener("click", () => {
+        global.File.manager.newfile(global.Detail.Details.cwd, (err, msg) => {
+            let error = null;
+            try {
+                msg = JSON.parse(msg);
+            } catch (e) {error = e;}
+            let mm = msg["file"];
+            if(err || mm == null || error) {
+                // inform failure TODO
+                return;
+            }
+            global.Detail.Details.chdir(global.Detail.Details.cwd).then(() => {
+                let xx = global.Detail.Details.QueryItem(util.basename(mm));
+                let yy: controller.FilenameBar = xx.toHtmlElement()[constants.KFilenameControl];
+                debug(yy);
+                yy.editName();
+            }, (err) => {
+                debug(err);
+                // infor failure TODO
+            });
+        });
+    }); //}
+
+    /** new folder */ //{
+    constants.tool.new_folder.addEventListener("click", () => {
+        global.File.manager.newfolder(global.Detail.Details.cwd, (err, msg) => {
+            let error = null;
+            try {
+                msg = JSON.parse(msg);
+            } catch (e) {error = e;}
+            let mm = msg["dir"];
+            if(err || mm == null || error) {
+                // inform failure TODO
+                return;
+            }
+            global.Detail.Details.chdir(global.Detail.Details.cwd).then(() => {
+                let xx = global.Detail.Details.QueryItem(util.basename(mm));
+                let yy: controller.FilenameBar = xx.toHtmlElement()[constants.KFilenameControl];
+                debug(yy);
+                yy.editName();
+            }, (err) => {
+                debug(err);
+                // infor failure TODO
+            });
+        });
+    }); //}
+}

@@ -106,6 +106,7 @@ export class Detail extends event.EventEmitter//{
     private sortFunc: FileSortFunc;
     private reg_func: register.RegisterFunction;
     private fileManager: file_manager.FileManager;
+    private name2DetailItem: Map<string, DetailItem>;
 
     /**
      * @param {HTMLDivElement} elem which object be attached
@@ -124,6 +125,7 @@ export class Detail extends event.EventEmitter//{
         this.sortFunc = SortByName;
         this.reg_func = reg;
         this.fileManager = filemanager;
+        this.name2DetailItem = null;
     } //}
 
     private UpdateDetails(children: DetailItem[]): void //{
@@ -140,8 +142,10 @@ export class Detail extends event.EventEmitter//{
             if(this._order) return this.sortFunc(d1, d2);
             return this.sortFunc(d2, d1);
         });
+        this.name2DetailItem = new Map<string, DetailItem>();
         this.children.map( x => {
             x.on("change", (n, o) => this.emit("change", n, o));
+            this.name2DetailItem.set(x.Basename, x);
             let ee = x.toHtmlElement();
             this.reg_func(ee, this, x);
             this.attachElem.append(ee);
@@ -171,6 +175,8 @@ export class Detail extends event.EventEmitter//{
         this.sortFunc = f;
         this.reconstruct();
     } //}
+
+    QueryItem(basename: string): DetailItem {return this.name2DetailItem.get(basename);}
 
     get cwd() {return this.currentLoc;}
 

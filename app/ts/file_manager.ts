@@ -20,9 +20,17 @@ enum FileOpcode {
     TOUCH   = "touch",
     TRUNCATE = "truncate",
     WRITE   = "write",
+    UPLOAD = "upload",
+    UPLOAD_WRITE = "upload_write",
+    UPLOAD_MERGE = "upload_merge",
+    NEW_FOLDER = "new_folder",
+    NEW_FILE = "new_file"
 };
 
 type Success = {code: number, message: string};
+type FileEntry = {file: string};
+type DirectoryEntry = {dir: string};
+type RangesEntry = [number, number][];
 type FileOpCallback = (err: Error, data: any) => void;
 const minimum_retry_time = 100;
 /**
@@ -179,23 +187,35 @@ export class FileManager extends EventEmitter //{
             buf: hexbuf 
         }, cb);
     } //}
+    newfile(dir: string, cb: FileOpCallback = this.echoMsg) {this.operation(FileOpcode.NEW_FILE, {path: dir}, cb);}
+    newfolder(dir: string, cb: FileOpCallback = this.echoMsg) {this.operation(FileOpcode.NEW_FOLDER, {path: dir}, cb);}
+    upload(loc: string, size: number, cb: FileOpCallback = this.echoMsg){this.operation(FileOpcode.UPLOAD, {path: loc, size: size}, cb);}
+    upload_write(loc: string, buf: string, offset: number, cb: FileOpCallback = this.echoMsg){this.operation(FileOpcode.UPLOAD_WRITE, {path: loc, buf: buf, size: buf.length / 2, offset: offset}, cb);}
+    upload_merge(loc: string, size: number, cb: FileOpCallback = this.echoMsg){this.operation(FileOpcode.UPLOAD_MERGE, {path: loc, size: size}, cb);}
 
     async chmodP   (loc: string, mode: string): Promise<Success>{return promisify(this.chmod).call(this, loc, mode);}
     async copyP    (src: string, dst: string): Promise<Success> {return promisify(this.copy).call(this, src, dst);}
     async execP    (loc: string, argv: string[])                {return promisify(this.exec).call(this, loc, argv);}
     async getdirP  (loc: string): Promise<types.FileStat[][]>     {return promisify(this.getdir).call(this, loc);}
-    async mkdirP   (loc: string): Promise<Success>              {return promisify(this.mkdir).call(this, loc);}
+    async mkdirP   (loc: string): Promise<DirectoryEntry>              {return promisify(this.mkdir).call(this, loc);}
     async readP    (loc: string, offset: number, length: number): Promise<string> {
         return promisify(this.read).call(this, loc, offset, length);
     }
     async renameP  (src: string, dst: string): Promise<Success> {return promisify(this.rename).call(this, src, dst);}
     async removeP  (loc: string): Promise<Success>              {return promisify(this.remove).call(this, loc);}
     async statP    (loc: string): Promise<types.FileStat>       {return promisify(this.stat).call(this, loc);}
-    async touchP   (loc: string): Promise<Success>              {return promisify(this.touch).call(this, loc);}
+    async touchP   (loc: string): Promise<FileEntry>              {return promisify(this.touch).call(this, loc);}
     async truncateP(loc: string, len: number): Promise<Success> {return promisify(this.truncate).call(this, loc, len);}
     async writeP   (loc: string, offset: number, hex: string): Promise<Success> {
         return promisify(this.write).call(this, loc, offset, hex);
     }
+    async newfileP  (dir: string): Promise<FileEntry> {return promisify(this.newfile).call(this, dir);}
+    async newfolderP(dir: string): Promise<DirectoryEntry> {return promisify(this.newfolder).call(this, dir);}
+    async uploadP(loc: string, size: number): Promise<RangesEntry> {return promisify(this.upload).call(this, loc, size);}
+    async upload_writeP(loc: string, buf: string, offset: number): Promise<Success> {return promisify(this.upload_write).call(this, loc, buf, offset);}
+    async upload_mergeP(loc: string, size: number): Promise<Success> {return promisify(this.upload_mergeP).call(this, loc, size);}
+
+ 
 
     reset(ws: WebSocket, retryOnClose: boolean = false) {
         this.connection = ws;

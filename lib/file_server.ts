@@ -345,7 +345,8 @@ class FileControlSession //{
         if (!util.isString(msg["path"]) || !loc.startsWith("/"))
             return this.sendfail(reqid, StatusCode.BAD_ARGUMENTS);
         let dir: string = path.resolve(this.user.DocRoot, loc.substring(1));
-        fs.mkdir(dir, {recursive: true}, (err, path) => {
+        fs.mkdir(dir, {recursive: true}, (err, path_) => {
+            console.log(err, dir);
             if(err) this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
             else this.sendsuccess(reqid, StatusCode.SUCCESS, JSON.stringify({dir: dir}, null, 1));
         });
@@ -457,7 +458,9 @@ class FileControlSession //{
         let dir: string = path.resolve(this.user.DocRoot, loc.substring(1));
         let cur = new Date();
         fs.open(dir, "a" , (err, fd) => {
+            console.log(err);
             if(err) return this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
+            console.log(msg);
             fs.futimes(fd, cur, cur, (err) => {
                 if(err) return this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
                 fs.close(fd, (err) => {if (err) debug(`close file [${dir}] error`);});
@@ -513,13 +516,13 @@ class FileControlSession //{
             let k = files.indexOf(constants.NEW_FILE_PREFIX);
             let ffname;
             if (k < 0) {
-                ffname = path.join(path_, constants.NEW_FILE_PREFIX);
+                ffname = path.join(loc, constants.NEW_FILE_PREFIX);
             } else {
                 for(let i = 0; i<constants.MAX_NEW_EXISTS; i++) {
                     let testname = constants.NEW_FILE_PREFIX + i.toString();
                     let m = files.indexOf(testname);
                     if(m < 0) {
-                        ffname = path.join(path_, testname);
+                        ffname = path.join(loc, testname);
                         break;
                     }
                 }
@@ -542,13 +545,13 @@ class FileControlSession //{
             let k = files.indexOf(constants.NEW_FOLDER_PREFIX);
             let ffname;
             if (k < 0) {
-                ffname = path.join(path_, constants.NEW_FOLDER_PREFIX);
+                ffname = path.join(loc, constants.NEW_FOLDER_PREFIX);
             } else {
                 for(let i = 0; i<constants.MAX_NEW_EXISTS; i++) {
                     let testname = constants.NEW_FOLDER_PREFIX + i.toString();
                     let m = files.indexOf(testname);
                     if(m < 0) {
-                        ffname = path.join(path_, testname);
+                        ffname = path.join(loc, testname);
                         break;
                     }
                 }
@@ -669,6 +672,12 @@ class FileControlSession //{
             /** @property {string}   what["path"] *
              *  @property {string[]} what["args"] */
             case FileOpcode.EXECUTE: this.op_exec(what); break;
+
+            /** @property {string} what["path"] */
+            case FileOpcode.NEW_FILE: this.op_newfile(what); break;
+
+            /** @property {string} what["path"] */
+            case FileOpcode.NEW_FOLDER: this.op_newfolder(what); break;
 
             case FileOpcode.READ: this.op_read(what); break;
             case FileOpcode.WRITE: this.op_write(what); break;
