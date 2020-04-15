@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as proc from 'process';
 import * as os from 'os';
+import * as annautils from 'annautils';
 
 
 /**
@@ -35,10 +36,16 @@ export class UploadMap //{
         });
     } //}
 
-    untrack(username: string, filename: string) {this.entries.delete(username + filename);}
+    untrack(username: string, filename: string) {
+        let x = this.entries.get(username + filename);
+        this.entries.delete(username + filename);
+        if(x) annautils.fs.removeRecusive(x.dir, (err) => {});
+    }
 } //}
 
 
+/** writeback frequency */
+export const WBFrequency = 8;
 /** helper function to sort list of ranges */
 function ranges_sort(a: [number, number], b: [number, number]) {return a[0] <= b[0] ? -1 : 1;}
 /**
@@ -49,6 +56,7 @@ export class UploadEntry //{
     private tempdir: string;
     private filesize: number;
     private uploadedRanges: [number, number][];
+    private loop_write: number;
 
     /**
      * after construte new object, the NeedRanges() method should be called
@@ -60,6 +68,7 @@ export class UploadEntry //{
         this.tempdir = tempdir;
         this.filesize = filesize;
         this.uploadedRanges = null;
+        this.loop_write = 0;
     } //}
 
     /**
@@ -75,7 +84,7 @@ export class UploadEntry //{
             if(v[0] > currentMax)
                 result.push([currentMax, v[0] - 1]);
             if (v[1] > currentMax)
-                currentMax = v[1];
+                currentMax = v[1] + 1;
         }
         if (currentMax < this.filesize)
             result.push([currentMax, this.filesize - 1]);
@@ -124,6 +133,13 @@ export class UploadEntry //{
             fs.write(fd, buf, 0, buf.length, 0, (err) => {
                 if(err) return cb(err);
                 fs.close(fd, (err) => {
+                    this.uploadedRanges.push(ranges);
+                    this.loop_write++;
+                    this.loop_write %= WBFrequency;
+                    if(this.loop_write == 0) {
+                        this.WriteBack((err) => {
+                        });
+                    }
                     return cb(err);
                 });
             });
@@ -152,7 +168,7 @@ export class UploadEntry //{
      */
     MergeTo(file: string, cb: (err) => void) //{
     {
-        if(this.uploadedRanges == null || this.__get_ranges.length != 0) cb(new Error("doesn't complete"));
+        if(this.uploadedRanges == null || this.__get_ranges().length != 0) cb(new Error("doesn't complete"));
         fs.open(file, "w", (err, fd) => {
             if (err) return cb(err);
             let currentMax = 0;
@@ -168,7 +184,7 @@ export class UploadEntry //{
                 }
                 let v = this.uploadedRanges[i];
                 if(v[1] < currentMax) return func();
-                fs.open(path.join(this.tempdir, v[0].toString(), "-", v[1].toString()), "r", (err, ffd) => {
+                fs.open(path.join(this.tempdir, `${v[0].toString()}-${v[1].toString()}`), "r", (err, ffd) => {
                     if(err) return cb(err);
                     let startPosition = currentMax - v[0];
                     let length = v[1] - currentMax + 1;
@@ -196,5 +212,7 @@ export class UploadEntry //{
     full(): boolean {return this.__get_ranges().length == 0;}
 
     get FileSize(): number {return this.filesize;} 
+
+    get dir(): string {return this.tempdir;}
 } //}
 

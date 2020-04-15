@@ -89,29 +89,37 @@ function formWsHeader(options: {
 /** Only useful to indicate a buffer just begin of complete websocket frame */
 class FrameNotComplete {}
 
+type ReservedBits = [boolean, boolean, boolean];
 /**
  * Doesn't support integer great than 2**51 - 2, namely BitInt type
  * @param   {Buffer} buffer is recieved from tcp socket
- * @returns {[boolean, number, Buffer, Buffer]} [FIN, opcode, message, remained_buffer] buffers that return from this function 
- *                                              references same memory location of origin buffer
+ * @returns {[boolean, number, Buffer, ReservedBits, Buffer]} [FIN, opcode, message, remained_buffer]
+ *          buffers that return from this function references same memory location of origin buffer
  * @exception {Error} when throwing an Error, mean message is broken, and the sever shold abort connection
  * @exception {FrameNotComplete} when frame isn't complete, throw an FrameNotComplete. 
  */                                       
-function extractFromFrame(buffer: Buffer): [boolean, WebsocketOPCode, Buffer, Buffer] //{
+function extractFromFrame(buffer: Buffer): [boolean, WebsocketOPCode, Buffer, ReservedBits, Buffer] //{
 {
     if (buffer.length < 2) throw new FrameNotComplete();
     let FIN: boolean = (buffer.readUInt8(0) & 0x80) == 0x80;
     let opcode: number = (buffer.readUInt8(0) & 0x7f);
-    if (!FIN && (opcode & 0x08) != 0)
-        throw new Error("control frame can't be fragmented");
-    if ((buffer.readUInt8(0) & 0x70) != 0) {
-        throw new Error(`broken frame, first bytes ${buffer.readUInt8(0).toString(2)}`);
+    if (!FIN) {
+        let xx = Buffer.alloc(20);
+        buffer.copy(xx, 0, 0, 20);
+    } else {
+        let xx = Buffer.alloc(20);
+        buffer.copy(xx, 0, 0, 20);
     }
-    console.log(buffer.readUInt8(0).toString(2));
-    console.log(buffer.readUInt8(1).toString(2));
+    if (!FIN && (opcode & 0x08) != 0) {
+        throw new ControlFrameFragmentation();
+    }
+    let reserved: ReservedBits = [false, false, false];
+    if ((buffer.readUInt8(0) & 0x40) != 0) reserved[0] = true; // leave reserved bits
+    if ((buffer.readUInt8(0) & 0x20) != 0) reserved[1] = true;
+    if ((buffer.readUInt8(0) & 0x10) != 0) reserved[2] = true;
     let Masked: boolean = (buffer.readUInt8(1) & 0x80) == 0x80;
     if (Masked == false) {
-        throw new Error("protocol error, frames send by client should be masked"); // TODO close connection with 1002
+        throw new ClientNotMask(); // TODO close connection with 1002
     }
     let payloadOffset: number = 2;
     let len: number = buffer.readUInt8(1) & 0x7f;
@@ -129,7 +137,7 @@ function extractFromFrame(buffer: Buffer): [boolean, WebsocketOPCode, Buffer, Bu
             if (l1 != 0) {
                 throw new Error("number out of range");
             }
-            len = buffer.readUInt32BE(4);
+            len = buffer.readUInt32BE(6);
         }
     }
     let mask: Uint8Array = null;
@@ -146,7 +154,7 @@ function extractFromFrame(buffer: Buffer): [boolean, WebsocketOPCode, Buffer, Bu
             buffer.writeUInt8(buffer.readUInt8(i) ^ mask[j], i);
         }
     }
-    return [FIN, opcode, buffer.slice(payloadOffset, payloadOffset + len), buffer.slice(payloadOffset + len)];
+    return [FIN, opcode, buffer.slice(payloadOffset, payloadOffset + len), reserved, buffer.slice(payloadOffset + len)];
 } //}
 
 /**
@@ -154,19 +162,21 @@ function extractFromFrame(buffer: Buffer): [boolean, WebsocketOPCode, Buffer, Bu
  * @return {[boolean[], WebsocketOPCode[], Buffer[], Buffer]}
  * @exception {Error} when throwing an Error, mean message is broken, and the sever shold abort connection
  */
-function extractFromFrameMulti(buffer: Buffer): [boolean[], WebsocketOPCode[], Buffer[], Buffer] //{
+function extractFromFrameMulti(buffer: Buffer): [boolean[], WebsocketOPCode[], Buffer[], ReservedBits[], Buffer] //{
 {
     let fins: boolean[] = [];
     let opcodes: WebsocketOPCode[] = [];
     let buffers: Buffer[] = [];
     let remain: Buffer = buffer;
+    let reserveds: ReservedBits[] = [];
     while (remain.length >= 2) {
         try {
-            let [x, a, b, c] = extractFromFrame(remain);
+            let [x, a, b, c, d] = extractFromFrame(remain);
             fins.push(x);
             opcodes.push(a);
             buffers.push(b);
-            remain = c;
+            reserveds.push(c);
+            remain = d;
         } catch (err){
             if(err instanceof FrameNotComplete)
                 break;
@@ -174,9 +184,26 @@ function extractFromFrameMulti(buffer: Buffer): [boolean[], WebsocketOPCode[], B
                 throw err;
         }
     }
-    return [fins, opcodes ,buffers, remain];
+    return [fins, opcodes ,buffers, reserveds, remain];
 }//}
 
+
+/** Websocket Errors */
+class WebsocketError extends Error {
+    constructor(msg: string = "websocket raise error") {
+        super(msg);
+    }
+}
+class ClientNotMask extends WebsocketError {
+    constructor(msg: string = "client doesn't mask message") {
+        super(msg);
+    }
+}
+class ControlFrameFragmentation extends WebsocketError {
+    constructor(msg: string = "fragment the control frame is illegal") {
+        super(msg);
+    }
+}
 
 /**
  * A partial implementation of websocket in server.
@@ -188,7 +215,10 @@ function extractFromFrameMulti(buffer: Buffer): [boolean[], WebsocketOPCode[], B
  *     @param (msg: Buffer | string)
  * @event frame
  *     @fires recieve a frame
- *     @param (fra: Buffer | string, opcode: WebsocketOpcode, FIN: boolean) 
+ *     @param (FIN: boolean, reserved: ReservedBits, opcode: WebsocketOpcode fra: Buffer | string)
+ * @event reserve
+ *     @fires recieve a frame whose opcode is reserve
+ *     @param (FIN: boolean, reserved: ReservedBits, opcode: WebsocketOpcode fra: Buffer | string)
  * @event error
  *     @fires something wrong has happend, underlying socket error and websocket header error
  *     @param (err: Error)
@@ -210,20 +240,27 @@ function extractFromFrameMulti(buffer: Buffer): [boolean[], WebsocketOPCode[], B
  *     @fires underlying tcp socket is closed
  *     @param (clean: boolean) indicates whether websocket is closed cleanly
  */
-export class WebsocketM extends event.EventEmitter {
+export class WebsocketM extends event.EventEmitter //{
+{
+    /**
+     * @property {boolean} closed used for safely closing websocket connection
+     */
     private underlyingsocket: net.Socket;
     private partialframe:   Buffer;
     private framedata: Buffer;
-    private framedata_binary: boolean;
+    private framedata_opc: WebsocketOPCode;
     private recieve_close: boolean;
     private state: WebsocketState;
     private clean_close: boolean;
+    private buffer_fragment: boolean;
+    private closed: boolean;
 
     /**
      * @constructor
      * @param {net.Socket} socket underlying socket
+     * @param {boolean} bufferFragment whether buffer fragmented message
     */
-    constructor(socket: net.Socket) //{
+    constructor(socket: net.Socket, bufferFragment: boolean = true) //{
     {
         super();
         this.underlyingsocket = socket;
@@ -232,7 +269,9 @@ export class WebsocketM extends event.EventEmitter {
         this.recieve_close = false;
         this.state = WebsocketState.OPEN;
         this.clean_close = false;
-        this.framedata_binary = null;
+        this.framedata_opc = null;
+        this.buffer_fragment = bufferFragment;
+        this.closed = false;
 
         this.underlyingsocket.on("data", this.ondata.bind(this));
         this.underlyingsocket.on("error", this.onerror.bind(this));
@@ -247,57 +286,68 @@ export class WebsocketM extends event.EventEmitter {
     private ondata(data: Buffer) //{
     {
         let buf: Buffer;
-        if(this.partialframe != null)
+        if(this.partialframe != null) {
             buf = Buffer.concat([this.partialframe, data]);
-        else
+            this.partialframe = null;
+        } else {
             buf = data;
-        let fins: boolean[], opcs: WebsocketOPCode[], msgs: Buffer[], remain: Buffer;
+        }
+        let fins: boolean[], opcs: WebsocketOPCode[], msgs: Buffer[], reserveds: ReservedBits[], remain: Buffer;
         try {
-            [fins, opcs, msgs, remain] = extractFromFrameMulti(buf);
+            [fins, opcs, msgs, reserveds, remain] = extractFromFrameMulti(buf);
         } catch (err) {
             this.emit("error", err);
+            if(err instanceof ClientNotMask) {
+                this.safe_close(1002); // protocol error
+            } else if (err instanceof ControlFrameFragmentation) {
+                this.safe_close(1002); // protocol error
+            } else {
+                this.safe_close();
+            }
             return;
         }
-        if (remain.length != 0)
+        if (remain.length != 0) {
             this.partialframe = remain;
-        for(let i = 0; i < msgs.length; i++) {
-            let fin = fins.pop();
-            let opc = opcs.pop();
-            let msg = msgs.pop();
-            debug(JSON.stringify({
+        }
+        let len = msgs.length;
+        for(let i = 0; i < len; i++) {
+            let fin = fins.shift();
+            let opc = opcs.shift();
+            let msg = msgs.shift();
+            let res = reserveds.shift();
+            debug(false, JSON.stringify({
                 opc: opc,
                 fin: fin,
                 msglen: msg.length,
             }, null, 1));
             switch(opc) {
                 case WebsocketOPCode.Binary:
-                case WebsocketOPCode.Text:    // control frame can't be fragmented
-                    if (this.framedata != null) {
-                        if (opc != (this.framedata_binary ? WebsocketOPCode.Binary : WebsocketOPCode.Text)) {
-                            this.emit("error", new Error("unexcept frame"));
-                            return;
-                        }
-                    }
-                    if (this.framedata != null)
-                        this.framedata = Buffer.concat([this.framedata, msg]);
-                    else
-                        this.framedata = Buffer.from(msg);
-                    this.emit("frame", fin, msg, opc);
+                case WebsocketOPCode.Text:
+                    this.emit("frame", fin, res, opc, msg);
                     if (fin) {
-                        console.log(fin);
                         let mmm: Buffer | string;
                         if (opc == WebsocketOPCode.Text)
-                            mmm = this.framedata.toString("utf8");
+                            mmm = msg.toString("utf8");
                         else
-                            mmm = this.framedata;
+                            mmm = msg;
                         this.emit("message", mmm);
-                        this.framedata = null;
+                    } else {
+                        if (this.buffer_fragment) {
+                            if (this.framedata != null) {
+                                this.emit("error", new Error("fragments interleave"));
+                                this.safe_close(1002); // protocol error
+                            } else {
+                                this.framedata = msg;
+                                this.framedata_opc = opc;
+                            }
+                        }
                     }
                     break;
                 case WebsocketOPCode.Close:
                     if(this.recieve_close) {
                         this.emit("error", new Error("double close from client"));
-                        return;
+                        this.safe_close(1006); // abnormal closure
+                        break;
                     }
                     this.recieve_close = true;
                     if (this.state == WebsocketState.CLOSING) {
@@ -313,10 +363,17 @@ export class WebsocketM extends event.EventEmitter {
                     if (msg.length > 0) {
                         statusCode = msg.readInt16BE(0);
                         if (msg.length > 2) {
-                            if (msg.length == 3) return this.emit("error", new Error("frame format error"));
+                            if (msg.length == 3) {
+                                this.emit("error", new Error("frame format error"));
+                                this.safe_close(1007); // invalid frame payload data
+                                break;
+                            }
                             let reason_length = msg.readInt16BE(2);
-                            if (msg.length != 4 + reason_length) 
-                                return this.emit("error", new Error("frame format error"));
+                            if (msg.length != 4 + reason_length) {
+                                this.emit("error", new Error("frame format error"));
+                                this.safe_close(1007); // invalid frame payload data
+                                break;
+                            }
                             let reason = msg.slice(4, 0);
                         }
                     }
@@ -328,8 +385,29 @@ export class WebsocketM extends event.EventEmitter {
                 case WebsocketOPCode.Pong:
                     this.emit("pong", msg);
                     break;
+                case WebsocketOPCode.Continue:
+                    this.emit("frame", fin, res, opc, msg);
+                    if(!this.buffer_fragment) {
+                        break;
+                    }
+                    if(this.framedata == null) {
+                        this.emit("error", new Error("unexpect continuation frame"));
+                        this.safe_close(1002); // protocol error
+                        break;
+                    }
+                    this.framedata = Buffer.concat([this.framedata, msg]);
+                    if(fin) {
+                        let mmm: Buffer | string;
+                        if (this.framedata_opc == WebsocketOPCode.Text)
+                            mmm = this.framedata.toString("utf8");
+                        else
+                            mmm = this.framedata;
+                        this.framedata = null;
+                        this.emit("message", mmm);
+                    }
+                    break;
                 default:
-                    this.emit("reserved", msg, opc, fin);
+                    this.emit("reserved", fin, res, opc, msg);
                     break;
             }
         }
@@ -457,7 +535,10 @@ export class WebsocketM extends event.EventEmitter {
     close(statusCode?: number, reason?: Buffer | string): void //{
     {
         this.__clean_close();
-        if (reason != null && statusCode == null) this.emit("error", new Error("argument error"));
+        if (reason != null && statusCode == null) {
+            this.emit("error", new Error("argument error"));
+            this.safe_close(1011); // internal server error
+        }
         let msg: Buffer = null;
         let msg_len: number = 0;
         let reason_x: Buffer = null;
@@ -479,6 +560,16 @@ export class WebsocketM extends event.EventEmitter {
             payload_len: msg ? msg.length : 0,
             opcode: WebsocketOPCode.Close
         });
+        this.closed = true;
         this.underlyingsocket.write(msg != null ? Buffer.concat([header, msg]) : header);
+    } //}
+
+    /** @see close() */
+    private safe_close(statusCode?: number, reason?: Buffer | string) //{
+    {
+        if(this.closed) return;
+        proc.nextTick(() => {
+            proc.nextTick(() => this.close(statusCode, reason));
+        });
     } //}
 } //}

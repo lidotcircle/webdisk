@@ -606,6 +606,7 @@ class FileControlSession //{
             if(err) return this.sendfail(reqid, StatusCode.FAIL, err.message.toString());
             mm.MergeTo(dir, (err) => {
                 if(err) return this.sendfail(reqid, StatusCode.FAIL, err.message.toString());
+                constants.UserUploadMaps.untrack(this.user.UserName, dir);
                 this.sendsuccess(reqid);
             });
         });
@@ -619,7 +620,6 @@ class FileControlSession //{
         try {
             what = JSON.parse(msg as string);
         } catch (err) {
-            debug(err);
             return this.sendfail("", StatusCode.DENIED, err.message);
         }
         let opc: FileOpcode = what["opcode"];

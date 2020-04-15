@@ -40,6 +40,7 @@ const logger = winston.createLogger({
 
 export function debug(...msg)
 {
+    if (msg[0] == false) return;
     let caller = getCaller();
     let mmm = caller[0] ? `[${caller[1]} (${caller[0]})]: ` : `[${caller[1]}]: `;
     console.debug(mmm, msg);

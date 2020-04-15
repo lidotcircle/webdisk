@@ -206,7 +206,7 @@ export class UploadSession extends events.EventEmitter //{
         let HAS_top = -1; // HAS_top + 1 to HAS_TOP + WindowSize should be in HAS or IN State
         while(HAS_top < plan.length - 1) {
             if(this.currentTask[2].cancel) throw new Error("cancel");
-            for(let i = HAS_top + 1; i<HAS_top + constants.Misc.WindowSize && i<plan.length; i++) {
+            for(let i = HAS_top + 1; i<=HAS_top + constants.Misc.WindowSize && i<plan.length; i++) {
                 if(sended[i] != SliceState.NO) continue;
                 promises[i] = this.send_slice(f.slice(plan[i][0], plan[i][1] + 1), plan[i][0], p, f.size).then(() => {
                     sended[i] = SliceState.HAS;
@@ -228,7 +228,7 @@ export class UploadSession extends events.EventEmitter //{
                 });
             }
             let wait: Promise<void>[] = [];
-            for(let i = 0; i<constants.Misc.WindowSize && i<plan.length; i++)
+            for(let i = HAS_top + 1; i<=constants.Misc.WindowSize + HAS_top && i<plan.length; i++)
                 if(promises[i] != null) wait.push(promises[i]);
             await Promise.race(wait);
         }

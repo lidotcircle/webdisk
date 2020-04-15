@@ -94,8 +94,8 @@ export namespace Regex {
 
 // Misc //{
 export namespace Misc {
-    export const BufferSize: number = 4096;
-    export const WindowSize: number = 100;
+    export const BufferSize: number = 1024 * 1024;
+    export const WindowSize: number = 8;
 }
 //}
 
