@@ -2,6 +2,7 @@ import * as constants from './constants';
 import * as details from './details';
 import * as register from './register';
 import * as file_manager from './file_manager';
+import * as upload from './upload';
 
 export namespace Detail {
     export let Details: details.Detail = null;
@@ -14,4 +15,8 @@ export namespace WS {
 
 export namespace File {
     export let manager: file_manager.FileManager = null;
+};
+
+export namespace Upload {
+    export let upload: upload.UploadSession = null;
 };

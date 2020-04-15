@@ -93,10 +93,10 @@ export function BufferToHex(buf: ArrayBuffer): string //{
     let u8buf: Uint8Array = new Uint8Array(buf);
     for(let i = 0; i < u8buf.length; i++) {
         let c = u8buf[i];
-        let c1 = c & 0xF0;
-        let c2 = c & 0xFF;
-        ret.push(HEX_MAP[c1]);
-        ret.push(HEX_MAP[c2]);
+        let c1 = (c & 0xF0) >> 4;
+        let c2 = c & 0x0F;
+        ret.push(HEX_MAP.charAt(c1));
+        ret.push(HEX_MAP.charAt(c2));
     }
     return ret.join("");
 } //}
@@ -105,7 +105,7 @@ export function HexToBuffer(hex: string): ArrayBuffer //{
     if (hex.length % 2 != 0) throw new Error("bad encode");
     let ret = new Uint8Array(hex.length / 2);
     for(let i = 0; i<ret.length; i++) {
-        let x1 = REV_HEX_MAP[hex.charAt( 2 * i )];
+        let x1 = REV_HEX_MAP[hex.charAt( 2 * i )] << 4;
         let x2 = REV_HEX_MAP[hex.charAt( 2 * i + 1)];
         if (x1 == null || x2 == null)
             throw new Error("bad encode");
@@ -124,7 +124,7 @@ export function promisify(original) //{
                 if (err) {
                     return reject(err);
                 }
-                if(values && values.length > 0) resolve(values);
+                if(values && values.length > 0) resolve(...values);
                 resolve();
             });
         });

@@ -4,7 +4,7 @@
 
 import { debug } from './util';
 
-import * as global from './global_vars';
+import * as gvar from './global_vars';
 import * as constants from './constants';
 import * as details from './details';
 import * as util from './util';
@@ -29,25 +29,38 @@ export function form_multi_functions(funcs: RegisterFunction[]) //{
  */
 export function upload(elem: HTMLElement, dt: details.Detail, dti: details.DetailItem): void //{
 {
+    /*
     elem.addEventListener("dragleave", (ee: CustomEvent) => {
-        ee.stopPropagation();
-        ee.preventDefault();
-        console.log("being draged", ee);
+//        ee.stopPropagation();
+//        ee.preventDefault();
+//        console.log("being draged leave");
     });
     elem.addEventListener("dragstart", (ee: CustomEvent) => {
-        console.log("being draged start", ee);
+//        console.log("being draged start");
     });
     elem.addEventListener("dragend", (ee: CustomEvent) => {
-        console.log("being draged end", ee);
+//        console.log("being draged end");
     });
+    */
     elem.addEventListener("dragover", (ee: CustomEvent) => {
         ee.stopPropagation();
         ee.preventDefault();
+//        console.log("being draged over");
     });
     elem.addEventListener("drop", (ee: DragEvent) => {
         ee.stopPropagation();
         ee.preventDefault();
-        let mm = ee.dataTransfer.items[0].webkitGetAsEntry();
+        let di = elem[constants.KDetailItem] as details.DetailItem;
+        if(di.Stat.type != types.FileType.dir) {
+            debug("drop should only support directory");
+            return;
+        }
+        for(let i=0; i<ee.dataTransfer.items.length; i++) {
+            let x = ee.dataTransfer.items[i].webkitGetAsEntry();
+            if (x.isFile || x.isDirectory) { // FileSystemEntry
+                gvar.Upload.upload.newTask(x, di.Stat.filename);
+            }
+        }
     });
 } //}
 

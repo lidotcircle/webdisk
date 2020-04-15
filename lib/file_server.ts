@@ -235,7 +235,8 @@ class FileControlSession //{
      * @param {net.Socket} socket upgrade http socket
      * @param {config.User} user  this session belong to the user
      */
-    constructor(socket: net.Socket, user: config.User) {
+    constructor(socket: net.Socket, user: config.User) //{
+    {
         this.websocket = new WebsocketM(socket);
         this.user = user;
         this.current_loc = null;
@@ -259,12 +260,14 @@ class FileControlSession //{
         this.websocket.on("end", () => {
             this.websocket.close();
         });
-    }
+    } //}
 
-    private send(msg, cb?: (err: Error) => void) {
+    /** avoid using the function directly in responding request */
+    private send(msg, cb?: (err: Error) => void) //{
+    {
         if(this.invalid) return;
         this.websocket.send(msg, cb);
-    }
+    } //}
 
     private op_chmod (msg) //{
     {
@@ -306,14 +309,7 @@ class FileControlSession //{
         path__ = path.resolve(this.user.DocRoot, path__.substring(1));
         child_proc.execFile(path__, argv__, (err, stdout, stderr) => {
             if(err) return this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
-            this.send(JSON.stringify({
-                id: reqid,
-                msg: {
-                    stdout: stdout,
-                    stderr: stderr
-                },
-                error: false
-            }, null, 1));
+            this.sendsuccess(reqid, StatusCode.SUCCESS, {stdout: stdout, stderr: stderr});
         });
     } //}
     /** get stat of files under specified directory, the result also includes the directory */
@@ -346,9 +342,8 @@ class FileControlSession //{
             return this.sendfail(reqid, StatusCode.BAD_ARGUMENTS);
         let dir: string = path.resolve(this.user.DocRoot, loc.substring(1));
         fs.mkdir(dir, {recursive: true}, (err, path_) => {
-            console.log(err, dir);
             if(err) this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
-            else this.sendsuccess(reqid, StatusCode.SUCCESS, JSON.stringify({dir: dir}, null, 1));
+            else this.sendsuccess(reqid, StatusCode.SUCCESS, {dir: dir});
         });
     } //}
     /** read partial content of file */
@@ -374,12 +369,11 @@ class FileControlSession //{
                 if(n == length)
                     bb = buf;
                 else {
-                    console.log("asdf", n);
                     bb = Buffer.alloc(n);
                     buf.copy(bb, 0, 0, n);
                 }
                 // Due to simplicity using hex, but double the traffic, FIXME
-                return this.send(JSON.stringify({id: reqid, msg: bb.toString("hex"), error: false}, null, 1));
+                this.sendsuccess(reqid, StatusCode.SUCCESS, bb.toString("hex"));
             });
         });
     } //}
@@ -441,11 +435,7 @@ class FileControlSession //{
             } else {
                 stats["type"] = "unknown";
             }
-            this.send(JSON.stringify({
-                id: reqid,
-                error: false,
-                msg: stats
-            }, null, 1));
+            this.sendsuccess(reqid, StatusCode.SUCCESS, stats);
         });
     } //}
     /** similar with [touch] */
@@ -458,13 +448,11 @@ class FileControlSession //{
         let dir: string = path.resolve(this.user.DocRoot, loc.substring(1));
         let cur = new Date();
         fs.open(dir, "a" , (err, fd) => {
-            console.log(err);
             if(err) return this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
-            console.log(msg);
             fs.futimes(fd, cur, cur, (err) => {
                 if(err) return this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
                 fs.close(fd, (err) => {if (err) debug(`close file [${dir}] error`);});
-                return this.sendsuccess(reqid, StatusCode.SUCCESS, JSON.stringify({file: dir}, null, 1));
+                return this.sendsuccess(reqid, StatusCode.SUCCESS, {file: dir});
             });
         });
     } //}
@@ -577,7 +565,7 @@ class FileControlSession //{
                 if(err) return this.sendfail(reqid, StatusCode.FAIL, err.message.toString());
                 entry.NeedRanges((err, ranges) => {
                     if(err) return this.sendfail(reqid, StatusCode.FAIL, err.message.toString());
-                    return this.sendsuccess(reqid, StatusCode.SUCCESS, JSON.stringify(ranges, null, 1));
+                    return this.sendsuccess(reqid, StatusCode.SUCCESS, ranges);
                 });
             });
         });
@@ -623,14 +611,16 @@ class FileControlSession //{
         });
     } //}
 
+    /** message dispatcher, dispatch message base on opcode */
     private onmessage(msg: Buffer | string) //{
     {
         if(this.invalid) return;
         let what;
         try {
             what = JSON.parse(msg as string);
-        } catch (err){
-            this.send(err.toString());
+        } catch (err) {
+            debug(err);
+            return this.sendfail("", StatusCode.DENIED, err.message);
         }
         let opc: FileOpcode = what["opcode"];
         let reqid: string   = what["id"];
@@ -682,20 +672,38 @@ class FileControlSession //{
             case FileOpcode.READ: this.op_read(what); break;
             case FileOpcode.WRITE: this.op_write(what); break;
 
+            case FileOpcode.UPLOAD: this.op_upload(what); break;
+            case FileOpcode.UPLOAD_WRITE: this.on_upload_write(what); break;
+            case FileOpcode.UPLOAD_MERGE: this.on_upload_merge(what); break;
+
             case FileOpcode.INVALID:
                 debug(`get error request ${what["opcode"]}`);
                 return this.sendfail(reqid, StatusCode.BAD_OPCODE);
         } //}
     } //}
 
-    private sendfail(id: string, code: StatusCode = StatusCode.FAIL, reason: string = null) {
-        let msg = {id: id, msg: reason ? {message: reason, code: code} : statusCodeToJSON(code), error: true};
-        this.send(JSON.stringify(msg, null, 1));
-    }
+    /**
+     * response client with error
+     * @param {string} id the request id
+     * @param {StatusCode} code indicate error
+     * @param {string} reason error message
+     */
+    private sendfail(id: string, code: StatusCode = StatusCode.FAIL, reason: string = null) //{
+    {
+        let sendM = {id: id, msg: reason ? {message: reason, code: code} : statusCodeToJSON(code), error: true};
+        this.send(JSON.stringify(sendM, null, 1));
+    } //}
 
-    private sendsuccess(id: string, code: StatusCode = StatusCode.SUCCESS, reason: string = null) {
-        let msg = {id: id, msg: reason ? reason : statusCodeToJSON(code), error: false};
-        this.send(JSON.stringify(msg, null, 1));
-    }
+    /**
+     * response client with success
+     * @param {string} id the request id
+     * @param {StatusCode} code should be success
+     * @param {any} data an object can be JSON.stringify
+     */
+    private sendsuccess(id: string, code: StatusCode = StatusCode.SUCCESS, data: any = null) //{
+    {
+        let sendM = {id: id, msg: data ? data : statusCodeToJSON(code), error: false};
+        this.send(JSON.stringify(sendM, null, 1));
+    } //}
 } //}
 

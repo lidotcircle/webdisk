@@ -11,12 +11,14 @@ import * as util from './util';
 import * as websocket from './websocket';
 import * as detail from './details';
 import * as fm from './file_manager';
+import * as upload from './upload';
 import * as toolbar from './toolbar';
 
 // init
 websocket.SetupWS();
 fm.SetupFM();
 detail.SetupDetail();
+upload.SetupUpload();
 register.SetupReg();
 toolbar.SetupTools();
 

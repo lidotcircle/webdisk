@@ -122,13 +122,31 @@ export class FileManager extends EventEmitter //{
     private valid(): boolean {return this.connection && (this.connection.readyState != WebSocket.CLOSED);}
     private newid(): string  {return util.makeid(16);}
 
-    private onmessage(msg: MessageEvent): void //{
+    /**
+     * The type of message data is string or buffer, if it is string, 
+     * it should be a json string in such format {
+     *     id: string, 
+     *     msg: JSONMsg, 
+     *     error: boolean
+     * }
+     * When JSON.parse the string raise an error or parsed message doesn't contains
+     * above fields, just abort this message and emit an parseError event with original
+     * message as first parameter.
+     * If the error field is true, then the msg should be {code: number, reason: string} format,
+     * otherwise the msg depends on the opcode.
+     * @param {MessageEvent} msge message recieved from websocket
+     */
+    private onmessage(msge: MessageEvent): void //{
     {
-        let data = msg.data;
+        let data = msge.data;
         let parsed_msg;
         try {
             parsed_msg = JSON.parse(data);
         } catch (err) {
+            this.emit("parseError", data);
+            return;
+        }
+        if (parsed_msg["id"] == null || parsed_msg["msg"] == null || parsed_msg["error"] == null) {
             this.emit("parseError", data);
             return;
         }
@@ -142,7 +160,10 @@ export class FileManager extends EventEmitter //{
         if(xx[0] == FileOpcode.INVALID) // operation timeout
             return;
         if (xx[1] == null) return;
-        xx[1].apply(null, [parsed_msg["error"] ? new Error((parsed_msg["msg"] && parsed_msg["msg"]["message"]) || "request error") : null, parsed_msg["msg"]]);
+        let err: Error;
+        if(parsed_msg["error"])
+            err = new Error(parsed_msg["msg"]["message"] || "Request error, server doesn't provide reason");
+        xx[1].call(null, err, parsed_msg["msg"]);
     } //}
 
     private operation(opcode: FileOpcode, req: any, cb: FileOpCallback) //{
@@ -190,13 +211,13 @@ export class FileManager extends EventEmitter //{
     newfile(dir: string, cb: FileOpCallback = this.echoMsg) {this.operation(FileOpcode.NEW_FILE, {path: dir}, cb);}
     newfolder(dir: string, cb: FileOpCallback = this.echoMsg) {this.operation(FileOpcode.NEW_FOLDER, {path: dir}, cb);}
     upload(loc: string, size: number, cb: FileOpCallback = this.echoMsg){this.operation(FileOpcode.UPLOAD, {path: loc, size: size}, cb);}
-    upload_write(loc: string, buf: string, offset: number, cb: FileOpCallback = this.echoMsg){this.operation(FileOpcode.UPLOAD_WRITE, {path: loc, buf: buf, size: buf.length / 2, offset: offset}, cb);}
+    upload_write(loc: string, filesize: number, buf: string, offset: number, cb: FileOpCallback = this.echoMsg){this.operation(FileOpcode.UPLOAD_WRITE, {path: loc, buf: buf, size: filesize, offset: offset}, cb);}
     upload_merge(loc: string, size: number, cb: FileOpCallback = this.echoMsg){this.operation(FileOpcode.UPLOAD_MERGE, {path: loc, size: size}, cb);}
 
     async chmodP   (loc: string, mode: string): Promise<Success>{return promisify(this.chmod).call(this, loc, mode);}
     async copyP    (src: string, dst: string): Promise<Success> {return promisify(this.copy).call(this, src, dst);}
     async execP    (loc: string, argv: string[])                {return promisify(this.exec).call(this, loc, argv);}
-    async getdirP  (loc: string): Promise<types.FileStat[][]>     {return promisify(this.getdir).call(this, loc);}
+    async getdirP  (loc: string): Promise<types.FileStat[]>     {return promisify(this.getdir).call(this, loc);}
     async mkdirP   (loc: string): Promise<DirectoryEntry>              {return promisify(this.mkdir).call(this, loc);}
     async readP    (loc: string, offset: number, length: number): Promise<string> {
         return promisify(this.read).call(this, loc, offset, length);
@@ -212,8 +233,8 @@ export class FileManager extends EventEmitter //{
     async newfileP  (dir: string): Promise<FileEntry> {return promisify(this.newfile).call(this, dir);}
     async newfolderP(dir: string): Promise<DirectoryEntry> {return promisify(this.newfolder).call(this, dir);}
     async uploadP(loc: string, size: number): Promise<RangesEntry> {return promisify(this.upload).call(this, loc, size);}
-    async upload_writeP(loc: string, buf: string, offset: number): Promise<Success> {return promisify(this.upload_write).call(this, loc, buf, offset);}
-    async upload_mergeP(loc: string, size: number): Promise<Success> {return promisify(this.upload_mergeP).call(this, loc, size);}
+    async upload_writeP(loc: string, filesize: number, buf: string, offset: number): Promise<Success> {return promisify(this.upload_write).call(this, loc, filesize, buf, offset);}
+    async upload_mergeP(loc: string, size: number): Promise<Success> {return promisify(this.upload_merge).call(this, loc, size);}
 
  
 
@@ -240,4 +261,5 @@ export class FileManager extends EventEmitter //{
 export function SetupFM() {
     File.manager = new FileManager(new WebSocket(constants.server_ws), true);
     window["fm"] = File.manager;
+    window["util"] = util;
 }

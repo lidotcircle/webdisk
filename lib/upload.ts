@@ -2,6 +2,7 @@ import * as constants from './constants';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as proc from 'process';
+import * as os from 'os';
 
 
 /**
@@ -22,15 +23,15 @@ export class UploadMap //{
         this.entries = new Map<string, UploadEntry>();
     }
 
-    uploadfile(username: string, filename: string, filesize: number, cb: (err, folder) => void) //{
+    uploadfile(username: string, filename: string, filesize: number, cb: (err, entry) => void) //{
     {
         let ff = this.entries.get(username + filename);
-        if(ff) cb(null, ff);
-        fs.mkdtemp("upload_folder", "utf8", (err, folder) => {
+        if(ff && ff.FileSize == filesize) return cb(null, ff);
+        fs.mkdtemp(path.join(os.tmpdir(), "upload_folder"), "utf8", (err, folder) => {
             if(err) return cb(err, null);
             let kk = new UploadEntry(folder, filesize);
             this.entries.set(username + filename, kk);
-            cb(null, folder);
+            cb(null, kk);
         });
     } //}
 
@@ -117,8 +118,8 @@ export class UploadEntry //{
     /** write a range of file to temporary file */
     WriteRanges(buf: Buffer, ranges: [number,number], cb: (err: Error) => void) //{
     {
-        if(buf.length != (ranges[1] - ranges[0])) return cb(new Error("buffer length error"));
-        fs.open(path.join(this.tempdir, ranges[0].toString(), '-', ranges[1].toString()), "w", (err, fd) => {
+        if(buf.length != (ranges[1] - ranges[0] + 1)) return cb(new Error("buffer length error"));
+        fs.open(path.join(this.tempdir, `${ranges[0].toString()}-${ranges[1].toString()}`), "w", (err, fd) => {
             if(err) return cb(err);
             fs.write(fd, buf, 0, buf.length, 0, (err) => {
                 if(err) return cb(err);
@@ -193,5 +194,7 @@ export class UploadEntry //{
 
     /** test whether file is full recieved from client */
     full(): boolean {return this.__get_ranges().length == 0;}
+
+    get FileSize(): number {return this.filesize;} 
 } //}
 

@@ -105,9 +105,14 @@ function extractFromFrame(buffer: Buffer): [boolean, WebsocketOPCode, Buffer, Bu
     if (!FIN && (opcode & 0x08) != 0)
         throw new Error("control frame can't be fragmented");
     if ((buffer.readUInt8(0) & 0x70) != 0) {
-        throw new Error("broken frame");
+        throw new Error(`broken frame, first bytes ${buffer.readUInt8(0).toString(2)}`);
     }
+    console.log(buffer.readUInt8(0).toString(2));
+    console.log(buffer.readUInt8(1).toString(2));
     let Masked: boolean = (buffer.readUInt8(1) & 0x80) == 0x80;
+    if (Masked == false) {
+        throw new Error("protocol error, frames send by client should be masked"); // TODO close connection with 1002
+    }
     let payloadOffset: number = 2;
     let len: number = buffer.readUInt8(1) & 0x7f;
     if (len == 126) {
@@ -263,7 +268,6 @@ export class WebsocketM extends event.EventEmitter {
                 opc: opc,
                 fin: fin,
                 msglen: msg.length,
-                msg: msg.toString()
             }, null, 1));
             switch(opc) {
                 case WebsocketOPCode.Binary:
@@ -280,6 +284,7 @@ export class WebsocketM extends event.EventEmitter {
                         this.framedata = Buffer.from(msg);
                     this.emit("frame", fin, msg, opc);
                     if (fin) {
+                        console.log(fin);
                         let mmm: Buffer | string;
                         if (opc == WebsocketOPCode.Text)
                             mmm = this.framedata.toString("utf8");

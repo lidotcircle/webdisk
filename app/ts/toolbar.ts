@@ -89,12 +89,8 @@ export function SetupTools() {
     /** new file */ //{
     constants.tool.new_file.addEventListener("click", () => {
         global.File.manager.newfile(global.Detail.Details.cwd, (err, msg) => {
-            let error = null;
-            try {
-                msg = JSON.parse(msg);
-            } catch (e) {error = e;}
             let mm = msg["file"];
-            if(err || mm == null || error) {
+            if(err || mm == null) {
                 // inform failure TODO
                 return;
             }
@@ -113,12 +109,8 @@ export function SetupTools() {
     /** new folder */ //{
     constants.tool.new_folder.addEventListener("click", () => {
         global.File.manager.newfolder(global.Detail.Details.cwd, (err, msg) => {
-            let error = null;
-            try {
-                msg = JSON.parse(msg);
-            } catch (e) {error = e;}
             let mm = msg["dir"];
-            if(err || mm == null || error) {
+            if(err || mm == null) {
                 // inform failure TODO
                 return;
             }

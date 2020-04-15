@@ -3,8 +3,8 @@ import * as events from 'events';
 import * as constants from './constants';
 import * as fm from './file_manager';
 import * as proc from 'process';
-import * as path from 'path';
 import * as util from './util';
+import * as gvar from './global_vars';
 import { debug } from './util';
 
 // FileSystem API declare //{
@@ -44,8 +44,10 @@ enum SliceState { NO, IN, HAS };
  * @class UploadSession implementation of uploading files and directories
  * @event fail @fires when a task failed
  *     @param {FileSystemEntry} task
+ *     @param {Error} error
  * @event cancel @fires when a task be cancelled
  *     @param {FileSystemEntry} task
+ *     @param {Error} error
  * @event start @fires when a task start
  *     @param {FileSystemEntry} task
  * @event progress
@@ -55,7 +57,7 @@ enum SliceState { NO, IN, HAS };
  * @event uploaded @fires when a task finished
  *     @param {FileSystemEntry} task
  */
-class UploadSession extends events.EventEmitter //{
+export class UploadSession extends events.EventEmitter //{
 {
     /**
      * @property {[FileSystemEntry, string, cancelObject][]} task_queue queue of upload tasks
@@ -91,8 +93,8 @@ class UploadSession extends events.EventEmitter //{
             this.currentTask = null;
             if(this.task_queue.length > 0) proc.nextTick(() => {this.run();});
         }, (err: Error) => {
-            if(err.message == "cancel") this.emit("cancel", this.currentTask[0]);
-            else this.emit("fail", this.currentTask[0]);
+            if(err.message == "cancel") this.emit("cancel", this.currentTask[0], err);
+            else this.emit("fail", this.currentTask[0], err);
             this.currentTask = null;
             if(this.task_queue.length > 0) proc.nextTick(() => {this.run();});
         });
@@ -101,6 +103,7 @@ class UploadSession extends events.EventEmitter //{
     private async __run() //{
     {
         this.send_bytes = 0;
+        this.total_size = 0;
         this.emit("start", this.currentTask[0]);
         await this.get_total_size(this.currentTask[0]);
         await this.send_entry(this.currentTask[0], this.currentTask[1]);
@@ -150,8 +153,8 @@ class UploadSession extends events.EventEmitter //{
                         reject(err);
                     });
                 });
-            })() as FileSystemFileEntry;
-            return await this.send_file_entryP(xx, p);
+            })() as File;
+            return await this.send_file(xx, p);
         } else {
             await this.file_manager.mkdirP(p);
             let dir = this.currentTask[0] as FileSystemDirectoryEntry;
@@ -162,7 +165,7 @@ class UploadSession extends events.EventEmitter //{
             })() as FileSystemEntry[];
             for (let i=0; i<entries.length;i++) {
                 let x = entries[i];
-                this.send_entry(x, path.join(p, x.name));
+                this.send_entry(x, util.pathJoin(p, x.name));
             }
         }
     } //}
@@ -171,11 +174,11 @@ class UploadSession extends events.EventEmitter //{
      * @param {Blob} slice slice of a file
      * @param {string} p upload path
      */
-    private async send_slice(slice: Blob, offset: number, p: string) //{
+    private async send_slice(slice: Blob, offset: number, p: string, filesize: number) //{
     {
         let ab = await (slice as any).arrayBuffer();
         let send = util.BufferToHex(ab);
-        return this.file_manager.upload_writeP(p, send, offset);
+        return this.file_manager.upload_writeP(p, filesize, send, offset);
     } //}
 
     /**
@@ -196,15 +199,16 @@ class UploadSession extends events.EventEmitter //{
         }
         let errornum: number = 0;
         let sended: SliceState[] = [];
+        let error_queue: {message: string, stack: string}[] = [];
         let promises: Promise<void>[] = [];
         for(let i = 0; i<plan.length; i++)
             sended.push(SliceState.NO);
         let HAS_top = -1; // HAS_top + 1 to HAS_TOP + WindowSize should be in HAS or IN State
         while(HAS_top < plan.length - 1) {
             if(this.currentTask[2].cancel) throw new Error("cancel");
-            for(let i = HAS_top + 1; i<HAS_top + constants.Misc.WindowSize; i++) {
+            for(let i = HAS_top + 1; i<HAS_top + constants.Misc.WindowSize && i<plan.length; i++) {
                 if(sended[i] != SliceState.NO) continue;
-                promises[i] = this.send_slice(f.slice(plan[i][0], plan[i][1] + 1), plan[i][0], p).then(() => {
+                promises[i] = this.send_slice(f.slice(plan[i][0], plan[i][1] + 1), plan[i][0], p, f.size).then(() => {
                     sended[i] = SliceState.HAS;
                     promises[i] = null;
                     this.send_bytes += (plan[i][1] + 1 - plan[i][0]);
@@ -214,32 +218,22 @@ class UploadSession extends events.EventEmitter //{
                             HAS_top += 1;
                     }
                     return;
-                }, () => {
+                }, (err: Error) => {
+                    error_queue.push({message: err.message, stack: err.stack});
                     sended[i] = SliceState.NO;
                     promises[i] = null;
                     errornum += 1;
-                    if(errornum > plan.length) throw new Error("transmit error");
+                    if(errornum > plan.length) throw new Error(JSON.stringify(error_queue, null, 1));
                     return;
                 });
             }
             let wait: Promise<void>[] = [];
-            for(let i = 0; i<constants.Misc.WindowSize; i++)
+            for(let i = 0; i<constants.Misc.WindowSize && i<plan.length; i++)
                 if(promises[i] != null) wait.push(promises[i]);
             await Promise.race(wait);
         }
+        await this.file_manager.upload_mergeP(p, f.size);
         return;
-    } //}
-    private send_file_entry(f: FileSystemFileEntry, p: string, cb: (err) => void) //{
-    {
-        f.file((ff: File) => {
-            this.send_file(ff, p).then(() => cb(null), (err) => cb(err));
-        }, (err) => {
-            return cb(err);
-        });
-    } //}
-    private async send_file_entryP(f: FileSystemFileEntry, p: string): Promise<void> //{
-    {
-        return util.promisify(this.send_file_entry).call(this, f, p);
     } //}
 
     /**
@@ -250,6 +244,7 @@ class UploadSession extends events.EventEmitter //{
      */
     newTask(entry: FileSystemEntry, dest: string): cancelObject //{
     {
+        dest = util.pathJoin(dest, entry.name);
         if(!constants.Regex.validPathname.test(dest) || entry == null || entry.fullPath == null)
             return null;
         let obj = {cancel: false};
@@ -262,3 +257,9 @@ class UploadSession extends events.EventEmitter //{
     cancel(obj: cancelObject) {obj.cancel = true;}
 } //}
 
+export function SetupUpload() {
+    gvar.Upload.upload = new UploadSession(gvar.File.manager);
+//    gvar.Upload.upload.on("start", debug);
+    gvar.Upload.upload.on("fail",  debug);
+    gvar.Upload.upload.on("cancel", debug);
+}

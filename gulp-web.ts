@@ -32,7 +32,7 @@ function onerror(err) {
 // browser javascript - compile_webdisk_ts() //{
 function browser_compile_ts_dir(entry: string, destination: string, sourceMaps: boolean = false) {
     return function() {
-        let sm = browserify()
+        let sm = browserify({debug: true})
         .add(entry)
         .plugin("tsify", {target: 'es6', project: tsconfig}).on("error", onerror)
         .bundle().on("error", onerror)
