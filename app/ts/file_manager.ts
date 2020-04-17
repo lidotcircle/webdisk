@@ -22,6 +22,7 @@ enum FileOpcode {
     WRITE   = "write",
     UPLOAD = "upload",
     UPLOAD_WRITE = "upload_write",
+    UPLOAD_WRITE_B = "upload_write_b",
     UPLOAD_MERGE = "upload_merge",
     NEW_FOLDER = "new_folder",
     NEW_FILE = "new_file"
@@ -166,6 +167,8 @@ export class FileManager extends EventEmitter //{
         xx[1].call(null, err, parsed_msg["msg"]);
     } //}
 
+    /** remote function calls, serialization with JSON */
+    // RPC JSON //{
     private operation(opcode: FileOpcode, req: any, cb: FileOpCallback) //{
     {
         if (!this.ready()) cb(new Error("websocket isn't ready"), null);
@@ -235,8 +238,31 @@ export class FileManager extends EventEmitter //{
     async uploadP(loc: string, size: number): Promise<RangesEntry> {return promisify(this.upload).call(this, loc, size);}
     async upload_writeP(loc: string, filesize: number, buf: string, offset: number): Promise<Success> {return promisify(this.upload_write).call(this, loc, filesize, buf, offset);}
     async upload_mergeP(loc: string, size: number): Promise<Success> {return promisify(this.upload_merge).call(this, loc, size);}
+    //}
 
- 
+    /** alternatives of above functions, seraialization with raw buffer, it's useful to send file */
+    // RPC Buffer //{
+    private operation_b(opcode: FileOpcode, req: any, extra: ArrayBuffer, cb: FileOpCallback) //{
+    {
+        if (!this.ready()) cb(new Error("websocket isn't ready"), null);
+        let id = this.newid();
+        this.register_timeout(id);
+        this.wait_list.set(id, [opcode, cb]);
+        req["id"] = id;
+        req["opcode"] = opcode;
+        let header: ArrayBuffer = util.EncodePairs(req);
+        let send_data = util.concatArrayBuffers(header,extra);
+        this.connection.send(send_data);
+    } //}
+    upload_write_b(loc: string, filesize: number, buf: ArrayBuffer, offset: number, cb: FileOpCallback = this.echoMsg) {
+        this.operation_b(FileOpcode.UPLOAD_WRITE_B, {path: loc, size: filesize, offset: offset}, buf, cb);
+    }
+
+    async upload_write_b_P(loc: string, filesize: number, buf: ArrayBuffer, 
+                           offset: number, cb: FileOpCallback = this.echoMsg): Promise<Success> {
+        return promisify(this.upload_write_b).call(this, loc, filesize, buf, offset);
+    }
+    //}
 
     reset(ws: WebSocket, retryOnClose: boolean = false) {
         this.connection = ws;

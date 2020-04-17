@@ -145,3 +145,115 @@ export function parseCookie(cookie: string): Map<string, string> //{
     return ret;
 } //}
 
+/** encode string pair like http header format, append newline in last field-value pair.
+ *  If the pairs is {}, then the result is '\n'
+ */
+export function EncodePairs(pairs: any): ArrayBuffer //{
+{
+    let s = "";
+    for(let i in pairs)
+        s += `${i}: ${encodeURI(pairs[i])}\n`;
+    s += "\n";
+    let x = new TextEncoder();
+    return x.encode(s);
+} //}
+
+enum DecodeState {
+    Begin,
+    Field,
+    Space,
+    Value,
+    NEWLINE,
+    END
+}
+/** REGEXP ([^:]+:\s*[^\n]+\n)*\n.*
+ * Begin (char=\n)=> End,   (otherwise)=> Field [field += char]
+ * Field (char=:)=> Space,  (otherwise)=> Field [field += char]
+ * Space (char= )=> Space,  (otherwise)=> Value [value += char]
+ * Value (char=\n)=> NEWLINE [return[field]=value, field = "", value = ""], 
+ *                          (otherwise)=> Value [value += char]
+ * NEWLINE (char=\n)=> END, (otherwise)=> Value [value += char]
+ * END
+ */
+/** decode string pair from buffer, reversed operation of above function.
+ *  @exception {Error} If format error, raise an error
+ */
+export function DecodePairs(buf: ArrayBuffer): [any, ArrayBuffer] //{
+{
+    let x = new TextDecoder();
+    let array = new Uint8Array(buf);
+    let ret = {};
+    let output = "";
+    let field = "";
+    let value = ""
+    let state = DecodeState.Begin;
+    let i;
+    for(i=0; i<array.length; i++) //{
+    {
+        let y: string = x.decode(array.subarray(i, i+1));
+        if (y == "") continue;
+        switch (state) {
+            case DecodeState.Begin:
+                if (y == "\n") {
+                    state = DecodeState.END;
+                } else {
+                    field += y;
+                    state = DecodeState.Field;
+                } break;
+            case DecodeState.Field:
+                if (y == ":") {
+                    state = DecodeState.Space;
+                } else {
+                    field += y;
+                } break;
+            case DecodeState.Space:
+                if( y != " " && y != "\t") {
+                    state = DecodeState.Value;
+                    value += y;
+                } break;
+            case DecodeState.Value:
+                if (y == "\n") {
+                    state = DecodeState.NEWLINE;
+                    ret[field] = value;
+                    field = "";
+                    value = "";
+                } else {
+                    value += y;
+                } break;
+            case DecodeState.NEWLINE:
+                if (y == "\n") {
+                    state = DecodeState.END;
+                } else {
+                    state = DecodeState.Field;
+                    field += y;
+                } break;
+        }
+        if (state == DecodeState.END) break;
+    } //}
+    if (state != DecodeState.END) {
+        throw new Error("bad format");
+    }
+    return [ret, array.subarray(i+1)];
+} //}
+
+/** @see https://gist.github.com/72lions/4528834#gistcomment-2657284
+ * Creates a new ArrayBuffer from concatenating two existing ones
+ *
+ * @param {ArrayBuffer | null} buffer1 The first buffer.
+ * @param {ArrayBuffer | null} buffer2 The second buffer.
+ * @return {ArrayBuffer | null} The new ArrayBuffer created out of the two.
+ */
+export function concatArrayBuffers(buffer1, buffer2) //{
+{
+    if (!buffer1) {
+        return buffer2;
+    } else if (!buffer2) {
+        return buffer1;
+    }
+
+    var tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength);
+    tmp.set(new Uint8Array(buffer1), 0);
+    tmp.set(new Uint8Array(buffer2), buffer1.byteLength);
+    return tmp.buffer;
+} //}
+

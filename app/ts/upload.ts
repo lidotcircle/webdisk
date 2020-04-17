@@ -196,8 +196,11 @@ export class UploadSession extends events.EventEmitter //{
     private async send_slice(slice: Blob, offset: number, p: string, filesize: number) //{
     {
         let ab = await (slice as any).arrayBuffer();
+        /*
         let send = util.BufferToHex(ab);
         return this.file_manager.upload_writeP(p, filesize, send, offset);
+        */
+        return this.file_manager.upload_write_b_P(p, filesize, ab, offset);
     } //}
 
     /**

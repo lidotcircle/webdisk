@@ -20,54 +20,9 @@ import { WebsocketM, WebsocketOPCode } from './websocket';
 
 import * as upload from './upload';
 
-/** file operations //{
- *
- * support upload breakpoint resume
- *
- * 1. client request
- *  a. client
- *    payload := --------------------------------------------
- *               | opcode | path1_len |   path1   | options |
- *               |  1byte |   2byte   | path1_len |   ---   |
- *               --------------------------------------------
- *    opcode := REMOVE | MOVE | GETDIR | CHMOD | CHOWN 
- *            | EXECUTE | GETFILE | UPLOAD | RENAME
- *      if opcode = REMOVE | GETDIR | EXECUTE | GETFILE | UPLOAD |GETDIR
- *          options = null
- *      if opcode = MOVE 
- *          options = [ path2_len | path2 ]
- *      if opcode = CHMOD
- *          options = [ x xxx ] 4bytes
- *      if opcode = CHOWN
- *          options = [ own_len | own ]
- *
- *  b. server
- *     payload := ----------------
- *                | status | opt |
- *                |  1byte |  -  |
- *                ----------------
- * 
- *
- * 2. sever report event
- *  a. server
- *    payload := --------------------------------------------
- *               |  event | path1_len |   path1   | options |
- *               |  1byte |   2byte   | path1_len |   ---   |
- *               --------------------------------------------
- *    event := REMOVE | MOVE | MODIFIED | CHMOD | CHOWN | NEW
- *  b. client
- *     payload := ----------------
- *                | status | opt |
- *                |  1byte |  -  |
- *                ----------------
- *
- * !!!!! FOR SIMPLICITY, USING JSON FORMAT TO IMPLEMENT ABOVE MESSAGE, 
- *       EXCEPT UPLOAD OPERATION. So if @message is Buffer type, the opcode
- *       should be upload.
- */ //}
 
-
-enum FileOpcode {
+enum FileOpcode //{
+{
     CHMOD   = "chmod",
     COPY    = "copy",
     EXECUTE = "execute",
@@ -84,13 +39,14 @@ enum FileOpcode {
     WRITE   = "write",
     UPLOAD = "upload",
     UPLOAD_WRITE = "upload_write",
+    UPLOAD_WRITE_B = "upload_write_b",
     UPLOAD_MERGE = "upload_merge",
     NEW_FOLDER = "new_folder",
     NEW_FILE = "new_file"
-}
+} //}
 
-
-enum FileEvent {
+enum FileEvent //{
+{
     REMOVE = "remove",
     MOVE = "move",
     MODIFIED = "modified",
@@ -98,10 +54,10 @@ enum FileEvent {
     CHOWN = "chown",
     NEW = "new",
     INVALID = "invalid"
-}
+} //}
 
-
-export enum StatusCode {
+export enum StatusCode //{
+{
     NOENTRY = 20,
     DENIED,
     NOTDIR,
@@ -118,7 +74,7 @@ export enum StatusCode {
 
     FAIL = 100,
     SUCCESS = 200,
-}
+} //}
 function statusCodeToString(sc: StatusCode): string //{
 {
     switch (sc) {
@@ -612,15 +568,48 @@ class FileControlSession //{
         });
     } //}
 
+    /** alternative of on_upload_write */
+    private on_upload_write_b(msg, buf) //{
+    {
+        console.log("here");
+        let loc: string = msg["path"];
+        let reqid: string = msg["id"];
+        if (!util.isString(msg["path"]) || !loc.startsWith("/"))
+            return this.sendfail(reqid, StatusCode.BAD_ARGUMENTS);
+        let dir: string = path.resolve(this.user.DocRoot, loc.substring(1));
+        let offset: number = parseInt(msg["offset"]);
+        let size: number = parseInt(msg["size"]);
+        console.log(loc, reqid, offset, size);
+        if (!util.isNumber(offset) || offset < 0 || !util.isNumber(size) || size <= 0)
+            return this.sendfail(reqid, StatusCode.REQUEST_ERROR);
+        constants.UserUploadMaps.uploadfile(this.user.UserName, dir, size, (err, mm: upload.UploadEntry) => {
+            if(err) return this.sendfail(reqid, StatusCode.FAIL, err.message.toString());
+            mm.WriteRanges(buf, [offset, offset + buf.length - 1], (err) => {
+                if(err) return this.sendfail(reqid, StatusCode.FAIL, err.message.toString());
+                return this.sendsuccess(reqid);
+            });
+        });
+    } //}
+
     /** message dispatcher, dispatch message base on opcode */
     private onmessage(msg: Buffer | string) //{
     {
         if(this.invalid) return;
         let what;
-        try {
-            what = JSON.parse(msg as string);
-        } catch (err) {
-            return this.sendfail("", StatusCode.DENIED, err.message);
+        let xbuf: ArrayBuffer = null;
+        if (util.isString(msg)) {
+            try {
+                what = JSON.parse(msg as string);
+            } catch (err) {
+                return this.sendfail("", StatusCode.DENIED, err.message);
+            }
+        } else {
+            try {
+                [what, xbuf] = xutil.DecodePairs(msg);
+            } catch (err) {
+                return this.sendfail("", StatusCode.DENIED, err.message);
+            }
+            console.log(what);
         }
         let opc: FileOpcode = what["opcode"];
         let reqid: string   = what["id"];
@@ -675,6 +664,8 @@ class FileControlSession //{
             case FileOpcode.UPLOAD: this.op_upload(what); break;
             case FileOpcode.UPLOAD_WRITE: this.on_upload_write(what); break;
             case FileOpcode.UPLOAD_MERGE: this.on_upload_merge(what); break;
+
+            case FileOpcode.UPLOAD_WRITE_B: this.on_upload_write_b(what, xbuf); break;
 
             case FileOpcode.INVALID:
                 debug(`get error request ${what["opcode"]}`);

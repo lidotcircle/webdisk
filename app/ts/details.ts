@@ -183,10 +183,13 @@ export class Detail extends event.EventEmitter//{
     async chdir(path_: string): Promise<void> {
         if (this.fileManager == null) throw new Error("file manager doesn't initialize");
         let pps = await this.fileManager.getdirP(path_);
+        let cwd_stat = pps.filter(x => x.filename == path_)[0];
         pps = pps.filter(x => x.filename != path_);
         let mm = pps.map( x => new DetailItem(x));
         this.UpdateDetails(mm);
         this.currentLoc = path_;
+        let cwd_di = new DetailItem(cwd_stat);
+        this.attachElem[constants.KDetailItem] = cwd_di;
         this.emit("chdir", this.currentLoc);
         return;
     }

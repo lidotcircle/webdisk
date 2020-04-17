@@ -382,3 +382,16 @@ export class AddressBar extends events.EventEmitter //{
     get Elem(): HTMLSpanElement{return this.anchorPoint;}
 } //}
 
+
+/**
+ * @class PopMenu
+ */
+
+/**
+ * @class ConfirmMenu
+ */
+
+/**
+ * @class TransferProgressBar
+ */
+

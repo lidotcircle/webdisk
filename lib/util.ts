@@ -206,3 +206,73 @@ function pathEqual_aux(p1: string, p2: string): boolean {
 export function pathEqual(p1: string, p2: string): boolean {
     return pathEqual_aux(p1, p2) || pathEqual_aux(p2, p1);
 }
+
+enum DecodeState {
+    Begin,
+    Field,
+    Space,
+    Value,
+    NEWLINE,
+    END
+}
+/** 
+ * @see app/ts/util/util.ts#DecodePairs 
+ **/
+export function DecodePairs(buf: ArrayBuffer): [any, ArrayBuffer] //{
+{
+    let x = new util.TextDecoder();
+    let array = new Uint8Array(buf);
+    let ret = {};
+    let output = "";
+    let field = "";
+    let value = ""
+    let state = DecodeState.Begin;
+    let i;
+    for(i=0; i<array.length; i++) //{
+    {
+        let y: string = x.decode(array.subarray(i, i+1));
+        if (y == "") continue;
+        switch (state) {
+            case DecodeState.Begin:
+                if (y == "\n") {
+                    state = DecodeState.END;
+                } else {
+                    field += y;
+                    state = DecodeState.Field;
+                } break;
+            case DecodeState.Field:
+                if (y == ":") {
+                    state = DecodeState.Space;
+                } else {
+                    field += y;
+                } break;
+            case DecodeState.Space:
+                if( y != " " && y != "\t") {
+                    state = DecodeState.Value;
+                    value += y;
+                } break;
+            case DecodeState.Value:
+                if (y == "\n") {
+                    state = DecodeState.NEWLINE;
+                    ret[field] = decodeURI(value);
+                    field = "";
+                    value = "";
+                } else {
+                    value += y;
+                } break;
+            case DecodeState.NEWLINE:
+                if (y == "\n") {
+                    state = DecodeState.END;
+                } else {
+                    state = DecodeState.Field;
+                    field += y;
+                } break;
+        }
+        if (state == DecodeState.END) break;
+    } //}
+    if (state != DecodeState.END) {
+        throw new Error("bad format");
+    }
+    return [ret, array.subarray(i+1)];
+} //}
+
