@@ -514,38 +514,22 @@ class FileControlSession //{
         if (!util.isString(msg["path"]) || !loc.startsWith("/") || !util.isNumber(size) || size < 0)
             return this.sendfail(reqid, StatusCode.BAD_ARGUMENTS);
         let path_: string = path.resolve(this.user.DocRoot, loc.substring(1));
+        let m = constants.UserUploadMaps.query(this.user.UserName, path_);
+        if(m) return this.sendsuccess(reqid, StatusCode.SUCCESS, m.NeedRanges());
         fs.stat(path_, (err, stats) => {
-            if(!err) return this.sendfail(reqid, StatusCode.FAIL, (new Error(`file '${path}' already exists`)).message.toString());
-            if(size == 0) return this.op_touch(msg);
-            constants.UserUploadMaps.uploadfile(this.user.UserName, path_, size, (err, entry: upload.UploadEntry) => {
-                if(err) return this.sendfail(reqid, StatusCode.FAIL, err.message.toString());
-                entry.NeedRanges((err, ranges) => {
-                    if(err) return this.sendfail(reqid, StatusCode.FAIL, err.message.toString());
-                    return this.sendsuccess(reqid, StatusCode.SUCCESS, ranges);
-                });
-            });
+            if(!err)
+                return this.sendfail(reqid, StatusCode.FAIL, (new Error(`file '${path}' already exists`)).message.toString());
+            let s = constants.UserUploadMaps.uploadfile(this.user.UserName, path_, size);
+            return this.sendsuccess(reqid, StatusCode.SUCCESS, s.NeedRanges());
         });
     } //}
     /** upload_write */
     private on_upload_write(msg) //{
     {
-        let loc: string = msg["path"];
         let reqid: string = msg["id"];
-        if (!util.isString(msg["path"]) || !loc.startsWith("/"))
-            return this.sendfail(reqid, StatusCode.BAD_ARGUMENTS);
-        let dir: string = path.resolve(this.user.DocRoot, loc.substring(1));
-        let offset: number = parseInt(msg["offset"]);
-        let size: number = parseInt(msg["size"]);
+        if(msg["buf"] == null) return this.sendfail(reqid, StatusCode.BAD_ARGUMENTS);
         let buf: Buffer = Buffer.from(msg["buf"], "hex");
-        if (!util.isNumber(offset) || offset < 0 || !util.isNumber(size) || size <= 0)
-            return this.sendfail(reqid, StatusCode.REQUEST_ERROR);
-        constants.UserUploadMaps.uploadfile(this.user.UserName, dir, size, (err, mm: upload.UploadEntry) => {
-            if(err) return this.sendfail(reqid, StatusCode.FAIL, err.message.toString());
-            mm.WriteRanges(buf, [offset, offset + buf.length - 1], (err) => {
-                if(err) return this.sendfail(reqid, StatusCode.FAIL, err.message.toString());
-                return this.sendsuccess(reqid);
-            });
-        });
+        return this.on_upload_write_b(msg, buf);
     } //}
     /** upload_merge */
     private on_upload_merge(msg) //{
@@ -558,20 +542,18 @@ class FileControlSession //{
         let size: number = parseInt(msg["size"]);
         if (!util.isNumber(size) || size <= 0)
             return this.sendfail(reqid, StatusCode.REQUEST_ERROR);
-        constants.UserUploadMaps.uploadfile(this.user.UserName, dir, size, (err, mm: upload.UploadEntry) => {
-            if(err) return this.sendfail(reqid, StatusCode.FAIL, err.message.toString());
-            mm.MergeTo(dir, (err) => {
-                if(err) return this.sendfail(reqid, StatusCode.FAIL, err.message.toString());
-                constants.UserUploadMaps.untrack(this.user.UserName, dir);
-                this.sendsuccess(reqid);
-            });
-        });
+        let m = constants.UserUploadMaps.uploadfile(this.user.UserName, dir, size);    
+        if(m.full()) {
+            m.clean(err => debug(err));
+            return this.sendsuccess(reqid);
+        } else {
+            return this.sendfail(reqid, StatusCode.REQUEST_ERROR);
+        }
     } //}
 
     /** alternative of on_upload_write */
     private on_upload_write_b(msg, buf) //{
     {
-        console.log("here");
         let loc: string = msg["path"];
         let reqid: string = msg["id"];
         if (!util.isString(msg["path"]) || !loc.startsWith("/"))
@@ -579,15 +561,12 @@ class FileControlSession //{
         let dir: string = path.resolve(this.user.DocRoot, loc.substring(1));
         let offset: number = parseInt(msg["offset"]);
         let size: number = parseInt(msg["size"]);
-        console.log(loc, reqid, offset, size);
         if (!util.isNumber(offset) || offset < 0 || !util.isNumber(size) || size <= 0)
             return this.sendfail(reqid, StatusCode.REQUEST_ERROR);
-        constants.UserUploadMaps.uploadfile(this.user.UserName, dir, size, (err, mm: upload.UploadEntry) => {
+        let mm = constants.UserUploadMaps.uploadfile(this.user.UserName, dir, size);
+        mm.WriteRanges(buf, [offset, offset + buf.length - 1],(err) => {
             if(err) return this.sendfail(reqid, StatusCode.FAIL, err.message.toString());
-            mm.WriteRanges(buf, [offset, offset + buf.length - 1], (err) => {
-                if(err) return this.sendfail(reqid, StatusCode.FAIL, err.message.toString());
-                return this.sendsuccess(reqid);
-            });
+            return this.sendsuccess(reqid);
         });
     } //}
 
@@ -609,7 +588,6 @@ class FileControlSession //{
             } catch (err) {
                 return this.sendfail("", StatusCode.DENIED, err.message);
             }
-            console.log(what);
         }
         let opc: FileOpcode = what["opcode"];
         let reqid: string   = what["id"];

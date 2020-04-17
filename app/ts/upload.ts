@@ -7,6 +7,7 @@ import * as util from './util';
 import * as gvar from './global_vars';
 import { debug } from './util';
 
+
 // FileSystem API declare //{
 type FileSystemEntryCallback = (F: FileSystemEntry) => void;
 type ErrorCallback = (E: Error) => void;

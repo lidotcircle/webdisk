@@ -12,9 +12,11 @@
     "annautils": "^0.0.1",
     "chokidar": "^3.3.1",
     "formidable": "^1.2.2",
+    "google-closure-library": "^20200406.0.0",
     "http-status-codes": "^1.4.0",
     "node-getopt": "^0.3.2",
     "smart-buffer": "^4.1.0",
+    "tmp": "^0.1.0",
     "winston": "^3.2.1"
   },
   "devDependencies": {
@@ -22,6 +24,7 @@
     "@types/formidable": "^1.0.31",
     "@types/node": "^13.11.0",
     "@types/node-getopt": "^0.2.31",
+    "@types/tmp": "^0.1.0",
     "bootstrap": "^4.4.1",
     "browserify": "^16.5.1",
     "dart-sass": "^1.25.0",
