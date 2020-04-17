@@ -1,129 +1,7 @@
 import * as events from 'events';
 import * as util from './util';
 import * as constants from './constants';
-
-class MessageBar extends events.EventEmitter //{
-{
-    private where: HTMLElement = null;
-    private displayState: boolean   = false;
-    private displayClass: string;
-    private msgQueue: any[][];
-    private amountOfTimeOfInvoking: number;
-    constructor(target: HTMLElement, displayClass: string = "d-block") {
-        super();
-        if(target == null) throw new Error("null element");
-        this.where                  = target;
-        this.displayClass           = displayClass;
-        this.msgQueue               = [];
-        this.amountOfTimeOfInvoking = 0;
-    }
-    private _show(time: number = 3000): void {
-        if(this.displayState) return;
-
-        let id = util.makeid(16);
-        let css_template: string = 
-        `<style>
-        #${id} {
-            animation-name:   anim-${id};
-            animation-duration: ${time * 0.2 / 1000.0}s;
-            background-size: cover;
-            background-repeat: no-repeat;
-        }
-        @keyframes anim-${id} {
-            0%    {opacity: 0;} 
-            100%  {opcaity: 1;}
-        }
-        </style>`;
-        let newCss: Element = util.createNodeFromHtmlString(css_template);
-        let prevSibling: Element = this.where.previousSibling as Element;
-        if(prevSibling == null || prevSibling.nodeName.toLowerCase() != "style") {
-            this.where.parentNode.insertBefore(newCss, this.where);
-        } else {
-            this.where.parentNode.replaceChild(newCss, prevSibling);
-        }
-
-        this.where.setAttribute("id", id);
-        this.where.classList.remove("d-none"); 
-        this.where.classList.add(this.displayClass);
-        this.displayState = true;
-    }
-    _hide(): void {
-        if(!this.displayState) return;
-
-        let time: number = 800;
-        let id = util.makeid(16);
-        let css_template: string = 
-        `<style>
-        #${id} {
-            animation-name:   anim-${id};
-            animation-duration: ${time / 1000.0}s;
-        }
-        @keyframes anim-${id} {
-            0%    {opacity: 1;} 
-            100%  {opacity: 0; display: none;}
-        }
-        </style>`;
-        let newCss: Element = util.createNodeFromHtmlString(css_template);
-        let prevSibling: Element = this.where.previousSibling as Element;
-        if(prevSibling == null || prevSibling.nodeName.toLowerCase() != "style") {
-            this.where.parentNode.insertBefore(newCss, this.where);
-        } else {
-            this.where.parentNode.replaceChild(newCss, prevSibling);
-        }
-
-        this.where.setAttribute("id", id);
-        window.setTimeout((() => {
-            this.where.classList.remove(this.displayClass);
-            this.where.classList.add("d-none"); 
-            this.displayState = false;
-        }), time);
-    }
-    __run(): void {
-        if(this.displayState == true) return;
-        if(this.msgQueue.length == 0) return;
-        let keep = this.amountOfTimeOfInvoking;
-        this.amountOfTimeOfInvoking++;
-        let i: any[] = this.msgQueue.splice(0, 1)[0];
-        if(i.length == 2) {
-            this.where.innerHTML = i[0];
-            this._show(i[1]);
-            window.setTimeout(function(obj: MessageBar) {
-                if(obj.amountOfTimeOfInvoking != ++keep) // this message had been cancelled
-                    return;
-                obj._hide();
-                obj.__run();
-            }, i[1], this);
-        } else if (i.length == 3) {
-            this.where.innerHTML = i[0];
-            this._show();
-            let etarget: events.EventEmitter = i[1];
-            let event: string = i[2];
-            etarget.once(event, (earg) => {
-                if(this.amountOfTimeOfInvoking != ++keep) // this message had been cancelled
-                    return;
-                this._hide();
-                this.__run();
-            });
-        } else {
-            console.error("unexpected length.");
-            return;
-        }
-    }
-    ShowWithDuration(html_msg: string, duration: number, force: boolean = false): void {
-        this.msgQueue.push([html_msg, duration]);
-        if(force) {
-            this.displayState = false;
-        }
-        this.__run();
-    }
-    ShowWithEvent(html_msg: string, target: events.EventEmitter, eventType: string, force: boolean = false): void {
-        this.msgQueue.push([html_msg, target, eventType]);
-        if(force) {
-            this.displayState = false;
-        }
-        this.__run();
-    }
-} //}
+import { debug } from './util';
 
 /**
  * @class FilenameBar used for managing filename rename
@@ -382,16 +260,308 @@ export class AddressBar extends events.EventEmitter //{
     get Elem(): HTMLSpanElement{return this.anchorPoint;}
 } //}
 
+/**
+ * @class Attachment
+ */
+class Attachment extends events.EventEmitter //{
+{
+    protected attachElem: HTMLElement;
+
+    constructor(attach: HTMLElement) {
+        super();
+        this.attachElem = attach;
+    }
+} //}
+
+export enum MessageType {
+    Fail = 'message-fail', 
+    Success = 'message-success', 
+    Inform = 'message-inform'
+};
+/**
+ * @class MessageBar
+ */
+export class MessageBar extends Attachment //{
+{
+    private hideClass: string;
+    private msgCount: number;
+
+    constructor(attach: HTMLElement, hideClass: string) //{
+    {
+        super(attach);
+        this.hideClass = hideClass;
+        this.msgCount = 0;
+    } //}
+
+    show(msg: string, mtype: MessageType, mtimeout: number = 3000) //{
+    {
+        while(this.attachElem.firstElementChild) 
+            this.attachElem.removeChild(this.attachElem.firstElementChild);
+        this.msgCount += 1;
+        let i = this.msgCount;
+        this.attachElem.classList.remove(this.hideClass);
+        this.attachElem.classList.add(mtype);
+        switch (mtype) {
+            case MessageType.Fail:
+                this.attachElem.classList.remove(MessageType.Inform);
+                this.attachElem.classList.remove(MessageType.Success);
+                break;
+            case MessageType.Success:
+                this.attachElem.classList.remove(MessageType.Inform);
+                this.attachElem.classList.remove(MessageType.Fail);
+                break;
+            case MessageType.Inform:
+                this.attachElem.classList.remove(MessageType.Fail);
+                this.attachElem.classList.remove(MessageType.Success);
+                break;
+        }
+        this.attachElem.innerText = msg;
+        window.setTimeout(() => {
+            if(this.msgCount != i) return;
+            this.attachElem.classList.add(this.hideClass);
+        }, mtimeout);
+    } //}
+} //}
 
 /**
  * @class PopMenu
  */
+export class PopMenu extends Attachment //{
+{
+    static ClassA = 'pop-menu-item';
+    private static popMenuTemplate = `
+        <div class="${PopMenu.ClassA}">
+        </div>`;
+    private static XElement = util.createNodeFromHtmlString(PopMenu.popMenuTemplate);
+
+    /**
+     * @property {[string, string][]} eMap store mapping from menu item name to event 
+     *                                 that will arise when click the item
+     * @property {string} hideClass control the display of this element
+     */
+    private eMap: [string, string][];
+    private hideClass: string;
+
+    constructor(elem: HTMLElement, hideClass: string) {
+        super(elem);
+        this.hideClass = hideClass;
+    }
+
+    private show() {this.attachElem.classList.remove(this.hideClass);}
+    private hide() {this.attachElem.classList.add(this.hideClass);}
+    private update() //{
+    {
+        while(this.attachElem.firstChild) this.attachElem.removeChild(this.attachElem.firstChild);
+        for(let v of this.eMap) {
+            let e = PopMenu.XElement.cloneNode(true) as HTMLElement;
+            e.innerText = v[0];
+            e.onclick = (ev: MouseEvent) => {
+                ev.stopPropagation();
+                ev.preventDefault();
+                this.hide();
+                this.emit(v[1], ev);
+            };
+            e.onkeydown = (ev: KeyboardEvent) => {
+                ev.stopPropagation();
+                ev.preventDefault();
+                if(ev.key.toLowerCase() == "enter") {
+                    this.hide();
+                    this.emit(v[1], ev);
+                }
+            };
+            this.attachElem.appendChild(e);
+        }
+    } //}
+
+    SetMenu(items: [string, string][]) {
+        this.eMap = items;
+        this.update();
+    }
+} //}
+
+/**
+ * @class ElementGenerator
+ */
+class ElementGenerator extends events.EventEmitter //{
+{
+    constructor() {
+        super();
+    }
+
+    toHtmlElement(): HTMLElement {
+        return null;
+    }
+} //}
+
+/**
+ * @class MoveableElementGenerator
+ */
+class MoveableElementGenerator extends ElementGenerator //{
+{
+    protected latestElem: HTMLElement;
+
+    constructor() {
+        super();
+    }
+
+    protected register_drag_drop() {
+        this.latestElem.ondragstart = this.on_dragstart.bind(this);
+        this.latestElem.ondragover = this.on_dragover.bind(this);
+    }
+
+    private on_dragstart(ev: DragEvent) //{
+    {
+        ev.stopPropagation();
+        let img = new Image();
+        img.src = "/imgs/transparent-1pixel.png";
+        ev.dataTransfer.setDragImage(img, 0, 0);
+        this.latestElem[constants.KScreenPrevDragOver] = [ev.screenX, ev.screenY];
+    } //}
+    private on_dragover(ev: DragEvent) //{
+    {
+        let cstyle = window.getComputedStyle(this.latestElem);
+        let ox = parseInt(cstyle.marginLeft);
+        let oy = parseInt(cstyle.marginTop);
+        let ax, ay;
+        if (this.latestElem[constants.KScreenPrevDragOver] == null) {
+            ax = ev.offsetX;
+            ay = ev.offsetY;
+        } else {
+            ax = ev.screenX - this.latestElem[constants.KScreenPrevDragOver][0];
+            ay = ev.screenY - this.latestElem[constants.KScreenPrevDragOver][1];
+        }
+        this.latestElem[constants.KScreenPrevDragOver] = [ev.screenX, ev.screenY];
+        this.latestElem.style.marginLeft = `${ax + ox}px`;
+        this.latestElem.style.marginTop  = `${ay + oy}px`;
+    } //}
+} //}
 
 /**
  * @class ConfirmMenu
  */
+export class ConfirmMenu extends MoveableElementGenerator //{
+{
+    static ClassA = 'confirm-menu';
+    static ClassAA = 'confirm-menu-msg';
+    static ClassAB = 'confirm-menu-item';
+    private static template = `
+    <div class="${ConfirmMenu.ClassA}" draggable="true">
+        <div class="${ConfirmMenu.ClassAA}"></div>
+        <div class="${ConfirmMenu.ClassAB}"></div>
+    </div>
+    `;
+    private static XTemplate = util.createNodeFromHtmlString(ConfirmMenu.template);
+
+    private cb: Function;
+    private msg: string;
+    private options: string[];
+    private uclass: string;
+
+    constructor(msg: string, options: string[], uclass: string = null) {
+        super();
+        this.msg = msg;
+        this.options = options;
+        this.uclass = uclass;
+    }
+
+    toHtmlElement(): HTMLElement {
+        let x: HTMLElement = ConfirmMenu.XTemplate.cloneNode(true) as HTMLElement;
+        (x.firstElementChild as HTMLDivElement).innerText = this.msg;
+        if (this.uclass) x.classList.add(this.uclass);
+        for(let v of this.options) {
+            let y = util.createNodeFromHtmlString(`<input type="button" value="${v}">`);
+            y.onclick = () => this.cb(null, v);
+            x.children[1].appendChild(y);
+        }
+        this.latestElem = x;
+        this.register_drag_drop();
+        return x;
+    }
+
+    GetInput(cb: (err, message) => void) {
+        this.cb = (e, m) => {
+            x.remove();
+            cb(e, m);
+        }
+        let x = this.toHtmlElement();
+        let body = document.querySelector("body");
+        body.prepend(x);
+    }
+
+    async GetInputP(): Promise<string> {return util.promisify(this.GetInput).call(this);}
+} //}
 
 /**
  * @class TransferProgressBar
  */
+export class TransferProgressBar extends MoveableElementGenerator //{
+{
+    static ClassA = 'transfer-bar';
+    static ClassAA = 'transfer-bar-top';
+    static ClassAAA = 'transfer-bar-title';
+    static ClassAAB = 'transfer-bar-cancel';
+    static ClassAB = 'transfer-bar-progress';
+    static ClassABA = 'transfer-bar-progress-finish';
+    private static template = `
+    <div class="${TransferProgressBar.ClassA}" draggable="true">
+        <div class="${TransferProgressBar.ClassAA}">
+            <div class="${TransferProgressBar.ClassAAA}"></div>
+            <input class="${TransferProgressBar.ClassAAB}" type="button" value="cancel">
+        </div>
+        <div class="${TransferProgressBar.ClassAB}"><div class="${TransferProgressBar.ClassABA}"></div></div>
+    </div>
+    `;
+    private static XTemplate = util.createNodeFromHtmlString(TransferProgressBar.template);
 
+    private title: string;
+    private totalsize: number;
+    private processedsize: number;
+
+    private Efinish: HTMLElement;
+    private cancel: Function;
+
+    constructor(title: string, cancel: Function) {
+        super();
+        this.title = title;
+        this.totalsize = 0;
+        this.processedsize = 0;
+        this.cancel = cancel;
+    }
+
+    toHtmlElement(): HTMLElement {
+        let x = TransferProgressBar.XTemplate.cloneNode(true) as HTMLElement;
+        (x.firstElementChild.firstElementChild as HTMLElement).innerText = this.title;
+        this.Efinish = x.lastElementChild.firstElementChild as HTMLElement;
+        (x.firstElementChild.lastElementChild as HTMLElement).onclick = () => {
+            this.cancel();
+            this.finish();
+        };
+        this.latestElem = x;
+        this.register_drag_drop();
+        return x;
+    }
+
+    start(total: number) {
+        this.totalsize = total;
+        let x = this.toHtmlElement();
+        this.Efinish.style.width = "0%";
+        let body = document.querySelector("body");
+        body.prepend(x);
+    }
+
+    progress(size: number) {
+        this.processedsize = size;
+        let percent = (this.processedsize / this.totalsize) * 100;
+        this.Efinish.style.width = `${percent}%`;
+        this.Efinish.innerText = `${percent}%`;
+    }
+
+    finish() {
+        this.latestElem.remove();
+        this.latestElem = null;
+    }
+} //}
+
+/**
+ * @class DirectoryTree
+ */

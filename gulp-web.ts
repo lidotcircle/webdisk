@@ -157,6 +157,9 @@ export function watch_B() //{
                     console.log("server typescript");
                     return compile_server_ts();
                 }
+            case "imgs":
+                console.log("images");
+                return images_copy();
             default:
                 console.log("unknown");
         }

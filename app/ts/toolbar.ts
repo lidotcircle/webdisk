@@ -125,4 +125,20 @@ export function SetupTools() {
             });
         });
     }); //}
+
+    /* settings */
+    constants.tool.settings.onclick = () => {
+        let x = new controller.ConfirmMenu("are you sure?", ["yes", "no"]);
+        x.GetInputP().then((msg) => {
+            debug(msg);
+            window.alert(msg);
+        });
+    };
+
+    constants.tool.find.onclick = () => {
+        let x = new controller.TransferProgressBar("hello", () => {window.alert("cancel");});
+        x.start(200);
+        x.progress(100);
+    };
 }
+

@@ -84,6 +84,7 @@ export namespace CSSClass {
 // Symbol //{
 export const KDetailItem = Symbol("detailItem");
 export const KFilenameControl = Symbol("FilenameControl");
+export const KScreenPrevDragOver = Symbol("confirm window");
 //}
 
 // Regex //{
