@@ -39,6 +39,12 @@ export namespace tool {
 }
 //}
 
+// Bottom //{
+export namespace Bottom {
+    export const message_bar = document.getElementById("message-bar");
+}
+//}
+
 // homeicon //{
 export const homeicon = document.getElementById("homeicon");
 //}

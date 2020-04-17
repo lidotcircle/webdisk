@@ -549,16 +549,19 @@ export class TransferProgressBar extends MoveableElementGenerator //{
         body.prepend(x);
     }
 
-    progress(size: number) {
+    progress(size: number, t: number) {
         this.processedsize = size;
+        this.totalsize = t;
         let percent = (this.processedsize / this.totalsize) * 100;
         this.Efinish.style.width = `${percent}%`;
-        this.Efinish.innerText = `${percent}%`;
+        this.Efinish.innerText = `${percent.toPrecision(3)}%`;
     }
 
     finish() {
-        this.latestElem.remove();
-        this.latestElem = null;
+        if(this.latestElem) {
+            this.latestElem.remove();
+            this.latestElem = null;
+        }
     }
 } //}
 

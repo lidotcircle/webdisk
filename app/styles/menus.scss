@@ -1,0 +1,66 @@
+/** 
+ * 1. Message Box 
+ * 2. Transfer Dialog
+ */
+
+@use "mixin.scss" as mixin;
+@use "size.scss"  as size;
+
+/** pop confirm menu */
+.confirm-menu //{
+{
+    @include mixin.pop_panel(280px, 150px);
+
+    .confirm-menu-msg {
+        @include mixin.no-select();
+        width: 100%;
+        margin-bottom: 1em;
+    }
+    
+    .confirm-menu-item {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: space-around;
+
+        input {
+            @include mixin.common_button();
+        }
+    }
+} //}
+
+/** pop file transfer progress */
+.transfer-bar //{
+{
+    @include mixin.pop_panel(280px, 100px);
+
+    .transfer-bar-top {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+
+        input {
+            max-width: 20%;
+            @include mixin.common_button();
+        }
+    }
+
+    .transfer-bar-progress {
+        width: 100%;
+        height: 1.5em;
+        background-color: #DFDFDF;
+        border-radius: 0.7em;
+
+        .transfer-bar-progress-finish {
+            height: 100%;
+            border-top-left-radius: 0.7em;
+            border-bottom-left-radius: 0.7em;
+            background-color: #2E2;
+            text-align: center;
+        }
+    }
+} //}
+

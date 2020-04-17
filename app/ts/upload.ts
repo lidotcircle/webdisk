@@ -5,6 +5,7 @@ import * as fm from './file_manager';
 import * as proc from 'process';
 import * as util from './util';
 import * as gvar from './global_vars';
+import * as controller from './controller';
 import { debug } from './util';
 
 
@@ -90,12 +91,67 @@ export class UploadSession extends events.EventEmitter //{
         this.currentTask = null;
     } //}
 
+    /** setup component for showing upload progress */
+    private transfer_progress() //{
+    {
+        let p_bar = new controller.TransferProgressBar(
+        `From ${this.currentTask[0].fullPath} to ${this.currentTask[1]}`, () => {
+            this.cancel(this.currentTask[2]);
+        });
+        let ct = this.currentTask[0];
+        let clean = () => {
+            this.removeListener("progress", p_func);
+            this.removeListener("fail", f_func);
+            this.removeListener("cancel", c_func);
+            this.removeListener("start", s_func);
+            this.removeListener("uploaded", u_func);
+        }
+        let p_func = (f: FileSystemEntry, a, b) => {
+            if(ct === f) {
+                p_bar.progress(a, b);
+            }
+        };
+        let f_func = (f: FileSystemEntry, e) => {
+            if(ct === f) {
+                // INFORM fail
+                p_bar.finish();
+                clean();
+            }
+        };
+        let c_func = (f: FileSystemEntry, e) => {
+            if(ct === f) {
+                // INFORM Cancel
+                p_bar.finish();
+                clean();
+            }
+        };
+        let s_func = (f: FileSystemEntry) => {
+            if(ct === f) {
+                // INFORM Start
+                p_bar.start(this.total_size);
+            }
+        }
+        let u_func = (f: FileSystemEntry) => {
+            if(ct === f) {
+                // INFORM Uploaded
+                p_bar.finish();
+                clean();
+            }
+        }
+        this.on("start", s_func);
+        this.on("progress", p_func);
+        this.on("uploaded", u_func);
+        this.on("cancel", c_func);
+        this.on("fail", f_func);
+    } //}
+
     /** run the tasks */
     private run() //{
     {
         if(this.currentTask) return;
         if(this.task_queue.length == 0) {debug("some bug here"); return;}
         this.currentTask = this.task_queue.shift();
+        this.transfer_progress();
         this.__run().then(() => {
             this.emit("uploaded", this.currentTask[0]);
             this.currentTask = null;
@@ -299,7 +355,7 @@ export function SetupUpload() {
     gvar.Upload.upload.on("start", debug);
     gvar.Upload.upload.on("fail",  debug);
     gvar.Upload.upload.on("cancel", debug);
-    */
     gvar.Upload.upload.on("uploaded", debug);
     gvar.Upload.upload.on("progress", debug);
+    */
 }

@@ -1,0 +1,86 @@
+/** style for toolbar */
+@use 'mixin.scss' as mixin;
+@use 'size.scss'  as size;
+
+/** tool bar layout */
+.tool-bar //{
+{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    .tool {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 0.5em 0.3em 0.1em 0.3em;
+        svg {
+            @media (max-width: size.$large) {
+                width: 1.5vw;
+                height: 1.5vw;
+            }
+            @media (max-width: size.$medium) {
+                width: 2vw;
+                height: 2vw;
+            }
+            @media (max-width: size.$small) {
+                width: 4vw;
+                height: 4vw;
+            }
+        }
+        .tool-name {
+            @include mixin.no-select();
+            text-overflow: ellipsis;
+        }
+    }
+    .tool:hover {
+        background-color: #DDD;
+    }
+} //}
+
+/** address bar */
+#tool-address //{
+{
+    @include mixin.no-select();
+    margin: 0.8em;
+    box-sizing: content-box;
+    width: min-content;
+
+    .address-bar {
+        border: solid black 0.8px;
+        padding: 0em 0.3em;
+        border-radius: 0.2em;
+        display: inline-flex;
+        flex-direction: row;
+        .address-bar-pa {
+            display: inline-flex;
+            flex-direction: row;
+            flex-grow: 1;
+            flex-basis: 10px;
+            .address-slice {
+                display: inline-flex;
+                flex-direction: row;
+                .address-slice-arrow {
+                    svg {
+                        width: 10px;
+                    }
+                }
+                .address-slice-name {
+                    padding: 0em 0.3em;
+                }
+                .address-slice-name:hover {
+                    background-color: #E5F3FF;
+                }
+            }
+        }
+
+        & > input {
+            flex-grow: 1;
+            flex-basis: 10px;
+            border: none;
+        }
+        & > input:focus {
+            outline: none;
+        }
+    }
+} //}
+

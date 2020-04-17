@@ -138,7 +138,7 @@ export function SetupTools() {
     constants.tool.find.onclick = () => {
         let x = new controller.TransferProgressBar("hello", () => {window.alert("cancel");});
         x.start(200);
-        x.progress(100);
+        x.progress(100, 200);
     };
 }
 

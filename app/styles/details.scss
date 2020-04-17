@@ -1,0 +1,58 @@
+@use "mixin.scss" as mixin;
+@use "size.scss"  as size;
+
+/** detail page hierarchy */
+#details-container //{
+{
+    margin-top: 2.5em;
+    margin-left: 1em;
+    & > .x-selected {
+        background-color: #AAF;
+    };
+    a {
+        color: black;
+    };
+    a:hover {
+        text-decoration: none;
+    }
+    & > .file-item {
+        display: inline-flex;
+        flex-flow: column;
+        align-items: center;
+        margin: 0.25em 0.3em 0.1em 0.3em;
+        padding: 0.3em 0.6em;
+        @media (max-width: size.$large) {
+            width: 8vw;
+            font-size: 22px;
+        }
+        @media (max-width: size.$medium) {
+            width: 12vw;
+            font-size: 18px;
+        }
+        @media (max-width: size.$small) {
+            width: 15vw;
+            font-size: 12px;
+        }
+        .file-item-icon {
+            width: 100%;
+            svg {
+                width: 100%;
+            }
+        };
+        .filename-bar {
+            .filename {
+                @include mixin.no-select();
+            }
+            .filename-input {
+                width: 100%;
+            }
+        }
+    };
+    & > .file-item:hover {
+        background-color: #EEF;
+    }
+    & > .x-selected:hover {
+        background-color: #BBF;
+    }
+} //}
+
