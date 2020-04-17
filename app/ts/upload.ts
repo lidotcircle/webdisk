@@ -38,7 +38,14 @@ interface FileSystem {
 }
 //}
 
-type cancelObject = {cancel: boolean};
+type TaskManager = {
+    cancel: boolean, 
+    isFile: boolean,
+    mergeDirectory: boolean,
+    ignoreDirecotry: boolean,
+    overrideFile: boolean,
+    ignoreFile: boolean
+};
 enum SliceState { NO, IN, HAS };
 /**
  * @class UploadSession implementation of uploading files and directories
@@ -66,8 +73,8 @@ export class UploadSession extends events.EventEmitter //{
      * @property {number} total_size total bytes of files of current task
      */
     private file_manager: fm.FileManager;
-    private task_queue: [FileSystemEntry, string, cancelObject][];
-    private currentTask: [FileSystemEntry, string, cancelObject];
+    private task_queue: [FileSystemEntry, string, TaskManager][];
+    private currentTask: [FileSystemEntry, string, TaskManager];
     private send_bytes: number;
     private total_size: number;
 
@@ -93,6 +100,7 @@ export class UploadSession extends events.EventEmitter //{
             this.currentTask = null;
             if(this.task_queue.length > 0) proc.nextTick(() => {this.run();});
         }, (err: Error) => {
+            debug("error", err);
             if(err.message == "cancel") this.emit("cancel", this.currentTask[0], err);
             else this.emit("fail", this.currentTask[0], err);
             this.currentTask = null;
@@ -117,7 +125,7 @@ export class UploadSession extends events.EventEmitter //{
         if(entry.isFile) {
             let xx: number = await (() => {
                 return new Promise((resolve, reject) => {
-                    (this.currentTask[0] as FileSystemFileEntry).file((f: File) => {
+                    (entry as FileSystemFileEntry).file((f: File) => {
                         resolve(f.size);
                     }, (err) => {
                         reject(err);
@@ -126,7 +134,7 @@ export class UploadSession extends events.EventEmitter //{
             })() as number;
             this.total_size += xx;
         } else {
-            let dir = this.currentTask[0] as FileSystemDirectoryEntry;
+            let dir = entry as FileSystemDirectoryEntry;
             let entries = await (() => {
                 return new Promise((resolve, reject) => {
                     dir.createReader().readEntries(e => resolve(e), err => reject(err));
@@ -144,20 +152,31 @@ export class UploadSession extends events.EventEmitter //{
      */
     private async send_entry(entry: FileSystemEntry, p: string): Promise<void> //{
     {
+        let fileExists = /file.*already exists/;
         if(entry.isFile) {
             let xx = await (() => {
                 return new Promise((resolve, reject) => {
-                    (this.currentTask[0] as FileSystemFileEntry).file((f: File) => {
+                    (entry as FileSystemFileEntry).file((f: File) => {
                         resolve(f);
                     }, (err) => {
                         reject(err);
                     });
                 });
             })() as File;
-            return await this.send_file(xx, p);
+            try {
+                await this.send_file(xx, p);
+            } catch (err) {
+                if(!fileExists.test(err.message) || this.currentTask[2].isFile) // INFORM USER TODO
+                    throw err;
+            }
         } else {
-            await this.file_manager.mkdirP(p);
-            let dir = this.currentTask[0] as FileSystemDirectoryEntry;
+            try {
+                await this.file_manager.mkdirP(p);
+            } catch (err) {
+                if(!fileExists.test(err.message)) // INFORM USER CONFIRM WHETHER MERGE DIRECTORY TODO
+                    throw err;
+            }
+            let dir = entry as FileSystemDirectoryEntry;
             let entries = await (() => {
                 return new Promise((resolve, reject) => {
                     dir.createReader().readEntries(e => resolve(e), err => reject(err));
@@ -165,7 +184,7 @@ export class UploadSession extends events.EventEmitter //{
             })() as FileSystemEntry[];
             for (let i=0; i<entries.length;i++) {
                 let x = entries[i];
-                this.send_entry(x, util.pathJoin(p, x.name));
+                await this.send_entry(x, util.pathJoin(p, x.name));
             }
         }
     } //}
@@ -188,6 +207,11 @@ export class UploadSession extends events.EventEmitter //{
     private async send_file(f: File, p: string): Promise<void> //{
     {
         let ha = await this.file_manager.uploadP(p, f.size);
+        let not_send: number = 0;
+        for(let i of ha) {
+            not_send = i[1] - i[0] + 1;
+        }
+        this.send_bytes += (f.size - not_send);
         let plan: [number, number][] = [];
         for(let v of ha) {
             let x = v[0];
@@ -208,6 +232,7 @@ export class UploadSession extends events.EventEmitter //{
             if(this.currentTask[2].cancel) throw new Error("cancel");
             for(let i = HAS_top + 1; i<=HAS_top + constants.Misc.WindowSize && i<plan.length; i++) {
                 if(sended[i] != SliceState.NO) continue;
+                sended[i] = SliceState.IN;
                 promises[i] = this.send_slice(f.slice(plan[i][0], plan[i][1] + 1), plan[i][0], p, f.size).then(() => {
                     sended[i] = SliceState.HAS;
                     promises[i] = null;
@@ -242,24 +267,35 @@ export class UploadSession extends events.EventEmitter //{
      * @param {string} dest valid path
      * @return {cancelObject} used for cancelling corresponding task
      */
-    newTask(entry: FileSystemEntry, dest: string): cancelObject //{
+    newTask(entry: FileSystemEntry, dest: string): TaskManager //{
     {
         dest = util.pathJoin(dest, entry.name);
         if(!constants.Regex.validPathname.test(dest) || entry == null || entry.fullPath == null)
             return null;
-        let obj = {cancel: false};
+        let obj = {
+            cancel: false, 
+            isFile: entry.isFile,
+            overrideFile: false,
+            ignoreFile: false,
+            mergeDirectory: false,
+            ignoreDirecotry: false
+        };
         this.task_queue.push([entry, dest, obj]);
         proc.nextTick(() => this.run());
         return obj;
     } //}
 
     /** cancel specified task */
-    cancel(obj: cancelObject) {obj.cancel = true;}
+    cancel(obj: TaskManager) {obj.cancel = true;}
 } //}
 
 export function SetupUpload() {
     gvar.Upload.upload = new UploadSession(gvar.File.manager);
-//    gvar.Upload.upload.on("start", debug);
+    /*
+    gvar.Upload.upload.on("start", debug);
     gvar.Upload.upload.on("fail",  debug);
     gvar.Upload.upload.on("cancel", debug);
+    */
+    gvar.Upload.upload.on("uploaded", debug);
+    gvar.Upload.upload.on("progress", debug);
 }

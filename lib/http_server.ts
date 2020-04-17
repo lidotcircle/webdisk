@@ -186,9 +186,7 @@ export class HttpServer extends event.EventEmitter //{
             if (user == null)
                 return this.write_empty_response(response, 401);
             let docRoot = user.DocRoot;
-            let fileName = path.resolve(docRoot, url.pathname.substring(constants.DISK_PREFIX.length + 1));
-            console.log(fileName);
-            console.log(docRoot);
+            let fileName = path.resolve(docRoot, decodeURI(url.pathname.substring(constants.DISK_PREFIX.length + 1)));
             let range: [number, number] = util.parseRangeField(request.headers.range);
             this.write_file_response(fileName, response, header, range);
         } else { // JUST SINGLE PAGE "/index.html" or "/", PUBLIC Resources

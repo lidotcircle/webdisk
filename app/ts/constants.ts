@@ -88,7 +88,7 @@ export const KFilenameControl = Symbol("FilenameControl");
 
 // Regex //{
 export namespace Regex {
-    export const validPathname = /^\/([\w\-. ]+\/)*([\w\-. ]+)?$/;
+    export const validPathname = /^\/([^\/]+\/)*([^\/]+)?$/;
 }
 //}
 
