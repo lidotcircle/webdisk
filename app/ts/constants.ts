@@ -7,7 +7,7 @@ export const login_confirm = document.getElementById("login-submit");
 export const login_reset   = document.getElementById("login-reset");
 //}
 
-// Inputs //{
+// Login //{
 export const login_password = document.getElementById("login-password");
 export const login_username = document.getElementById("login-username");
 //}
@@ -22,6 +22,7 @@ export const dir_tree = document.getElementById("dir_tree");
 
 // Tool Bar //{
 export const tool_bar = document.getElementById("tool-bar");
+export const upload_elem: HTMLElement = document.getElementById("directory-input");
 export namespace tool {
     export const address: HTMLElement     = document.getElementById("tool-address");
     export const upload: HTMLElement     = document.getElementById("tool-upload");

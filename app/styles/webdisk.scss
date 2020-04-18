@@ -18,3 +18,11 @@ body {
     padding: 0.33em 2em 0em 2em;
     height: 80%;
 }
+
+#dir-tree {
+    padding: 0.5em;
+    max-height: 50vh;
+    svg {
+        height: 100%;
+    }
+}

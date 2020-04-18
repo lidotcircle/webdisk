@@ -245,5 +245,18 @@ export function SetupTools() {
         if(!ev.ctrlKey) ctrlDown = false;
     });
     //}
+
+    /** upload */ //{
+    constants.tool.upload.onclick = () => {
+        constants.upload_elem.click();
+    } 
+    constants.upload_elem.oninput = (ev) => {
+        ev.preventDefault();
+        console.log((ev.target as any).files);
+    }
+    constants.upload_elem.onchange = (ev) => {
+        ev.preventDefault();
+    }
+    //}
 }
 
