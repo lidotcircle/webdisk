@@ -9,6 +9,7 @@ import { debug, promisify } from './util';
 enum FileOpcode {
     CHMOD   = "chmod",
     COPY    = "copy",
+    COPYR   = "copyr",
     EXECUTE = "execute",
     GETDIR  = "getdir",
     INVALID = "invalid",
@@ -181,6 +182,7 @@ export class FileManager extends EventEmitter //{
     } //}
     chmod(loc: string, mode: string, cb: FileOpCallback = this.echoMsg) {this.operation(FileOpcode.CHMOD, {path: loc, mode: mode}, cb);}
     copy(src: string, dst: string, cb: FileOpCallback = this.echoMsg) {this.operation(FileOpcode.COPY, {src: src, dst: dst}, cb);}
+    copyr(src: string, dst: string, cb: FileOpCallback = this.echoMsg) {this.operation(FileOpcode.COPYR, {src: src, dst: dst}, cb);}
     exec(loc: string, argv: string[], cb: FileOpCallback = this.echoMsg) //{
     {
         this.operation(FileOpcode.EXECUTE, {
@@ -219,6 +221,7 @@ export class FileManager extends EventEmitter //{
 
     async chmodP   (loc: string, mode: string): Promise<Success>{return promisify(this.chmod).call(this, loc, mode);}
     async copyP    (src: string, dst: string): Promise<Success> {return promisify(this.copy).call(this, src, dst);}
+    async copyrP   (src: string, dst: string): Promise<Success> {return promisify(this.copyr).call(this, src, dst);}
     async execP    (loc: string, argv: string[])                {return promisify(this.exec).call(this, loc, argv);}
     async getdirP  (loc: string): Promise<types.FileStat[]>     {return promisify(this.getdir).call(this, loc);}
     async mkdirP   (loc: string): Promise<DirectoryEntry>              {return promisify(this.mkdir).call(this, loc);}

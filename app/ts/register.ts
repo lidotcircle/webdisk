@@ -29,23 +29,9 @@ export function form_multi_functions(funcs: RegisterFunction[]) //{
  */
 export function upload(elem: HTMLElement, dt: details.Detail, dti: details.DetailItem): void //{
 {
-    /*
-    elem.addEventListener("dragleave", (ee: CustomEvent) => {
-//        ee.stopPropagation();
-//        ee.preventDefault();
-//        console.log("being draged leave");
-    });
-    elem.addEventListener("dragstart", (ee: CustomEvent) => {
-//        console.log("being draged start");
-    });
-    elem.addEventListener("dragend", (ee: CustomEvent) => {
-//        console.log("being draged end");
-    });
-    */
     elem.addEventListener("dragover", (ee: CustomEvent) => {
         ee.stopPropagation();
         ee.preventDefault();
-//        console.log("being draged over");
     });
     elem.addEventListener("drop", (ee: DragEvent) => {
         ee.stopPropagation();
@@ -55,12 +41,23 @@ export function upload(elem: HTMLElement, dt: details.Detail, dti: details.Detai
             debug("drop should only support directory");
             return;
         }
-        for(let i=0; i<ee.dataTransfer.items.length; i++) {
-            let x = ee.dataTransfer.items[i].webkitGetAsEntry();
-            if (x.isFile || x.isDirectory) { // FileSystemEntry
-                gvar.Upload.upload.newTask(x, di.Stat.filename);
+        let _path = ee.dataTransfer.getData("path");
+        if (_path == "") { // file
+            for(let i=0; i<ee.dataTransfer.items.length; i++) {
+                let x = ee.dataTransfer.items[i].webkitGetAsEntry();
+                if (x.isFile || x.isDirectory) { // FileSystemEntry
+                    gvar.Upload.upload.newTask(x, di.Stat.filename);
+                }
             }
+            return;
         }
+        let dst = util.pathJoin(di.Stat.filename, util.basename(_path));
+        gvar.File.manager.renameP(_path, dst)
+        .then(() => {
+            gvar.Detail.Details.chdir(gvar.Detail.Details.cwd);
+        }, (err) => {
+            // INFORM ERROR TODO
+        });
     });
 } //}
 

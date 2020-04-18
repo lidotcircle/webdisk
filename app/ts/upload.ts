@@ -351,11 +351,15 @@ export class UploadSession extends events.EventEmitter //{
 
 export function SetupUpload() {
     gvar.Upload.upload = new UploadSession(gvar.File.manager);
+    gvar.Upload.upload.on("uploaded", () => {
+        gvar.Detail.Details.chdir(gvar.Detail.Details.cwd);
+    });
+    gvar.Upload.upload.on("start", () => {
+        gvar.Detail.Details.chdir(gvar.Detail.Details.cwd);
+    });
     /*
-    gvar.Upload.upload.on("start", debug);
     gvar.Upload.upload.on("fail",  debug);
     gvar.Upload.upload.on("cancel", debug);
-    gvar.Upload.upload.on("uploaded", debug);
     gvar.Upload.upload.on("progress", debug);
     */
 }

@@ -36,12 +36,19 @@ export class DetailItem extends event.EventEmitter//{
         window["cd"] = util.extension;
     } //}
 
+    private on_dragstart(ev: DragEvent) //{
+    {
+        ev.stopPropagation();
+        ev.dataTransfer.setData("path", this.stat.filename);
+        ev.dataTransfer.setDragImage(this._element, 0, 0);
+    } //}
+
     toHtmlElement(): HTMLElement //{
     {
         if(this._element) return this._element;
         let tag = this.Stat.type == types.FileType.reg ? "a" : "div";
         let result: HTMLDivElement = util.createNodeFromHtmlString(
-            `<${tag} class='${constants.CSSClass.file_item}'>
+            `<${tag} class='${constants.CSSClass.file_item}' draggable="true">
             </${tag}>`) as HTMLDivElement;
         let fname = new controller.FilenameBar(this.basename, constants.CSSClass.hide_elem);
         fname.on("change", (n, o) => {
@@ -64,6 +71,7 @@ export class DetailItem extends event.EventEmitter//{
         this._element = result;
         result[constants.KDetailItem] = this;
         result[constants.KFilenameControl] = fname;
+        result.ondragstart = this.on_dragstart.bind(this);
         return result;
     } //}
 

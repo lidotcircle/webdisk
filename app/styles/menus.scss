@@ -33,7 +33,7 @@
 /** pop file transfer progress */
 .transfer-bar //{
 {
-    @include mixin.pop_panel(280px, 100px);
+    @include mixin.pop_panel(280px, 120px);
 
     .transfer-bar-top {
         width: 100%;
@@ -43,7 +43,8 @@
         align-items: center;
 
         input {
-            max-width: 20%;
+            min-width: 20%;
+            max-width: 30%;
             @include mixin.common_button();
         }
     }

@@ -42,6 +42,7 @@
         .filename-bar {
             .filename {
                 @include mixin.no-select();
+                word-break: break-all;
             }
             .filename-input {
                 width: 100%;

@@ -25,6 +25,7 @@ enum FileOpcode //{
 {
     CHMOD   = "chmod",
     COPY    = "copy",
+    COPYR   = "copyr",
     EXECUTE = "execute",
     GETDIR  = "getdir",
     INVALID = "invalid",
@@ -250,6 +251,21 @@ class FileControlSession //{
         src = path.resolve(this.user.DocRoot, src.substring(1));
         dst = path.resolve(this.user.DocRoot, dst.substring(1));
         fs.copyFile(src, dst, (err) => {
+            if(err) this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
+            else    this.sendsuccess(reqid);
+        });
+    } //}
+    private op_copyr (msg) //{
+    {
+        let reqid: string = msg["id"];
+        let src: string = msg["src"] as string;
+        let dst: string = msg["dst"] as string;
+        if (!util.isString(src) || !(src as string).startsWith("/") ||
+            !util.isString(dst) || !(dst as string).startsWith("/"))
+            return this.sendfail(reqid, StatusCode.BAD_ARGUMENTS);
+        src = path.resolve(this.user.DocRoot, src.substring(1));
+        dst = path.resolve(this.user.DocRoot, dst.substring(1));
+        annautils.fs.copyr(src, dst, (err) => {
             if(err) this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
             else    this.sendsuccess(reqid);
         });
@@ -605,6 +621,7 @@ class FileControlSession //{
             /** @property {string} what["src"]
              *  @property {string} what["dst"] */
             case FileOpcode.COPY:   this.op_copy(what); break;
+            case FileOpcode.COPYR:  this.op_copyr(what); break;
 
             /** @property {string} what["path"] */
             case FileOpcode.REMOVE: this.op_remove(what); break;

@@ -28,12 +28,12 @@
     padding: 0.8em;
     top: 50%;
     left: 50%;
-    $large-width:   (size.$large / size.$medium) * $width;
-    $large-height:  (size.$large / size.$medium) * $height;
+    $large-width:   (size.$large / size.$medium) * $width * 0.9;
+    $large-height:  (size.$large / size.$medium) * $height * 0.9;
     $medium-width:  $width;
     $medium-height: $height;
-    $small-width:   (size.$small / size.$medium) * $width;
-    $small-height:  (size.$small / size.$medium) * $height;
+    $small-width:   (size.$small / size.$medium) * $width * 1.2;
+    $small-height:  (size.$small / size.$medium) * $height * 1.2;
     @media (max-width: size.$large) {
         @include center-rectangle($large-width, $large-height);
     }
