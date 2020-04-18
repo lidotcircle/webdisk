@@ -257,3 +257,50 @@ export function concatArrayBuffers(buffer1, buffer2) //{
     return tmp.buffer;
 } //}
 
+export class FileTree //{
+{
+    children: Map<string, (FileTree | File)>;
+    filetree: boolean;
+    name: string;
+
+    constructor(name: string) {
+        this.children = new Map<string, (FileTree | File)>();
+        this.name = name;
+        this.filetree = true;
+    }
+
+    private getA(path_: string): [string, string] {
+        let i = path_.indexOf("/");
+        if(i < 0) return [path_, null];
+        return [path_.substring(0, i), path_.substring(i + 1)];
+    }
+
+    /**
+     * @param {string} path_ path like a/b/c/d
+     * @param {File} fileEntry file entry, external node of tree
+     */
+    add(path_: string, fileEntry: File) {
+        let x, y;
+        [x, y] = this.getA(path_);
+        if(y == null)
+            return this.children.set(path_, fileEntry);
+        if(!this.children.has(x))
+            this.children.set(x, new FileTree(x));
+        return (this.children.get(x) as FileTree).add(y, fileEntry);
+    }
+} //}
+export function DirectoryfileListToFileTree(cwd: string, fileList: File[]) //{
+{
+    let ret = new FileTree(cwd);
+    for(let v of fileList)
+        ret.add((v as any).webkitRelativePath, v);
+    return ret;
+} //}
+export function MultiplefileListToFileTree(cwd: string, fileList: File[]) //{
+{
+    let ret = new FileTree(cwd);
+    for(let v of fileList)
+        ret.add(v.name, v);
+    return ret;
+} //}
+

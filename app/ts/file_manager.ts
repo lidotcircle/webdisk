@@ -6,28 +6,8 @@ import * as types from './types';
 
 import { debug, promisify } from './util';
 
-enum FileOpcode {
-    CHMOD   = "chmod",
-    COPY    = "copy",
-    COPYR   = "copyr",
-    EXECUTE = "execute",
-    GETDIR  = "getdir",
-    INVALID = "invalid",
-    MKDIR   = "mkdir",
-    READ    = "read",
-    REMOVE  = "remove",
-    RENAME  = "rename",
-    STAT    = "stat",
-    TOUCH   = "touch",
-    TRUNCATE = "truncate",
-    WRITE   = "write",
-    UPLOAD = "upload",
-    UPLOAD_WRITE = "upload_write",
-    UPLOAD_WRITE_B = "upload_write_b",
-    UPLOAD_MERGE = "upload_merge",
-    NEW_FOLDER = "new_folder",
-    NEW_FILE = "new_file"
-};
+import { FileOpcode } from '../../lib/common';
+
 
 type Success = {code: number, message: string};
 type FileEntry = {file: string};

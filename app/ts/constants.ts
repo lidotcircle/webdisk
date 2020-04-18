@@ -22,10 +22,12 @@ export const dir_tree = document.getElementById("dir_tree");
 
 // Tool Bar //{
 export const tool_bar = document.getElementById("tool-bar");
-export const upload_elem: HTMLElement = document.getElementById("directory-input");
+export const upload_elem_directory: HTMLElement = document.getElementById("directory-input");
+export const upload_elem_file: HTMLElement      = document.getElementById("file-input");
 export namespace tool {
     export const address: HTMLElement     = document.getElementById("tool-address");
-    export const upload: HTMLElement     = document.getElementById("tool-upload");
+    export const upload_file: HTMLElement     = document.getElementById("tool-upload-file");
+    export const upload_directory: HTMLElement     = document.getElementById("tool-upload-directory");
     export const back: HTMLElement     = document.getElementById("tool-back");
     export const new_file: HTMLElement     = document.getElementById("tool-new-file");
     export const new_folder: HTMLElement     = document.getElementById("tool-new-folder");

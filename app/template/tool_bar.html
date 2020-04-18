@@ -16,7 +16,12 @@
     <div class="tool" id="tool-upload"  >
         <% include_plain("./svgs/toolbar/upload.svg");  %>
         <div class="tool-name">upload</div>
+        <div id="file-directory-upload">
+            <div id="tool-upload-file">File</div>
+            <div id="tool-upload-directory">Directory</div>
+        </div>
         <input id="directory-input" type="file" multiple webkitdirectory>
+        <input id="file-input"      type="file" multiple>
     </div>
     <!--
         <div class="tool" id="tool-edit"    ><% include_plain("./svgs/toolbar/edit.svg");    %><div class="tool-name"></div></div>

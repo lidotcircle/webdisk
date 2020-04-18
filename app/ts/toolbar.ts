@@ -247,15 +247,26 @@ export function SetupTools() {
     //}
 
     /** upload */ //{
-    constants.tool.upload.onclick = () => {
-        constants.upload_elem.click();
+    constants.tool.upload_directory.onclick = () => {
+        constants.upload_elem_directory.click();
     } 
-    constants.upload_elem.oninput = (ev) => {
+    constants.upload_elem_directory.oninput = (ev) => {
         ev.preventDefault();
-        console.log((ev.target as any).files);
+        let entry = util.DirectoryfileListToFileTree("/", (ev.target as any).files);
+        let ent = ((ev.target as any).files[0] as any).webkitRelativePath as string;
+        let ent_i = ent.indexOf("/");
+        if(ent_i > 0)
+            ent = ent.substring(0, ent_i);
+        entry.name = "/" + ent;
+        gvar.Upload.upload.newTask2(entry, gvar.Detail.Details.cwd);
     }
-    constants.upload_elem.onchange = (ev) => {
+    constants.tool.upload_file.onclick = () => {
+        constants.upload_elem_file.click();
+    } 
+    constants.upload_elem_file.oninput = (ev) => {
         ev.preventDefault();
+        let entry = util.MultiplefileListToFileTree("/", (ev.target as any).files);
+        gvar.Upload.upload.newTask2(entry, gvar.Detail.Details.cwd);
     }
     //}
 }

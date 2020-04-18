@@ -9,9 +9,7 @@
     flex-direction: row;
     flex-wrap: wrap;
     .tool {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
+        text-align: center;
         margin: 0.5em 0.3em 0.1em 0.3em;
         svg {
             @media (max-width: size.$large) {
@@ -84,8 +82,32 @@
     }
 } //}
 
-#directory-input //{
+/** file upload */
+#tool-upload //{
 {
-    display: none;
+    #directory-input, #file-input{
+        display: none;
+    }
+
+    #file-directory-upload {
+        display: none;
+        position: absolute;
+
+        div {
+            padding: 0.2em 0.3em;
+            text-align: left;
+
+            &:hover {
+                background-color: #E5F3FF;
+            }
+        }
+    }
+
+    &:hover {
+        #file-directory-upload {
+            display: block;
+            background-color: white;
+        }
+    }
 } //}
 

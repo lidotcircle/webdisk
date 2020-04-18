@@ -6,7 +6,7 @@ import * as proc from 'process';
 import * as util from './util';
 import * as gvar from './global_vars';
 import * as controller from './controller';
-import { debug } from './util';
+import { debug, FileTree } from './util';
 
 
 // FileSystem API declare //{
@@ -75,8 +75,8 @@ export class UploadSession extends events.EventEmitter //{
      * @property {number} total_size total bytes of files of current task
      */
     private file_manager: fm.FileManager;
-    private task_queue: [FileSystemEntry, string, TaskManager][];
-    private currentTask: [FileSystemEntry, string, TaskManager];
+    private task_queue: [FileSystemEntry | FileTree, string, TaskManager][];
+    private currentTask: [FileSystemEntry | FileTree, string, TaskManager];
     private send_bytes: number;
     private total_size: number;
 
@@ -95,7 +95,7 @@ export class UploadSession extends events.EventEmitter //{
     private transfer_progress() //{
     {
         let p_bar = new controller.TransferProgressBar(
-        `From ${this.currentTask[0].fullPath} to ${this.currentTask[1]}`, () => {
+        `From ${(this.currentTask[0] as FileSystemEntry).fullPath || this.currentTask[0].name} to ${this.currentTask[1]}`, () => {
             this.cancel(this.currentTask[2]);
         });
         let ct = this.currentTask[0];
@@ -170,8 +170,15 @@ export class UploadSession extends events.EventEmitter //{
         this.send_bytes = 0;
         this.total_size = 0;
         this.emit("start", this.currentTask[0]);
-        await this.get_total_size(this.currentTask[0]);
-        await this.send_entry(this.currentTask[0], this.currentTask[1]);
+        if((this.currentTask[0] as FileTree).filetree) {
+            let x = this.currentTask[0] as FileTree;
+            await this.get_total_size_2(x);
+            await this.send_entry_2(x, this.currentTask[1]);
+        } else {
+            let x = this.currentTask[0] as FileSystemEntry;
+            await this.get_total_size(x);
+            await this.send_entry(x, this.currentTask[1]);
+        }
     } //}
 
     /**
@@ -200,6 +207,19 @@ export class UploadSession extends events.EventEmitter //{
             for (let i=0; i<entries.length;i++) {
                 await this.get_total_size(entries[i]);
             }
+        }
+    } //}
+
+    /** @see above */
+    private async get_total_size_2(entry: FileTree | File) //{
+    {
+        if((entry as any).filetree) {
+            let entryx = entry as FileTree;
+            for (let v of entryx.children as any) {
+                await this.get_total_size_2(v[1]);
+            }
+        } else {
+            this.total_size += (entry as File).size;
         }
     } //}
 
@@ -242,6 +262,30 @@ export class UploadSession extends events.EventEmitter //{
             for (let i=0; i<entries.length;i++) {
                 let x = entries[i];
                 await this.send_entry(x, util.pathJoin(p, x.name));
+            }
+        }
+    } //}
+    private async send_entry_2(entry: FileTree | File, p: string): Promise<void> //{
+    {
+        let fileExists = /file.*already exists/;
+        if(!(entry as any).filetree) {
+            let xx = entry as File;
+            try {
+                await this.send_file(xx, p);
+            } catch (err) {
+                if(!fileExists.test(err.message) || this.currentTask[2].isFile) // INFORM USER TODO
+                    throw err;
+            }
+        } else {
+            try {
+                await this.file_manager.mkdirP(p);
+            } catch (err) {
+                if(!fileExists.test(err.message)) // INFORM USER CONFIRM WHETHER MERGE DIRECTORY TODO
+                    throw err;
+            }
+            let dir = entry as FileTree;
+            for (let v of dir.children as any) {
+                await this.send_entry_2(v[1], util.pathJoin(p, v[0]));
             }
         }
     } //}
@@ -335,6 +379,24 @@ export class UploadSession extends events.EventEmitter //{
         let obj = {
             cancel: false, 
             isFile: entry.isFile,
+            overrideFile: false,
+            ignoreFile: false,
+            mergeDirectory: false,
+            ignoreDirecotry: false
+        };
+        this.task_queue.push([entry, dest, obj]);
+        proc.nextTick(() => this.run());
+        return obj;
+    } //}
+    /** @see above */
+    newTask2(entry: FileTree, dest: string): TaskManager //{
+    {
+        dest = util.pathJoin(dest, entry.name);
+        if(!constants.Regex.validPathname.test(dest) || entry == null || entry.filetree == null)
+            return null;
+        let obj = {
+            cancel: false, 
+            isFile: false,
             overrideFile: false,
             ignoreFile: false,
             mergeDirectory: false,

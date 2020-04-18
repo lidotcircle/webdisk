@@ -20,42 +20,7 @@ import { WebsocketM, WebsocketOPCode } from './websocket';
 
 import * as upload from './upload';
 
-
-enum FileOpcode //{
-{
-    CHMOD   = "chmod",
-    COPY    = "copy",
-    COPYR   = "copyr",
-    EXECUTE = "execute",
-    GETDIR  = "getdir",
-    INVALID = "invalid",
-    MKDIR   = "mkdir",
-    MOVE    = "move",
-    READ    = "read",
-    REMOVE  = "remove",
-    RENAME  = "rename",
-    STAT    = "stat",
-    TOUCH   = "touch",
-    TRUNCATE   = "truncate",
-    WRITE   = "write",
-    UPLOAD = "upload",
-    UPLOAD_WRITE = "upload_write",
-    UPLOAD_WRITE_B = "upload_write_b",
-    UPLOAD_MERGE = "upload_merge",
-    NEW_FOLDER = "new_folder",
-    NEW_FILE = "new_file"
-} //}
-
-enum FileEvent //{
-{
-    REMOVE = "remove",
-    MOVE = "move",
-    MODIFIED = "modified",
-    CHMOD = "chmod",
-    CHOWN = "chown",
-    NEW = "new",
-    INVALID = "invalid"
-} //}
+import { FileOpcode, FileEvent } from './common';
 
 export enum StatusCode //{
 {
