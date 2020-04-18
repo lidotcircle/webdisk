@@ -13,3 +13,8 @@ body {
     height: 90vh;
 };
 
+#webdisk-logo {
+    @include mixin.no-select();
+    padding: 0.33em 2em 0em 2em;
+    height: 80%;
+}

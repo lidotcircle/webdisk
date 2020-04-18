@@ -568,3 +568,6 @@ export class TransferProgressBar extends MoveableElementGenerator //{
 /**
  * @class DirectoryTree
  */
+export class DirectoryEntry {
+}
+
