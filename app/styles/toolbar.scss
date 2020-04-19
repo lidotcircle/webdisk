@@ -27,6 +27,7 @@
         }
         .tool-name {
             @include mixin.no-select();
+            font-size: 80%;
             text-overflow: ellipsis;
         }
     }
@@ -88,26 +89,52 @@
     #directory-input, #file-input{
         display: none;
     }
+} //}
 
-    #file-directory-upload {
+.dropdown-main //{
+{
+    .dropdown-content {
         display: none;
         position: absolute;
+        background-color: white;
+    }
 
+    &:hover > .dropdown-content {
+        display: block;
+        text-align: left;
+        padding: 0.5em 0.7em;
+        border-right: 1px #EEE solid;
+        border-bottom: 1px #EEE solid;
+        border-left: 1px #EEE solid;
         div {
-            padding: 0.2em 0.3em;
-            text-align: left;
-
-            &:hover {
-                background-color: #E5F3FF;
-            }
+            padding: 0.1em 1em 0.5em 1em;
+            margin: 0.2em;
+        }
+        div + div {
+            border-top: 0.7px #AAA solid;
+        }
+        div ~ div {
+            padding: 0.3em 1em 0.5em 1em;
         }
     }
 
-    &:hover {
-        #file-directory-upload {
-            display: block;
-            background-color: white;
-        }
+    &:hover > .dropdown-content > div:hover {
+        background-color: #E5F3FF;
     }
 } //}
+
+#tool-sortby {
+    .sort-option + .reverse-option {
+        border-top: 2px solid black;
+    }
+}
+
+/** select layout, select sort */
+.selected-layout, .selected-sort, .selected-reverse {
+    &::before {
+        position: absolute;
+        left: 0.2em;
+        content: "\2611";
+    }
+}
 

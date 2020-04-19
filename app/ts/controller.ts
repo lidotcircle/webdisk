@@ -56,6 +56,7 @@ export class FilenameBar extends events.EventEmitter //{
     /** event handlers */
     private change_name(name: string) //{
     {
+        this.inInput = false;
         let old_name = this.basename;
         this.basename = name;
         this.filename_e.innerText = this.basename;
@@ -68,7 +69,7 @@ export class FilenameBar extends events.EventEmitter //{
     private check_on_input() //{
     {
         if(!FilenameBar.validFilename.test(this.input_e.value)) {
-            if (this.input_e.value != "") window.alert("invalid filename");
+            if (this.input_e.value != "") window.alert("invalid filename"); // TODO
             this.change_name(this.basename);
         } else
             this.change_name(this.input_e.value);

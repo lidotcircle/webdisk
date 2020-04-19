@@ -8,6 +8,8 @@ import * as util from './util';
 var copy_store: details.DetailItem[] = [];
 var cut_store: details.DetailItem[] = []
 
+let html = document.querySelector("html");
+
 export function SetupTools() {
     /** back parent directory */ //{
     constants.tool.back.addEventListener("click", () => {
@@ -48,6 +50,13 @@ export function SetupTools() {
             }
             constants.tool.refresh.dispatchEvent(new CustomEvent("click"));
         });
+    }); //}
+
+    /** f2 */ //{
+    const f2_keycode = 113;
+    html.addEventListener("keydown", (ev: KeyboardEvent) => {
+        if(ev.keyCode == f2_keycode)
+            constants.tool.rename.click();
     }); //}
 
     /** delete selected files */ //{
@@ -221,7 +230,6 @@ export function SetupTools() {
     } //}
 
     /** <ctrl-c> <ctrl-x> <ctrl-v> */ //{
-    let html = document.querySelector("html");
     let ctrlDown: boolean = false;
     let ctrl_delay = 500;
     const x_keycode = 88;
@@ -269,5 +277,54 @@ export function SetupTools() {
         gvar.Upload.upload.newTask2(entry, gvar.Detail.Details.cwd);
     }
     //}
+    
+    /** select */
+    function register_select(elem: HTMLElement, childClass: string, selectClass: string, callback: (elem: HTMLElement) => void) //{
+    {
+        elem.addEventListener("click", (ev: MouseEvent) => {
+            let src = ev.target as HTMLElement;
+            while(src) {
+                if(src.classList.contains(childClass)) break;
+                src = src.parentNode as HTMLElement;
+                if (src.tagName == "HTML") return;
+            }
+            if (src == null) return;
+            let a = src as Element;
+            while (a.nextElementSibling) {
+                a = a.nextElementSibling;
+                a.classList.remove(selectClass);
+            }
+            a = src as Element;
+            while (a.previousElementSibling) {
+                a = a.previousElementSibling;
+                a.classList.remove(selectClass);
+            }
+            src.classList.add(selectClass);
+            callback(src);
+        });
+    } //}
+
+    /** layout */ //{
+    register_select(constants.tool.layout, "layout-option", "selected-layout", (elem) => {
+        let target = elem.dataset["target"];
+        if(target == null) return;
+        let origin = [];
+        constants.detail_page.classList.forEach((x) => origin.push(x));
+        origin.map(x => constants.detail_page.classList.remove(x));
+        constants.detail_page.classList.add(target);
+    }); //}
+
+    /** sort */ //{
+    register_select(constants.tool.sortby, "sort-option", "selected-sort", (elem) => {
+        let target = elem.dataset["sort"];
+        gvar.Detail.Details.SortBy(target as any);
+        return;
+    }); 
+    register_select(constants.tool.sortby, "reverse-option", "selected-reverse", (elem) => {
+        let target = elem.dataset["order"];
+        gvar.Detail.Details.Order(target as any);
+        return;
+    }); //}
+
 }
 

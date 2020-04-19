@@ -37,6 +37,8 @@ export namespace tool {
     export const rename: HTMLElement   = document.getElementById("tool-rename");
     export const refresh: HTMLElement   = document.getElementById("tool-refresh");
     export const del: HTMLElement      = document.getElementById("tool-delete");
+    export const layout: HTMLElement      = document.getElementById("tool-layout");
+    export const sortby: HTMLElement      = document.getElementById("tool-sortby");
     export const find: HTMLElement     = document.getElementById("tool-find");
     export const settings: HTMLElement = document.getElementById("tool-settings");
 }

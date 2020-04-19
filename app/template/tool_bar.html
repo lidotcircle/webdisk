@@ -13,10 +13,10 @@
     <div class="tool" id="tool-new-folder"   ><% include_plain("./svgs/toolbar/new-folder.svg");   %><div class="tool-name">new folder</div></div>
     <div class="tool" id="tool-rename"  ><% include_plain("./svgs/toolbar/rename.svg");  %><div class="tool-name">rename</div></div>
     <div class="tool" id="tool-delete"  ><% include_plain("./svgs/toolbar/delete.svg");  %><div class="tool-name">delete</div></div>
-    <div class="tool" id="tool-upload"  >
+    <div class="tool dropdown-main" id="tool-upload"  >
         <% include_plain("./svgs/toolbar/upload.svg");  %>
         <div class="tool-name">upload</div>
-        <div id="file-directory-upload">
+        <div class="dropdown-content" id="file-directory-upload">
             <div id="tool-upload-file">File</div>
             <div id="tool-upload-directory">Directory</div>
         </div>
@@ -26,6 +26,29 @@
     <!--
         <div class="tool" id="tool-edit"    ><% include_plain("./svgs/toolbar/edit.svg");    %><div class="tool-name"></div></div>
     -->
+    <div class="tool dropdown-main" id="tool-layout">
+        <% include_plain("./svgs/toolbar/layout.svg");    %>
+        <div class="tool-name">layout</div>
+        <div class="dropdown-content">
+            <div data-target="extra-large-icons" class="layout-option" id="dl-extra-large-icons">Extra large icons</div>
+            <div data-target="large-icons" class="layout-option" id="dl-large-icons">Large icons</div>
+            <div data-target="medium-icons" class="layout-option" id="dl-medium-icons">Medium icons</div>
+            <div data-target="small-icons" class="layout-option" id="dl-small-icons">Small icons</div>
+            <div data-target="style-details" class="layout-option selected-layout" id="dl-details">Details</div>
+        </div>
+    </div>
+    <div class="tool dropdown-main" id="tool-sortby">
+        <% include_plain("./svgs/toolbar/sortby.svg");    %>
+        <div class="tool-name">sortby</div>
+        <div class="dropdown-content">
+            <div data-sort="name" class="sort-option selected-sort" id="sortby-name">Name</div>
+            <div data-sort="time" class="sort-option" id="sortby-time">Time</div>
+            <div data-sort="type" class="sort-option" id="sortby-type">Type</div>
+            <div data-sort="size" class="sort-option" id="sortby-size">Size</div>
+            <div class="reverse-option selected-reverse" data-order="ascending" >Ascending </div>
+            <div class="reverse-option" data-order="descending">Descending</div>
+        </div>
+    </div>
     <div class="tool" id="tool-find"    ><% include_plain("./svgs/toolbar/find.svg");    %><div class="tool-name">find</div></div>
     <div class="tool" id="tool-settings"><% include_plain("./svgs/toolbar/settings.svg");%><div class="tool-name">setting</div></div>
 </div>
