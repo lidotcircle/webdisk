@@ -93,6 +93,7 @@
 
 .dropdown-main //{
 {
+    @include mixin.no-select();
     .dropdown-content {
         display: none;
         position: absolute;

@@ -6,6 +6,15 @@
     height: 100%;
 }
 
+.filename-bar {
+    input {
+        border: none;
+        &:hover {
+            outline: none;
+        }
+    }
+}
+
 @mixin common($w1, $f1, $w2, $f2, $w3, $f3) //{
 {
     margin-top: 2.5em;
