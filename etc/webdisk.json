@@ -1,0 +1,10 @@
+{
+    "Users": [
+        {
+            "UserName": "admin",
+            "DocRoot": "/",
+            "SID": "FzBPaYVgFpKaZh5t68tdIyTXfGWxTFp6",
+            "Password": "12345678"
+        }
+    ]
+}

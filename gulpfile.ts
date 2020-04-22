@@ -25,16 +25,20 @@ function onerror(err) {
     this.emit("end");
 }
 
-function copy_misc() {
+/** package.json, README.md */
+function copy_misc() //{
+{
     return merge([
         gulp.src("./package.json").pipe(gulp.dest(path.join(release_root, project_name))),
         gulp.src("./README.md").pipe(gulp.dest(path.join(release_root, project_name))),
         gulp.src("./package.json").pipe(gulp.dest(path.join(release_root, "@types", project_name))),
         gulp.src("./README.md").pipe(gulp.dest(path.join(release_root, "@types", project_name)))
     ]);
-}
+} //}
 
-function compile_ts_dir(glob: string, destination: string, declaration: boolean = false, decl_dest: string = null) {
+/** compile typescript with specified glob */
+function compile_ts_dir(glob: string, destination: string, declaration: boolean = false, decl_dest: string = null) //{
+{
     return function() {
         let ts_project = ts.createProject("./tsconfig.json", {
             declaration: declaration
@@ -52,69 +56,79 @@ function compile_ts_dir(glob: string, destination: string, declaration: boolean 
             return ts_pipe.js.pipe(gulp.dest(destination));
         }
     }
-}
+} //}
 
-let compile_lib_ts = compile_ts_dir(
+/** compile lib */
+let compile_lib_ts = compile_ts_dir //{
+(
     "lib/**/*.ts", 
     path.join(release_root, project_name, "lib"),
     true, 
     path.join(release_root, "@types", project_name, "lib")
-);
+); //}
 
-let compile_bin_ts = compile_ts_dir(
+/** compile bin */
+let compile_bin_ts = compile_ts_dir //{
+(
     "bin/*.ts", 
     path.join(release_root, project_name, "bin")
-);
+); //}
 
-function chmod_bin_js() {
+/** chmod 777 to all of excutable file */
+function chmod_bin_js() //{
+{
     return annautils.fs.promisify.chmodRecursive(path.join(release_root, project_name, "bin"), "777", 1, /.*/).then((num) => {
         console.log(`change ${num} files to permission '777'`);
     }, (err) => {
         console.log(err);
     });
-}
+} //}
 
-let compile_index_ts = compile_ts_dir(
+/** compile index.ts */
+let compile_index_ts = compile_ts_dir //{
+(
     "./index.ts", 
     path.join(release_root, project_name),
     true, 
     path.join(release_root, "@types", project_name)
-);
+); //}
 
-function link_to_node_modules() {
+/** make a symbol link of current project to node_modules */
+function link_to_node_modules() //{
+{
     return merge([
         gulp.src(path.join(release_root, project_name, "*")).pipe(gulp.symlink(path.join("node_modules", project_name))),
         gulp.src(path.join(release_root, "@types", project_name, "*")).
         pipe(gulp.symlink(path.join("node_modules", "@types", project_name)))
     ]);
-}
+} //}
 
 let ts_task = gulp.series(compile_index_ts, compile_lib_ts, compile_bin_ts, chmod_bin_js, link_to_node_modules);
-gulp.task("compileTypescripts", ts_task);
 
-gulp.task("release", gulp.parallel("compileTypescripts", copy_misc));
-
-let compile_test = compile_ts_dir("./test/**/*.ts", test_root);
-function link_test_html() {
+/** test */
+let compile_test = compile_ts_dir("./test/**/*.ts", test_root); //{
+function link_test_html() //{
+{
     return gulp.src("test/*.html")
     .pipe(gulp.symlink(test_root));
-}
-function link_test_json() {
+} //}
+function link_test_json() //{
+{
     return gulp.src("test/*.json")
     .pipe(gulp.symlink(test_root));
-}
-function build_test() {
+} //}
+function build_test() //{
+{
     return merge([
         compile_test(),
         link_test_html(),
         link_test_json()
     ]);
-}
-gulp.task("buildtest", build_test);
-
-gulp.task("default", gulp.series("compileTypescripts", build_test));
-
-function watch_S() {
+} //}
+//}
+/** watch */
+function watch_S() //{
+{
     let watcher = gulp.watch(["lib/**/*.ts", "test/**/*.ts", "./*.ts", "bin/*.ts"]);
     let handle = (fp: string, stat) => {
         console.log(`----- file [${fp}]`);
@@ -138,12 +152,36 @@ function watch_S() {
     watcher.on("add", handle);
     watcher.on("unlink", handle);
     watcher.on("error", onerror);
-}
+} //}
+
+/** project specify */
+function project_specify() //{
+{
+    return merge([
+        gulp.src("docroot/**").pipe(gulp.dest(path.join(release_root, project_name, "docroot"))),
+        gulp.src("etc/**")    .pipe(gulp.dest(path.join(release_root, project_name, "etc"))),
+    ]);
+} //}
+
+/** TASK typescript */
+gulp.task("typescript", ts_task);
+
+/** TASK release */
+gulp.task("release", gulp.parallel("typescript", copy_misc, project_specify));
+
+/** TASK buildtest */
+gulp.task("buildtest", build_test);
+
+/** TASK default */
+gulp.task("default", gulp.series("typescript", build_test));
+
+/** TASK watch */
 gulp.task("watch", () => {
     watch_S();
     web.watch_B();
 });
 
+/** TASK test */
 gulp.task("test", () => {
     let test_task = proc.env["test"];
     if (test_task == null) return Promise.resolve("empty");
@@ -155,6 +193,7 @@ gulp.task("test", () => {
     return Promise.resolve("yes");
 });
 
+/** TASK clean */
 gulp.task("clean", () => {
     let dirs = [
         test_root, 

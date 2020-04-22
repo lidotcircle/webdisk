@@ -1,8 +1,11 @@
 import * as upload from './upload';
+import * as path from 'path';
 
-export const WebResourceRoot = require("process").cwd() + "/docroot";
-export const CONFIG_PATH     = require("process").cwd() + "/test/server.json";
-export const DEFAULT_PORT    = '5445';
+const rootdir = path.dirname(path.dirname(__filename));
+
+export const WebResourceRoot = path.join(rootdir, "docroot");
+export const CONFIG_PATH     = path.join(rootdir, "etc", "webdisk.json");
+export const DEFAULT_PORT    = '80';
 export const DEFAULT_ADDR    = '0.0.0.0';
 
 export const ServerName = 'webdisk/0.0.1';
