@@ -78,7 +78,7 @@ export namespace svg {
 //}
 
 // server //{
-export const server_ws: string = `ws://${location.host}`;
+export const server_ws: string = `${location.protocol == 'https:' ? 'wss' : 'ws'}://${location.host}/ws`;
 //}
 
 // CSS //{

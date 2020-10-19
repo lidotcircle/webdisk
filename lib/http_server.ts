@@ -22,12 +22,12 @@ import { ServerConfig } from './server_config';
 import { URL }          from 'url';
 import * as util        from './util';
 import * as constants   from './constants';
-import * as parser      from './parse_html_inlinejs';
 
 import { upgradeHandler } from './file_server';
 import { logger } from './logger';
 
 import * as annautils from 'annautils';
+
 
 /**
  * @class HttpServer delegate of underlying http server
@@ -143,43 +143,19 @@ export class HttpServer extends event.EventEmitter //{
         }
     } //}
 
-    /** user login */
-    protected trylogin(request: http.IncomingMessage, response: http.ServerResponse) //{
-    {
-        let formdata = new formidable.IncomingForm();
-        formdata.parse(request, (err, fields, files) => {
-            let username: string = fields["username"] as string;
-            let password: string = fields["password"] as string;
-            let userprofile = this.config.GetProfile(username);
-            request.method = "GET";
-            if (utilx.isNullOrUndefined(userprofile) || utilx.isNullOrUndefined(password) || userprofile.Password != password) {
-                request["BAD_POST"] = true;
-                return this.onrequest(request, response);
-            } else {
-                let sid = util.makeid(32);
-                response.setHeader("Set-Cookie", "SID=" + sid);
-                request.headers["cookie"] = "SID=" + sid;
-                this.config.set(username, "SID", sid);
-                this.config.WriteBack((err) => {
-                    return this.onrequest(request, response);
-                });
-            }
-        });
-    } //}
-
     /** default listener of request event */
     protected onrequest(request: http.IncomingMessage, response: http.ServerResponse) //{
     {
         response.setHeader("Server", constants.ServerName);
         let url = new URL(request.url, `http:\/\/${request.headers.host}`);
         if (request.method.toLowerCase() != "get" && request.method.toLowerCase() != "header") {
-            if (request.method.toLowerCase() == "post" && (url.pathname == "/" || url.pathname == "/index.html"))
-                return this.trylogin(request, response);
-            this.write_empty_response(response);
-            return;
+            response.statusCode = 405;
+            response.setHeader("Connection", "close");
+            response.end();
         }
         let header: boolean = request.method.toLowerCase() == "header";
         if(url.pathname.startsWith(constants.DISK_PREFIX)) { // RETURN FILE
+            // TODO DATABASE
             let sid = url.searchParams.get("sid");
             if (sid == null)
                 return this.write_empty_response(response, 401);
@@ -193,27 +169,7 @@ export class HttpServer extends event.EventEmitter //{
         } else { // JUST SINGLE PAGE "/index.html" or "/", PUBLIC Resources
             if (url.pathname == "/") url.pathname = "/index.html";
             let fileName = path.resolve(constants.WebResourceRoot, url.pathname.substring(1));
-            if (!fileName.endsWith(".html")) {
-                return this.write_file_response(fileName, response, header, util.parseRangeField(request.headers.range));
-            }
-            fs.stat(fileName, (err, stat) => {
-                if (err) {
-                    logger.info("new request " + fileName);
-                    return this.write_empty_response(response, 404);
-                }
-                response.setHeader("content-type", "text/html");
-                response.writeHead(200);
-                if (header) return response.end();
-                let configx = [];
-                for (let i of this.config.getUsers())
-                    configx.push(i[1]);
-                parser.parseHTMLNewProc(fileName, 
-                    {REQ: util.httpRequestToAcyclic(request), CONFIG: configx},
-                    response, null, (err_) => {
-                        if(err_) return this.write_empty_response(response, 404);
-                        response.end();
-                    });
-            });
+            return this.write_file_response(fileName, response, header, util.parseRangeField(request.headers.range));
         }
     } //}
 
@@ -244,3 +200,4 @@ export class HttpServer extends event.EventEmitter //{
             this.__listen(port, addr);
     } //}
 }; //}
+

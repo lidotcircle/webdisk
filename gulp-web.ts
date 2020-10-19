@@ -59,19 +59,6 @@ function compile_ts_to_dir(glob: string, destination: string) {
         .pipe(ts_project()).on("error", onerror)
         .js.pipe(gulp.dest(destination));
 }
-
-function compile_server_ts_index() {
-    return compile_ts_to_dir(path.join(project_root, "index.ts"), doc_root);
-}
-function compile_server_ts_template() {
-    return compile_ts_to_dir(path.join(project_root, "template/**/*.ts"), doc_root);
-}
-function compile_server_ts() {
-    return merge([
-        compile_server_ts_index(),
-        compile_server_ts_template()
-    ]);
-}
 //}
 
 // styles - sass and css - sytles__() //{
@@ -130,10 +117,10 @@ export function watch_B() //{
 {
     let watcher = gulp.watch([
         "ts/**/*.ts", "styles/*.scss", 
-        "template/**/*.html", "template/**/*.ts",
+        "template/**/*.html",
         "template/**/*.svg",
-        "imgs/**",
-        "index*"
+        "index.html",
+        "imgs/**"
     ].map(x => path.join(project_root, x)));
     let handle = (fp: string, stat) => {
         console.log(`[${fp}] fires event`);
@@ -147,16 +134,12 @@ export function watch_B() //{
                 return styles__();
             case "template":
             case "index.html":
-            case "index.ts":
                 if (fp.endsWith("html")) {
                     console.log("copy html");
                     return htmls_copy();
                 } else if (fp.endsWith("svg")) {
                     console.log("copy svg");
                     return htmls_copy();
-                } else if (fp.endsWith("ts")) {
-                    console.log("server typescript");
-                    return compile_server_ts();
                 }
             case "imgs":
                 console.log("images");
@@ -173,7 +156,7 @@ export function watch_B() //{
 
 export function doit() {
 gulp.task("browserjs", compile_webdisk_ts);
-gulp.task("app", gulp.parallel(compile_webdisk_ts, compile_server_ts, styles__, images_copy, htmls_copy));
+gulp.task("app", gulp.parallel(compile_webdisk_ts, styles__, images_copy, htmls_copy));
 
 gulp.task("xwatch", () => {watch_B();})
 

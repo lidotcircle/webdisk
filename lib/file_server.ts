@@ -71,7 +71,7 @@ function statusCodeToJSON(sc: StatusCode) //{
 export function upgradeHandler(inc: http.IncomingMessage, socket: net.Socket, buf: Buffer, conf: config.ServerConfig) //{
 {
     let date = (new Date()).toUTCString();
-    if (inc.url != "/") {
+    if (inc.url != "/ws") {
         socket.end(xutil.simpleHttpResponse(404, {
             Server: constants.ServerName,
             Date: date,
@@ -87,7 +87,7 @@ export function upgradeHandler(inc: http.IncomingMessage, socket: net.Socket, bu
         }));
         return;
     }
-    if (inc.headers.connection != "Upgrade" || inc.headers.upgrade != "websocket" ) {
+    if (inc.headers.connection.toLowerCase() != "upgrade" || inc.headers.upgrade.toLowerCase() != "websocket" ) {
         socket.end(xutil.simpleHttpResponse(406, {
             Server: constants.ServerName,
             Date: date,
@@ -117,17 +117,6 @@ export function upgradeHandler(inc: http.IncomingMessage, socket: net.Socket, bu
         }));
         return;
     }
-    let cookie__ = xutil.parseCookie(inc.headers.cookie);
-    let sid = cookie__ && (cookie__.get("SID") || cookie__.get("sid"));
-    let user = conf.LookupUserRootBySID(sid);
-    if (user == null) {
-        socket.end(xutil.simpleHttpResponse(401, {
-            Server: constants.ServerName,
-            Date: date,
-            Connection: "close",
-        }));
-        return;
-    }
     // Accept
     let response = xutil.simpleHttpResponse(101, {
         Server: constants.ServerName,
@@ -137,7 +126,7 @@ export function upgradeHandler(inc: http.IncomingMessage, socket: net.Socket, bu
         "Sec-WebSocket-Accept": xutil.WebSocketAcceptKey(en_ws_key)
     });
     socket.write(response);
-    let ns = new FileControlSession(socket, user);
+    let ns = new FileControlSession(socket, null);
 } //}
 
 /**
@@ -572,6 +561,8 @@ class FileControlSession //{
         }
         let opc: FileOpcode = what["opcode"];
         let reqid: string   = what["id"];
+        if (!this.user) return this.sendfail(reqid);
+
         if (reqid == null) return this.sendfail("", StatusCode.BAD_ID);
         if (opc   == null) return this.sendfail(reqid, StatusCode.BAD_OPCODE);
         switch (opc) //{

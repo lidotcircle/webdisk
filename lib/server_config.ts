@@ -37,6 +37,22 @@ interface IServerConfig {
  *     ]
  * }
  */
+
+/*
+ * config file format
+ * {
+ *   "listen_addr": <addr>,
+ *   "listen_port": <port>,
+ *   "sqlite3_database": <path>
+ * }
+ */
+
+export class Config {
+    listen_addr: string;
+    listen_port: number;
+    sqlite3_database: string;
+}
+
 export class ServerConfig implements IServerConfig {
     private configFile: string;
     private users: Map<string, User>;

@@ -15,6 +15,7 @@ import * as upload from './upload';
 import * as toolbar from './toolbar';
 
 // init
+console.log("hello");
 websocket.SetupWS();
 fm.SetupFM();
 detail.SetupDetail();

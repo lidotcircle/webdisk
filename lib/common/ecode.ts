@@ -1,40 +1,4 @@
-/** server and browser code */
-
-export enum FileOpcode //{
-{
-    CHMOD          = "chmod",
-    COPY           = "copy",
-    COPYR          = "copyr",
-    EXECUTE        = "execute",
-    GETDIR         = "getdir",
-    INVALID        = "invalid",
-    MKDIR          = "mkdir",
-    MOVE           = "move",
-    READ           = "read",
-    REMOVE         = "remove",
-    RENAME         = "rename",
-    STAT           = "stat",
-    TOUCH          = "touch",
-    TRUNCATE       = "truncate",
-    WRITE          = "write",
-    UPLOAD         = "upload",
-    UPLOAD_WRITE   = "upload_write",
-    UPLOAD_WRITE_B = "upload_write_b",
-    UPLOAD_MERGE   = "upload_merge",
-    NEW_FOLDER     = "new_folder",
-    NEW_FILE       = "new_file"
-} //}
-
-export enum FileEvent //{
-{
-    REMOVE   = "remove",
-    MOVE     = "move",
-    MODIFIED = "modified",
-    CHMOD    = "chmod",
-    CHOWN    = "chown",
-    NEW      = "new",
-    INVALID  = "invalid"
-} //}
+/** Error code */
 
 export enum ECode //{ 
 {
@@ -169,8 +133,9 @@ export enum ECode //{
     EOWNERDEAD      = 130,
     ENOTRECOVERABLE = 131,
 } //}
+
 // ECodeString //{
-let ECodeString = [
+const ECodeString = [
     "success",
     "Operation not permitted",
     "No such file or directory",
