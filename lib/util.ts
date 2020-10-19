@@ -11,8 +11,6 @@ import * as proc from 'process';
 
 import { Writable } from 'stream';
 
-import * as winston from 'winston';
-
 import { getStatusText } from 'http-status-codes';
 
 function getCaller () //{
@@ -27,16 +25,6 @@ function getCaller () //{
     if (!mm) return null;
     return [mm[3], mm[1]];
 }; //}
-
-const logger = winston.createLogger({
-    level: "debug",
-    format: winston.format.json(),
-    defaultMeta: {application: "webdisk", pid: proc.pid},
-    transports: [
-//        new winston.transports.File({filename: path.join("webdisk.log")}),
-        new winston.transports.Console()
-    ]
-});
 
 export function debug(...msg)
 {

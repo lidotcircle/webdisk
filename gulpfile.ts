@@ -158,8 +158,8 @@ function watch_S() //{
 function project_specify() //{
 {
     return merge([
-        gulp.src("docroot/**").pipe(gulp.dest(path.join(release_root, project_name, "docroot"))),
-        gulp.src("etc/**")    .pipe(gulp.dest(path.join(release_root, project_name, "etc"))),
+        gulp.src("docroot").pipe(gulp.symlink(path.join(release_root, project_name))),
+        gulp.src("etc")    .pipe(gulp.symlink(path.join(release_root, project_name))),
     ]);
 } //}
 

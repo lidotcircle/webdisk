@@ -25,6 +25,7 @@ import * as constants   from './constants';
 import * as parser      from './parse_html_inlinejs';
 
 import { upgradeHandler } from './file_server';
+import { logger } from './logger';
 
 import * as annautils from 'annautils';
 
@@ -196,8 +197,10 @@ export class HttpServer extends event.EventEmitter //{
                 return this.write_file_response(fileName, response, header, util.parseRangeField(request.headers.range));
             }
             fs.stat(fileName, (err, stat) => {
-                if (err)
+                if (err) {
+                    logger.info("new request " + fileName);
                     return this.write_empty_response(response, 404);
+                }
                 response.setHeader("content-type", "text/html");
                 response.writeHead(200);
                 if (header) return response.end();

@@ -32,7 +32,9 @@ function onerror(err) {
 // browser javascript - compile_webdisk_ts() //{
 function browser_compile_ts_dir(entry: string, destination: string, sourceMaps: boolean = false) {
     return function() {
-        let sm = browserify({debug: true})
+        let sm = browserify({
+            debug: true
+        })
         .add(entry)
         .plugin("tsify", {target: 'es6', project: tsconfig}).on("error", onerror)
         .bundle().on("error", onerror)
@@ -40,7 +42,6 @@ function browser_compile_ts_dir(entry: string, destination: string, sourceMaps: 
 
         if (sourceMaps)
             return sm.pipe(vinyl_buffer())
-                .pipe(sourcemaps.init({loadMaps: true}))
                 .pipe(sourcemaps.write())
                 .pipe(gulp.dest(destination));
         else

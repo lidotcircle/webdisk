@@ -2,8 +2,7 @@
 import * as events from 'events';
 import * as constants from './constants';
 import * as fm from './file_manager';
-import * as proc from 'process';
-import * as util from './util';
+import * as utils from './util';
 import * as gvar from './global_vars';
 import * as controller from './controller';
 import { debug, FileTree } from './util';
@@ -155,13 +154,13 @@ export class UploadSession extends events.EventEmitter //{
         this.__run().then(() => {
             this.emit("uploaded", this.currentTask[0]);
             this.currentTask = null;
-            if(this.task_queue.length > 0) proc.nextTick(() => {this.run();});
+            if(this.task_queue.length > 0) utils.nextTick(() => {this.run();});
         }, (err: Error) => {
             debug("error", err);
             if(err.message == "cancel") this.emit("cancel", this.currentTask[0], err);
             else this.emit("fail", this.currentTask[0], err);
             this.currentTask = null;
-            if(this.task_queue.length > 0) proc.nextTick(() => {this.run();});
+            if(this.task_queue.length > 0) utils.nextTick(() => {this.run();});
         });
     } //}
 
@@ -261,7 +260,7 @@ export class UploadSession extends events.EventEmitter //{
             })() as FileSystemEntry[];
             for (let i=0; i<entries.length;i++) {
                 let x = entries[i];
-                await this.send_entry(x, util.pathJoin(p, x.name));
+                await this.send_entry(x, utils.pathJoin(p, x.name));
             }
         }
     } //}
@@ -285,7 +284,7 @@ export class UploadSession extends events.EventEmitter //{
             }
             let dir = entry as FileTree;
             for (let v of dir.children as any) {
-                await this.send_entry_2(v[1], util.pathJoin(p, v[0]));
+                await this.send_entry_2(v[1], utils.pathJoin(p, v[0]));
             }
         }
     } //}
@@ -373,7 +372,7 @@ export class UploadSession extends events.EventEmitter //{
      */
     newTask(entry: FileSystemEntry, dest: string): TaskManager //{
     {
-        dest = util.pathJoin(dest, entry.name);
+        dest = utils.pathJoin(dest, entry.name);
         if(!constants.Regex.validPathname.test(dest) || entry == null || entry.fullPath == null)
             return null;
         let obj = {
@@ -385,13 +384,13 @@ export class UploadSession extends events.EventEmitter //{
             ignoreDirecotry: false
         };
         this.task_queue.push([entry, dest, obj]);
-        proc.nextTick(() => this.run());
+        utils.nextTick(() => this.run());
         return obj;
     } //}
     /** @see above */
     newTask2(entry: FileTree, dest: string): TaskManager //{
     {
-        dest = util.pathJoin(dest, entry.name);
+        dest = utils.pathJoin(dest, entry.name);
         if(!constants.Regex.validPathname.test(dest) || entry == null || entry.filetree == null)
             return null;
         let obj = {
@@ -403,7 +402,7 @@ export class UploadSession extends events.EventEmitter //{
             ignoreDirecotry: false
         };
         this.task_queue.push([entry, dest, obj]);
-        proc.nextTick(() => this.run());
+        utils.nextTick(() => this.run());
         return obj;
     } //}
 

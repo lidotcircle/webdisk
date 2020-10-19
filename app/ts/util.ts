@@ -304,3 +304,7 @@ export function MultiplefileListToFileTree(cwd: string, fileList: File[]) //{
     return ret;
 } //}
 
+export function nextTick(func) {
+    window.setTimeout(func, 0);
+}
+

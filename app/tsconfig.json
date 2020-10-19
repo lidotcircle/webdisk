@@ -12,7 +12,7 @@
         "baseUrl": "../",
         "paths": {
         },
-        "rootDirs": ["../"],
+        "rootDir": "../",
         "outDir": "dist-app",
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
@@ -22,7 +22,9 @@
         "sourceMap": true
     },
     "include": [
-        "app/ts/*"
+        "app/ts/*",
+        "app/template/*.ts",
+        "app/*.ts"
     ],
     "exclude": [
         "node_modules"

@@ -13,7 +13,7 @@
         "paths": {
             "webdisk/*": ["release/webdisk/*"]
         },
-        "rootDirs": ["./"],
+        "rootDir": "./",
         "outDir": "dist",
         "moduleResolution": "node",
         "emitDecoratorMetadata": true,
