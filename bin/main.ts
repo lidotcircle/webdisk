@@ -3,7 +3,6 @@
 import * as http_server   from '../lib/http_server';
 import * as util          from '../lib/util';
 import * as constants     from '../lib/constants';
-import * as server_config from '../lib/server_config';
 import { Config, conf } from '../lib/config';
 import * as child_process from 'child_process';
 import * as process from 'process';

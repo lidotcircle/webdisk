@@ -18,7 +18,6 @@ import * as pathx from 'path';
 import * as smartbuffer from 'smart-buffer';
 import * as formidable  from 'formidable';
 
-import { ServerConfig } from './server_config';
 import { URL }          from 'url';
 import * as util        from './util';
 import * as constants   from './constants';

@@ -14,7 +14,6 @@ import * as xutil from './util';
 
 import * as timers from 'timers';
 
-import * as config from './server_config'
 import * as constants from './constants'
 import { WebsocketM, WebsocketOPCode } from './websocket';
 
@@ -126,7 +125,7 @@ export function upgradeHandler(inc: http.IncomingMessage, socket: net.Socket, bu
         "Sec-WebSocket-Accept": xutil.WebSocketAcceptKey(en_ws_key)
     });
     socket.write(response);
-    let ns = new FileControlSession(socket, null);
+    let ns = new FileControlSession(socket);
 } //}
 
 /**
@@ -136,7 +135,6 @@ export function upgradeHandler(inc: http.IncomingMessage, socket: net.Socket, bu
 class FileControlSession //{
 {
     private websocket: WebsocketM;
-    private user: config.User;
     private current_loc: string;
     private watcher: chokidar.FSWatcher;
     private invalid: boolean;
@@ -146,10 +144,9 @@ class FileControlSession //{
      * @param {net.Socket} socket upgrade http socket
      * @param {config.User} user  this session belong to the user
      */
-    constructor(socket: net.Socket, user: config.User) //{
+    constructor(socket: net.Socket) //{
     {
         this.websocket = new WebsocketM(socket);
-        this.user = user;
         this.current_loc = null;
         this.watcher = null; // TODO
         this.invalid = false;
@@ -188,7 +185,8 @@ class FileControlSession //{
         if (!util.isString(path_) || !(path_ as string).startsWith("/") ||
             !util.isString(mode_))
             return this.sendfail(reqid, StatusCode.BAD_ARGUMENTS);
-        path_ = path.resolve(this.user.DocRoot, path_.substr(1));
+        // TODO
+        path_ = path.resolve('/', path_.substr(1));
         fs.chmod(path_, mode_, (err) => {
             if(err) this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
             else    this.sendsuccess(reqid);
@@ -202,8 +200,9 @@ class FileControlSession //{
         if (!util.isString(src) || !(src as string).startsWith("/") ||
             !util.isString(dst) || !(dst as string).startsWith("/"))
             return this.sendfail(reqid, StatusCode.BAD_ARGUMENTS);
-        src = path.resolve(this.user.DocRoot, src.substring(1));
-        dst = path.resolve(this.user.DocRoot, dst.substring(1));
+        // TODO
+        src = path.resolve('/', src.substring(1));
+        dst = path.resolve('/', dst.substring(1));
         fs.copyFile(src, dst, (err) => {
             if(err) this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
             else    this.sendsuccess(reqid);
@@ -217,8 +216,8 @@ class FileControlSession //{
         if (!util.isString(src) || !(src as string).startsWith("/") ||
             !util.isString(dst) || !(dst as string).startsWith("/"))
             return this.sendfail(reqid, StatusCode.BAD_ARGUMENTS);
-        src = path.resolve(this.user.DocRoot, src.substring(1));
-        dst = path.resolve(this.user.DocRoot, dst.substring(1));
+        src = path.resolve('/', src.substring(1));
+        dst = path.resolve('/', dst.substring(1));
         annautils.fs.copyr(src, dst, (err) => {
             if(err) this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
             else    this.sendsuccess(reqid);
@@ -232,7 +231,7 @@ class FileControlSession //{
         let argv__:  string[] = msg["argv"] || [];
         if (!util.isString(path__) || !(path__ as string).startsWith("/"))
             return this.sendfail(reqid, StatusCode.BAD_ARGUMENTS);
-        path__ = path.resolve(this.user.DocRoot, path__.substring(1));
+        path__ = path.resolve('/', path__.substring(1));
         child_proc.execFile(path__, argv__, (err, stdout, stderr) => {
             if(err) return this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
             this.sendsuccess(reqid, StatusCode.SUCCESS, {stdout: stdout, stderr: stderr});
@@ -245,12 +244,12 @@ class FileControlSession //{
         let reqid: string = msg["id"];
         if (!util.isString(msg["path"]) || !loc.startsWith("/"))
             return this.sendfail(reqid, StatusCode.BAD_ARGUMENTS);
-        let dir: string = path.resolve(this.user.DocRoot, loc.substring(1));
+        let dir: string = path.resolve('/', loc.substring(1));
         annautils.fs.getStatsOfFiles(dir, 1, (err, stats) => {
             if(err) return this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
             this.current_loc = dir;
             let stats_ = {id: reqid, msg: stats, error: false};
-            let user_root = this.user.DocRoot.trim();
+            let user_root = '/'.trim();
             this.send(JSON.stringify(stats_, (k, v) => {
                 if(k != "filename") return v;
                 if (xutil.pathEqual(v, user_root)) return "/";
@@ -266,7 +265,7 @@ class FileControlSession //{
         let reqid: string = msg["id"];
         if (!util.isString(msg["path"]) || !loc.startsWith("/"))
             return this.sendfail(reqid, StatusCode.BAD_ARGUMENTS);
-        let dir: string = path.resolve(this.user.DocRoot, loc.substring(1));
+        let dir: string = path.resolve('/', loc.substring(1));
         fs.mkdir(dir, {recursive: true}, (err, path_) => {
             if(err) this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
             else this.sendsuccess(reqid, StatusCode.SUCCESS, {dir: dir});
@@ -279,7 +278,7 @@ class FileControlSession //{
         let reqid: string = msg["id"];
         if (!util.isString(msg["path"]) || !loc.startsWith("/"))
             return this.sendfail(reqid, StatusCode.BAD_ARGUMENTS);
-        let dir: string = path.resolve(this.user.DocRoot, loc.substring(1));
+        let dir: string = path.resolve('/', loc.substring(1));
         let offset: number = parseInt(msg["offset"]);
         let length: number = parseInt(msg["length"]);
         if (!util.isNumber(offset) || !util.isNumber(length) || offset < 0 || length < 0)
@@ -310,7 +309,7 @@ class FileControlSession //{
         let reqid: string = msg["id"];
         if (!util.isString(msg["path"]) || !loc.startsWith("/"))
             return this.sendfail(reqid, StatusCode.BAD_ARGUMENTS);
-        let dir: string = path.resolve(this.user.DocRoot, loc.substring(1));
+        let dir: string = path.resolve('/', loc.substring(1));
         annautils.fs.removeRecusive(dir, (err) => {
             if(err) this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
             else    this.sendsuccess(reqid);
@@ -326,8 +325,8 @@ class FileControlSession //{
         if (!util.isString(src) || !src.startsWith("/") ||
             !util.isString(dst) || !dst.startsWith("/"))
             return this.sendfail(reqid, StatusCode.BAD_ARGUMENTS);
-        src = path.resolve(this.user.DocRoot, src.substring(1));
-        dst = path.resolve(this.user.DocRoot, dst.substring(1));
+        src = path.resolve('/', src.substring(1));
+        dst = path.resolve('/', dst.substring(1));
         fs.rename(src, dst, (err) => {
             if(err) this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
             else    this.sendsuccess(reqid);
@@ -340,7 +339,7 @@ class FileControlSession //{
         let reqid: string = msg["id"];
         if (!util.isString(msg["path"]) || !loc.startsWith("/"))
             return this.sendfail(reqid, StatusCode.BAD_ARGUMENTS);
-        let dir: string = path.resolve(this.user.DocRoot, loc.substring(1));
+        let dir: string = path.resolve('/', loc.substring(1));
         fs.stat(dir, (err, stats) => {
             if(err) return this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
             stats["filename"] = dir;
@@ -371,7 +370,7 @@ class FileControlSession //{
         let reqid: string = msg["id"];
         if (!util.isString(msg["path"]) || !loc.startsWith("/"))
             return this.sendfail(reqid, StatusCode.BAD_ARGUMENTS);
-        let dir: string = path.resolve(this.user.DocRoot, loc.substring(1));
+        let dir: string = path.resolve('/', loc.substring(1));
         let cur = new Date();
         fs.open(dir, "a" , (err, fd) => {
             if(err) return this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
@@ -389,7 +388,7 @@ class FileControlSession //{
         let reqid: string = msg["id"];
         if (!util.isString(msg["path"]) || !loc.startsWith("/"))
             return this.sendfail(reqid, StatusCode.BAD_ARGUMENTS);
-        let dir: string = path.resolve(this.user.DocRoot, loc.substring(1));
+        let dir: string = path.resolve('/', loc.substring(1));
         let offset: number = parseInt(msg["offset"]);
         let buf: Buffer = Buffer.from(msg["buf"], "hex");
         if (!util.isNumber(offset) || offset < 0)
@@ -411,7 +410,7 @@ class FileControlSession //{
         let len: number = parseInt(msg["length"]);
         if (!util.isString(msg["path"]) || !loc.startsWith("/") || !util.isNumber(len) || len < 0)
             return this.sendfail(reqid, StatusCode.BAD_ARGUMENTS);
-        let path_: string = path.resolve(this.user.DocRoot, loc.substring(1));
+        let path_: string = path.resolve('/', loc.substring(1));
         fs.truncate(path_, len, (err) => {
             if(err) return this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
             return this.sendsuccess(reqid);
@@ -424,7 +423,7 @@ class FileControlSession //{
         let reqid: string = msg["id"];
         if (!util.isString(msg["path"]) || !loc.startsWith("/"))
             return this.sendfail(reqid, StatusCode.BAD_ARGUMENTS);
-        let path_: string = path.resolve(this.user.DocRoot, loc.substring(1));
+        let path_: string = path.resolve('/', loc.substring(1));
         fs.readdir(path_, "utf8", (err, files) => {
             if(err) return this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
             let k = files.indexOf(constants.NEW_FILE_PREFIX);
@@ -453,7 +452,7 @@ class FileControlSession //{
         let reqid: string = msg["id"];
         if (!util.isString(msg["path"]) || !loc.startsWith("/"))
             return this.sendfail(reqid, StatusCode.BAD_ARGUMENTS);
-        let path_: string = path.resolve(this.user.DocRoot, loc.substring(1));
+        let path_: string = path.resolve('/', loc.substring(1));
         fs.readdir(path_, "utf8", (err, files) => {
             if(err) return this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
             let k = files.indexOf(constants.NEW_FOLDER_PREFIX);
@@ -483,13 +482,15 @@ class FileControlSession //{
         let reqid: string = msg["id"];
         if (!util.isString(msg["path"]) || !loc.startsWith("/") || !util.isNumber(size) || size < 0)
             return this.sendfail(reqid, StatusCode.BAD_ARGUMENTS);
-        let path_: string = path.resolve(this.user.DocRoot, loc.substring(1));
-        let m = constants.UserUploadMaps.query(this.user.UserName, path_);
+        let path_: string = path.resolve('/', loc.substring(1));
+        // TODO
+        let m = constants.UserUploadMaps.query('/', path_);
         if(m) return this.sendsuccess(reqid, StatusCode.SUCCESS, m.NeedRanges());
         fs.stat(path_, (err, stats) => {
             if(!err)
                 return this.sendfail(reqid, StatusCode.FAIL, (new Error(`file '${path}' already exists`)).message.toString());
-            let s = constants.UserUploadMaps.uploadfile(this.user.UserName, path_, size);
+            // TODO
+            let s = constants.UserUploadMaps.uploadfile('/', path_, size);
             return this.sendsuccess(reqid, StatusCode.SUCCESS, s.NeedRanges());
         });
     } //}
@@ -508,11 +509,12 @@ class FileControlSession //{
         let reqid: string = msg["id"];
         if (!util.isString(msg["path"]) || !loc.startsWith("/"))
             return this.sendfail(reqid, StatusCode.BAD_ARGUMENTS);
-        let dir: string = path.resolve(this.user.DocRoot, loc.substring(1));
+        let dir: string = path.resolve('/', loc.substring(1));
         let size: number = parseInt(msg["size"]);
         if (!util.isNumber(size) || size <= 0)
             return this.sendfail(reqid, StatusCode.REQUEST_ERROR);
-        let m = constants.UserUploadMaps.uploadfile(this.user.UserName, dir, size);    
+        // TODO
+        let m = constants.UserUploadMaps.uploadfile('/', dir, size);    
         if(m.full()) {
             m.clean(err => debug(err));
             return this.sendsuccess(reqid);
@@ -528,12 +530,12 @@ class FileControlSession //{
         let reqid: string = msg["id"];
         if (!util.isString(msg["path"]) || !loc.startsWith("/"))
             return this.sendfail(reqid, StatusCode.BAD_ARGUMENTS);
-        let dir: string = path.resolve(this.user.DocRoot, loc.substring(1));
+        let dir: string = path.resolve('/', loc.substring(1));
         let offset: number = parseInt(msg["offset"]);
         let size: number = parseInt(msg["size"]);
         if (!util.isNumber(offset) || offset < 0 || !util.isNumber(size) || size <= 0)
             return this.sendfail(reqid, StatusCode.REQUEST_ERROR);
-        let mm = constants.UserUploadMaps.uploadfile(this.user.UserName, dir, size);
+        let mm = constants.UserUploadMaps.uploadfile('this.user.UserName', dir, size);
         mm.WriteRanges(buf, [offset, offset + buf.length - 1],(err) => {
             if(err) return this.sendfail(reqid, StatusCode.FAIL, err.message.toString());
             return this.sendsuccess(reqid);
@@ -561,7 +563,7 @@ class FileControlSession //{
         }
         let opc: FileOpcode = what["opcode"];
         let reqid: string   = what["id"];
-        if (!this.user) return this.sendfail(reqid);
+        if ('!this.user') return this.sendfail(reqid);
 
         if (reqid == null) return this.sendfail("", StatusCode.BAD_ID);
         if (opc   == null) return this.sendfail(reqid, StatusCode.BAD_OPCODE);
