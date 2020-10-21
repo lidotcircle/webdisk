@@ -9,7 +9,7 @@ import * as fs from 'fs';
 import * as child_proc from 'child_process';
 import { URL } from 'url';
 
-import { debug } from './util';
+import { debug, info, warn, error } from './logger';
 import * as xutil from './util';
 
 import * as timers from 'timers';
@@ -132,23 +132,20 @@ export function upgradeHandler(inc: http.IncomingMessage, socket: net.Socket, bu
  * @class FileControlSession
  * use to control a authenticated session
  */
-class FileControlSession //{
+class FileControlSession
 {
     private websocket: WebsocketM;
-    private current_loc: string;
-    private watcher: chokidar.FSWatcher;
-    private invalid: boolean;
+    private invalid:   boolean;
+    private watcher:   chokidar.FSWatcher; // TODO
 
     /**
      * @constructor
      * @param {net.Socket} socket upgrade http socket
-     * @param {config.User} user  this session belong to the user
      */
     constructor(socket: net.Socket) //{
     {
+        socket.removeAllListeners();
         this.websocket = new WebsocketM(socket);
-        this.current_loc = null;
-        this.watcher = null; // TODO
         this.invalid = false;
 
         this.websocket.on("message", this.onmessage.bind(this));
@@ -247,7 +244,6 @@ class FileControlSession //{
         let dir: string = path.resolve('/', loc.substring(1));
         annautils.fs.getStatsOfFiles(dir, 1, (err, stats) => {
             if(err) return this.sendfail(reqid, StatusCode.FS_REPORT_ERROR, err.message.toString());
-            this.current_loc = dir;
             let stats_ = {id: reqid, msg: stats, error: false};
             let user_root = '/'.trim();
             this.send(JSON.stringify(stats_, (k, v) => {
@@ -649,5 +645,5 @@ class FileControlSession //{
         let sendM = {id: id, msg: data ? data : statusCodeToJSON(code), error: false};
         this.send(JSON.stringify(sendM, null, 1));
     } //}
-} //}
+}
 

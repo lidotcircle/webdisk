@@ -1,19 +1,22 @@
 import * as sqlite from 'sqlite3';
 import * as xutils from './xutils';
-import * as MD5 from 'md5';
+import * as proc from 'process';
 import { makeid, validation } from './xutils';
+const MD5 = require('md5');
 
 /** TODO */
-const LAST_ACTIVATION_SPAN = (5 * 24 * 60 * 60 * 1000);
-const MAX_INVITATION_CODE = 20;
-const INVITAION_CODE_LENGTH = 56;
-const TOKEN_LENGTH = 56;
+const LAST_ACTIVATION_SPAN       = (5 * 24 * 60 * 60 * 1000);
+const SHORT_TERM_TOKEN_LIVE_TIME = (1 * 60 * 60 * 1000);
+const MAX_INVITATION_CODE        = 20;
+const INVITAION_CODE_LENGTH      = 56;
+const TOKEN_LENGTH               = 56;
 
 export type Token = string;
 export class UserInfo {
     username: string = null;
     rootPath: string = null;
     ring:     number = null;
+    createTime: number = null;
 }
 export module DBRelations {
     export class User extends UserInfo {
@@ -33,18 +36,26 @@ export module DBRelations {
         uid:   number;
         last:  number;
     }
+
+    export class ShortTermToken {
+        token:   Token;
+        ATtoken: Token;
+        start:   number;
+    }
 }
 const KEY_USER = 'users';
 const KEY_INVITATION = 'invitation';
 const KEY_TOKEN = 'tokens';
+const KEY_SHORTTERM_TOKEN = 'short_term_token';
 
 const RootUserInfo: DBRelations.User = new DBRelations.User();
 RootUserInfo.uid            = 1;
 RootUserInfo.username       = 'administrator';
-RootUserInfo.password       = 'f447b20a7fcbf53a5d5be013ea0b15af'; // MD5 of 123456
+RootUserInfo.password       = 'e10adc3949ba59abbe56e057f20f883e'; // MD5 of 123456
 RootUserInfo.rootPath       = '/';
 RootUserInfo.ring           = 0;
 RootUserInfo.invitationCode = 'ROOT_DOESNT_NEED_INVITATION_CODE';
+RootUserInfo.createTime     = Date.now();
 
 const RootInvitation: DBRelations.InvitationCode = new DBRelations.InvitationCode();
 RootInvitation.ownerUid       = RootUserInfo.uid;
@@ -88,7 +99,8 @@ export function createSQLInsertion(relation: Function, records: any[], ignore: s
     }
     let ans = mergeToTuple(keys);
     ans += ' VALUES ';
-    for(let record of records) {
+    for(let i=0;i<records.length;i++) {
+        const record = records[i]
         if(!(record instanceof relation)) {
             throw new Error('bad instance');
         }
@@ -97,16 +109,23 @@ export function createSQLInsertion(relation: Function, records: any[], ignore: s
             np.push(record[prop]);
         }
         ans += mergeToTuple(np, true);
+        if(i < records.length - 1)
+            ans += ', ';
     }
     return ans;
 } //}
 
+
 export class Database {
     private m_database: sqlite.Database;
 
-    constructor(db: string) {
+    constructor(db: string) //{
+    {
+        if(!db.startsWith('/') && !db.startsWith('\\')) {
+            throw new Error("require absolute path");
+        }
         this.m_database = new sqlite.Database(db);
-    }
+    } //}
 
     private async run(sql: string): Promise<void> //{
     {
@@ -138,6 +157,7 @@ export class Database {
         });
     } //}
 
+
     private async ensure_tables() //{
     {
         await this.run(`CREATE TABLE IF NOT EXISTS ${KEY_TOKEN} (
@@ -145,6 +165,12 @@ export class Database {
                             uid   INTEGER NOT NULL CHECK(uid >= 0),
                             last  INTEGER   NOT NULL CHECK(last > 0),
                             FOREIGN KEY (uid) references ${KEY_USER}(uid) ON DELETE CASCADE);`);
+
+        await this.run(`CREATE TABLE IF NOT EXISTS ${KEY_SHORTTERM_TOKEN} (
+            token   TEXT(256) PRIMARY KEY,
+            ATtoken TEXT(256) NOT NULL,
+            start   INTEGER   NOT NULL CHECK(start > 0),
+            FOREIGN KEY (ATtoken) references ${KEY_TOKEN} (token) ON DELETE CASCADE);`);
     } //}
 
     private async __init__(): Promise<void> //{
@@ -164,6 +190,7 @@ export class Database {
                             rootPath TEXT(512) NOT NULL,
                             ring     INTEGER NOT NULL CHECK(ring >= 0),
                             invitationCode TEXT(256) NOT NULL UNIQUE,
+                            createTime INTEGER NOT NULL CHECK(createTime > 0),
                             FOREIGN KEY (invitationCode) references ${KEY_INVITATION}(invitationCode));`);
         await this.run(`CREATE TABLE ${KEY_INVITATION} (
                             ownerUid INTEGER NOT NULL,
@@ -187,6 +214,7 @@ export class Database {
         await this.ensure_tables();
     } //}
 
+
     private async checkToken(token: Token): Promise<number> //{
     {
         const now = Date.now();
@@ -194,10 +222,10 @@ export class Database {
         if(!data) return -1;
 
         if ((now - data.last) > LAST_ACTIVATION_SPAN) {
-            await this.run(`DELETE ${KEY_TOKEN} WHERE token='${token}';`);
+            await this.run(`DELETE FROM ${KEY_TOKEN} WHERE token='${token}';`);
             return -1;
         } else {
-            await this.run(`UPDATE FROM ${KEY_TOKEN} SET last=${now} WHERE token='${token}';`);
+            await this.run(`UPDATE ${KEY_TOKEN} SET last=${now} WHERE token='${token}';`);
             return data['uid'];
         }
     } //}
@@ -218,6 +246,42 @@ export class Database {
         return new_record.token;
     } //}
 
+
+    async UserInfoByShortTermToken(stoken: Token): Promise<UserInfo> //{
+    {
+        const record = await this.get(`SELECT * FROM ${KEY_SHORTTERM_TOKEN} WHERE token='${stoken}';`) as DBRelations.ShortTermToken;
+        if(!record) return null;
+
+        const now = Date.now();
+        if((now - record.start) > SHORT_TERM_TOKEN_LIVE_TIME) {
+            await this.run(`DELETE FROM ${KEY_SHORTTERM_TOKEN} WHERE token='${stoken}';`);
+            return null;
+        } else {
+            return await this.getUserInfo(record.ATtoken);
+        }
+    } //}
+
+    async RequestShortTermToken(token: Token): Promise<Token> //{
+    {
+        const uid = await this.checkToken(token);
+        if(uid < 0) return null;
+
+        let obj = new DBRelations.ShortTermToken();
+        obj.token = makeid(TOKEN_LENGTH);
+        obj.start = Date.now();
+        obj.ATtoken = token;
+        let insert = createSQLInsertion(DBRelations.ShortTermToken, [obj]);
+        await this.run(`INSERT INTO ${KEY_SHORTTERM_TOKEN} ${insert}`);
+
+        return obj.token;
+    } //}
+
+    async DeleteShortTermToken(token: Token): Promise<void> //{
+    {
+        await this.run(`DELETE FROM ${KEY_SHORTTERM_TOKEN} WHERE token='${token}';`);
+    } //}
+
+
     private async getUserRecord(token: Token): Promise<DBRelations.User> //{
     {
         const uid = await this.checkToken(token);
@@ -226,16 +290,10 @@ export class Database {
         const data = await this.get(`SELECT * FROM ${KEY_USER} WHERE uid=${uid}`);
         return data;
     } //}
-    
-    async logout(token: Token): Promise<void> //{
-    {
-        await this.run(`DELETE ${KEY_TOKEN} WHERE token='${token}';`);
-        return;
-    } //}
 
     async getUserInfo(token: Token): Promise<UserInfo> //{
     {
-        const data = this.getUserRecord(token);
+        const data = await this.getUserRecord(token);
         if(!data) return null;
 
         let ans = new UserInfo();
@@ -243,27 +301,11 @@ export class Database {
         return ans;
     } //}
 
-    private async removeUserByUid(uid: number): Promise<boolean> //{
-    {
-        if(uid <= 1) return false;
-        let ans: boolean = false;
 
-        try {
-            await this.run('BEGIN TRANSACTION;');
-            await this.run(`UPDATE FROM ${KEY_INVITATION} SET invitedUid=NULL WHERE invitedUid=${uid};`);
-            await this.run(`DELETE ${KEY_USER} WHERE uid=${uid};`);
-            await this.run('COMMIT;');
-            ans = true;
-        } catch {
-            await this.run('ROLLBACK;');
-        }
-
-        return ans;
-    } //}
 
     async login(username: string, password: string): Promise<Token> //{
     {
-        const data = this.get(`SELECT uid, password FROM ${KEY_USER} WHERE username=${username};`);
+        const data = await this.get(`SELECT uid, password FROM ${KEY_USER} WHERE username='${username}';`);
         if(!data) return null;
         const uid: number = data["uid"];
 
@@ -273,6 +315,13 @@ export class Database {
             return null;
         }
     } //}
+
+    async logout(token: Token): Promise<void> //{
+    {
+        await this.run(`DELETE FROM ${KEY_TOKEN} WHERE token='${token}';`);
+        return;
+    } //}
+
 
     async addUser(username: string, password: string, invitation: string): Promise<boolean> //{
     {
@@ -289,14 +338,46 @@ export class Database {
         user.invitationCode = invitation;
         user.username = username;
         user.password = MD5(password);
+        user.createTime = Date.now();
 
-        const dy = await this.get(`SELECT ring, rootPath FROM ${KEY_USER} WHERE uid=${data["ownerUid"]};`);
+        const dy = await this.get(`SELECT ring, rootPath FROM ${KEY_USER} WHERE uid=${dx["ownerUid"]};`);
         if(!dy) throw new Error("database error");
 
         user.ring     = dy["ring"];
         user.rootPath = dy["rootPath"];
         const insert  = createSQLInsertion(DBRelations.User, [user], ['uid']);
-        await this.run(`INSERT INTO ${KEY_USER} ${insert};`);
+        let ans = true;
+        try {
+            await this.run('BEGIN TRANSACTION;');
+            await this.run(`INSERT INTO ${KEY_USER} ${insert};`);
+            const new_user = await this.get(`SELECT * FROM ${KEY_USER} WHERE username='${username}';`);
+            await this.run(`UPDATE ${KEY_INVITATION} 
+                            SET invitedUid=${new_user['uid']}
+                            WHERE invitationCode='${new_user.invitationCode}';`);
+            await this.run('COMMIT;');
+        } catch (err) {
+            await this.run('ROLLBACK;');
+            ans = false;
+        }
+        return ans;
+    } //}
+
+    private async removeUserByUid(uid: number): Promise<boolean> //{
+    {
+        if(uid <= 1) return false;
+        let ans: boolean = false;
+
+        try {
+            await this.run('BEGIN TRANSACTION;');
+            await this.run(`UPDATE ${KEY_INVITATION} SET invitedUid=NULL WHERE invitedUid=${uid};`);
+            await this.run(`DELETE FROM ${KEY_USER} WHERE uid=${uid};`);
+            await this.run('COMMIT;');
+            ans = true;
+        } catch {
+            await this.run('ROLLBACK;');
+        }
+
+        return ans;
     } //}
 
     async removeUser(token: Token, username: string, password: string): Promise<boolean> //{
@@ -305,11 +386,48 @@ export class Database {
         if(!info) return false;
 
         if(info.username == username && info.password == MD5(password)) {
-            await this.removeUserByUid(info.uid);
+            return await this.removeUserByUid(info.uid);
         } else {
             return false;
         }
     } //}
+
+    private async removeTokenByUid(uid: number): Promise<void> //{
+    {
+        await this.run(`DELETE FROM ${KEY_TOKEN} WHERE uid=${uid};`);
+    } //}
+    
+    async changePassword(token: Token, oldPassword: string, newPassword: string): Promise<boolean> //{
+    {
+        const user = await this.getUserRecord(token);
+        if(!user) return false;
+
+        if(user.password == MD5(oldPassword) && xutils.validation.password(newPassword)) {
+            const md5_new = MD5(newPassword);
+            await this.run(`UPDATE ${KEY_USER} SET password='${md5_new}' WHERE uid=${user.uid}`);
+            await this.removeTokenByUid(user.uid);
+            return true;
+        } else {
+            return false;
+        }
+    } //}
+
+    async resetPassword(username: string, newPassword: string, invitationCode: string): Promise<boolean> //{
+    {
+        const record = await this.get(`SELECT * FROM ${KEY_USER} WHERE username='${username}';`) as DBRelations.User;
+        // ADMINISTRATOR SHOULD RESET PASSWORD BY DIRECTLY MODIFYING DB
+        if(record.uid == RootUserInfo.uid) return false;
+        if(!record) return false;
+
+        if(record.invitationCode == invitationCode) {
+            await this.run(`UPDATE ${KEY_USER} SET password='${MD5(newPassword)}' WHERE uid=${record.uid};`);
+            await this.removeTokenByUid(record.uid);
+            return true;
+        } else {
+            return false;
+        }
+    } //}
+
 
     async generateInvitationCode(token: Token, n: number): Promise<boolean> //{
     {
@@ -317,7 +435,7 @@ export class Database {
         const uid = await this.checkToken(token);
         if (uid < 0) return false;
 
-        const da = this.get(`SELECT COUNT(*) from ${KEY_INVITATION} WHERE ownerUid=${uid};`);
+        const da = await this.all(`SELECT COUNT(*) FROM ${KEY_INVITATION} WHERE ownerUid=${uid};`);
         const total = n + da["COUNT(*)"];
         if(total > MAX_INVITATION_CODE) return false;
 
@@ -344,19 +462,16 @@ export class Database {
         return datas.map(dt => [dt["invitationCode"], dt["invitedUid"]]);
     } //}
 
-    async ShowUser(): Promise<void> {
-        const users = await this.all(`SELECT * FROM ${KEY_USER};`);
-        console.log(JSON.stringify(users, null, 2));
+    async GetUser(): Promise<any[]> {
+        return await this.all(`SELECT * FROM ${KEY_USER};`);
     }
 
-    async ShowInvitationCode(): Promise<void> {
-        const invites = await this.all(`SELECT * FROM ${KEY_INVITATION};`);
-        console.log(JSON.stringify(invites, null, 2));
+    async GetInvitationCode(): Promise<any[]> {
+        return await this.all(`SELECT * FROM ${KEY_INVITATION};`);
     }
 
-    async ShowToken(): Promise<void> {
-        const tokens = await this.all(`SELECT * FROM ${KEY_TOKEN};`);
-        console.log(JSON.stringify(tokens, null, 2));
+    async ShowToken(): Promise<any[]> {
+        return await this.all(`SELECT * FROM ${KEY_TOKEN};`);
     }
 }
 

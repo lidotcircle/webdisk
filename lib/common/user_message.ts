@@ -1,6 +1,12 @@
 import { MessageType, MessageId, MessageAck, BasicMessage } from './message';
 
 export enum UserMessageType {
+    Login = "LOGIN",
+    Logout = "LOGOUT",
+
+    GetBasicUserInfo = "GetUserInfo",
+    SetBasicUserInfo = "SetUserInfo",
+
     Uninit = "UNINIT"
 }
 

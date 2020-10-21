@@ -8,22 +8,17 @@
 import * as event from 'events';
 import * as net   from 'net';
 import * as http  from 'http';
-import * as proc  from 'process';
 import * as fs    from 'fs';
 import * as path  from 'path';
 import * as utilx from 'util';
-import * as stream from 'stream';
 import * as pathx from 'path';
-
-import * as smartbuffer from 'smart-buffer';
-import * as formidable  from 'formidable';
 
 import { URL }          from 'url';
 import * as util        from './util';
 import * as constants   from './constants';
 
 import { upgradeHandler } from './file_server';
-import { logger } from './logger';
+import { debug, info, warn, error } from './logger';
 
 import * as annautils from 'annautils';
 

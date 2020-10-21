@@ -2,7 +2,7 @@ import * as winston from 'winston';
 import * as proc from 'process';
 import * as path from 'path';
 
-export const logger = winston.createLogger({
+const logger = winston.createLogger({
     level: "debug",
     format: winston.format.json(),
     defaultMeta: {application: "webdisk", pid: proc.pid},
@@ -12,4 +12,23 @@ export const logger = winston.createLogger({
     ]
 });
 
+export function debug(...msg)
+{
+    logger.debug(msg);
+}
+
+export function info(...msg)
+{
+    logger.info(msg);
+}
+
+export function warn(...msg)
+{
+    logger.warn(msg);
+}
+
+export function error(...msg)
+{
+    logger.error(msg);
+}
 
