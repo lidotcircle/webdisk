@@ -1,6 +1,7 @@
 /* parse config file */
 
 import * as fs from 'fs';
+import * as xutils from './xutils';
 
 export class User {
     public UserName: string;
@@ -43,14 +44,23 @@ interface IServerConfig {
  * {
  *   "listen_addr": <addr>,
  *   "listen_port": <port>,
- *   "sqlite3_database": <path>
+ *   "sqlite3_database": <path> // default path is '~/.webdisk/database'
  * }
  */
 
 export class Config {
-    listen_addr: string;
-    listen_port: number;
-    sqlite3_database: string;
+    listen_addr: string      = '127.0.0.1';
+    listen_port: number      = 5445;
+    sqlite3_database: string = '~/.webdisk/wd.db';
+}
+
+export async function readConfig(conf: string): Promise<Config> {
+    const data = await fs.promises.readFile(conf);
+    let ans = new Config();
+    const d = JSON.parse(data.toString());
+
+    xutils.assignTargetEnumProp(d, ans);
+    return ans;
 }
 
 export class ServerConfig implements IServerConfig {

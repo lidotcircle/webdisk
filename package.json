@@ -27,6 +27,7 @@
     "@types/gulp": "^4.0.6",
     "@types/node": "^13.11.0",
     "@types/node-getopt": "^0.2.31",
+    "@types/sqlite3": "^3.1.6",
     "@types/tmp": "^0.1.0",
     "bootstrap": "^4.4.1",
     "browserify": "^16.5.1",
@@ -42,6 +43,8 @@
     "tsify": "^4.0.1",
     "typescript": "^3.8.3",
     "vinyl-buffer": "^1.0.1",
-    "vinyl-source-stream": "^2.0.0"
+    "vinyl-source-stream": "^2.0.0",
+    "vue": "^2.6.12",
+    "vue-router": "^3.4.7"
   }
 }
