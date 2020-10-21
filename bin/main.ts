@@ -4,7 +4,7 @@ import * as http_server   from '../lib/http_server';
 import * as util          from '../lib/util';
 import * as constants     from '../lib/constants';
 import * as server_config from '../lib/server_config';
-import * as config from '../lib/server_config';
+import { Config, conf } from '../lib/config';
 import * as child_process from 'child_process';
 import * as process from 'process';
 import * as timer from 'timers';
@@ -29,24 +29,20 @@ if (options["h"] == true) {
 
 let config_file = options["c"];
 let daemonized  = options["d"];
-let listen_addr = null;
-let listen_port = null;
 
 
 function main() //{
 {
-    config.readConfig(config_file).then(config => {
-        listen_addr = config.listen_addr;
-        listen_port = config.listen_port;
+    Config.GetConfig(config_file).then(() => {
+        let server = new http_server.HttpServer();
 
-        let server = new http_server.HttpServer(config_file);
         server.on("error", (err) => {
             throw err;
         });
         server.on("listening", () => {
-            console.log(`listening at ${listen_addr}:${listen_port}`)
+            console.log(`listening at ${conf.listenAddress}:${conf.listenPort}`)
         });
-        server.listen(listen_port, listen_addr);
+        server.listen(conf.listenPort, conf.listenAddress);
     });
 } //}
 

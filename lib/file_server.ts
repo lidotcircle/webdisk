@@ -68,7 +68,7 @@ function statusCodeToJSON(sc: StatusCode) //{
  * a handler of upgrade event in http server, it will accept websocket connection,
  * paramters just like parameters of upgrade event
  */
-export function upgradeHandler(inc: http.IncomingMessage, socket: net.Socket, buf: Buffer, conf: config.ServerConfig) //{
+export function upgradeHandler(inc: http.IncomingMessage, socket: net.Socket, buf: Buffer) //{
 {
     let date = (new Date()).toUTCString();
     if (inc.url != "/ws") {

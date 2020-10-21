@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node ./release/webdisk/bin/main.js -a '0.0.0.0' -p 5445 -c ./test/server.json"
+    "test": "node ./release/webdisk/bin/main.js -c ./test/webdisk.json"
   },
   "bin": {
     "webdisk": "./bin/main.js"

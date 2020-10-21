@@ -31,8 +31,6 @@ import * as annautils from 'annautils';
 
 /**
  * @class HttpServer delegate of underlying http server
- * @event configParsed
- * @event configParsed
  * @event request
  * @event upgrade
  * @event listening
@@ -41,16 +39,14 @@ import * as annautils from 'annautils';
  */
 export class HttpServer extends event.EventEmitter //{
 {
-    private config: ServerConfig;
     private httpServer: http.Server;
 
     /**
      * @param {string} configFile a json file that specify configuration of this server, such as users information
      */
-    constructor (configFile: string) //{
+    constructor () //{
     {
         super();
-        this.config = new ServerConfig(configFile);
         this.httpServer = new http.Server();
 
         this.httpServer.on("request", (req, res) => this.emit("request", req, res));
@@ -159,7 +155,8 @@ export class HttpServer extends event.EventEmitter //{
             let sid = url.searchParams.get("sid");
             if (sid == null)
                 return this.write_empty_response(response, 401);
-            let user = this.config.LookupUserRootBySID(sid);
+            // TODO FIXME
+            let user = null;
             if (user == null)
                 return this.write_empty_response(response, 401);
             let docRoot = user.DocRoot;
@@ -176,28 +173,12 @@ export class HttpServer extends event.EventEmitter //{
     /** default listener of request event */
     protected onupgrade(inc: http.IncomingMessage, socket: net.Socket, buf: Buffer) //{
     {
-        upgradeHandler(inc, socket, buf, this.config);
-    }
-     //}
-
-    /** helper function of @see listen */
-    private __listen(port: number, addr: string) //{
-    {
-        if (!this.config.parsed()) this.emit("error", new Error("config file need be parsed before listen"));
-        this.httpServer.listen(port, addr);
+        upgradeHandler(inc, socket, buf);
     } //}
-
     /** listen */
     public listen(port: number, addr: string) //{
     {
-        if (!this.config.parsed()) {
-            this.config.ParseFile((err) => {
-                if (err) throw err;
-                this.emit("configParsed")
-                this.__listen(port, addr);
-            });
-        } else 
-            this.__listen(port, addr);
+        this.httpServer.listen(port, addr);
     } //}
 }; //}
 
