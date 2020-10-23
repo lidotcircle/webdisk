@@ -3,7 +3,7 @@ import * as message from 'webdisk/lib/common/message';
 
 const kkk = {
     asdf: false,
-    yy: "\x33\x33\x33\x33",
+    zxcv: '\x33\x33\x33\x33'
 };
 
 let encoder = new message.MessageBIN();

@@ -212,10 +212,21 @@ export class MessageBIN extends MessageEncoder {
     private object_decode_handler(view: DataView): [Object, number] //{
     {
         if(view.byteLength < 4) throw new Error('bad view for object');
-        let l = view.getUint32(0);
-        if(view.byteLength < (4 + l)) throw new Error('bad view for object');
-        let ov = new DataView(view.buffer, view.byteOffset + 4, l);
-        return [this.decode__xx(ov), l+4];
+        let len = view.getUint32(0);
+        if(view.byteLength < (4 + len)) throw new Error('bad view for object');
+        view = new DataView(view.buffer, view.byteOffset + 4, len);
+
+        let ans = {};
+        while(view.byteLength > 0) {
+            let [f, fl] = this.string_decode_handler(view);
+            view = new  DataView(view.buffer, view.byteOffset + fl, view.byteLength - fl);
+
+            let [vl, v] = this.general_decode_handler(view);
+            view = new  DataView(view.buffer, view.byteOffset + vl, view.byteLength - vl);
+            ans[f] = v;
+        }
+
+        return [ans, len+4];
     } //}
 
     private general_encode_handler(val: any): [number, ArrayBuffer[]] //{
@@ -331,7 +342,7 @@ export class MessageBIN extends MessageEncoder {
     private decode__xx(view: DataView): Object //{
     {
         let t = this.type_decode_handler(view);
-        if(t != ValueType.OBJECT) return false;
+        if(t != ValueType.OBJECT) return null;
         return this.general_decode_handler(view)[1];
     } //}
 
@@ -343,6 +354,8 @@ export class MessageBIN extends MessageEncoder {
     decode(ab: ArrayBuffer): BasicMessage //{
     {
         const obj = this.decode__xx(new DataView(ab));
+        if(obj == null) return null;
+
         const ans = new BasicMessage();
         for(let prop in ans) {
             if(obj[prop] === undefined) return null;
