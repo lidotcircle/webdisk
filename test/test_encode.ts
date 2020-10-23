@@ -9,6 +9,19 @@ function str(n, c) {
     return ans;
 }
 
+/*
+let encoder = new message.BINSerialization();
+let obj = [1,2,3,4,5,6,7,8];
+console.log(obj);
+const b = encoder.encode(obj);
+const bb = Buffer.from(b);
+console.log(b);
+console.log(bb.toString('hex'));
+const ox = encoder.decode(b);
+console.log(ox);
+*/
+
+
 let k1 = str(20, 'z');
 let k2 = str(0x10, 'y');
 

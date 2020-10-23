@@ -55,7 +55,7 @@ enum ValueType {
     ARRAY     = 6,
     BUFFERARRAY = 7
 }
-export class MessageBIN extends MessageEncoder {
+export class BINSerialization {
     private MergeArrayBuffer(bufs: ArrayBuffer[]): ArrayBuffer //{
     {
         let n = 0;
@@ -208,6 +208,35 @@ export class MessageBIN extends MessageEncoder {
         return [view, buf_len + consumed]
     } //}
 
+    private array_encode_handler(val: Array<any>): [ArrayBuffer[], number] //{
+    {
+        let len = 0;
+        let kkk = [];
+        for(let v of val) {
+            const [bs, l] = this.general_encode_handler(v);
+            len += l;
+            kkk.push(bs);
+        }
+        let ans = this.encode_length(len);
+        for(let o of ans) len += o.byteLength;
+        for(let bs of kkk) {
+            this.MergeArray(ans, bs);
+        }
+        return [ans, len];
+    } //}
+    private array_decode_handler(view: DataView): [Array<any>, number] //{
+    {
+        const [arr_len, consumed] = this.decode_length(view);
+        let arr_view = new DataView(view.buffer, view.byteOffset + consumed, arr_len);
+        let ans = [];
+        while(arr_view.byteLength > 0) {
+            let [v, l] = this.general_decode_handler(arr_view);
+            ans.push(v);
+            arr_view = new DataView(arr_view.buffer, arr_view.byteOffset + l, arr_view.byteLength - l);
+        }
+        return [ans, arr_len + consumed];
+    } //}
+
     private getBuffer(v: any): ArrayBuffer | SharedArrayBuffer //{
     {
         if(v instanceof ArrayBuffer)       return v;
@@ -239,7 +268,7 @@ export class MessageBIN extends MessageEncoder {
         return null;
     } //}
 
-    private object_encode_handler(obj: Object): [number, ArrayBuffer[]] //{
+    private object_encode_handler(obj: Object): [ArrayBuffer[], number] //{
     {
         let len = 0;
         let seg = [];
@@ -250,7 +279,7 @@ export class MessageBIN extends MessageEncoder {
             this.MergeArray(seg, ss);
 
             const v = obj[prop];
-            const [vl, vv] = this.general_encode_handler(v);
+            const [vv, vl] = this.general_encode_handler(v);
             len += vl;
             this.MergeArray(seg, vv);
         }
@@ -258,7 +287,7 @@ export class MessageBIN extends MessageEncoder {
         for(let o of obj_len) len += o.byteLength;
         this.MergeArray(obj_len, seg);
 
-        return [len, obj_len];
+        return [obj_len, len];
     } //}
     private object_decode_handler(view: DataView): [Object, number] //{
     {
@@ -270,7 +299,7 @@ export class MessageBIN extends MessageEncoder {
             let [f, fl] = this.string_decode_handler(view);
             view = new  DataView(view.buffer, view.byteOffset + fl, view.byteLength - fl);
 
-            let [vl, v] = this.general_decode_handler(view);
+            let [v, vl] = this.general_decode_handler(view);
             view = new  DataView(view.buffer, view.byteOffset + vl, view.byteLength - vl);
             ans[f] = v;
         }
@@ -278,7 +307,7 @@ export class MessageBIN extends MessageEncoder {
         return [ans, len+consumed];
     } //}
 
-    private general_encode_handler(val: any): [number, ArrayBuffer[]] //{
+    private general_encode_handler(val: any): [ArrayBuffer[], number] //{
     {
         let ans = [];
         let len = 0;
@@ -309,14 +338,11 @@ export class MessageBIN extends MessageEncoder {
                 this.MergeArray(ans, ss);
             } else if (val === null) {
                 ans.push(this.type_encode_handler(ValueType.NULL));
-                /*
-                } else if (Array.isArray(val)) {
-                    ans.push(this.type_encode_handler(ValueType.ARRAY));
-                    let arr_len = 0;
-                    let arr_ans = [];
-                    for(let ve of val) {
-                    }
-                 */
+            } else if (Array.isArray(val)) {
+                ans.push(this.type_encode_handler(ValueType.ARRAY));
+                const [arrs, l] = this.array_encode_handler(val);
+                this.MergeArray(ans, arrs);
+                len += l;
             } else {
                 let buf = this.getBuffer(val);
                 if(buf) {
@@ -326,7 +352,7 @@ export class MessageBIN extends MessageEncoder {
                     this.MergeArray(ans, bbb);
                 } else {
                     ans.push(this.type_encode_handler(ValueType.OBJECT));
-                    const [l, bs] = this.object_encode_handler(val);
+                    const [bs, l] = this.object_encode_handler(val);
                     this.MergeArray(ans, bs);
                     len += l;
                 }
@@ -335,9 +361,9 @@ export class MessageBIN extends MessageEncoder {
             throw new Error('bad object to serialization');
         }
 
-        return [len, ans];
+        return [ans, len];
     } //}
-    private general_decode_handler(view: DataView): [number, any] //{
+    private general_decode_handler(view: DataView): [any, number] //{
     {
         let ans;
         let len = 0;
@@ -346,6 +372,11 @@ export class MessageBIN extends MessageEncoder {
         view = new DataView(view.buffer, view.byteOffset + 1, view.byteLength - 1);
         len++;
         switch(t) {
+            case ValueType.ARRAY:
+                let l3 = 0;
+                [ans, l3] = this.array_decode_handler(view);
+                len += l3;
+                break;
             case ValueType.BOOLEAN:
                 ans = this.boolean_decode_handler(view);
                 len++;
@@ -376,29 +407,38 @@ export class MessageBIN extends MessageEncoder {
                 throw new Error(`It seems this view isn't a arraybuffer which serialized by counterpart encoder of THIS decoder`);
         }
 
-        return [len, ans];
+        return [ans, len];
     } //}
 
-    private encode__xx(obj: Object): ArrayBuffer //{
+    encode(obj: any): ArrayBuffer //{
     {
-        return this.MergeArrayBuffer(this.general_encode_handler(obj)[1]);
+        return this.MergeArrayBuffer(this.general_encode_handler(obj)[0]);
     } //}
-    private decode__xx(view: DataView): Object //{
+    decode(view: DataView | ArrayBuffer | SharedArrayBuffer): any //{
     {
-        let t = this.type_decode_handler(view);
-        if(t != ValueType.OBJECT) return null;
-        return this.general_decode_handler(view)[1];
+        if (view instanceof ArrayBuffer)       view = new DataView(view);
+        if (view instanceof SharedArrayBuffer) view = new DataView(view);
+        return this.general_decode_handler(view)[0];
     } //}
+}
+
+export class MessageBIN extends MessageEncoder {
+    private bin_encoder;
+
+    constructor() {
+        super();
+        this.bin_encoder = new BINSerialization();
+    }
 
     encode(msg: BasicMessage): ArrayBuffer //{
     {
         if(!(msg instanceof BasicMessage)) return null;
-        return this.encode__xx(msg);
+        return this.bin_encoder.encode(msg);
     } //}
     decode(ab: ArrayBuffer): BasicMessage //{
     {
-        const obj = this.decode__xx(new DataView(ab));
-        if(obj == null) return null;
+        const obj = this.bin_encoder.decode(new DataView(ab));
+        if(obj == null || (typeof obj != 'object')) return null;
 
         const ans = new BasicMessage();
         for(let prop in ans) {
