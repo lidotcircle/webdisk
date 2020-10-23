@@ -25,44 +25,12 @@ function getCaller () //{
     if (!mm) return null;
     return [mm[3], mm[1]];
 }; //}
-
-export function debug(...msg)
+function debug(...msg) //{
 {
     if (msg[0] == false) return;
     let caller = getCaller();
     let mmm = caller[0] ? `[${caller[1]} (${caller[0]})]: ` : `[${caller[1]}]: `;
     console.debug(mmm, msg);
-}
-
-export function parseCookie(cookie: string): Map<string, string> //{
-{
-    cookie = cookie || "";
-    let ret = new Map<string, string>();
-    let s1 = cookie.split(";");
-    for (let vv of s1) {
-        let kv = vv.split("=");
-        kv[1] = kv[1] || "true";
-        ret.set(kv[0].trim(), kv[1].trim());
-    }
-    return ret;
-} //}
-
-export function httpRequestToAcyclic(request: http.IncomingMessage) //{
-{
-    return {
-        headers: request.headers,
-        httpVersion: request.httpVersion,
-        httpVersionMajo: request.httpVersionMajor,
-        httpVersionMino: request.httpVersionMinor,
-        method: request.method,
-        rawHeaders: request.rawHeaders,
-        rawTrailers: request.rawTrailers,
-        statusCode: request.statusCode,
-        statusMessage: request.statusMessage,
-        trailers: request.trailers,
-        url: request.url,
-        BAD_POST: request["BAD_POST"] ? true : false
-    }
 } //}
 
 // range: 'bytes' '=' '#num' '-' ['#num']
@@ -82,16 +50,6 @@ export function parseRangeField(range: string): [number, number] //{
         if(r1 <= r2) return [r1, r2];
     }
     return null;
-} //}
-
-export function makeid(length: number): string //{
-{
-    var result           = '';
-    var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghipqrstuvwxyz0123456789';
-    var charactersLength = characters.length;
-    for ( var i = 0; i < length; i++ )
-        result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    return result;
 } //}
 
 /**
@@ -185,82 +143,14 @@ export function simpleHttpResponse(statusCode: number, headers: any, statusMessa
     return xx.RawBuffer();
 } //}
 
-function pathEqual_aux(p1: string, p2: string): boolean {
-    if (p1 == p2) return true;
-    if (p1.endsWith("/"))
-        return p1.substr(0, p1.length - 1) == p2;
-    return false;
-}
-export function pathEqual(p1: string, p2: string): boolean {
-    return pathEqual_aux(p1, p2) || pathEqual_aux(p2, p1);
-}
-
-enum DecodeState {
-    Begin,
-    Field,
-    Space,
-    Value,
-    NEWLINE,
-    END
-}
-/** 
- * @see app/ts/util/util.ts#DecodePairs 
- **/
-export function DecodePairs(buf: ArrayBuffer): [any, ArrayBuffer] //{
+export function pathEqual(p1: string, p2: string): boolean //{
 {
-    let x = new util.TextDecoder();
-    let array = new Uint8Array(buf);
-    let ret = {};
-    let output = "";
-    let field = "";
-    let value = ""
-    let state = DecodeState.Begin;
-    let i;
-    for(i=0; i<array.length; i++) //{
-    {
-        let y: string = x.decode(array.subarray(i, i+1));
-        if (y == "") continue;
-        switch (state) {
-            case DecodeState.Begin:
-                if (y == "\n") {
-                    state = DecodeState.END;
-                } else {
-                    field += y;
-                    state = DecodeState.Field;
-                } break;
-            case DecodeState.Field:
-                if (y == ":") {
-                    state = DecodeState.Space;
-                } else {
-                    field += y;
-                } break;
-            case DecodeState.Space:
-                if( y != " " && y != "\t") {
-                    state = DecodeState.Value;
-                    value += y;
-                } break;
-            case DecodeState.Value:
-                if (y == "\n") {
-                    state = DecodeState.NEWLINE;
-                    ret[field] = decodeURI(value);
-                    field = "";
-                    value = "";
-                } else {
-                    value += y;
-                } break;
-            case DecodeState.NEWLINE:
-                if (y == "\n") {
-                    state = DecodeState.END;
-                } else {
-                    state = DecodeState.Field;
-                    field += y;
-                } break;
-        }
-        if (state == DecodeState.END) break;
-    } //}
-    if (state != DecodeState.END) {
-        throw new Error("bad format");
+    const f = (p1: string, p2: string) => {
+        if (p1 == p2) return true;
+        if (p1.endsWith("/"))
+            return p1.substr(0, p1.length - 1) == p2;
     }
-    return [ret, array.subarray(i+1)];
+
+    return f(p1, p2) || f(p2, p1);
 } //}
 

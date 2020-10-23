@@ -4,7 +4,7 @@ import * as stream from 'stream';
 import * as util from 'util';
 import * as proc from 'process';
 
-import { debug } from './util';
+import { debug } from './logger';
 
 let bigIntSupport = true;
 try { BigInt(0); } catch (e) {bigIntSupport = false;}

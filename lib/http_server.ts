@@ -13,12 +13,14 @@ import * as path  from 'path';
 import * as utilx from 'util';
 import * as pathx from 'path';
 
-import { URL }          from 'url';
-import * as util        from './util';
-import * as constants   from './constants';
+import { URL }       from 'url';
 
-import { upgradeHandler } from './file_server';
+import * as util     from './utils';
+import { constants } from './constants';
+import { upgradeHandler } from './message_gateway';
+
 import { debug, info, warn, error } from './logger';
+import { DB } from './services';
 
 import * as annautils from 'annautils';
 
@@ -144,20 +146,20 @@ export class HttpServer extends event.EventEmitter //{
             response.end();
         }
         let header: boolean = request.method.toLowerCase() == "header";
-        if(url.pathname.startsWith(constants.DISK_PREFIX)) { // RETURN FILE
-            // TODO DATABASE
-            let sid = url.searchParams.get("sid");
-            if (sid == null)
+        if(url.pathname.startsWith(constants.DISK_PREFIX)) {
+            const token = url.searchParams.get(constants.SHORT_TERM_TOKEN_QUERY_PARAM);
+            if (token == null) {
                 return this.write_empty_response(response, 401);
-            // TODO FIXME
-            let user = null;
-            if (user == null)
-                return this.write_empty_response(response, 401);
-            let docRoot = user.DocRoot;
-            let fileName = path.resolve(docRoot, decodeURI(url.pathname.substring(constants.DISK_PREFIX.length + 1)));
-            let range: [number, number] = util.parseRangeField(request.headers.range);
-            this.write_file_response(fileName, response, header, range);
-        } else { // JUST SINGLE PAGE "/index.html" or "/", PUBLIC Resources
+            }
+            DB.UserInfoByShortTermToken(token).then(userinfo => {
+                if (userinfo == null) {
+                    return this.write_empty_response(response, 401);
+                }
+                let fileName = path.resolve(userinfo.rootPath, decodeURI(url.pathname.substring(constants.DISK_PREFIX.length + 1)));
+                let range: [number, number] = util.parseRangeField(request.headers.range);
+                this.write_file_response(fileName, response, header, range);
+            });
+        } else {
             if (url.pathname == "/") url.pathname = "/index.html";
             let fileName = path.resolve(constants.WebResourceRoot, url.pathname.substring(1));
             return this.write_file_response(fileName, response, header, util.parseRangeField(request.headers.range));
@@ -169,6 +171,7 @@ export class HttpServer extends event.EventEmitter //{
     {
         upgradeHandler(inc, socket, buf);
     } //}
+
     /** listen */
     public listen(port: number, addr: string) //{
     {

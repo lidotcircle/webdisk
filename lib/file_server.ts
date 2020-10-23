@@ -10,16 +10,14 @@ import * as child_proc from 'child_process';
 import { URL } from 'url';
 
 import { debug, info, warn, error } from './logger';
-import * as xutil from './util';
+import * as xutil from './utils';
 
 import * as timers from 'timers';
 
-import * as constants from './constants'
+import { constants } from './constants'
 import { WebsocketM, WebsocketOPCode } from './websocket';
 
 import * as upload from './upload';
-
-import { FileOpcode, FileEvent } from './common';
 
 export enum StatusCode //{
 {
