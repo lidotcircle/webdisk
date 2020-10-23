@@ -1,17 +1,17 @@
 /** Gataway to dispatch message base on message type */
 
-import * as http from 'http';
-import * as net from 'net';
+import * as http   from 'http';
+import * as net    from 'net';
 import * as events from 'events';
 
 import { constants } from './constants';
-import * as utls from './utils';
-
-import { BasicMessage, MessageEncoder } from './common/message';
-
-import { URL } from 'url';
+import { BasicMessage, MessageEncoder, MessageType } from './common/message';
 import { debug, info, warn, error } from './logger';
 import { WebsocketM, WebsocketOPCode } from './websocket';
+import { MessageSerializer, MessageHandlers } from './services';
+import * as utls from './utils';
+
+import { URL } from 'url';
 
 
 /**
@@ -125,14 +125,40 @@ export class MessageGateway extends events.EventEmitter {
     private onmessage(msg: Buffer | string) //{
     {
         if(this.invalid) return;
+        let message: BasicMessage;
+
         if (typeof(msg) == 'string') {
             try {
+                message = MessageSerializer.JSONSerializer.decode(msg);
             } catch (err) {
+                warn('recieve a bad message ', err);
             }
         } else {
             try {
+                message = MessageSerializer.BINSerializer.decode(utls.BuffertoArrayBuffer(msg));
             } catch (err) {
+                warn('recieve a bad message ', err);
             }
+        }
+
+        if(message == null) {
+            warn('recieve a bad message which doesn\'t meet requirement of basic message, ignore it');
+        } else {
+            if(!MessageHandlers.has(message.messageType)) {
+                warn('get a message without handler, ignore it');
+            } else {
+                const handler = MessageHandlers.get(message.messageType);
+                handler.handleRequest(this, message);
+            }
+        }
+    } //}
+
+    public response(msg: BasicMessage, binary: boolean = false): void //{
+    {
+        if(binary) {
+            this.send(utls.ArrayBuffertoBuffer(MessageSerializer.BINSerializer.encode(msg)));
+        } else {
+            this.send(MessageSerializer.JSONSerializer.encode(msg));
         }
     } //}
 }

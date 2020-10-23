@@ -1,7 +1,7 @@
 import * as sqlite from 'sqlite3';
-import * as xutils from './xutils';
 import * as proc from 'process';
-import { makeid, validation } from './xutils';
+import { makeid, validation, assignTargetEnumProp } from './common/utils';
+import { Token, UserInfo } from './common/db_types';
 const MD5 = require('md5');
 
 /** TODO */
@@ -11,13 +11,6 @@ const MAX_INVITATION_CODE        = 20;
 const INVITAION_CODE_LENGTH      = 56;
 const TOKEN_LENGTH               = 56;
 
-export type Token = string;
-export class UserInfo {
-    username: string = null;
-    rootPath: string = null;
-    ring:     number = null;
-    createTime: number = null;
-}
 export module DBRelations {
     export class User extends UserInfo {
         uid: number;
@@ -297,7 +290,7 @@ export class Database {
         if(!data) return null;
 
         let ans = new UserInfo();
-        xutils.assignTargetEnumProp(data, ans);
+        assignTargetEnumProp(data, ans);
         return ans;
     } //}
 
@@ -402,7 +395,7 @@ export class Database {
         const user = await this.getUserRecord(token);
         if(!user) return false;
 
-        if(user.password == MD5(oldPassword) && xutils.validation.password(newPassword)) {
+        if(user.password == MD5(oldPassword) && validation.password(newPassword)) {
             const md5_new = MD5(newPassword);
             await this.run(`UPDATE ${KEY_USER} SET password='${md5_new}' WHERE uid=${user.uid}`);
             await this.removeTokenByUid(user.uid);

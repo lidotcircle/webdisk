@@ -1,7 +1,7 @@
 import { conf } from './config';
 import * as db from './database';
 import { MessageHandler } from './message_handler';
-import { MessageType } from './common/message';
+import { MessageType, MessageJSON, MessageBIN } from './common/message';
 
 
 export const DB: db.Database = new db.Database(conf.sqlite3Database);
@@ -12,5 +12,10 @@ export function registerMessageHandler(msg_type: MessageType, handler: MessageHa
         throw new Error("double handler to a message type is prohibit");
     }
     MessageHandlers.set(msg_type, handler);
+}
+
+export module MessageSerializer {
+    export const JSONSerializer = new MessageJSON();
+    export const BINSerializer  = new MessageBIN();
 }
 
