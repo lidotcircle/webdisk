@@ -99,23 +99,74 @@ export class MessageBIN extends MessageEncoder {
         return view.getUint8(0);
     } //}
 
+    private encode_length(len: number): ArrayBuffer[] //{
+    {
+        let ans: ArrayBuffer[] = [];
+
+        if(len < 0xfe) {
+            let n = new Uint8Array(1);
+            n[0] = len;
+            ans.push(n.buffer);
+        } else if (len <= 0xffff) {
+            let n = new Uint8Array(1);
+            n[0] = 0xfe;
+            ans.push(n.buffer);
+            let n16 = new ArrayBuffer(2);
+            let n16v = new DataView(n16);
+            n16v.setUint16(0, len, false);
+            ans.push(n16);
+        } else if (len <= 0xffffffff) {
+            let n = new Uint8Array(1);
+            n[0] = 0xff;
+            ans.push(n.buffer);
+            let n32 = new ArrayBuffer(4);
+            let n32v = new DataView(n32);
+            n32v.setUint32(0, len, false);
+            ans.push(n32);
+        } else {
+            throw new Error('string is too long');
+        }
+
+        return ans;
+    } //}
+    private decode_length(view: DataView): [number, number] //{
+    {
+        if(view.byteLength < 1) throw new Error('bad dataview for string');
+        let total = 0;
+        let ans = null;
+        const l1 = view.getUint8(0);
+        total++;
+        view = new DataView(view.buffer, view.byteOffset + 1, view.byteLength -1);
+
+        if(l1 < 0xfe) {
+            ans = l1;
+        } else if (l1 == 0xfe) {
+            const l2 = view.getUint16(0, false);
+            total += 2;
+            ans = l2;
+        } else {
+            const l2 = view.getUint32(0, false);
+            total += 4;
+            ans = l2;
+        }
+
+        return [ans, total];
+    } //}
+
     private string_encode_handler(str: string): ArrayBuffer[] //{
     {
         let encoder = utils.getTextEncoder();
         const f = encoder.encode(str);
-        let n = new ArrayBuffer(4);
-        const l = new DataView(n);
-        l.setUint32(0, f.byteLength);
-        return [n, f.buffer];
+        let ans: ArrayBuffer[] = this.encode_length(f.byteLength);
+        ans.push(f.buffer);
+        return ans;
     } //}
     private string_decode_handler(view: DataView): [string, number] //{
     {
-        if(view.byteLength < 4) throw new Error('bad dataview for string');
-        const l = view.getUint32(0);
-        const nv = new DataView(view.buffer, view.byteOffset + 4, l);
-        const d = utils.getTextDecoder();
-        const ans = d.decode(nv);
-        return [ans, l + 4];
+        const [str_len, consumed] = this.decode_length(view);
+        const str_view = new DataView(view.buffer, view.byteOffset + consumed, str_len);
+        const ans = utils.getTextDecoder().decode(str_view);
+        return [ans, str_len + consumed];
     } //}
 
     private number_encode_handler(n: number): ArrayBuffer //{
@@ -146,18 +197,15 @@ export class MessageBIN extends MessageEncoder {
 
     private buffer_encode_handler(buf: ArrayBuffer | SharedArrayBuffer): ArrayBuffer[] //{
     {
-        let ll = new ArrayBuffer(4);
-        let llv = new DataView(ll);
-        llv.setUint32(0, buf.byteLength);
-        return [ll, buf];
+        const ans = this.encode_length(buf.byteLength);
+        ans.push(buf);
+        return ans;
     } //}
     private buffer_decode_handler(view: DataView): [DataView, number] //{
     {
-        if(view.byteLength < 4) throw new Error('bad view');
-        const l = view.getUint32(0);
-        if(view.byteLength < (4 + l)) throw new Error('bad view');
-        view = new DataView(view.buffer, view.byteOffset + 4, l);
-        return [view, l + 4]
+        const [buf_len, consumed] = this.decode_length(view);
+        view = new DataView(view.buffer, view.byteOffset + consumed, buf_len);
+        return [view, buf_len + consumed]
     } //}
 
     private getBuffer(v: any): ArrayBuffer | SharedArrayBuffer //{
@@ -181,9 +229,9 @@ export class MessageBIN extends MessageEncoder {
         if(viewBuf) {
             let ans = new ArrayBuffer(v.byteLength);
             let ansview = new Uint8Array(ans);
-            let vview = new Uint8Array(v.buffer, v.byteOffset, v.byteLength);
+            let vx  = new Uint8Array(v.buffer, v.byteOffset, v.byteLength);
             for(let i=0;i<ans.byteLength;i++) {
-                ansview[i] = vview[i]
+                ansview[i] = vx[i];
             }
             return ans;
         }
@@ -206,15 +254,16 @@ export class MessageBIN extends MessageEncoder {
             len += vl;
             this.MergeArray(seg, vv);
         }
+        const obj_len = this.encode_length(len);
+        for(let o of obj_len) len += o.byteLength;
+        this.MergeArray(obj_len, seg);
 
-        return [len, seg];
+        return [len, obj_len];
     } //}
     private object_decode_handler(view: DataView): [Object, number] //{
     {
-        if(view.byteLength < 4) throw new Error('bad view for object');
-        let len = view.getUint32(0);
-        if(view.byteLength < (4 + len)) throw new Error('bad view for object');
-        view = new DataView(view.buffer, view.byteOffset + 4, len);
+        const [len, consumed] = this.decode_length(view);
+        view = new DataView(view.buffer, view.byteOffset + consumed, len);
 
         let ans = {};
         while(view.byteLength > 0) {
@@ -226,7 +275,7 @@ export class MessageBIN extends MessageEncoder {
             ans[f] = v;
         }
 
-        return [ans, len+4];
+        return [ans, len+consumed];
     } //}
 
     private general_encode_handler(val: any): [number, ArrayBuffer[]] //{
@@ -278,12 +327,7 @@ export class MessageBIN extends MessageEncoder {
                 } else {
                     ans.push(this.type_encode_handler(ValueType.OBJECT));
                     const [l, bs] = this.object_encode_handler(val);
-                    let ll = new ArrayBuffer(4);
-                    let llv = new DataView(ll);
-                    llv.setUint32(0, l);
-                    ans.push(ll);
                     this.MergeArray(ans, bs);
-                    len += 4;
                     len += l;
                 }
             }

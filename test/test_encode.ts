@@ -1,10 +1,23 @@
 import * as message from 'webdisk/lib/common/message';
 
+function str(n, c) {
+    let ans = '';
+    while(n > 0) {
+        ans += c;
+        n--;
+    }
+    return ans;
+}
+
+let k1 = str(20, 'z');
+let k2 = str(0x10, 'y');
 
 const kkk = {
     asdf: false,
     zxcv: '\x33\x33\x33\x33'
 };
+kkk[k1] = false;
+kkk[k2] = true;
 
 let encoder = new message.MessageBIN();
 let obj = new message.BasicMessage();
