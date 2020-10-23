@@ -2,9 +2,9 @@
 
 import * as http from 'http';
 import * as net from 'net';
+import * as events from 'events';
 
-import * as constants from './constants';
-import * as xutils from './xutils';
+import { constants } from './constants';
 import * as utls from './utils';
 
 import { BasicMessage, MessageEncoder } from './common/message';
@@ -79,7 +79,7 @@ export function upgradeHandler(inc: http.IncomingMessage, socket: net.Socket, bu
 } //}
 
 
-export class MessageGateway {
+export class MessageGateway extends events.EventEmitter {
     private websocket: WebsocketM;
     private invalid:   boolean;
 
@@ -89,6 +89,8 @@ export class MessageGateway {
      */
     constructor(socket: net.Socket) //{
     {
+        super();
+
         socket.removeAllListeners();
         this.websocket = new WebsocketM(socket);
         this.invalid = false;
@@ -106,6 +108,7 @@ export class MessageGateway {
         });
         this.websocket.on("close", (clean: boolean) => {
             debug(`websocket closed, clean ? ${clean}`);
+            this.emit('close');
         });
         this.websocket.on("end", () => {
             this.websocket.close();
@@ -122,48 +125,15 @@ export class MessageGateway {
     private onmessage(msg: Buffer | string) //{
     {
         if(this.invalid) return;
-        let what;
-        let xbuf: ArrayBuffer = null;
         if (typeof(msg) == 'string') {
             try {
-                what = JSON.parse(msg as string);
             } catch (err) {
-                return this.sendfail("", StatusCode.DENIED, err.message);
             }
         } else {
             try {
-                [what, xbuf] = xutil.DecodePairs(msg);
             } catch (err) {
-                return this.sendfail("", StatusCode.DENIED, err.message);
             }
         }
     } //}
-
-    /**
-     * response client with error
-     * @param {string} id the request id
-     * @param {StatusCode} code indicate error
-     * @param {string} reason error message
-     */
-    private sendfail(id: string, code: StatusCode = StatusCode.FAIL, reason: string = null) //{
-    {
-        let sendM = {id: id, msg: reason ? {message: reason, code: code} : statusCodeToJSON(code), error: true};
-        this.send(JSON.stringify(sendM, null, 1));
-    } //}
-
-    /**
-     * response client with success
-     * @param {string} id the request id
-     * @param {StatusCode} code should be success
-     * @param {any} data an object can be JSON.stringify
-     */
-    private sendsuccess(id: string, code: StatusCode = StatusCode.SUCCESS, data: any = null) //{
-    {
-        let sendM = {id: id, msg: data ? data : statusCodeToJSON(code), error: false};
-        this.send(JSON.stringify(sendM, null, 1));
-    } //}
-
-    sendMessage(msg: BasicMessage, encoder: MessageEncoder) {
-    }
 }
 

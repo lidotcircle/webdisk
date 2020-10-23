@@ -154,3 +154,22 @@ export function pathEqual(p1: string, p2: string): boolean //{
     return f(p1, p2) || f(p2, p1);
 } //}
 
+export function ArrayBuffertoBuffer(ab: ArrayBuffer | SharedArrayBuffer): Buffer //{
+{
+    var buf = Buffer.alloc(ab.byteLength);
+    var view = new Uint8Array(ab);
+    for (var i = 0; i < buf.length; ++i) {
+        buf[i] = view[i];
+    }
+    return buf;
+} //}
+export function BuffertoArrayBuffer(buf: Buffer): ArrayBuffer //{
+{
+    var ab = new ArrayBuffer(buf.length);
+    var view = new Uint8Array(ab);
+    for (var i = 0; i < buf.length; ++i) {
+        view[i] = buf[i];
+    }
+    return ab;
+} //}
+
