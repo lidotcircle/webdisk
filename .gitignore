@@ -8,3 +8,6 @@ core
 gulpfile.js
 gulp-web.js
 package-lock.json
+
+dashboard/dist/*
+
