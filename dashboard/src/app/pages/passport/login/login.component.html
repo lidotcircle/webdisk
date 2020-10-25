@@ -1,1 +1,45 @@
-<p>login works!</p>
+
+<div class="container">
+
+    <div class="content">
+        <form #fs1="ngForm" class='login-form' novalidate>
+            <div class="login-account with-warning">
+                <div>
+                    <label>输入邮箱或者手机号</label>
+                    <input matInput type="text" required
+                           name="userAccount" #userAccount="ngModel" [(ngModel)]="username">
+                </div>
+                <div color="danger" class="warning" *ngIf="userAccount.errors?.required && userAccount.touched">请输入邮箱或者手机号</div>
+            </div>
+            <div class="login-password with-warning">
+                <div>
+                    <label color="stable" position="floating">输入密码</label>
+                    <input name="userPassword" #userPassword="ngModel" type="password"
+                                                                       required
+                                                                       [(ngModel)]="password">
+                </div>
+                <div color="danger" class="warning" *ngIf="userPassword.errors?.required && userPassword.touched">请输入密码</div>
+            </div>
+
+            <div class="with-warning">
+                <div class="buttons">
+                    <button class="confirm-login-button" color="primary" expand="block" fill="solid" (click)='login()'>
+                        登录
+                    </button>
+                    <button class="new-account-button" color="primary" expand="block" 
+                                                                       fill="outline" [routerLink]="['/passport/signup']">
+                        注册新账户
+                    </button>
+                </div>
+                <div color="info"   class="info"    *ngIf="loginSuccess">登录成功，即将跳转到用户首页</div>
+                <div color="danger" class="warning" *ngIf="loginFail">登录失败，密码或者账户名错误</div>
+            </div>
+
+            <div class="forget-password">
+                <a [routerLink]="['/passport/retrieve-password']">忘记密码?</a>
+            </div>
+        </form>
+    </div>
+
+</div>
+

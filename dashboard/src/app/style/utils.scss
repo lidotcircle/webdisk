@@ -1,0 +1,24 @@
+
+@mixin ratio-box($l1-selector, $l2-selector, $box-selector, $ratio-woh) {
+    #{$l1-selector} {
+        #{$l2-selector} {
+            position: relative;
+            width: 100%;
+            height: 0em;
+            padding-top: 100% / $ratio-woh;
+
+            #{$box-selector} {
+                box-sizing: border-box;
+                width: 100%;
+                height: 100%;
+                position: absolute;
+                top: 0em;
+                left: 0em;
+            }
+        }
+    }
+}
+
+@mixin square-box($l1-selector, $l2-selector, $box-selector) {
+    @include ratio-box($l1-selector, $l2-selector, $box-selector, 1);
+}

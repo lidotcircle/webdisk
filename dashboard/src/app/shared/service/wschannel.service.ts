@@ -21,6 +21,7 @@ export class WSChannelService {
         this.request_timeout = 3000;
         this.max_id          = 0;
         this.retry_base      = CONS.WS_RETRY_BASE;
+        this.setup_new_connection();
     } //}
 
     async send(msg: BasicMessage, json: boolean = true): Promise<BasicMessage> //{

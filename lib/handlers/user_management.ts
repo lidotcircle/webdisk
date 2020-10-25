@@ -1,4 +1,4 @@
-import { DB, registerMessageHandler } from '../services';
+import { DB } from '../services';
 import { MessageHandler } from '../message_handler';
 import { MessageGateway } from '../message_gateway';
 import { BasicMessage, MessageType } from '../common/message';
@@ -7,6 +7,7 @@ import { debug, info, warn, error } from '../logger';
 
 import { UserMessageLoginRequest, UserMessageLoginResponse,
          UserMessageLogoutRequest } from '../common/user_message';
+
 
 class UserManagement extends MessageHandler {
     private static GMSG = new UserMessage();
@@ -33,10 +34,13 @@ class UserManagement extends MessageHandler {
             case UserMessageType.Login: {
                 const lmsg: UserMessageLoginRequest = msg;
                 lmsg.um_msg.username;
+                info(`user: ${lmsg.um_msg.username} try to login`);
                 const token = await DB.login(lmsg.um_msg.username, lmsg.um_msg.password);
                 if(token == null) {
+                    info(`${lmsg.um_msg.username} login fail, wrong password`);
                     resp.error = 'username or password are wrong';
                 } else {
+                    info(`${lmsg.um_msg.username} login success`);
                     (resp as UserMessageLoginResponse).um_msg.token = token;
                 }
             } break;
@@ -60,6 +64,10 @@ class UserManagement extends MessageHandler {
                 warn('unknown user message type, ignore it');
                 return;
         }
+
+        dispatcher.response(resp);
     }
 }
+
+export const UserManager = new UserManagement();
 

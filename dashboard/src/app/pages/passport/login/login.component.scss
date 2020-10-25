@@ -1,0 +1,21 @@
+@import '../../../style/layout.scss';
+@import '../../../style/utils.scss';
+
+@include container-content();
+
+.buttons {
+    box-sizing: border-box;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+
+    button {
+        flex-basis: 0em;
+        flex-grow: 1;
+    }
+}
+
+.with-warning {
+    padding: 0em 0em 2em 0em !important;
+}
+

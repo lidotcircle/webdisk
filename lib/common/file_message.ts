@@ -8,6 +8,7 @@ export enum FileMessageType {
 }
 
 export class FileMessage extends BasicMessage {
+    public messageType = MessageType.FileManagement;
     public fm_type: FileMessageType = FileMessageType.Uninit;
 }
 

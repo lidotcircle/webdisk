@@ -8,7 +8,8 @@ import { constants } from './constants';
 import { BasicMessage, MessageEncoder, MessageType } from './common/message';
 import { debug, info, warn, error } from './logger';
 import { WebsocketM, WebsocketOPCode } from './websocket';
-import { MessageSerializer, MessageHandlers } from './services';
+import { MessageSerializer, MessageHandlers, registerMessageHandler } from './services';
+import { UserManager } from './handlers/user_management';
 import * as utls from './utils';
 
 import { URL } from 'url';
@@ -76,6 +77,7 @@ export function upgradeHandler(inc: http.IncomingMessage, socket: net.Socket, bu
         "Sec-WebSocket-Accept": utls.WebSocketAcceptKey(en_ws_key)
     });
     socket.write(response);
+    new MessageGateway(socket);
 } //}
 
 
@@ -91,9 +93,17 @@ export class MessageGateway extends events.EventEmitter {
     {
         super();
 
+        debug(`new websocket connection from ${socket.remoteAddress}:${socket.remotePort}`);
         socket.removeAllListeners();
         this.websocket = new WebsocketM(socket);
         this.invalid = false;
+        const ping = () => {
+            this.websocket.ping();
+            if(!this.invalid) {
+                setTimeout(ping, 5000);
+            }
+        }
+        ping();
 
         this.websocket.on("message", this.onmessage.bind(this));
         this.websocket.on("error", (err: Error) => {
@@ -162,4 +172,6 @@ export class MessageGateway extends events.EventEmitter {
         }
     } //}
 }
+
+registerMessageHandler(MessageType.UserManagement, UserManager);
 

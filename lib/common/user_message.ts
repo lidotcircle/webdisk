@@ -12,8 +12,9 @@ export enum UserMessageType {
 }
 
 export class UserMessage extends BasicMessage {
+    public messageType = MessageType.UserManagement;
     public um_type: UserMessageType = UserMessageType.Uninit;
-    public um_msg: any;
+    public um_msg: any = {};
 }
 
 export interface UserMessageLoginRequest extends UserMessage {

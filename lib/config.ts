@@ -1,5 +1,6 @@
 import * as fs from 'fs';
-import * as xutils from './xutils';
+import * as utils from './utils';
+import * as proc from 'process';
 
 /*
  * config file format
@@ -23,7 +24,7 @@ export class Config {
         const data = await fs.promises.readFile(conf);
         const d = JSON.parse(data.toString());
 
-        xutils.assignTargetEnumProp(d, Config.global_config);
+        utils.assignTargetEnumProp(d, Config.global_config);
     }
 
     public get listenAddress() {
@@ -33,7 +34,11 @@ export class Config {
         return this.listen_port;
     }
     public get sqlite3Database() {
-        return this.sqlite3_database;
+        let ans = this.sqlite3_database;
+        if(this.sqlite3_database.startsWith('~')) {
+            ans = proc.env.HOME + ans.substring(1);
+        }
+        return ans;
     }
 }
 

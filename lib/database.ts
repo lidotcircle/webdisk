@@ -2,6 +2,7 @@ import * as sqlite from 'sqlite3';
 import * as proc from 'process';
 import { makeid, validation, assignTargetEnumProp } from './common/utils';
 import { Token, UserInfo } from './common/db_types';
+import { debug, info, warn, error } from './logger';
 const MD5 = require('md5');
 
 /** TODO */
@@ -115,6 +116,7 @@ export class Database {
     constructor(db: string) //{
     {
         if(!db.startsWith('/') && !db.startsWith('\\')) {
+            console.error(db);
             throw new Error("require absolute path");
         }
         this.m_database = new sqlite.Database(db);
@@ -205,6 +207,7 @@ export class Database {
     {
         await this.__init__();
         await this.ensure_tables();
+        info('initialize database success');
     } //}
 
 

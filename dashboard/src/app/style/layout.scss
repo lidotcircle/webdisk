@@ -1,0 +1,20 @@
+
+
+@mixin container-content() {
+    .container {
+        display: flex;
+        flex-direction: row;
+        width: 100vw;
+        height: 100vh;
+        box-sizing: border-box;
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
+
+        .content {
+            flex-grow: 1;
+        }
+    }
+}
+

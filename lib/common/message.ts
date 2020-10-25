@@ -252,8 +252,10 @@ export class BINSerialization {
         if(v instanceof Uint32Array)       viewBuf = true;
         if(v instanceof Float32Array)      viewBuf = true;
         if(v instanceof Float64Array)      viewBuf = true;
-        if(v instanceof BigInt64Array)     viewBuf = true;
-        if(v instanceof BigUint64Array)    viewBuf = true;
+        /*
+         if(v instanceof BigInt64Array)     viewBuf = true;
+         if(v instanceof BigUint64Array)    viewBuf = true;
+         */
         if(v instanceof DataView)          viewBuf = true;
         if(viewBuf) {
             let ans = new ArrayBuffer(v.byteLength);

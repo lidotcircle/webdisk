@@ -1,4 +1,5 @@
 /* UTILS */
+export * from './common/utils';
 
 import * as fs   from 'fs';
 import * as path from 'path';
