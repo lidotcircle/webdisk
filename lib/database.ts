@@ -298,7 +298,6 @@ export class Database {
     } //}
 
 
-
     async login(username: string, password: string): Promise<Token> //{
     {
         const data = await this.get(`SELECT uid, password FROM ${KEY_USER} WHERE username='${username}';`);

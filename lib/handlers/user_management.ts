@@ -2,7 +2,7 @@ import { DB } from '../services';
 import { MessageHandler } from '../message_handler';
 import { MessageGateway } from '../message_gateway';
 import { BasicMessage, MessageType } from '../common/message';
-import { UserMessage, UserMessageType, UserMessageGetUserInfoRequest } from '../common/user_message';
+import { UserMessage, UserMessageType, UserMessageGetUserInfoRequest, UserMessageSetUserInfoRequest, UserMessageChangePasswordRequest, UserMessageGenInvCodeRequest, UserMessaageGetInvCodeRequest, UserMessaageGetInvCodeResponse, UserMessageAddUserRequest, UserMessageRemoveUserRequest } from '../common/user_message';
 import { debug, info, warn, error } from '../logger';
 
 import { UserMessageLoginRequest, UserMessageLoginResponse,
@@ -44,9 +44,11 @@ class UserManagement extends MessageHandler {
                     (resp as UserMessageLoginResponse).um_msg.token = token;
                 }
             } break;
+
             case UserMessageType.Logout: {
                 await DB.logout((msg as UserMessageLogoutRequest).um_msg.token);
             } break;
+
             case UserMessageType.GetBasicUserInfo: {
                 const gmsg: UserMessageGetUserInfoRequest = msg;
                 const info = await DB.getUserInfo(gmsg.um_msg.token);
@@ -56,10 +58,53 @@ class UserManagement extends MessageHandler {
                     resp.um_msg = info;
                 }
             } break;
+
             case UserMessageType.SetBasicUserInfo: {
+                const gmsg: UserMessageSetUserInfoRequest = msg;
                 // TODO
                 resp.error = 'not implement';
             } break;
+
+            case UserMessageType.ChangePassword: {
+                const gmsg: UserMessageChangePasswordRequest = msg;
+                if(!(await DB.changePassword(gmsg.um_msg.token, gmsg.um_msg.oldpass, gmsg.um_msg.newpass))) {
+                    resp.error = 'change password fail';
+                }
+            } break;
+
+            case UserMessageType.GenerateInvitationCode: {
+                const gmsg: UserMessageGenInvCodeRequest = msg;
+                if(!(await DB.generateInvitationCode(gmsg.um_msg.token, gmsg.um_msg.n))) {
+                    resp.error = 'generate new invitationCode fail';
+                }
+            } break;
+
+            case UserMessageType.GetInvitationCode: {
+                const gmsg: UserMessaageGetInvCodeRequest = msg;
+                const v = await DB.getInvitationCodes(gmsg.um_msg.token);
+                if(v) {
+                    const m: UserMessaageGetInvCodeResponse = resp;
+                    m.um_msg.InvCodes = v.map(c => c[0]);
+                } else {
+                    msg.error = 'get invitation codes fail, maybe a invalid token';
+                }
+            } break;
+
+            case UserMessageType.AddUser: {
+                const gmsg: UserMessageAddUserRequest = msg;
+                const v = await DB.addUser(gmsg.um_msg.username, gmsg.um_msg.password, gmsg.um_msg.invitationCode);
+                if(!v) {
+                    resp.error = `add user ${gmsg.um_msg.username} fail`;
+                }
+            } break;
+
+            case UserMessageType.RemoveUser: {
+                const gmsg: UserMessageRemoveUserRequest = msg;
+                if(!(await DB.removeUser(gmsg.um_msg.token, gmsg.um_msg.username, gmsg.um_msg.password))) {
+                    resp.error = `remove user ${gmsg.um_msg.username} fail`;
+                }
+            } break;
+
             default:
                 warn('unknown user message type, ignore it');
                 return;

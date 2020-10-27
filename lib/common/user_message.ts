@@ -8,6 +8,14 @@ export enum UserMessageType {
     GetBasicUserInfo = "GetUserInfo",
     SetBasicUserInfo = "SetUserInfo",
 
+    AddUser    = "ADD_USER",
+    RemoveUser = "REMOVE_USER",
+
+    GenerateInvitationCode = "GENERATE_INVITATIONCODE",
+    GetInvitationCode      = "GET_INVITATIONCODE",
+
+    ChangePassword = "CHANGE_PASSWORD",
+
     Uninit = "UNINIT"
 }
 
@@ -39,6 +47,48 @@ export interface UserMessageSetUserInfoRequest extends UserMessage {
     um_msg: {
         token: Token,
         newInfo: UserInfo
+    }
+}
+
+export interface UserMessageAddUserRequest extends UserMessage {
+    um_msg: {
+        username: string,
+        password: string,
+        invitationCode: string
+    }
+}
+
+export interface UserMessageRemoveUserRequest extends UserMessage {
+    um_msg: {
+        token: string,
+        username: string,
+        password: string
+    }
+}
+
+export interface UserMessageGenInvCodeRequest extends UserMessage {
+    um_msg: {
+        token: Token,
+        n: number
+    }
+}
+
+export interface UserMessaageGetInvCodeRequest extends UserMessage {
+    um_msg: {
+        token: Token
+    }
+}
+export interface UserMessaageGetInvCodeResponse extends UserMessage {
+    um_msg: {
+        InvCodes: string[]
+    }
+}
+
+export interface UserMessageChangePasswordRequest extends UserMessage {
+    um_msg: {
+        token: Token,
+        oldpass: string,
+        newpass: string
     }
 }
 

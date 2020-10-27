@@ -3,23 +3,26 @@
 
     <div class="content">
         <form #fs1="ngForm" class='login-form' novalidate>
-            <div class="login-account with-warning">
-                <div>
-                    <label>输入邮箱或者手机号</label>
-                    <input matInput type="text" required
-                           name="userAccount" #userAccount="ngModel" [(ngModel)]="username">
-                </div>
-                <div color="danger" class="warning" *ngIf="userAccount.errors?.required && userAccount.touched">请输入邮箱或者手机号</div>
-            </div>
-            <div class="login-password with-warning">
-                <div>
-                    <label color="stable" position="floating">输入密码</label>
-                    <input name="userPassword" #userPassword="ngModel" type="password"
-                                                                       required
-                                                                       [(ngModel)]="password">
-                </div>
-                <div color="danger" class="warning" *ngIf="userPassword.errors?.required && userPassword.touched">请输入密码</div>
-            </div>
+            <mat-form-field>
+                <mat-label>用户名</mat-label>
+                <input matInput
+                       placeholder="输入用户名">
+                <mat-error *ngIf="false">
+                    请输入正确的用户名
+                </mat-error>
+                <mat-error *ngIf="true">
+                    用户名是必须的
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field>
+                <mat-label>密码</mat-label>
+                <input matInput
+                       placeholder="输入密码">
+                <mat-error *ngIf="true">
+                    密码是必须的
+                </mat-error>
+            </mat-form-field>
 
             <div class="with-warning">
                 <div class="buttons">
