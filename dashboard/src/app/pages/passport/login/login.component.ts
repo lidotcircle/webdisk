@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { AccountManagerService } from 'src/app/shared/service/account-manager.service';
+import { Router } from '@angular/router';
 
 @Component({
     selector: 'app-login',
@@ -7,21 +8,31 @@ import { AccountManagerService } from 'src/app/shared/service/account-manager.se
     styleUrls: ['./login.component.scss']
 })
 export class LoginComponent implements OnInit {
-    username: string;
-    password: string;
-    loginSuccess = false;
+    inputState = {
+        username: '',
+        password: ''
+    };
     loginFail = false;
 
-    constructor(private accountManager: AccountManagerService) {}
+    constructor(private accountManager: AccountManagerService,
+                private router: Router) {}
 
     ngOnInit(): void {
     }
 
     login() {
-        console.log('try login');
-        this.accountManager.login('administrator', '123456').then(l => {
-            console.log((l ? 'login success' : 'login fail'));
-        });
+        this.loginFail = false;
+        this.accountManager.login(this.inputState.username, this.inputState.password)
+            .then(l => {
+                this.loginFail = !l;
+                if(l) {
+                    setTimeout(() => {
+                        this.inputState.username = '';
+                        this.inputState.password = '';
+                        this.router.navigateByUrl('/home');
+                    }, 500);
+                }
+            });
     }
 }
 

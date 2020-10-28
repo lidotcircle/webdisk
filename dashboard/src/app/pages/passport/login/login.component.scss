@@ -3,19 +3,22 @@
 
 @include container-content();
 
-.buttons {
-    box-sizing: border-box;
-    width: 100%;
-    display: flex;
-    flex-direction: row;
+.container {
 
-    button {
-        flex-basis: 0em;
-        flex-grow: 1;
+    .content {
+
+        @include inputs-buttons-form('.login-form');
+        .login-form {
+            .login-fail-warning {
+                padding: 0em 1em;
+            }
+            
+            .forget-password {
+                width: 100%;
+                box-sizing: border-box;
+                padding: 0.5em 1em;
+            }
+        }
     }
-}
-
-.with-warning {
-    padding: 0em 0em 2em 0em !important;
 }
 

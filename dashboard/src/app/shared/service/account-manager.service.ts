@@ -14,6 +14,7 @@ import { CONS, Token, UserMessage, UserMessageLoginRequest, UserMessageLoginResp
          UserMessageGenInvCodeRequest} from '../common';
 import { Router } from '@angular/router';
 import { EventEmitter } from 'events';
+import { nextTick } from '../utils';
 
 @Injectable({
     providedIn: 'root'
@@ -25,7 +26,7 @@ export class AccountManagerService {
     constructor(private localstorage: LocalStorageService,
                 private wschannel: WSChannelService,
                 private router: Router) {
-        let token = this.localstorage.get(CONS.Keys.LOGIN_TOKEN, null);
+        this.token = this.localstorage.get(CONS.Keys.LOGIN_TOKEN, null);
     }
 
     subscribe(func: {():void}) //{
@@ -57,7 +58,7 @@ export class AccountManagerService {
         } else {
             this.token = resp.um_msg.token;
             this.localstorage.set(CONS.Keys.LOGIN_TOKEN, this.token);
-            setTimeout(this.onChange, 0);
+            nextTick(() => this.onChange);
             return true;
         }
     } //}
@@ -70,7 +71,7 @@ export class AccountManagerService {
         req.um_type = UserMessageType.Logout;
         req.um_msg.token = this.token;
         this.token = null;
-        setTimeout(this.onChange, 0);
+        nextTick(() => this.onChange);
 
         await this.wschannel.send(req);
     } //}
@@ -95,7 +96,7 @@ export class AccountManagerService {
     async setUserinfo(info: UserInfo): Promise<boolean> {return false;}
 
     private success(resp: BasicMessage): boolean //{
-{
+    {
         if(resp && resp.error) console.warn(resp.error);
         return !!resp && !resp.error;
     } //}

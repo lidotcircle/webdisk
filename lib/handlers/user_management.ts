@@ -30,6 +30,8 @@ class UserManagement extends MessageHandler {
         resp.um_msg = {};
         msg.um_msg = msg.um_msg || {};
 
+        debug(`USER Manager: recieve ${msg.um_type} request`);
+
         switch(msg.um_type) {
             case UserMessageType.Login: {
                 const lmsg: UserMessageLoginRequest = msg;
