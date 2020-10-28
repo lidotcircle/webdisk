@@ -1,4 +1,3 @@
-import * as upload from './upload';
 import * as path from 'path';
 
 export module constants {
@@ -14,8 +13,6 @@ export module constants {
     export const NEW_FOLDER_PREFIX    = 'newfolder';
     export const MAX_NEW_EXISTS       = 100;
     export const TEMP_FILE_ENTRY_NAME = 'accepts';
-
-    export const UserUploadMaps = new upload.UploadMap();
 
     export const FILE_TYPE_MAP = new Map<string, string>([
         [".aac",    "audio/aac"],
