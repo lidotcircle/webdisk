@@ -20,23 +20,23 @@ export class FileComponent implements OnInit {
     }
 
     get FileType(): string {
-        return '';
+        return 'file type';
     }
 
     get FileName(): string {
-        return '';
+        return 'file name';
     }
 
     get FileMTime(): string {
-        return '';
+        return 'file mtime';
     }
 
     get FileMode(): string {
-        return '';
+        return 'file mode';
     }
 
     get FileSize(): string {
-        return '';
+        return 'file size';
     }
 }
 
