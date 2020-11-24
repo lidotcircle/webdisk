@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
 import { SharedComponentModule } from './shared-component/shared-component.module';
 import { SharedDirectiveModule } from './shared-directive/shared-directive.module';
+import { HttpClientModule } from '@angular/common/http';
 
 
 @NgModule({
@@ -19,6 +20,7 @@ import { SharedDirectiveModule } from './shared-directive/shared-directive.modul
         MatInputModule,
         MatButtonModule,
         MatIconModule,
+        HttpClientModule,
 
         SharedDirectiveModule,
         SharedComponentModule

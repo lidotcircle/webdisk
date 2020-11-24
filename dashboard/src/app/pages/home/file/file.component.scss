@@ -1,5 +1,10 @@
 
-.file-item {
-    color: blue;
+app-file {
+    .file-item {
+        color: blue;
+
+        display: flex;
+        flex-direction: row;
+    }
 }
 

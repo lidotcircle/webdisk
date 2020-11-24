@@ -44,15 +44,19 @@ class MiscManagement extends MessageHandler {
                 const h = RPCHandlers.get(rpc_req.misc_msg.function_name) as Function;
                 let rpc_await_ans = null;
                 if(!!h) {
-                    const rpc_ans = h(...rpc_req.misc_msg.function_argv);
-                    if(isPromise(rpc_ans)) {
-                        rpc_await_ans = await rpc_ans;
-                    } else {
-                        rpc_await_ans = rpc_ans;
+                    try {
+                        const rpc_ans = h(...rpc_req.misc_msg.function_argv);
+                        if(isPromise(rpc_ans)) {
+                            rpc_await_ans = await rpc_ans;
+                        } else {
+                            rpc_await_ans = rpc_ans;
+                        }
+                        const rpc_resp = resp as RPCResponseMessage;
+                        rpc_resp.misc_msg = rpc_resp.misc_msg || {function_response: null};
+                        rpc_resp.misc_msg.function_response = rpc_await_ans;
+                    } catch (err) {
+                        resp.error = err;
                     }
-                    const rpc_resp = resp as RPCResponseMessage;
-                    rpc_resp.misc_msg = rpc_resp.misc_msg || {function_response: null};
-                    rpc_resp.misc_msg.function_response = rpc_await_ans;
                 } else {
                     resp.error = `rpc without handler: ${rpc_req.misc_msg.function_name}`;
                 };

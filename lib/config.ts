@@ -1,6 +1,8 @@
 import * as fs from 'fs';
 import * as utils from './utils';
 import * as proc from 'process';
+import path from 'path';
+import { constants } from './constants';
 
 /*
  * config file format
@@ -15,6 +17,7 @@ import * as proc from 'process';
 export class Config {
     private listen_addr: string      = '127.0.0.1';
     private listen_port: number      = 5445;
+    private static_resources: string = 'resources';
     private sqlite3_database: string = '~/.webdisk/wd.db';
 
     private constructor() {};
@@ -39,6 +42,15 @@ export class Config {
             ans = proc.env.HOME + ans.substring(1);
         }
         return ans;
+    }
+    public get staticResources() {
+        if (this.static_resources.startsWith('/')) {
+            return this.static_resources;
+        } else if (this.static_resources.startsWith('~')) {
+            return proc.env.HOME + this.static_resources.substring(1);
+        } else {
+            return path.join(constants.rootdir, this.static_resources);
+        }
     }
 }
 

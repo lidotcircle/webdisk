@@ -9,12 +9,9 @@ import * as path       from 'path';
 import * as proc       from 'process';
 import * as child_proc from 'child_process';
 
-import * as rimraf from 'rimraf';
-
+import * as rimraf    from 'rimraf';
 import * as annautils from 'annautils';
 
-import * as web from './gulp-web';
-web.doit();
 
 const release_root = "./release";
 const test_root    = "./testme";
@@ -126,10 +123,11 @@ function build_test() //{
     ]);
 } //}
 //}
+
 /** watch */
-function watch_S() //{
+function watch() //{
 {
-    let watcher = gulp.watch(["lib/**/*.ts", "test/**/*.ts", "./*.ts", "bin/*.ts"]);
+    let watcher = gulp.watch(["lib/**/*.ts", "test/**/*.ts", "./*.ts", "bin/*.ts", "resources/**"]);
     let handle = (fp: string, stat) => {
         console.log(`----- file [${fp}]`);
         let fp_split = fp.split("/");
@@ -160,25 +158,22 @@ function project_specify() //{
     return merge([
         gulp.src("docroot").pipe(gulp.symlink(path.join(release_root, project_name))),
         gulp.src("etc")    .pipe(gulp.symlink(path.join(release_root, project_name))),
+        gulp.src("resources").pipe(gulp.symlink(path.join(release_root, project_name))),
     ]);
 } //}
 
-/** TASK typescript */
-gulp.task("typescript", ts_task);
-
 /** TASK release */
-gulp.task("release", gulp.parallel("typescript", copy_misc, project_specify));
+gulp.task("release", gulp.parallel(ts_task, copy_misc, project_specify));
 
 /** TASK buildtest */
 gulp.task("buildtest", build_test);
 
 /** TASK default */
-gulp.task("default", gulp.series("typescript", build_test));
+gulp.task("default", gulp.series("release"));
 
 /** TASK watch */
 gulp.task("watch", () => {
-    watch_S();
-    web.watch_B();
+    watch();
 });
 
 /** TASK test */

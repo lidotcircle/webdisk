@@ -1,7 +1,7 @@
 import * as path from 'path';
 
 export module constants {
-    const rootdir = path.dirname(path.dirname(__filename));
+    export const rootdir = path.dirname(path.dirname(__filename));
 
     export const WebResourceRoot = path.join(rootdir, "docroot");
     export const CONFIG_PATH     = path.join(rootdir, "etc", "webdisk.json");

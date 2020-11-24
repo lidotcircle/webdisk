@@ -49,7 +49,7 @@ export class HomeComponent implements OnInit {
 
     constructor() {
         let f = new FileStat();
-        f.filename = '/helloworld.c';
+        f.filename = '/helloworld.c++';
         this.files = [f];
     }
 

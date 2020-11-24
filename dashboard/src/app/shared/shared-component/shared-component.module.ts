@@ -10,7 +10,7 @@ import { LoginBGComponent } from './login-bg/login-bg.component';
         CommonModule
     ],
     exports: [
-        LoginBGComponent
+        LoginBGComponent,
     ]
 })
 export class SharedComponentModule { }

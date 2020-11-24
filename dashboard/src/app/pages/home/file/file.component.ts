@@ -1,16 +1,19 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { FileStat } from '../../../shared/common';
+import { Component, Input, OnInit, ViewChild, ElementRef, ViewEncapsulation } from '@angular/core';
+import { FileStat, FileType } from '../../../shared/common';
 import { FiletypeSvgIconService } from 'src/app/shared/service/filetype-svg-icon.service';
 
 
 @Component({
     selector: 'app-file',
     templateUrl: './file.component.html',
-    styleUrls: ['./file.component.scss']
+    styleUrls: ['./file.component.scss'],
+    encapsulation: ViewEncapsulation.None
 })
 export class FileComponent implements OnInit {
     @Input('file')
     file: FileStat;
+    @ViewChild('fileicon')
+    private iconElem: ElementRef;
 
     constructor(private svgIcon: FiletypeSvgIconService) {}
 
@@ -19,19 +22,33 @@ export class FileComponent implements OnInit {
             throw new Error('bad filename');
         }
 
-        this.svgIcon.getSvgIcon(this.file.extension).then(e => console.log(e));
-    }
+        const updateIcon = (icon: string) => {
+            this.svgIcon.getSvgIcon(icon)
+            .then(svg => (this.iconElem.nativeElement as HTMLElement).innerHTML = svg as string)
+            .catch(e => {
+                console.log("error");
+                if(icon != 'blank') {
+                    updateIcon('blank');
+                }
+            });
+        }
 
-    get FileType(): string {
-        return 'file type';
+        if(this.file.filetype == FileType.dir) {
+            updateIcon('folder');
+        } else if (this.file.extension == '') {
+            updateIcon('blank');
+        } else {
+            updateIcon(this.file.extension);
+       }
     }
 
     get FileName(): string {
-        return 'file name';
+        return this.file.basename;
     }
 
     get FileMTime(): string {
-        return 'file mtime';
+        const date = this.file.mtime;
+        return date.toLocaleString();
     }
 
     get FileMode(): string {
