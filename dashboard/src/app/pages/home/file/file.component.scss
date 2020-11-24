@@ -1,10 +1,58 @@
+@import '../../../style/colors.scss';
 
 app-file {
     .file-item {
-        color: blue;
+        &:hover {
+            background: $color-file-hover;
+        }
+    }
 
+    &.select {
+        .file-item {
+            background-color: $color-file-select;
+
+            &:hover {
+                background-color: $color-file-select-hover;
+            }
+        }
+    }
+
+    &.active {
+        .file-item {
+            background-color:  $color-file-active;
+        }
+    }
+
+    .file-item.detail {
         display: flex;
         flex-direction: row;
+        align-items: center;
+
+        font-size: 0.7em;
+
+        .file-icon {
+            padding: 0.4em;
+
+            svg {
+                width: 2em;
+            }
+        }
+
+        .file-props {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            box-sizing: border-box;
+            padding: 0.8em 0em;
+
+            .file-prop {
+                padding: 0em 0.8em;
+                white-space: nowrap;
+            }
+
+            .file-name {
+            }
+        }
     }
 }
 

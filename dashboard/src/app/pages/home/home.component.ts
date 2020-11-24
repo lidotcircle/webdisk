@@ -38,6 +38,29 @@ function SortByType(d1: FileStat, d2: FileStat): number //{
     return SortByName(d1, d2);
 } //}
 
+class FileDetailViewStyle {
+    nameOrder: number = 0;
+    dateOrder: number = 1;
+    typeOrder: number = 2;
+    sizeOrder: number = 3;
+    modeOrder: number = 4;
+
+    nameWidth: number = 20;
+    dateWidth: number = 20;
+    typeWidth: number = 15;
+    sizeWidth: number = 20;
+    modeWidth: number = 20;
+}
+
+export enum FileViewStyle {
+    detail = 'detail',
+    list = 'list',
+    tile = 'tile',
+    bigIcon = 'large-icon',
+    mediumIcon = 'medium-icon',
+    smallIcon = 'small-icon',
+}
+
 
 @Component({
     selector: 'app-home',
@@ -46,10 +69,14 @@ function SortByType(d1: FileStat, d2: FileStat): number //{
 })
 export class HomeComponent implements OnInit {
     files: FileStat[] = [];
+    // TODO save to local storage
+    detailFileView: FileDetailViewStyle = new FileDetailViewStyle();
+    viewStyle: FileViewStyle = FileViewStyle.detail;
 
     constructor() {
         let f = new FileStat();
-        f.filename = '/helloworld.c++';
+        f.filename = '/helloworld.cc';
+        f.mode = 33;
         this.files = [f];
     }
 
@@ -69,15 +96,19 @@ export class HomeComponent implements OnInit {
         this.files.sort(SortBySize);
     }
 
-    private order: boolean = true;
+    private _order: boolean = true;
     reverse() {
-        this.order = !this.order;
+        this._order = !this._order;
 
         const o = this.files;
         this.files = [];
         for(let f of o) {
             this.files.unshift(f);
         }
+    }
+
+    get FileOrder(): boolean {
+        return this._order;
     }
 
     get FileCount(): number {

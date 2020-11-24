@@ -7,10 +7,11 @@ import { HomeComponent } from './home.component';
 import { ToolComponent } from './tool/tool.component';
 import { FileComponent } from './file/file.component';
 import { FileSortComponent } from './file-sort/file-sort.component';
+import { DetailViewHeaderComponent } from './detail-view-header/detail-view-header.component';
 
 
 @NgModule({
-    declarations: [ HomeComponent, ToolComponent, FileComponent, FileSortComponent ],
+    declarations: [ HomeComponent, ToolComponent, FileComponent, FileSortComponent, DetailViewHeaderComponent ],
     imports: [
         CommonModule,
         HomeRoutingModule,

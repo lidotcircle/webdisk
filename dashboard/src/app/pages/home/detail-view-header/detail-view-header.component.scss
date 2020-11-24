@@ -1,0 +1,21 @@
+@import '../../../style/colors.scss';
+
+.detail-view-style {
+    display: flex;
+    flex-direction: row;
+
+    .detail-view-prop {
+        color: #777;
+        display: flex;
+        flex-direction: row;
+
+        .field {
+            flex-grow: 1;
+        }
+
+        &:hover {
+            background: $color-file-hover;
+        }
+    }
+}
+
