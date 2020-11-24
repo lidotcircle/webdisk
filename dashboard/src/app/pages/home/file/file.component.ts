@@ -1,5 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FileStat } from '../../../shared/common';
+import { FiletypeSvgIconService } from 'src/app/shared/service/filetype-svg-icon.service';
 
 
 @Component({
@@ -9,14 +10,16 @@ import { FileStat } from '../../../shared/common';
 })
 export class FileComponent implements OnInit {
     @Input('file')
-    private file: FileStat;
+    file: FileStat;
 
-    constructor() {}
+    constructor(private svgIcon: FiletypeSvgIconService) {}
 
     ngOnInit(): void {
         if(this.file == null || this.file.filename == null) {
             throw new Error('bad filename');
         }
+
+        this.svgIcon.getSvgIcon(this.file.extension).then(e => console.log(e));
     }
 
     get FileType(): string {

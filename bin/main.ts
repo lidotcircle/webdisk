@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
 import * as http_server   from '../lib/http_server';
-import * as constants     from '../lib/constants';
 import * as child_process from 'child_process';
 import * as process       from 'process';
 import * as timer         from 'timers';
 import * as proc          from 'process';
+import { constants }      from '../lib/constants';
 
 import { Config, conf } from '../lib/config';
 const getopt = require('node-getopt');

@@ -1,3 +1,10 @@
-<p>home works!</p>
 
+<div class="container">
+    <div class="content">
+        <div class="files">
+            <app-file *ngFor="let file of files; let i = index;" [file]="file">
+            </app-file>
+        </div>
+    </div>
+</div>
 

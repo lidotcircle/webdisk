@@ -5,6 +5,7 @@ import * as utils from './utils';
 export enum MessageType {
     UserManagement = "USER_MANAGEMENT",
     FileManagement = "FILE_MANAGEMENT",
+    MiscManagement = "MISC_MANAGEMENT",
     Uninit         = "UNINIT"
 }
 export type MessageId  = number;

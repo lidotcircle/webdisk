@@ -14,12 +14,29 @@ export class FileStat {
     mtimeMs:     number   = 0;
     ctimeMs:     number   = 0;
     birthtimeMs: number   = 0;
-    atime:       Date     = null;
-    mtime:       Date     = null;
-    ctime:       Date     = null;
-    birthtime:   Date     = null;
     filename:    string   = null;
-    filetype:    FileType = null;
+    filetype:    FileType = FileType.unknown;
+
+    get extension(): string {
+        if(!this.basename) return '';
+        if(this.filetype == FileType.dir) return '';
+        const k = this.basename.split('.');
+        if(k.length == 1) return '';
+        return k[k.length-1];
+    }
+
+    get basename(): string {
+        if(!this.filename) return null;
+        let k = this.filename;
+        if(k.endsWith('/') || k.endsWith('\\')) k = k.substr(0, k.length -1);
+        const kk = k.split('/');
+        return kk[kk.length - 1];
+    }
+
+    get atime(): Date     {return new Date(this.atimeMs);}
+    get mtime(): Date     {return new Date(this.mtimeMs);}
+    get ctime(): Date     {return new Date(this.ctimeMs);}
+    get birthtime(): Date {return new Date(this.birthtimeMs);}
 }
 
 export enum FileType {

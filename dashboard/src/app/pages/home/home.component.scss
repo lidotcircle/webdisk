@@ -1,0 +1,10 @@
+@import '../../style/layout.scss';
+@import '../../style/utils.scss';
+
+@include container-content();
+
+.container {
+    .content {
+    }
+}
+

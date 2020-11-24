@@ -1,16 +1,27 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NameDirective } from './directive/validation/name.directive';
 
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { FormsModule } from '@angular/forms';
+import { SharedComponentModule } from './shared-component/shared-component.module';
+import { SharedDirectiveModule } from './shared-directive/shared-directive.module';
 
 
 @NgModule({
-    declarations: [NameDirective],
+    declarations: [],
     imports: [
-        CommonModule
+        CommonModule,
     ],
     exports: [
-        NameDirective
+        FormsModule,
+        MatInputModule,
+        MatButtonModule,
+        MatIconModule,
+
+        SharedDirectiveModule,
+        SharedComponentModule
     ]
 })
 export class SharedModule { }

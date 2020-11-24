@@ -3,7 +3,7 @@ import * as proc from 'process';
 import * as timer from 'timers';
 import * as annautils from 'annautils';
 
-import {debug} from './util';
+import { debug } from './logger';
 
 
 /**

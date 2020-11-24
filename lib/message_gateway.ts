@@ -13,6 +13,7 @@ import { UserManager } from './handlers/user_management';
 import * as utls from './utils';
 
 import { URL } from 'url';
+import { MiscManager } from './handlers/misc_management';
 
 
 /**
@@ -174,4 +175,5 @@ export class MessageGateway extends events.EventEmitter {
 }
 
 registerMessageHandler(MessageType.UserManagement, UserManager);
+registerMessageHandler(MessageType.MiscManagement, MiscManager);
 

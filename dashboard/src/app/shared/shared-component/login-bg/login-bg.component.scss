@@ -1,0 +1,40 @@
+@import '../../../style/devices.scss';
+
+.bg-container {
+    width: 100%;
+    box-sizing: border-box;
+
+    .bg-img {
+        width: 100%;
+        box-sizing: border-box;
+        background: url('../../../../assets/img/from_pixabay/deer.jpg') no-repeat center;
+    }
+}
+
+@media (max-width: $phone-max-width) {
+    .bg-container {
+        padding: 1em;
+
+        .bg-img {
+            height: 28vh;
+            background-size: cover;
+        }
+    }
+}
+
+@media (min-width: $phone-max-width) {
+    .bg-container {
+        height: 10%;
+
+        .bg-img {
+            position: absolute;
+            background-size: cover;
+            width: 100vw;
+            height: 100vh;
+            opacity: 0.8;
+            top: 0em;
+            left: 0em;
+        }
+    }
+}
+
