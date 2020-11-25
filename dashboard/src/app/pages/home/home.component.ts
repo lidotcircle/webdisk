@@ -47,7 +47,7 @@ class FileDetailViewStyle {
 
     nameWidth: number = 20;
     dateWidth: number = 20;
-    typeWidth: number = 15;
+    typeWidth: number = 20;
     sizeWidth: number = 20;
     modeWidth: number = 20;
 }

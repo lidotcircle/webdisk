@@ -1,16 +1,22 @@
 
 <div class="container">
     <div class="content">
-        <div class="files">
-            <app-file *ngFor="let file of files; let i = index;" [file]="file"
-                [view-style]='viewStyle'
-                [name-order]='detailFileView.nameOrder' [name-width]='detailFileView.nameWidth'
-                [date-order]='detailFileView.dateOrder' [date-width]='detailFileView.dateWidth'
-                [type-order]='detailFileView.typeOrder' [type-width]='detailFileView.typeWidth'
-                [size-order]='detailFileView.sizeOrder' [size-width]='detailFileView.sizeWidth'
-                [mode-order]='detailFileView.modeOrder' [mode-width]='detailFileView.modeWidth'
-                >
-            </app-file>
+        <div class="file-view">
+            <app-detail-view-header class="detail-view-header"
+                                    [view-style]='viewStyle' [view-config]='detailFileView'>
+            </app-detail-view-header>
+
+            <div class="files">
+                <app-file *ngFor="let file of files; let i = index;" [file]="file"
+                 [view-style]='viewStyle'
+                 [name-order]='detailFileView.nameOrder' [name-width]='detailFileView.nameWidth'
+                 [date-order]='detailFileView.dateOrder' [date-width]='detailFileView.dateWidth'
+                 [type-order]='detailFileView.typeOrder' [type-width]='detailFileView.typeWidth'
+                 [size-order]='detailFileView.sizeOrder' [size-width]='detailFileView.sizeWidth'
+                 [mode-order]='detailFileView.modeOrder' [mode-width]='detailFileView.modeWidth'
+                 >
+                </app-file>
+            </div>
         </div>
     </div>
 </div>

@@ -8,7 +8,10 @@ import { FileViewStyle } from '../home.component';
 })
 export class DetailViewHeaderComponent implements OnInit {
     @Input('view-style')
-    viewStyle: FileViewStyle;
+    viewStyle: string;
+    @Input('view-config')
+    ViewConfig: FileViewStyle;
+
     @Output('change')
     ViewChange = new EventEmitter();
 
@@ -19,4 +22,21 @@ export class DetailViewHeaderComponent implements OnInit {
             throw new Error('fixme');
         }
     }
+
+    getPropCSS(prop: string) {
+        const order = this.ViewConfig[prop + "Order"];
+        const width = this.ViewConfig[prop + "Width"];
+        let ans = 'white-space: nowrap; overflow-x: hidden; text-overflow: ellipsis;';
+
+        if(order < 0) {
+            ans += 'display: none;';
+        } else {
+            ans += `order: ${order};`;
+        }
+        if(width != null) {
+            ans += `width: ${width}%;`;
+        }
+        return ans;
+    }
 }
+

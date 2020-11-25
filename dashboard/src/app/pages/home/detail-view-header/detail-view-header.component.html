@@ -1,23 +1,50 @@
 
 <div class="detail-view-style">
-    <div class="detail-view-prop name-prop">
+    <div class="take-space"></div>
+    <div class="detail-view-prop name-prop" [style]='getPropCSS("name")'>
         <div class="field">Name</div>
-        <div class="tool"></div>
+        <div class="tool">
+            <div class="vertical"></div>
+            <span class="material-icons maticon">expand_more</span>
+            <div class="vertical"></div>
+        </div>
+        <div class="vertical-drag"></div>
     </div>
-    <div class="detail-view-prop date-porp">
+    <div class="detail-view-prop date-prop" [style]='getPropCSS("date")'>
         <div class="field">Date Modified</div>
-        <div class="tool"></div>
+        <div class="tool">
+            <div class="vertical"></div>
+            <span class="material-icons maticon">expand_more</span>
+            <div class="vertical"></div>
+        </div>
+        <div class="vertical-drag"></div>
     </div>
-    <div class="detail-view-prop type-prop">
+    <div class="detail-view-prop type-prop" [style]='getPropCSS("type")'>
         <div class="field">Type</div>
-        <div class="tool"></div>
+        <div class="tool">
+            <div class="vertical"></div>
+            <span class="material-icons maticon">expand_more</span>
+            <div class="vertical"></div>
+        </div>
+        <div class="vertical-drag"></div>
     </div>
-    <div class="detail-view-prop size-prop">
+    <div class="detail-view-prop size-prop" [style]='getPropCSS("mode")'>
         <div class="field">Size</div>
-        <div class="tool"></div>
+        <div class="tool">
+            <div class="vertical"></div>
+            <span class="material-icons maticon">expand_more</span>
+            <div class="vertical"></div>
+        </div>
+        <div class="vertical-drag"></div>
     </div>
-    <div class="detail-view-prop mode-prop">
+    <div class="detail-view-prop mode-prop" [style]='getPropCSS("mode")'>
         <div class="field">Mode</div>
-        <div class="tool"></div>
+        <div class="tool">
+            <div class="vertical"></div>
+            <span class="material-icons maticon">expand_more</span>
+            <div class="vertical"></div>
+        </div>
+        <div class="vertical-drag"></div>
     </div>
 </div>
+

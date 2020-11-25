@@ -5,6 +5,13 @@
 
 .container {
     .content {
+        display: flex;
+        flex-direction: column;
+
+        .file-view {
+            display: flex;
+            flex-direction: column;
+        }
     }
 }
 
