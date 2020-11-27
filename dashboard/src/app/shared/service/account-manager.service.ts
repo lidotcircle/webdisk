@@ -28,6 +28,7 @@ export class AccountManagerService {
                 private router: Router) {
         this.token = this.localstorage.get(CONS.Keys.LOGIN_TOKEN, null);
     }
+    get LoginToken(): Token {return this.token;}
 
     subscribe(func: {():void}) //{
     {

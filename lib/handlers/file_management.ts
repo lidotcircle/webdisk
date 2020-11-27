@@ -3,11 +3,11 @@ import { MessageHandler } from '../message_handler';
 import { MessageGateway } from '../message_gateway';
 import { BasicMessage, MessageType } from '../common/message';
 import { debug, info, warn, error } from '../logger';
-import { FileMessage, FileMessageType, FileRequestMessage, FileResponseMessage, FileRequest } from 'lib/common/file_message';
-import { checkArgv } from 'lib/utils';
+import { FileMessage, FileMessageType, FileRequestMessage, FileResponseMessage, FileRequest } from '../common/file_message';
+import { checkArgv, subStringInObject } from '../utils';
 import path from 'path';
 import * as annautils from 'annautils';
-import { FileStat } from 'lib/common/file_types';
+import { FileStat } from '../common/file_types';
 
 
 class FileManagement extends MessageHandler {
@@ -64,6 +64,8 @@ class FileManagement extends MessageHandler {
                 const dir = path.join(user.rootPath, req.fm_request_argv[0]);
                 try {
                     const stats = annautils.fs.promisify.getStatsOfFiles(dir, 1) as FileStat[];
+                    subStringInObject(stats, /.*/, user.rootPath, '/');
+                    resp.fm_msg.fm_response = stats;
                 } catch {
                     resp.error = 'getdir fail';
                     debug(resp.error);

@@ -99,7 +99,7 @@ export function changeObject(obj: object, func: (prop: string, val: any) => any)
     }
 }
 
-export function subStringInObject(obj: object, propRegex: RegExp, srcRegex: RegExp, target: string) {
+export function subStringInObject(obj: object, propRegex: RegExp, srcRegex: RegExp | string, target: string) {
     changeObject(obj, (prop, val) => {
         if(typeof val == 'string' && prop.match(propRegex)) {
             return val.replace(srcRegex, target);

@@ -24,17 +24,11 @@ export enum FileRequest {
     MOVE           = "MOVE",
     READ           = "READ",
     REMOVE         = "REMOVE",
-    RENAME         = "RENAME",
+    REMOVER        = "REMOVER",
     STAT           = "STAT",
     TOUCH          = "TOUCH",
     TRUNCATE       = "TRUNCATE",
     WRITE          = "WRITE",
-    UPLOAD         = "UPLOAD",
-    UPLOAD_WRITE   = "UPLOAD_WRITE",
-    UPLOAD_WRITE_B = "UPLOAD_WRITE_B",
-    UPLOAD_MERGE   = "UPLOAD_MERGE",
-    NEW_FOLDER     = "NEW_FOLDER",
-    NEW_FILE       = "NEW_FILE"
 }
 
 export class FileRequestMessage extends FileMessage {
