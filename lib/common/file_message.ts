@@ -29,6 +29,7 @@ export enum FileRequest {
     TOUCH          = "TOUCH",
     TRUNCATE       = "TRUNCATE",
     WRITE          = "WRITE",
+    FILEMD5        = "FILEMD5",
 }
 
 export class FileRequestMessage extends FileMessage {

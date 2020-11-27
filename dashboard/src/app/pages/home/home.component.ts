@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FileStat } from 'src/app/shared/common';
+import { FileSystemManagerService } from 'src/app/shared/service/file-system-manager.service';
 
 
 /** sortByName */
@@ -73,7 +74,14 @@ export class HomeComponent implements OnInit {
     detailFileView: FileDetailViewStyle = new FileDetailViewStyle();
     viewStyle: FileViewStyle = FileViewStyle.detail;
 
-    constructor() {
+    constructor(private fileManager: FileSystemManagerService) {
+        this.fileManager.getdir('/')
+            .then(a => console.log(a))
+            .catch(e => {
+                console.warn(e)
+            })
+            .finally(() => console.log("over"));
+
         let f = new FileStat();
         f.filename = '/helloworld.cc';
         f.mode = 33;

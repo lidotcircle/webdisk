@@ -81,7 +81,11 @@ export function checkArgv(pattern: string, argv: any[]): boolean {
                 }
             } break;
             case 'f': {
-                return false;
+                if(argv[i] instanceof ArrayBuffer) {
+                    continue;
+                } else {
+                    return false;
+                }
             } break;
             default:
                 return false;
@@ -90,21 +94,25 @@ export function checkArgv(pattern: string, argv: any[]): boolean {
     return true;
 }
 
-export function changeObject(obj: object, func: (prop: string, val: any) => any) {
+export function changeObject(obj: object, func: (prop: string, val: any) => any): object {
     if(typeof obj == 'object') {
         for(const prop in obj) {
             changeObject(obj[prop], func);
             obj[prop] = func(prop, obj[prop]);
         }
     }
+    return obj;
 }
 
-export function subStringInObject(obj: object, propRegex: RegExp, srcRegex: RegExp | string, target: string) {
+export function subStringInObject(obj: object, propRegex: RegExp, srcRegex: RegExp | string, target: string): object {
     changeObject(obj, (prop, val) => {
         if(typeof val == 'string' && prop.match(propRegex)) {
+            console.log(val.replace(srcRegex, target));
             return val.replace(srcRegex, target);
         }
     });
+    console.log(obj);
+    return obj;
 }
 
 export function parseCookie(cookie: string): Map<string, string>

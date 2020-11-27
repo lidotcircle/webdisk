@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { FileStat, FileRequestMessage, FileRequest, FileResponseMessage } from '../common';
+import { FileStat, FileRequestMessage, FileRequest, FileResponseMessage, FileMessageType } from '../common';
 import { WSChannelService } from './wschannel.service';
 import { AccountManagerService } from './account-manager.service';
 
@@ -13,7 +13,9 @@ export enum FileSystemEvent {
 })
 export class FileSystemManagerService {
     constructor(private wschannel: WSChannelService,
-                private accountManager: AccountManagerService) {}
+                private accountManager: AccountManagerService) {
+        window['man'] = this;
+    }
 
     private authWithToken(req: FileRequestMessage){
         if(this.accountManager.LoginToken == null) {
@@ -30,12 +32,17 @@ export class FileSystemManagerService {
 
     private async sendTo(req_type: FileRequest, ...argv): Promise<any> {
         const req = new FileRequestMessage();
+        req.fm_type = FileMessageType.Request;
         this.authWithToken(req);
         req.fm_msg.fm_request = req_type;
         req.fm_msg.fm_request_argv = argv;
         const resp = await this.wschannel.send(req);
 
-        return (resp as FileResponseMessage).fm_msg.fm_response;
+        if(resp.error) {
+            throw resp.error;
+        }
+
+        return (resp as FileResponseMessage)?.fm_msg?.fm_response;
     }
 
     async getdir(dir: string): Promise<FileStat[]> {
@@ -76,6 +83,11 @@ export class FileSystemManagerService {
         return await this.sendTo(FileRequest.EXECUTE, file);
     }
 
+    async md5(file: string): Promise<string> {
+        this.absolutePath(file);
+        return await this.sendTo(FileRequest.FILEMD5, file);
+    }
+
     async mkdir(dir: string): Promise<void> {
         this.absolutePath(dir);
         return await this.sendTo(FileRequest.MKDIR, dir);
@@ -113,14 +125,14 @@ export class FileSystemManagerService {
         return await this.sendTo(FileRequest.TRUNCATE, length);
     }
 
-    async read(file: string, offset: number = 0, length: number = -1): Promise<ArrayBuffer> {
+    async read(file: string, position: number = 0, length: number = -1): Promise<ArrayBuffer> {
         this.absolutePath(file);
-        return await this.sendTo(FileRequest.READ, file, offset, length);
+        return await this.sendTo(FileRequest.READ, file, position, length);
     }
 
-    async write(file: string, offset: number = 0, buf: ArrayBuffer): Promise<number> {
+    async write(file: string, position: number = 0, buf: ArrayBuffer): Promise<number> {
         this.absolutePath(file);
-        return await this.sendTo(FileRequest.WRITE, file, offset, buf);
+        return await this.sendTo(FileRequest.WRITE, file, position, buf);
     }
 }
 

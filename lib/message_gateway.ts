@@ -14,6 +14,7 @@ import * as utls from './utils';
 
 import { URL } from 'url';
 import { MiscManager } from './handlers/misc_management';
+import { FileManager } from './handlers/file_management';
 
 
 /**
@@ -176,4 +177,5 @@ export class MessageGateway extends events.EventEmitter {
 
 registerMessageHandler(MessageType.UserManagement, UserManager);
 registerMessageHandler(MessageType.MiscManagement, MiscManager);
+registerMessageHandler(MessageType.FileManagement, FileManager);
 
