@@ -35,6 +35,78 @@ export function makeid(length: number): string
     return result;
 }
 
+/**
+ * pattern specify follow types: boolean, number, string, object, array, buffer
+ *     for example 'bf', 'bn', 'ns'
+ */
+export function checkArgv(pattern: string, argv: any[]): boolean {
+    if(!Array.isArray(argv) || pattern.length != argv.length) {
+        return false;
+    }
+    for(let i=0;i<pattern.length;i++) {
+        switch(pattern[i]) {
+            case 'b': {
+                if(typeof argv[i] == 'boolean') {
+                    continue;
+                } else {
+                    return false;
+                }
+            } break;
+            case 'n': {
+                if(typeof argv[i] == 'number') {
+                    continue;
+                } else {
+                    return false;
+                }
+            } break;
+            case 's': {
+                if(typeof argv[i] == 'string') {
+                    continue;
+                } else {
+                    return false;
+                }
+            } break;
+            case 'o': {
+                if(typeof argv[i] == 'object') {
+                    continue;
+                } else {
+                    return false;
+                }
+            } break;
+            case 'a': {
+                if(typeof argv[i] == 'object' && Array.isArray(argv[i])) {
+                    continue;
+                } else {
+                    return false;
+                }
+            } break;
+            case 'f': {
+                return false;
+            } break;
+            default:
+                return false;
+        }
+    }
+    return true;
+}
+
+export function changeObject(obj: object, func: (prop: string, val: any) => any) {
+    if(typeof obj == 'object') {
+        for(const prop in obj) {
+            changeObject(obj[prop], func);
+            obj[prop] = func(prop, obj[prop]);
+        }
+    }
+}
+
+export function subStringInObject(obj: object, propRegex: RegExp, srcRegex: RegExp, target: string) {
+    changeObject(obj, (prop, val) => {
+        if(typeof val == 'string' && prop.match(propRegex)) {
+            return val.replace(srcRegex, target);
+        }
+    });
+}
+
 export function parseCookie(cookie: string): Map<string, string>
 {
     cookie = cookie || "";

@@ -33,7 +33,6 @@ class MiscManagement extends MessageHandler {
 
         let resp = new MiscMessage();
         resp.messageId = this.id++;
-        resp.messageType = MessageType.MiscManagement;
         resp.messageAck = msg.messageId;
         resp.error = null;
         msg.misc_msg = msg.misc_msg || {};

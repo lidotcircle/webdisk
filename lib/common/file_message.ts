@@ -10,6 +10,7 @@ export enum FileMessageType {
 export class FileMessage extends BasicMessage {
     public messageType = MessageType.FileManagement;
     public fm_type: FileMessageType = FileMessageType.Uninit;
+    public fm_msg: any = null;
 }
 
 export enum FileRequest {
@@ -37,12 +38,17 @@ export enum FileRequest {
 }
 
 export class FileRequestMessage extends FileMessage {
-    public fm_request: FileRequest = FileRequest.INVALID;
-    public fm_request_argv: string[] = [];
+    fm_msg = {
+        user_token: null,
+        fm_request: FileRequest.INVALID,
+        fm_request_argv: [],
+    }
 }
 
 export class FileResponseMessage extends FileMessage {
-    public fm_response: any = null;
+    fm_msg = {
+        fm_response: null,
+    }
 }
 
 export enum FileEvent
@@ -57,7 +63,9 @@ export enum FileEvent
 }
 
 export class FileEventMessage extends FileMessage {
-    public fm_event: FileEvent = FileEvent.INVALID;
-    public fm_event_argv: string[] = [];
+    fm_msg = {
+        fm_event: FileEvent.INVALID,
+        fm_event_argv: [],
+    }
 }
 

@@ -23,7 +23,6 @@ class UserManagement extends MessageHandler {
 
         let resp = new UserMessage();
         resp.messageId = this.id++;
-        resp.messageType = MessageType.UserManagement;
         resp.messageAck = msg.messageId;
         resp.error = null;
         resp.um_type = msg.um_type;
