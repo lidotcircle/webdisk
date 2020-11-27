@@ -11,6 +11,7 @@ import path from 'path';
 import * as annautils from 'annautils';
 import * as md5 from 'md5';
 import * as utils from '../utils';
+import * as util from 'util';
 import { FileStat, FileType } from '../common/file_types';
 import { UserInfo } from '../common/db_types';
 import { Stats } from 'fs';
@@ -37,6 +38,20 @@ function statToStat(fstat: Stats, file: string): FileStat {
         ans["filetype"] = FileType.unknown;
     }
     return ans;
+}
+
+function replaceUserRootPath(obj: object, userRoot: string) {
+    return changeObject(obj, (prop, val) => {
+        if(typeof val == 'string' && val.startsWith(userRoot)) {
+            let ans = val.substr(userRoot.length);
+            if(!ans.startsWith('/')) {
+                ans = '/' + ans;
+            }
+            return ans;
+        } else {
+            return val;
+        }
+    });
 }
 
 class FileManagement extends MessageHandler {
@@ -99,7 +114,7 @@ class FileManagement extends MessageHandler {
     }
 
     private async copyr(src: string, dst: string) {
-        await annautils.fs.promises.copyr(src, dst);
+        await annautils.fs.promisify.copyr(src, dst);
     }
 
     private async execFile(file: string, argv: string[]) {
@@ -142,10 +157,11 @@ class FileManagement extends MessageHandler {
         await fs.promises.rename(src, dst);
     }
 
+    private static asyncRead = util.promisify(fs.read);
     private async read(file: string, position: number, length: number): Promise<Buffer> {
         const fd = await fs.promises.open(file, "r");
         let buf = Buffer.alloc(length);
-        const b = (await fs.promises.read(fd, buf, 0, length, position)).buffer;
+        const b = (await FileManagement.asyncRead(fd.fd, buf, 0, length, position)).buffer;
         await fd.close();
         return b;
     }
@@ -160,7 +176,7 @@ class FileManagement extends MessageHandler {
     }
 
     private async remover(path: string) {
-        await annautils.fs.promises.removeRecusive(path);
+        await annautils.fs.promisify.removeRecusive(path);
     }
 
     private async stat(file: string): Promise<FileStat> {
@@ -170,16 +186,26 @@ class FileManagement extends MessageHandler {
 
     private async touch(path: string) {
         let cur = new Date();
-        await fs.promises.utimes(path, cur, cur);
+        let f = null;
+        try {
+            f = await fs.promises.stat(path);
+        } catch {}
+        if(!!f) {
+            await fs.promises.utimes(path, cur, cur);
+        } else {
+            await (await fs.promises.open(path, 'w')).close();
+        }
     }
 
     private async truncate(file: string, len: number) {
         await fs.promises.truncate(file, len);
     }
 
+    private static asyncWrite = util.promisify(fs.write);
     private async write(file: string, position: number, buf: ArrayBuffer): Promise<number> {
+        console.log(buf);
         const fd = await fs.promises.open(file, "r+");
-        const rs = await fs.promises.write(fd, new Uint8Array(buf), 0, buf.byteLength, position);
+        const rs = await FileManagement.asyncWrite(fd.fd, new Uint8Array(buf), 0, buf.byteLength, position);
         await fd.close();
         return rs.bytesWritten;
     }
@@ -219,18 +245,9 @@ class FileManagement extends MessageHandler {
                 } break;
                 case FileRequest.GETDIR: {
                     checkArgv('s', argv);
-                    resp.fm_msg.fm_response = changeObject(
+                    resp.fm_msg.fm_response = replaceUserRootPath(
                         await this.getdir(this.resolveUserPath(user, argv[0])),
-                        (prop, val) => {
-                            if(typeof val == 'string') {
-                                if(val.startsWith(user.rootPath)) {
-                                    return val.substr(user.rootPath.length);
-                                } else {
-                                    return val;
-                                }
-                            }
-                        }
-                    );
+                        user.rootPath);
                 } break;
                 case FileRequest.MKDIR: {
                     checkArgv('s', argv);
@@ -255,13 +272,13 @@ class FileManagement extends MessageHandler {
                 } break;
                 case FileRequest.STAT: {
                     checkArgv('s', argv);
-                    resp.fm_msg.fm_response = subStringInObject(
-                        await this.stat(this.resolveUserPath(user, argv[0])),
-                        /.*/, user.rootPath, '/');
+                    resp.fm_msg.fm_response = replaceUserRootPath(
+                        await this.stat(this.resolveUserPath(user, argv[0])), 
+                        user.rootPath);
                 } break;
                 case FileRequest.TOUCH: {
                     checkArgv('s', argv);
-                    await this.fileMD5(this.resolveUserPath(user, argv[0]));
+                    await this.touch(this.resolveUserPath(user, argv[0]));
                 } break;
                 case FileRequest.TRUNCATE: {
                     checkArgv('sn', argv);

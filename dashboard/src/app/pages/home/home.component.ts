@@ -76,16 +76,8 @@ export class HomeComponent implements OnInit {
 
     constructor(private fileManager: FileSystemManagerService) {
         this.fileManager.getdir('/')
-            .then(a => console.log(a))
-            .catch(e => {
-                console.warn(e)
-            })
-            .finally(() => console.log("over"));
-
-        let f = new FileStat();
-        f.filename = '/helloworld.cc';
-        f.mode = 33;
-        this.files = [f];
+            .then(files => this.files = files)
+            .catch(e => console.warn(e));
     }
 
     ngOnInit(): void {

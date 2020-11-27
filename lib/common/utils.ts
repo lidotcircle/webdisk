@@ -109,9 +109,10 @@ export function subStringInObject(obj: object, propRegex: RegExp, srcRegex: RegE
         if(typeof val == 'string' && prop.match(propRegex)) {
             console.log(val.replace(srcRegex, target));
             return val.replace(srcRegex, target);
+        } else {
+            return val;
         }
     });
-    console.log(obj);
     return obj;
 }
 
@@ -126,6 +127,33 @@ export function parseCookie(cookie: string): Map<string, string>
         ret.set(kv[0].trim(), kv[1].trim());
     }
     return ret;
+}
+
+export function isArrayBuffer(buf: any) {
+    return (
+        buf instanceof ArrayBuffer       ||
+        buf instanceof SharedArrayBuffer ||
+        buf instanceof Int8Array         ||
+        buf instanceof Int16Array        ||
+        buf instanceof Int32Array        ||
+        buf instanceof Uint8ClampedArray ||
+        buf instanceof Uint16Array       ||
+        buf instanceof Uint32Array       ||
+        buf instanceof Float32Array      ||
+        buf instanceof Float64Array      ||
+        buf instanceof DataView);
+}
+
+export function hasArrayBuffer(obj: any) {
+    if(isArrayBuffer(obj)) return true;
+    if(typeof obj == 'object') {
+        for(let prop in obj) {
+            if(hasArrayBuffer(obj[prop])) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 let textEncoderDecoder = true;

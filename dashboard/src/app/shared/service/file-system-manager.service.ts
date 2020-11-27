@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { FileStat, FileRequestMessage, FileRequest, FileResponseMessage, FileMessageType } from '../common';
 import { WSChannelService } from './wschannel.service';
 import { AccountManagerService } from './account-manager.service';
+import { assignTargetEnumProp, isArrayBuffer, hasArrayBuffer } from '../utils';
 
 export enum FileSystemEvent {
     CHDIR  = 'CHDIR',
@@ -36,7 +37,8 @@ export class FileSystemManagerService {
         this.authWithToken(req);
         req.fm_msg.fm_request = req_type;
         req.fm_msg.fm_request_argv = argv;
-        const resp = await this.wschannel.send(req);
+        let binary: boolean = hasArrayBuffer(argv);
+        const resp = await this.wschannel.send(req, !binary);
 
         if(resp.error) {
             throw resp.error;
@@ -47,7 +49,13 @@ export class FileSystemManagerService {
 
     async getdir(dir: string): Promise<FileStat[]> {
         this.absolutePath(dir);
-        return await this.sendTo(FileRequest.GETDIR, dir);
+        const ans = [];
+        for(let stat of await this.sendTo(FileRequest.GETDIR, dir)) {
+            let newStat = new FileStat();
+            assignTargetEnumProp(stat, newStat);
+            ans.push(newStat);
+        };
+        return ans;
     }
 
     async chmod(file: string, mode: string | number): Promise<void> {
@@ -112,17 +120,19 @@ export class FileSystemManagerService {
 
     async stat(file: string): Promise<FileStat> {
         this.absolutePath(file);
-        return await this.sendTo(FileRequest.STAT, file);
+        let ans = new FileStat();
+        assignTargetEnumProp(await this.sendTo(FileRequest.STAT, file), ans);
+        return ans;
     }
 
-    async touch(file: string): Promise<FileStat> {
+    async touch(file: string): Promise<void> {
         this.absolutePath(file);
         return await this.sendTo(FileRequest.TOUCH, file);
     }
 
     async truncate(file: string, length: number): Promise<void> {
         this.absolutePath(file);
-        return await this.sendTo(FileRequest.TRUNCATE, length);
+        return await this.sendTo(FileRequest.TRUNCATE, file, length);
     }
 
     async read(file: string, position: number = 0, length: number = -1): Promise<ArrayBuffer> {
