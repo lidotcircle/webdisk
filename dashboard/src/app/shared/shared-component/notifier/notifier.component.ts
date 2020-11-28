@@ -1,15 +1,14 @@
 import { Component, OnInit, ElementRef, ViewContainerRef, OnDestroy, Input } from '@angular/core';
-import { FullScreenShadowComponent } from '../full-screen-shadow/full-screen-shadow.component';
+import { FullScreenViewShadow } from '../absolute-view/full-screen-view-shadow';
 
 @Component({
     selector: 'app-notifier',
     templateUrl: './notifier.component.html',
     styleUrls: ['./notifier.component.scss']
 })
-export class NotifierComponent extends FullScreenShadowComponent implements OnInit {
+export class NotifierComponent extends FullScreenViewShadow implements OnInit {
     @Input()
-    private title: string = 'origin';
-
+    title: string = 'origin';
     constructor(protected host: ElementRef) {
         super(host);
     }

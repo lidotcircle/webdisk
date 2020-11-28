@@ -3,7 +3,13 @@
 
 @include container-content();
 
+body {
+    overflow: hidden;
+}
+
 .container {
+    overflow: hidden;
+
     .content {
         display: flex;
         flex-direction: column;

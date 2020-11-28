@@ -2,18 +2,19 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LoginBGComponent } from './login-bg/login-bg.component';
 import { NotifierComponent } from './notifier/notifier.component';
-import { FullScreenShadowComponent } from './full-screen-shadow/full-screen-shadow.component';
+import { ProgressBarComponent } from './progress-bar/progress-bar.component';
 
 
 
 @NgModule({
-    declarations: [LoginBGComponent, NotifierComponent],
+    declarations: [LoginBGComponent, NotifierComponent, ProgressBarComponent],
     imports: [
         CommonModule
     ],
     exports: [
         LoginBGComponent,
-        NotifierComponent
+        NotifierComponent,
+        ProgressBarComponent
     ]
 })
 export class SharedComponentModule { }
