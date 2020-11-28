@@ -1,12 +1,18 @@
 @import '../../../style/colors.scss';
 
+
 .detail-view-style {
     display: flex;
     flex-direction: row;
+    align-items: center;
+    background: #eee;
 
     .take-space {
-        flex-grow: 1;
-        min-width: 2.5em;
+        width: 2em;
+        height: 1pt;
+        visibility: hidden;
+        padding: 0.4em;
+        flex-shrink: 0;
     }
 
     .detail-view-prop {
@@ -14,7 +20,9 @@
         display: flex;
         flex-direction: row;
         flex-shrink: 1;
+        flex-grow: 1;
         position: relative;
+        overflow-y: hidden;
 
         .field {
             flex-grow: 1;

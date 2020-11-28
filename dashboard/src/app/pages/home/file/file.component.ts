@@ -73,7 +73,7 @@ export class FileComponent implements OnInit {
 
     getPropCSS(order: number, width: number) {
         if(this.viewStyle != FileViewStyle.detail) return '';
-        let ans = 'overflow-x: hidden; text-overflow: ellipsis;';
+        let ans = '';
         if(order == -1) {
             ans += 'display: none;';
         } else if (order != null) {

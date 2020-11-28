@@ -35,9 +35,10 @@ app-file {
 
         .file-icon {
             padding: 0.4em;
+            width: 2em;
 
             svg {
-                width: 2em;
+                width: 100%;
             }
         }
 
@@ -48,10 +49,13 @@ app-file {
             align-items: center;
             box-sizing: border-box;
             padding: 0.8em 0em;
+            overflow-x: hidden;
 
             .file-prop {
                 padding: 0em 0.8em;
                 white-space: nowrap;
+                overflow-x: hidden;
+                text-overflow: ellipsis;
             }
 
             .file-name {

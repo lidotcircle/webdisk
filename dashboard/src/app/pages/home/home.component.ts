@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ElementRef } from '@angular/core';
 import { FileStat } from 'src/app/shared/common';
 import { FileSystemManagerService } from 'src/app/shared/service/file-system-manager.service';
+import { InjectFullScreenViewService } from 'src/app/shared/service/inject-full-screen-view.service';
+import { NotifierComponent } from 'src/app/shared/shared-component/notifier/notifier.component';
 
 
 /** sortByName */
@@ -74,10 +76,13 @@ export class HomeComponent implements OnInit {
     detailFileView: FileDetailViewStyle = new FileDetailViewStyle();
     viewStyle: FileViewStyle = FileViewStyle.detail;
 
-    constructor(private fileManager: FileSystemManagerService) {
+    constructor(private fileManager: FileSystemManagerService,
+                private fullScreenViewInject: InjectFullScreenViewService) {
         this.fileManager.getdir('/')
             .then(files => this.files = files)
             .catch(e => console.warn(e));
+        const n = this.fullScreenViewInject.inject(NotifierComponent, {title: "hello"});
+        setTimeout(() => n.destroy(), 2000);
     }
 
     ngOnInit(): void {

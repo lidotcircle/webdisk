@@ -15,3 +15,5 @@ export module validation {
   export const NotMatch: string = '.^';
 }
 
+export const rootViewContainerRefSymbol = Symbol('bodyContainer');
+
