@@ -14,11 +14,9 @@ export class DragableView extends AbsoluteView {
         this.elem.ondragstart = this.dragstart.bind(this);
         this.elem.ondragover  = this.dragover.bind(this);
         this.elem.ondragend   = this.dragend.bind(this);
-        this.elem.onclick = () => console.log('hello click');
     }
 
     private dragstart(ev: DragEvent) {
-        ev.stopPropagation();
         const img = new Image();
         img.src = "assets/img/transparent-1pixel.png";
         ev.dataTransfer.setDragImage(img, 0, 0);

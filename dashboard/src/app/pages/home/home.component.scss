@@ -14,6 +14,7 @@ body {
         display: flex;
         flex-direction: column;
         overflow: hidden;
+        @include no-select();
 
         .file-view {
             display: flex;

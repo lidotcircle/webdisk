@@ -40,6 +40,8 @@ export class FileComponent implements OnInit {
 
     @Output('doubleClick')
     private doubleClickEmitter = new EventEmitter();
+    @Output('select')
+    private selectEmitter = new EventEmitter();
 
     @ViewChild('fileicon')
     private iconElem: ElementRef;
@@ -106,6 +108,7 @@ export class FileComponent implements OnInit {
             this.doubleClickEmitter.emit();
         } else {
             this.prev_click = now;
+            this.selectEmitter.emit();
         }
     }
 

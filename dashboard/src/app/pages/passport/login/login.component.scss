@@ -8,6 +8,7 @@
     .content {
 
         @include inputs-buttons-form('.login-form');
+        @include no-select();
         .login-form {
             .login-fail-warning {
                 padding: 0em 1em;
