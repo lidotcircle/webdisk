@@ -1,8 +1,10 @@
-import { Component, OnInit, ElementRef } from '@angular/core';
+import { Component, OnInit, ElementRef, OnDestroy } from '@angular/core';
 import { FileStat } from 'src/app/shared/common';
 import { FileSystemManagerService } from 'src/app/shared/service/file-system-manager.service';
 import { InjectViewService } from 'src/app/shared/service/inject-view.service';
 import { NotifierComponent } from 'src/app/shared/shared-component/notifier/notifier.component';
+import { KeyboardPressService, Keycode } from 'src/app/shared/service/keyboard-press.service';
+import { Subscription } from 'rxjs';
 
 
 /** sortByName */
@@ -70,14 +72,17 @@ export enum FileViewStyle {
     templateUrl: './home.component.html',
     styleUrls: ['./home.component.scss']
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, OnDestroy {
     files: FileStat[] = [];
+    select: boolean[] = [];
     // TODO save to local storage
     detailFileView: FileDetailViewStyle = new FileDetailViewStyle();
     viewStyle: FileViewStyle = FileViewStyle.detail;
 
     constructor(private fileManager: FileSystemManagerService,
-                private viewInject: InjectViewService) {
+                private viewInject: InjectViewService,
+                private KeyboardPress: KeyboardPressService,
+                private host: ElementRef) {
         this.fileManager.getdir('/')
             .then(files => this.files = files)
             .catch(e => console.warn(e));
@@ -85,7 +90,37 @@ export class HomeComponent implements OnInit {
         setTimeout(() => n.destroy(), 500);
     }
 
+    private subscription: Subscription;
     ngOnInit(): void {
+        this.subscription = this.KeyboardPress.down.subscribe((kv) => {
+            switch(kv.code) {
+                case Keycode.ESC:
+                    this.select = [];
+                    break;
+            }
+        });
+    }
+
+    ngOnDestroy(): void {
+        this.subscription.unsubscribe();
+    }
+
+    private prevSelect: number;
+    onSelect(n: number) {
+        console.log(n);
+        if(this.KeyboardPress.InPress(Keycode.Ctrl)) {
+            this.select[n] = !this.select[n];
+        } else if (this.KeyboardPress.InPress(Keycode.Shift) && this.prevSelect != null) {
+            this.select = [];
+            for(let i=Math.min(this.prevSelect,n);i<=Math.max(this.prevSelect,n);i++) {
+                this.select[i] = true;
+            }
+        } else {
+            const ps = this.select[n];
+            this.select = [];
+            this.select[n] = !ps;
+        }
+        this.prevSelect = n;
     }
 
     sortByName() {

@@ -9,12 +9,12 @@ import * as fs from 'fs';
 import * as child_proc from 'child_process';
 import path from 'path';
 import * as annautils from 'annautils';
-import * as md5 from 'md5';
 import * as utils from '../utils';
 import * as util from 'util';
 import { FileStat, FileType } from '../common/file_types';
 import { UserInfo } from '../common/db_types';
 import { Stats } from 'fs';
+const md5 = require('md5');
 
 function statToStat(fstat: Stats, file: string): FileStat {
     const ans = new FileStat();

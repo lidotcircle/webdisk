@@ -1,5 +1,5 @@
 
-<div class="detail-view-style">
+<div class="detail-view-style" *ngIf="viewStyle == 'detail'">
     <div class="take-space" #icon></div>
 
     <div class="detail-view-prop name-prop" [style]='getPropCSS("name")'>
