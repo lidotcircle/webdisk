@@ -3,6 +3,7 @@ import * as proc from 'process';
 import { makeid, validation, assignTargetEnumProp } from './common/utils';
 import { Token, UserInfo } from './common/db_types';
 import { debug, info, warn, error } from './logger';
+import { UserSettings } from './common/user_settings';
 const MD5 = require('md5');
 
 /** TODO */
@@ -36,11 +37,17 @@ export module DBRelations {
         ATtoken: Token;
         start:   number;
     }
+
+    export class UserSettings {
+        uid: number;
+        settings: string;
+    }
 }
 const KEY_USER = 'users';
 const KEY_INVITATION = 'invitation';
 const KEY_TOKEN = 'tokens';
 const KEY_SHORTTERM_TOKEN = 'short_term_token';
+const KEY_USER_SETTINGS = 'settings';
 
 const RootUserInfo: DBRelations.User = new DBRelations.User();
 RootUserInfo.uid            = 1;
@@ -166,6 +173,11 @@ export class Database {
             ATtoken TEXT(256) NOT NULL,
             start   INTEGER   NOT NULL CHECK(start > 0),
             FOREIGN KEY (ATtoken) references ${KEY_TOKEN} (token) ON DELETE CASCADE);`);
+
+        await this.run(`CREATE TABLE IF NOT EXISTS ${KEY_USER_SETTINGS} (
+            uid INTEGER PRIMARY KEY,
+            settings TEXT NOT NULL,
+            FOREIGN KEY (uid) references ${KEY_USER}(uid) ON DELETE CASCADE;`);
     } //}
 
     private async __init__(): Promise<void> //{
@@ -456,6 +468,37 @@ export class Database {
         const datas = await this.all(`SELECT invitationCode, invitedUid from ${KEY_INVITATION} WHERE ownerUid=${uid};`);
         return datas.map(dt => [dt["invitationCode"], dt["invitedUid"]]);
     } //}
+
+
+    async updateUserSettings(token: Token, settings: UserSettings): Promise<boolean> //{
+    {
+        const uid = await this.checkToken(token);
+        if(uid < 0) return false;
+
+        const str = JSON.stringify(settings);
+        if (await this.getUserSettings(token) == null) {
+            const insert_data = createSQLInsertion(DBRelations.UserSettings, [{uid: uid, settings: str}]);
+            await this.run(`INSERT INTO ${KEY_USER_SETTINGS} ${insert_data};`);
+        } else {
+            await this.run(`UPDATE SET settings='${str}' WHERE uid=${uid};`);
+        }
+        return true;
+    } //}
+
+    async getUserSettings(token: Token): Promise<UserSettings> //{
+    {
+        const uid = await this.checkToken(token);
+        if(uid < 0) return null;
+
+        const data = await this.get(`SELECT * FROM ${KEY_USER_SETTINGS} WHERE uid=${uid}`);
+        if (!!data) {
+            const ans = JSON.parse(data["settings"]);
+            return ans;
+        } else {
+            return null;
+        }
+    } //}
+
 
     async GetUser(): Promise<any[]> {
         return await this.all(`SELECT * FROM ${KEY_USER};`);

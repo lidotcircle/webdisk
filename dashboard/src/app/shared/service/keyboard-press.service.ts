@@ -26,7 +26,6 @@ export class Keyval {
     key:  string;
     repeat: boolean = false;
 }
-const PressDownCancelDelay = 100;
 
 @Injectable({
     providedIn: 'root'
@@ -50,6 +49,8 @@ export class KeyboardPressService {
     constructor() {
         this.down_listener = document.body.addEventListener('keydown', this.keydownListener.bind(this));
         this.up_listener = document.body.addEventListener('keyup',   this.keyupListener.bind(this));
+        window.addEventListener("blur", () => this.in_press_table.clear());
+        window.addEventListener("focus", () => this.in_press_table.clear());
     }
 
     private keydownListener(ev: KeyboardEvent) {
@@ -60,15 +61,11 @@ export class KeyboardPressService {
         const code = this.keymap(ev.key);
         kv.code = code;
         kv.repeat = ev.repeat;
+
         if(kv.code != Keycode.Unindentified) {
             this.in_press_table.set(code, Date.now());
-            setTimeout(() => {
-                if(this.in_press_table.has(code) &&
-                   (Date.now() - this.in_press_table.get(code) >= PressDownCancelDelay/2)) {
-                   this.in_press_table.delete(code);
-                }
-            }, PressDownCancelDelay);
         }
+        console.log('key down ', ev.key);
         this._down.next(kv);
     }
 
@@ -81,7 +78,7 @@ export class KeyboardPressService {
         if(this.in_press_table.has(kv.code)) {
             this.in_press_table.delete(kv.code);
         }
-        console.log('press down ', ev.key);
+        console.log('key up ', ev.key);
         this._up.next(kv);
     }
 

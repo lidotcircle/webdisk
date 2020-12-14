@@ -166,33 +166,41 @@ export class UploadFileViewComponent extends AbsoluteView implements OnInit {
 
         let uploadsize = 0;
         if(stat != null) {
-            let override = false;
-            if(this.uploadOption.alwaysOverride) {
-                override = true;
-            } else if (!this.uploadOption.alwaysSkipSameName) {
-                const opt = await this.PopOverrideOptionWindow();
-                override = opt[0];
-                if(opt[1]) {
-                    this.uploadOption.alwaysOverride = override;
-                    this.uploadOption.alwaysSkipSameName = !override;
+            if (stat.size <= fileData.size && this.userSettings.ContinueSendFileWithSameMD5) {
+                const rmd5 = await this.fileManager.md5(filename);
+                const lmd5 = await this.fileMD5(fileData, 0, stat.size);
+                if(rmd5 == lmd5) {
+                    uploadsize = stat.size;
+                    this.uploadSize.next(stat.size);
                 }
             }
 
-            if(override) {
-                crypto.algo.MD5.create();
-                let rmd5 = '';
-                try {
-                    rmd5 = await this.fileManager.md5(filename);
-                } catch {}
-                const filemd5 = await this.fileMD5(fileData);
-                if(rmd5 == filemd5) {
+            if (uploadsize == 0) {
+                let override = false;
+                if(this.uploadOption.alwaysOverride) {
+                    override = true;
+                } else if (!this.uploadOption.alwaysSkipSameName) {
+                    const opt = await this.PopOverrideOptionWindow();
+                    override = opt[0];
+                    if(opt[1]) {
+                        this.uploadOption.alwaysOverride = override;
+                        this.uploadOption.alwaysSkipSameName = !override;
+                    }
+                }
+
+                if(override) {
+                    crypto.algo.MD5.create();
+                    const rmd5 = await this.fileManager.md5(filename);
+                    const filemd5 = await this.fileMD5(fileData);
+                    if(rmd5 == filemd5) {
+                        this.uploadSize.next(fileData.size);
+                        return;
+                    }
+                    await this.fileManager.remove(filename);
+                } else {
                     this.uploadSize.next(fileData.size);
                     return;
                 }
-                await this.fileManager.remove(filename);
-            } else {
-                this.uploadSize.next(fileData.size);
-                return;
             }
         }
 
@@ -201,6 +209,12 @@ export class UploadFileViewComponent extends AbsoluteView implements OnInit {
             const buf = await fileData.slice(uploadsize, uploadsize + sliceSize).arrayBuffer();
             await this.fileManager.write(filename, uploadsize, buf);
             uploadsize += sliceSize;
+        }
+
+        const rmd5 = await this.fileManager.md5(filename);
+        const lmd5 = await this.fileMD5(fileData);
+        if (rmd5 != lmd5) {
+            throw new Error(`upload file fail, unexpected md5 ${rmd5}`);
         }
     } //}
 }

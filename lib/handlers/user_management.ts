@@ -2,7 +2,7 @@ import { DB } from '../services';
 import { MessageHandler } from '../message_handler';
 import { MessageGateway } from '../message_gateway';
 import { BasicMessage, MessageType } from '../common/message';
-import { UserMessage, UserMessageType, UserMessageGetUserInfoRequest, UserMessageSetUserInfoRequest, UserMessageChangePasswordRequest, UserMessageGenInvCodeRequest, UserMessaageGetInvCodeRequest, UserMessaageGetInvCodeResponse, UserMessageAddUserRequest, UserMessageRemoveUserRequest } from '../common/user_message';
+import { UserMessage, UserMessageType, UserMessageGetUserInfoRequest, UserMessageSetUserInfoRequest, UserMessageChangePasswordRequest, UserMessageGenInvCodeRequest, UserMessaageGetInvCodeRequest, UserMessaageGetInvCodeResponse, UserMessageAddUserRequest, UserMessageRemoveUserRequest, UserMessageGetUserSettingsRequest, UserMessageGetUserSettingsResponse, UserMessageUpdateUserSettingsRequest } from '../common/user_message';
 import { debug, info, warn, error } from '../logger';
 
 import { UserMessageLoginRequest, UserMessageLoginResponse,
@@ -103,6 +103,19 @@ class UserManagement extends MessageHandler {
                 const gmsg: UserMessageRemoveUserRequest = msg;
                 if(!(await DB.removeUser(gmsg.um_msg.token, gmsg.um_msg.username, gmsg.um_msg.password))) {
                     resp.error = `remove user ${gmsg.um_msg.username} fail`;
+                }
+            } break;
+
+            case UserMessageType.GetUserSettings: {
+                const gmsg: UserMessageGetUserSettingsRequest = msg;
+                const settings = await DB.getUserSettings(gmsg.um_msg.token);
+                (resp as UserMessageGetUserSettingsResponse).um_msg.userSettings = settings;
+            } break;
+
+            case UserMessageType.UpdateUserSettings: {
+                const gmsg: UserMessageUpdateUserSettingsRequest = msg;
+                if (!(await DB.updateUserSettings(gmsg.um_msg.token, gmsg.um_msg.userSettings))) {
+                    resp.error = `update user settings fail`;
                 }
             } break;
 

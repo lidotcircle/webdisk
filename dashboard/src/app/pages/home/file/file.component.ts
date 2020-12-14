@@ -46,6 +46,9 @@ export class FileComponent implements OnInit {
     @ViewChild('fileicon')
     private iconElem: ElementRef;
 
+    @ViewChild('fileitem')
+    private itemElem: ElementRef;
+
     constructor(private svgIcon: FiletypeSvgIconService) {}
 
     ngOnInit(): void {
@@ -66,6 +69,12 @@ export class FileComponent implements OnInit {
 
         if(this.file.filetype == FileType.dir) {
             updateIcon('folder');
+            setTimeout(() => {
+                const all = this.itemElem.nativeElement as HTMLElement;
+                all.addEventListener("drop", (ev: DragEvent) => {
+                    console.log(ev);
+                });
+            }, 0);
         } else if (this.file.extension == '') {
             updateIcon('blank');
         } else {

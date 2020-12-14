@@ -7,20 +7,39 @@ import { AccountManagerService } from './account-manager.service';
 import { AsyncLocalStorageService } from './async-local-storage.service';
 import { UserDBService } from './user-db.service';
 
-function AutoUpdateInChange() {
-    return function(target) {
-        console.log("feel", target);
-        for(let i in target) {
-            console.log(i);
+function AutoUpdateInChange(sm: string, gm?: string) {
+    return function<T extends { new (...args: any[]): {}}>(constructor: T) {
+        return class extends constructor {
+            constructor(...args) {
+                super(...args);
+                let keys = [];
+                for(let key in this) keys.push(key);
+
+                return new Proxy(this, {
+                    get: function (target, prop, receiver) {
+                        if (keys.indexOf(prop as string) >= 0) {
+                            if(!!gm) {
+                                setTimeout(() => (target as any)[gm](prop), 0);
+                            }
+                        }
+                        return Reflect.get(target, prop, receiver);
+                    },
+                    set: function (target, prop, value, receiver) {
+                        if (keys.indexOf(prop as string) >= 0) {
+                            setTimeout(() => (target as any)[sm](prop), 0);
+                        }
+                        Reflect.set(target, prop,value, receiver);
+                        return true;
+                    }
+                });
+            }
         }
     }
 }
 
 const SETTING_KEY = "USER_SETTING";
-@AutoUpdateInChange()
-class Setting extends UserSettings {
-    hello: boolean = true;
-}
+@AutoUpdateInChange("saveSettings")
+class Setting extends UserSettings {}
 
 @Injectable({
     providedIn: 'root'
@@ -30,7 +49,7 @@ export class UserSettingService extends Setting {
     get saveFail(): Observable<Error> {return this._saveFail;}
 
     constructor(private localstorage: AsyncLocalStorageService, 
-                private accountManager: AccountManagerService) { 
+                private accountManager: AccountManagerService) {
         super();
         this.accountManager.onLogin.subscribe(async () => {
             const settings = await this.accountManager.getUserSettings();
