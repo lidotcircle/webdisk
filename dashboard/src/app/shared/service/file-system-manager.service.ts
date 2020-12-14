@@ -96,6 +96,11 @@ export class FileSystemManagerService {
         return await this.sendTo(FileRequest.FILEMD5, file);
     }
 
+    async sliceMd5(file: string, position: number, length: number): Promise<string> {
+        this.absolutePath(file);
+        return await this.sendTo(FileRequest.FILEMD5_SLICE, file, position, length);
+    }
+
     async mkdir(dir: string): Promise<void> {
         this.absolutePath(dir);
         return await this.sendTo(FileRequest.MKDIR, dir);

@@ -1,7 +1,6 @@
 
 <div class="container">
     <div class="content">
-        <app-progress-bar></app-progress-bar>
         <div class="file-view">
             <app-detail-view-header class="detail-view-header"
                                     [view-style]='viewStyle' [view-config]='detailFileView'>
@@ -10,6 +9,7 @@
             <div class="files">
                 <app-file *ngFor="let file of files; let i = index;" [file]="file"
                  (select)="onSelect(i)" [class]='select[i] ? "select" : ""'
+                 (doubleClick)="onChdir(i)"
                  [view-style]='viewStyle'
                  [name-order]='detailFileView.nameOrder' [name-width]='detailFileView.nameWidth'
                  [date-order]='detailFileView.dateOrder' [date-width]='detailFileView.dateWidth'

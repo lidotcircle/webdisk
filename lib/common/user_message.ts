@@ -1,5 +1,6 @@
 import { MessageType, MessageId, MessageAck, BasicMessage } from './message';
 import { UserInfo, Token } from './db_types';
+import { UserSettings } from './user_settings';
 
 export enum UserMessageType {
     Login = "LOGIN",
@@ -15,6 +16,9 @@ export enum UserMessageType {
     GetInvitationCode      = "GET_INVITATIONCODE",
 
     ChangePassword = "CHANGE_PASSWORD",
+
+    GetUserSettings = "GET_USER_SETTINGS",
+    UpdateUserSettings = "UPDATE_USER_SETTINGS",
 
     Uninit = "UNINIT"
 }
@@ -89,6 +93,25 @@ export interface UserMessageChangePasswordRequest extends UserMessage {
         token: Token,
         oldpass: string,
         newpass: string
+    }
+}
+
+export interface UserMessageGetUserSettingsRequest extends UserMessage {
+    um_msg: {
+        token: Token
+    }
+}
+
+export interface UserMessageGetUserSettingsResponse extends UserMessage {
+    um_msg: {
+        userSettings: UserSettings
+    }
+}
+
+export interface UserMessageUpdateUserSettingsRequest extends UserMessage {
+    um_msg: {
+        token: Token,
+        userSettings: UserSettings
     }
 }
 

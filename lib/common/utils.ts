@@ -1,5 +1,8 @@
 import * as util from 'util';
 
+export function assert(val: boolean) {
+    if(!val) throw new Error("assert fail");
+}
 
 export module validation {
     export function password(ps: string): boolean {
@@ -165,5 +168,70 @@ export function getTextEncoder() {
 }
 export function getTextDecoder() {
     return textEncoderDecoder ? new TextDecoder() : new util.TextDecoder();
+}
+
+export type TypeOfClassProperty<T, M extends keyof T> = T[M];
+export type TypeOfClassMethod  <T, M extends keyof T> = T[M] extends (...args: any) => any ? T[M] : never;
+export function ForwardMethod(...keys: string[]) {
+    return function (
+        target: any,
+        propertyKey: string) {
+        return {
+            writable: false,
+            value: function (...args) {
+                let n = this;
+                let p = null;
+                for(const k of keys) {
+                    p = n;
+                    n = p[k];
+                }
+                let f = n as Function;
+                return f.bind(p)(...args);
+            },
+            configurable: false,
+            enumerable: false
+        } as any;
+    }
+}
+
+function ForwardGetterSetterProperty(getter: boolean, setter: boolean, ...keys: string[]) {
+    return function (
+        target: any,
+        propertyKey: string) {
+        let ans = {
+            configurable: false,
+            enumerable: true
+        };
+        if (getter) {
+            ans["get"] = function() {
+                let n = this;
+                for(const k of keys) n = n[k];
+                return n;
+            };
+        }
+        if (setter) {
+            ans["set"] = function(val: any) {
+                const k2 = keys.slice(0, keys.length-1);
+                const idx = keys[keys.length - 1];
+                let n = this;
+                for(const k of k2) n = n[k];
+                n[idx] = val;
+            }
+        }
+
+        return ans as any;
+    }
+}
+
+export function ForwardProperty(...keys: string[]) {
+    return ForwardGetterSetterProperty(true, true, ...keys);
+}
+
+export function ForwardGetterProperty(...keys: string[]) {
+    return ForwardGetterSetterProperty(true, false, ...keys);
+}
+
+export function ForwardSetterProperty(...keys: string[]) {
+    return ForwardGetterSetterProperty(false, true, ...keys);
 }
 

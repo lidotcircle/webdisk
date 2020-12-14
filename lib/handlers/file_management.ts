@@ -4,17 +4,24 @@ import { MessageGateway } from '../message_gateway';
 import { BasicMessage, MessageType } from '../common/message';
 import { debug, info, warn, error } from '../logger';
 import { FileMessage, FileMessageType, FileRequestMessage, FileResponseMessage, FileRequest } from '../common/file_message';
-import { changeObject, checkArgv, subStringInObject } from '../utils';
+import { changeObject, subStringInObject } from '../utils';
 import * as fs from 'fs';
 import * as child_proc from 'child_process';
 import path from 'path';
 import * as annautils from 'annautils';
 import * as utils from '../utils';
 import * as util from 'util';
+import * as crypto from 'crypto';
 import { FileStat, FileType } from '../common/file_types';
 import { UserInfo } from '../common/db_types';
 import { Stats } from 'fs';
 const md5 = require('md5');
+
+function checkArgv(pat: string, argv: any[]) {
+    if (!utils.checkArgv(pat, argv)) {
+        throw new Error('bad argument');
+    }
+}
 
 function statToStat(fstat: Stats, file: string): FileStat {
     const ans = new FileStat();
@@ -145,8 +152,30 @@ class FileManagement extends MessageHandler {
     }
     
     private async fileMD5(file: string): Promise<string> {
-        const fileBuf = await fs.promises.readFile(file);
-        return md5(fileBuf);
+        const stat = await fs.promises.stat(file);
+        return await this.fileSliceMD5(file, 0, stat.size);
+    }
+
+    private async fileSliceMD5(file: string, position: number, len: number): Promise<string> {
+        const md5Digest = crypto.createHash("md5");
+        const fd = await fs.promises.open(file, "r");
+        const buf = Buffer.alloc(4096);
+        let o = 0;
+        while (len > 0) {
+            const n = Math.min(len, buf.byteLength);
+            const nb = (await FileManagement.asyncRead(fd.fd,buf,0,n,position+o)).bytesRead;
+            if (nb < n) {
+                md5Digest.update(Buffer.from(buf,0,nb));
+                // TODO or omit
+                throw new Error("file out of range");
+            } else {
+                md5Digest.update(buf);
+            }
+            len -= n;
+            o += n;
+        }
+        await fd.close();
+        return md5Digest.digest("hex");
     }
 
     private async mkdir(dir: string) {
@@ -161,9 +190,9 @@ class FileManagement extends MessageHandler {
     private async read(file: string, position: number, length: number): Promise<Buffer> {
         const fd = await fs.promises.open(file, "r");
         let buf = Buffer.alloc(length);
-        const b = (await FileManagement.asyncRead(fd.fd, buf, 0, length, position)).buffer;
+        const nb = (await FileManagement.asyncRead(fd.fd, buf, 0, length, position)).bytesRead;
         await fd.close();
-        return b;
+        return Buffer.from(buf, 0, nb);
     }
 
     private async remove(path: string) {
@@ -242,6 +271,10 @@ class FileManagement extends MessageHandler {
                 case FileRequest.FILEMD5: {
                     checkArgv('s', argv);
                     resp.fm_msg.fm_response = await this.fileMD5(this.resolveUserPath(user, argv[0]));
+                } break;
+                case FileRequest.FILEMD5_SLICE: {
+                    checkArgv('snn', argv);
+                    resp.fm_msg.fm_response = await this.fileSliceMD5(this.resolveUserPath(user, argv[0]), argv[1], argv[2]);
                 } break;
                 case FileRequest.GETDIR: {
                     checkArgv('s', argv);

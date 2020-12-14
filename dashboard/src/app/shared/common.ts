@@ -5,6 +5,7 @@ export * from '../../../../lib/common/file_message';
 export * from '../../../../lib/common/db_types';
 export * from '../../../../lib/common/ecode';
 export * from '../../../../lib/common/file_types';
+export * from '../../../../lib/common/user_settings';
 
 export module CONS {
     export module Keys {

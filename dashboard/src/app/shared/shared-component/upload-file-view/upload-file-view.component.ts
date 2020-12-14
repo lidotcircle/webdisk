@@ -4,7 +4,9 @@ import { FileSystemManagerService } from '../../service/file-system-manager.serv
 import { FileStat } from '../../common';
 import { Subject } from 'rxjs';
 import { pathJoin } from '../../utils';
-import * as md5 from 'md5';
+import * as crypto from 'crypto-js';
+import { UserSettingService } from '../../service/user-setting.service';
+const assert = console.assert;
 
 // FileSystem API declaration //{
 type FileSystemEntryCallback = (F: FileSystemEntry) => void;
@@ -37,7 +39,7 @@ interface FileSystem {
 }
 //}
 
-const blocksize = 512 * 1024;
+const blocksize = 128 * 1024;
 
 class UploadOption {
     alwaysOverride: boolean = false;
@@ -60,7 +62,8 @@ export class UploadFileViewComponent extends AbsoluteView implements OnInit {
     private uploadSize: Subject<number> = new Subject<number>();
 
     constructor(protected host: ElementRef,
-                private fileManager: FileSystemManagerService) {
+                private fileManager: FileSystemManagerService,
+                private userSettings: UserSettingService) {
         super(host);
         this.uploadOption = new UploadOption();
     }
@@ -137,6 +140,23 @@ export class UploadFileViewComponent extends AbsoluteView implements OnInit {
         return [true, true, true];
     }
 
+    private async fileMD5(file: File, position: number = 0, length: number = null) {
+        length = length || file.size;
+        assert(position >= 0 && (length + position) <= file.size);
+        const m = crypto.algo.MD5.create();
+
+        let c = 0;
+        while (length > c) {
+            let u = Math.min(file.size - c - position, blocksize);
+            let v = crypto.lib.WordArray.create();
+            let b = new Uint8Array(await file.slice(position,position+u).arrayBuffer());
+            m.update(crypto.lib.WordArray.create(b as any));
+            c += b.byteLength;
+        }
+
+        return m.finalize().toString(crypto.enc.Hex);
+    }
+
     private async sendFile(fileData: File, filename: string): Promise<void> //{
     {
         let stat: FileStat;
@@ -144,6 +164,7 @@ export class UploadFileViewComponent extends AbsoluteView implements OnInit {
             stat = await this.fileManager.stat(filename);
         } catch { }
 
+        let uploadsize = 0;
         if(stat != null) {
             let override = false;
             if(this.uploadOption.alwaysOverride) {
@@ -158,11 +179,12 @@ export class UploadFileViewComponent extends AbsoluteView implements OnInit {
             }
 
             if(override) {
+                crypto.algo.MD5.create();
                 let rmd5 = '';
                 try {
                     rmd5 = await this.fileManager.md5(filename);
                 } catch {}
-                const filemd5 = md5(await fileData.arrayBuffer());
+                const filemd5 = await this.fileMD5(fileData);
                 if(rmd5 == filemd5) {
                     this.uploadSize.next(fileData.size);
                     return;
@@ -174,7 +196,6 @@ export class UploadFileViewComponent extends AbsoluteView implements OnInit {
             }
         }
 
-        let uploadsize = 0;
         while(uploadsize < fileData.size) {
             let sliceSize = Math.min(blocksize, fileData.size - uploadsize);
             const buf = await fileData.slice(uploadsize, uploadsize + sliceSize).arrayBuffer();

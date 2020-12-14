@@ -11,10 +11,15 @@ import { CONS, Token, UserMessage, UserMessageLoginRequest, UserMessageLoginResp
          UserMessageRemoveUserRequest,
          UserMessaageGetInvCodeRequest,
          UserMessaageGetInvCodeResponse,
-         UserMessageGenInvCodeRequest} from '../common';
+         UserMessageGenInvCodeRequest,
+         UserSettings,
+         UserMessageUpdateUserSettingsRequest,
+         UserMessageGetUserSettingsRequest,
+         UserMessageGetUserSettingsResponse} from '../common';
 import { Router } from '@angular/router';
 import { EventEmitter } from 'events';
-import { nextTick } from '../utils';
+import { assignTargetEnumProp, CopySourceEnumProp, nextTick } from '../utils';
+import { Observable, Subject } from 'rxjs';
 
 @Injectable({
     providedIn: 'root'
@@ -22,6 +27,10 @@ import { nextTick } from '../utils';
 export class AccountManagerService {
     private token: Token;
     private changeCallbacks: {(): void}[] = [];
+    private _onLogin  = new Subject<void>();
+    private _onLogout = new Subject<void>();
+    get onLogin():  Observable<void> {return this._onLogin;}
+    get onLogout(): Observable<void> {return this._onLogout;}
 
     constructor(private localstorage: LocalStorageService,
                 private wschannel: WSChannelService,
@@ -29,19 +38,7 @@ export class AccountManagerService {
         this.token = this.localstorage.get(CONS.Keys.LOGIN_TOKEN, null);
     }
     get LoginToken(): Token {return this.token;}
-
-    subscribe(func: {():void}) //{
-    {
-        this.changeCallbacks.push(func);
-    } //}
-    private onChange() //{
-    {
-        for(let f of this.changeCallbacks) {
-            try {
-                f();
-            } catch(err) {}
-        }
-    } //}
+    get isLogin(): boolean {return this.token != null;}
 
     async login(username: string, password: string): Promise<boolean> //{
     {
@@ -59,7 +56,7 @@ export class AccountManagerService {
         } else {
             this.token = resp.um_msg.token;
             this.localstorage.set(CONS.Keys.LOGIN_TOKEN, this.token);
-            nextTick(() => this.onChange);
+            nextTick(() => this._onLogin.next());
             return true;
         }
     } //}
@@ -72,7 +69,7 @@ export class AccountManagerService {
         req.um_type = UserMessageType.Logout;
         req.um_msg.token = this.token;
         this.token = null;
-        nextTick(() => this.onChange);
+        nextTick(() => this._onLogout.next());
 
         await this.wschannel.send(req);
     } //}
@@ -161,6 +158,38 @@ export class AccountManagerService {
 
         const resp = await this.wschannel.send(req) as UserMessaageGetInvCodeResponse;
         return resp?.um_msg?.InvCodes;
+    } //}
+
+    async getUserSettings(): Promise<UserSettings> //{
+    {
+        if(this.token == null) return null;
+
+        let req = new UserMessage() as UserMessageGetUserSettingsRequest;
+        req.um_type = UserMessageType.GetUserSettings;
+        req.um_msg.token = this.token;
+        const resp = await this.wschannel.send(req) as UserMessageGetUserSettingsResponse;
+
+        if(resp.error || !resp.um_msg) {
+            console.warn('get userinfo fail');
+            return null;
+        } else {
+            return resp.um_msg.userSettings;
+        }
+    } //}
+
+    async updateUserSettings(settings: UserSettings): Promise<boolean> //{
+    {
+        if(this.token == null) return false;
+
+        let req = new UserMessage() as UserMessageUpdateUserSettingsRequest;
+        req.um_type = UserMessageType.UpdateUserSettings;
+        req.um_msg.token = this.token;
+        let s = new UserSettings();
+        assignTargetEnumProp(settings, s);
+        req.um_msg.userSettings = s;
+        const resp = await this.wschannel.send(req);
+
+        return this.success(resp);
     } //}
 }
 

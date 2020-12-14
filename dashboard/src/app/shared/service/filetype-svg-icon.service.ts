@@ -1,15 +1,16 @@
 import { Injectable } from '@angular/core';
 import { WSChannelService } from './wschannel.service';
 import { RPCRequestMessage, MiscMessageType, RPCResponseMessage } from '../common';
+import { UserDBService } from './user-db.service';
 
 const memcache: Map<string, string> = new Map<string, string>();
 
 export enum SVGIconStyle {
-    classic = "classic",
-    extra = "extra",
+    classic       = "classic",
+    extra         = "extra",
     high_contrast = "high-contrast",
-    square_o = "square-o",
-    vivid = "vivid"
+    square_o      = "square-o",
+    vivid         = "vivid"
 };
 
 const extensionMapping: Map<string, string> = new Map<string, string>([
@@ -22,7 +23,11 @@ const extensionMapping: Map<string, string> = new Map<string, string>([
     providedIn: 'root'
 })
 export class FiletypeSvgIconService {
-    constructor(private wschannel: WSChannelService) {}
+    constructor(private wschannel: WSChannelService,
+                private userDB: UserDBService) {
+        this.userDB.createTable({fileicons: "&[extension+style], svgData"});
+    }
+    private get IconDB() {return this.userDB.table("fileicons");}
 
     async getSvgIcon(ext: string, style: SVGIconStyle = SVGIconStyle.square_o): Promise<string> {
         if(extensionMapping.has(ext)) {
@@ -32,20 +37,33 @@ export class FiletypeSvgIconService {
         if(memcache.has(ext + style)) {
             return memcache.get(ext + style);
         } else {
-            let msg = new RPCRequestMessage();
-            msg.misc_type = MiscMessageType.RPC_REQUEST;
-            msg.misc_msg.function_name = 'getSvgIcon';
-            msg.misc_msg.function_argv = [ext, style];
-            let ans = await this.wschannel.send(msg, false) as RPCResponseMessage;
+            try {
+                let svg;
+                let dbcache = await this.IconDB.where({extension: ext, style: style}).toArray();
+                if (dbcache.length > 0) {
+                    svg = dbcache[0].svgData;
+                    console.assert(svg != null);
+                } else {
+                    let msg = new RPCRequestMessage();
+                    msg.misc_type = MiscMessageType.RPC_REQUEST;
+                    msg.misc_msg.function_name = 'getSvgIcon';
+                    msg.misc_msg.function_argv = [ext, style];
+                    let ans = await this.wschannel.send(msg, false) as RPCResponseMessage;
 
-            if(!ans.error && ans.misc_msg?.function_response && 
-                ans.misc_msg.function_response.match(/^\<\s*svg\s+.*\>.*\<\s*\/\s*svg\s*\>$/)) {
-                memcache.set(ext+style, ans.misc_msg.function_response);
-            } else {
-                throw new Error('recieve bad icon');
+                    if(!ans.error && ans.misc_msg?.function_response && 
+                        ans.misc_msg.function_response.match(/^\<\s*svg\s+.*\>.*\<\s*\/\s*svg\s*\>$/)) {
+                        svg = ans.misc_msg.function_response;
+                        this.IconDB.add({extension: ext, style: style, svgData: svg}).catch(console.warn);
+                    } else {
+                        throw new Error('recieve bad icon');
+                    }
+                }
+                memcache.set(ext+style, svg);
+                return svg;
+            } catch (err) {
+                console.log(err);
+                throw err;
             }
-
-            return ans.misc_msg?.function_response;
         }
     }
 

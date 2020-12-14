@@ -1,10 +1,11 @@
 import { Component, OnInit, ElementRef, OnDestroy } from '@angular/core';
-import { FileStat } from 'src/app/shared/common';
+import { FileStat, FileType } from 'src/app/shared/common';
 import { FileSystemManagerService } from 'src/app/shared/service/file-system-manager.service';
 import { InjectViewService } from 'src/app/shared/service/inject-view.service';
 import { NotifierComponent } from 'src/app/shared/shared-component/notifier/notifier.component';
 import { KeyboardPressService, Keycode } from 'src/app/shared/service/keyboard-press.service';
 import { Subscription } from 'rxjs';
+import { CurrentDirectoryService } from 'src/app/shared/service/current-directory.service';
 
 
 /** sortByName */
@@ -66,6 +67,18 @@ export enum FileViewStyle {
     smallIcon = 'small-icon',
 }
 
+enum SortByWhat {
+    name = 1, date, ftype, size
+}
+
+class ViewConfig {
+    detail: FileDetailViewStyle = new FileDetailViewStyle();
+    style: FileViewStyle = FileViewStyle.detail;
+    sort: SortByWhat = SortByWhat.name;
+    reverse: boolean = false;
+    filter: string = '';
+}
+
 
 @Component({
     selector: 'app-home',
@@ -76,18 +89,19 @@ export class HomeComponent implements OnInit, OnDestroy {
     files: FileStat[] = [];
     select: boolean[] = [];
     // TODO save to local storage
-    detailFileView: FileDetailViewStyle = new FileDetailViewStyle();
-    viewStyle: FileViewStyle = FileViewStyle.detail;
+    config: ViewConfig = new ViewConfig();
+
+    get detailFileView(): FileDetailViewStyle {return this.config.detail;}
+    get viewStyle(): FileViewStyle {return this.config.style;}
+    get sortby(): SortByWhat {return this.config.sort;}
+    get sortReverse(): boolean {return this.config.reverse;}
 
     constructor(private fileManager: FileSystemManagerService,
                 private viewInject: InjectViewService,
                 private KeyboardPress: KeyboardPressService,
+                private currentDirectory: CurrentDirectoryService,
                 private host: ElementRef) {
-        this.fileManager.getdir('/')
-            .then(files => this.files = files)
-            .catch(e => console.warn(e));
-        const n = this.viewInject.inject(NotifierComponent, {title: "hello"});
-        setTimeout(() => n.destroy(), 500);
+        this.chdir('/');
     }
 
     private subscription: Subscription;
@@ -105,9 +119,24 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.subscription.unsubscribe();
     }
 
+    private refresh() {
+        this.select = [];
+        switch(this.sortby) {
+            case SortByWhat.name:  this.sortByName(); break;
+            case SortByWhat.date:  this.sortByDate(); break;
+            case SortByWhat.ftype: this.sortByType(); break;
+            case SortByWhat.size:  this.sortBySize(); break;
+        }
+        if(this.sortReverse) {
+            const m = this.files;
+            const f = [];
+            for(const v of m) f.unshift([v]);
+            this.files = f;
+        }
+    }
+
     private prevSelect: number;
     onSelect(n: number) {
-        console.log(n);
         if(this.KeyboardPress.InPress(Keycode.Ctrl)) {
             this.select[n] = !this.select[n];
         } else if (this.KeyboardPress.InPress(Keycode.Shift) && this.prevSelect != null) {
@@ -121,6 +150,23 @@ export class HomeComponent implements OnInit, OnDestroy {
             this.select[n] = !ps;
         }
         this.prevSelect = n;
+    }
+
+    private chdir(dir: string) {
+        this.fileManager.getdir(dir)
+            .then(files => {
+                this.files = files
+                this.refresh();
+                this.currentDirectory.cd('/');
+            })
+            .catch(e => console.warn(e));
+    }
+
+    onChdir(n: number) {
+        const stat = this.files[n];
+        if(stat.filetype == FileType.dir) {
+            this.chdir(stat.filename);
+        }
     }
 
     sortByName() {

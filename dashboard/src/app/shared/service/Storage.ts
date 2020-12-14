@@ -53,13 +53,13 @@ export class CommonStorage {
         hooks.push(hook);
     }
 
-    public get(key: string, defaultValue: any): any {
+    public get<T>(key: string, defaultValue: T): T {
         if(this.mStorage == null) {
             console.warn("bad storage");
             return null;
         }
 
-        let value = this.mStorage.getItem(key);
+        let value = this.mStorage.getItem(key) as any;
         try {
             value = JSON.parse(value);
         } catch {
@@ -71,7 +71,7 @@ export class CommonStorage {
         return value;
     }
 
-    public set(key: string, value: any) {
+    public set<T>(key: string, value: T) {
         if(this.mStorage == null) {
             console.warn("bad storage");
             return null;

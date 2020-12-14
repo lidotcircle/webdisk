@@ -30,6 +30,7 @@ export enum FileRequest {
     TRUNCATE       = "TRUNCATE",
     WRITE          = "WRITE",
     FILEMD5        = "FILEMD5",
+    FILEMD5_SLICE  = "FILEMD5_SLICE",
 }
 
 export class FileRequestMessage extends FileMessage {
