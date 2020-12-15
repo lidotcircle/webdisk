@@ -1,6 +1,6 @@
 import * as sqlite from 'sqlite3';
 import * as proc from 'process';
-import { makeid, validation, assignTargetEnumProp } from './common/utils';
+import { makeid, validation, assignTargetEnumProp, cons } from './common/utils';
 import { Token, UserInfo } from './common/db_types';
 import { debug, info, warn, error } from './logger';
 import { UserSettings } from './common/user_settings';
@@ -8,7 +8,7 @@ const MD5 = require('md5');
 
 /** TODO */
 const LAST_ACTIVATION_SPAN       = (5 * 24 * 60 * 60 * 1000);
-const SHORT_TERM_TOKEN_LIVE_TIME = (1 * 60 * 60 * 1000);
+const SHORT_TERM_TOKEN_LIVE_TIME = cons.ShortTermTokenValidPeriod;
 const MAX_INVITATION_CODE        = 20;
 const INVITAION_CODE_LENGTH      = 56;
 const TOKEN_LENGTH               = 56;
@@ -257,6 +257,7 @@ export class Database {
 
     async UserInfoByShortTermToken(stoken: Token): Promise<UserInfo> //{
     {
+        console.log("asdf");
         const record = await this.get(`SELECT * FROM ${KEY_SHORTTERM_TOKEN} WHERE token='${stoken}';`) as DBRelations.ShortTermToken;
         if(!record) return null;
 

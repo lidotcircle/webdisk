@@ -36,14 +36,15 @@ export class FiletypeSvgIconService {
         if(extensionMapping.has(ext)) {
             ext = extensionMapping.get(ext);
         }
+        const key = ext + '/' + style;
 
-        if (failHistoryM.has(ext + '/' + style) ||
+        if (failHistoryM.has(key) ||
            (await this.FailHistory.where({extension: ext, style: style}).toArray()).length > 0) {
             throw new Error('failed');
         }
 
-        if(memcache.has(ext + style)) {
-            return memcache.get(ext + style);
+        if(memcache.has(key)) {
+            return memcache.get(key);
         } else {
             try {
                 let svg;
@@ -69,7 +70,7 @@ export class FiletypeSvgIconService {
                 memcache.set(ext+style, svg);
                 return svg;
             } catch (err) {
-                failHistoryM.add(ext + '/' + style);
+                failHistoryM.add(key);
                 this.FailHistory.add({extension: ext, style: style});
                 throw err;
             }

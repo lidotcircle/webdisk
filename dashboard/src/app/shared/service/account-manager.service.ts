@@ -15,11 +15,17 @@ import { CONS, Token, UserMessage, UserMessageLoginRequest, UserMessageLoginResp
          UserSettings,
          UserMessageUpdateUserSettingsRequest,
          UserMessageGetUserSettingsRequest,
-         UserMessageGetUserSettingsResponse} from '../common';
+         UserMessageGetUserSettingsResponse,
+         UserMessageShortTermTokenGenerateRequest,
+         UserMessageShortTermTokenGenerateResponse,
+         UserMessageShortTermTokenClearRequest} from '../common';
 import { Router } from '@angular/router';
 import { EventEmitter } from 'events';
-import { assignTargetEnumProp, CopySourceEnumProp, nextTick } from '../utils';
+import { assignTargetEnumProp, cons, CopySourceEnumProp, nextTick } from '../utils';
 import { Observable, Subject } from 'rxjs';
+import { SessionStorageService } from './session-storage.service';
+
+const ShortTermTokenStore = "SHORT_TERM_TOKEN_STATE";
 
 @Injectable({
     providedIn: 'root'
@@ -33,6 +39,7 @@ export class AccountManagerService {
     get onLogout(): Observable<void> {return this._onLogout;}
 
     constructor(private localstorage: LocalStorageService,
+                private sessionstorage: SessionStorageService,
                 private wschannel: WSChannelService,
                 private router: Router) {
         this.token = this.localstorage.get(CONS.Keys.LOGIN_TOKEN, null);
@@ -185,6 +192,50 @@ export class AccountManagerService {
         assignTargetEnumProp(settings, s);
         req.um_msg.userSettings = s;
         await this.wschannel.send(req);
+    } //}
+
+    private shortTermToken: Token;
+    private shortTermTokenStartPoint: number;
+    async refreshShortTermToken(): Promise<Token> //{
+    {
+        console.assert(this.token != null);
+
+        let req = new UserMessage() as UserMessageShortTermTokenGenerateRequest;
+        req.um_type = UserMessageType.ShortTermTokenGenerate;
+        req.um_msg.token = this.token;
+        const resp = await this.wschannel.send(req) as UserMessageShortTermTokenGenerateResponse;
+        this.shortTermToken = resp.um_msg.shortTermToken;
+        this.shortTermTokenStartPoint = Date.now();
+        this.sessionstorage.set(ShortTermTokenStore, {token: this.shortTermToken, start: this.shortTermTokenStartPoint});
+
+        return this.shortTermToken;
+    } //}
+    async clearShortTermToken(): Promise<void> //{
+    {
+        console.assert(this.token != null);
+        this.shortTermToken = null;
+        this.shortTermTokenStartPoint = null;
+        this.sessionstorage.remove(ShortTermTokenStore);
+
+        let req = new UserMessage() as UserMessageShortTermTokenClearRequest;
+        req.um_type = UserMessageType.ShortTermTokenClear;
+        req.um_msg.token = this.token;
+        await this.wschannel.send(req) as UserMessageShortTermTokenGenerateResponse;
+    } //}
+    async getShortTermToken(): Promise<Token> //{
+    {
+        console.assert(this.token != null);
+        if (this.shortTermToken == null) {
+            const ans = this.sessionstorage.get(ShortTermTokenStore, null);;
+            if (!ans || (Date.now() - ans.start) > (cons.ShortTermTokenValidPeriod / 2)) {
+                await this.refreshShortTermToken();
+            } else {
+                this.shortTermToken = ans.token;
+                this.shortTermTokenStartPoint = ans.start;
+            }
+        }
+
+        return this.shortTermToken;
     } //}
 }
 

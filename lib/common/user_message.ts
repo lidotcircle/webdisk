@@ -20,6 +20,9 @@ export enum UserMessageType {
     GetUserSettings = "GET_USER_SETTINGS",
     UpdateUserSettings = "UPDATE_USER_SETTINGS",
 
+    ShortTermTokenGenerate = "SHORT_TERM_TOKEN_GEN",
+    ShortTermTokenClear = "SHORT_TERM_TOKEN_CLEAR",
+
     Uninit = "UNINIT"
 }
 
@@ -112,6 +115,24 @@ export interface UserMessageUpdateUserSettingsRequest extends UserMessage {
     um_msg: {
         token: Token,
         userSettings: UserSettings
+    }
+}
+
+export interface UserMessageShortTermTokenGenerateRequest extends UserMessage {
+    um_msg: {
+        token: Token,
+    }
+}
+
+export interface UserMessageShortTermTokenGenerateResponse extends UserMessage {
+    um_msg: {
+        shortTermToken: Token,
+    }
+}
+
+export interface UserMessageShortTermTokenClearRequest extends UserMessage {
+    um_msg: {
+        token: Token,
     }
 }
 

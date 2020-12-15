@@ -23,6 +23,8 @@ import { debug, info, warn, error } from './logger';
 import { DB } from './services';
 
 import * as annautils from 'annautils';
+import { cons } from './utils';
+import { UserInfo } from './common/db_types';
 
 
 /**
@@ -146,19 +148,26 @@ export class HttpServer extends event.EventEmitter //{
             response.end();
         }
         let header: boolean = request.method.toLowerCase() == "header";
-        if(url.pathname.startsWith(constants.DISK_PREFIX)) {
-            const token = url.searchParams.get(constants.SHORT_TERM_TOKEN_QUERY_PARAM);
-            if (token == null) {
+        if(url.pathname.startsWith(cons.DiskPrefix)) {
+            const token = url.searchParams.get(cons.DownloadTokenName);
+            const stoken = url.searchParams.get(cons.DownloadShortTermTokenName);
+            console.log("hello file", token, stoken);
+            if (token == null && stoken == null) {
                 return this.write_empty_response(response, 401);
             }
-            DB.UserInfoByShortTermToken(token).then(userinfo => {
-                if (userinfo == null) {
+            const download = (uinfo: UserInfo) => {
+                if (uinfo == null) {
                     return this.write_empty_response(response, 401);
                 }
-                let fileName = path.resolve(userinfo.rootPath, decodeURI(url.pathname.substring(constants.DISK_PREFIX.length + 1)));
+                let fileName = path.resolve(uinfo.rootPath, decodeURI(url.pathname.substring(constants.DISK_PREFIX.length + 1)));
                 let range: [number, number] = util.parseRangeField(request.headers.range);
                 this.write_file_response(fileName, response, header, range);
-            });
+            };
+            if (!!token) {
+                DB.getUserInfo(token).then(userinfo => download(userinfo));
+            } else {
+                DB.UserInfoByShortTermToken(stoken).then(userinfo => download(userinfo));
+            }
         } else {
             if (url.pathname == "/") url.pathname = "/index.html";
             let fileName = path.resolve(constants.WebResourceRoot, url.pathname.substring(1));

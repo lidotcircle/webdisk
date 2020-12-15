@@ -2,7 +2,7 @@ import { DB } from '../services';
 import { MessageHandler } from '../message_handler';
 import { MessageGateway } from '../message_gateway';
 import { BasicMessage, MessageType } from '../common/message';
-import { UserMessage, UserMessageType, UserMessageGetUserInfoRequest, UserMessageSetUserInfoRequest, UserMessageChangePasswordRequest, UserMessageGenInvCodeRequest, UserMessaageGetInvCodeRequest, UserMessaageGetInvCodeResponse, UserMessageAddUserRequest, UserMessageRemoveUserRequest, UserMessageGetUserSettingsRequest, UserMessageGetUserSettingsResponse, UserMessageUpdateUserSettingsRequest } from '../common/user_message';
+import { UserMessage, UserMessageType, UserMessageGetUserInfoRequest, UserMessageSetUserInfoRequest, UserMessageChangePasswordRequest, UserMessageGenInvCodeRequest, UserMessaageGetInvCodeRequest, UserMessaageGetInvCodeResponse, UserMessageAddUserRequest, UserMessageRemoveUserRequest, UserMessageGetUserSettingsRequest, UserMessageGetUserSettingsResponse, UserMessageUpdateUserSettingsRequest, UserMessageShortTermTokenGenerateRequest, UserMessageShortTermTokenGenerateResponse, UserMessageShortTermTokenClearRequest } from '../common/user_message';
 import { debug, info, warn, error } from '../logger';
 
 import { UserMessageLoginRequest, UserMessageLoginResponse,
@@ -118,6 +118,17 @@ class UserManagement extends MessageHandler {
                     if (!(await DB.updateUserSettings(gmsg.um_msg.token, gmsg.um_msg.userSettings))) {
                         throw new Error(`update user settings fail`);
                     }
+                } break;
+
+                case UserMessageType.ShortTermTokenGenerate: {
+                    const gmsg: UserMessageShortTermTokenGenerateRequest = msg;
+                    const shortTermToken = await DB.RequestShortTermToken(gmsg.um_msg.token);
+                    (resp as UserMessageShortTermTokenGenerateResponse).um_msg.shortTermToken = shortTermToken;
+                } break;
+
+                case UserMessageType.ShortTermTokenClear: {
+                    const gmsg: UserMessageShortTermTokenClearRequest = msg;
+                    await DB.DeleteShortTermToken(gmsg.um_msg.token);
                 } break;
 
                 default:

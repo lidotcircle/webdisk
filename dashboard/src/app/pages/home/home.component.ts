@@ -6,6 +6,8 @@ import { NotifierComponent } from 'src/app/shared/shared-component/notifier/noti
 import { KeyboardPressService, Keycode } from 'src/app/shared/service/keyboard-press.service';
 import { Subscription } from 'rxjs';
 import { CurrentDirectoryService } from 'src/app/shared/service/current-directory.service';
+import { AccountManagerService } from 'src/app/shared/service/account-manager.service';
+import { cons, downloadURI } from 'src/app/shared/utils';
 
 
 /** sortByName */
@@ -98,6 +100,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     constructor(private fileManager: FileSystemManagerService,
                 private viewInject: InjectViewService,
+                private accountManager: AccountManagerService,
                 private KeyboardPress: KeyboardPressService,
                 private currentDirectory: CurrentDirectoryService,
                 private host: ElementRef) {
@@ -172,6 +175,12 @@ export class HomeComponent implements OnInit, OnDestroy {
         if(stat.filetype == FileType.dir) {
             // TODO hint
             this.currentDirectory.cd(stat.filename);
+        } else if (stat.filetype == FileType.reg) {
+            // TODO Others just download prefix
+            this.accountManager.getShortTermToken().then(token => {
+                const uri = `${cons.DiskPrefix}${stat.filename}?${cons.DownloadShortTermTokenName}=${token}`;
+                downloadURI(uri, stat.basename);
+            });
         }
     }
 
