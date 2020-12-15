@@ -1,7 +1,13 @@
 import { Component, Input, OnInit, ViewChild, ElementRef, ViewEncapsulation, EventEmitter, Output } from '@angular/core';
 import { FileStat, FileType } from '../../../shared/common';
+import { nextTick, path } from '../../../shared/utils';
 import { FiletypeSvgIconService } from 'src/app/shared/service/filetype-svg-icon.service';
 import { FileViewStyle } from '../home.component';
+import { FileSystemManagerService } from 'src/app/shared/service/file-system-manager.service';
+import { CurrentDirectoryService } from 'src/app/shared/service/current-directory.service';
+import { InjectViewService } from 'src/app/shared/service/inject-view.service';
+import { UploadFileViewComponent } from 'src/app/shared/shared-component/upload-file-view/upload-file-view.component';
+import { AcceptDragItem, AsDragItem } from './dragdrop';
 
 
 @Component({
@@ -49,7 +55,10 @@ export class FileComponent implements OnInit {
     @ViewChild('fileitem')
     private itemElem: ElementRef;
 
-    constructor(private svgIcon: FiletypeSvgIconService) {}
+    constructor(private svgIcon: FiletypeSvgIconService,
+                private fileManager: FileSystemManagerService,
+                private cwd: CurrentDirectoryService,
+                private injector: InjectViewService) {}
 
     ngOnInit(): void {
         if(this.file == null || this.file.filename == null) {
@@ -58,28 +67,25 @@ export class FileComponent implements OnInit {
 
         const updateIcon = (icon: string) => {
             this.svgIcon.getSvgIcon(icon)
-            .then(svg => (this.iconElem.nativeElement as HTMLElement).innerHTML = svg as string)
-            .catch(e => {
-                console.log("error");
-                if(icon != 'blank') {
-                    updateIcon('blank');
-                }
-            });
+                .then(svg => (this.iconElem.nativeElement as HTMLElement).innerHTML = svg as string)
+                .catch(e => {
+                    if(icon != 'blank') {
+                        updateIcon('blank');
+                    }
+                });
         }
 
         if(this.file.filetype == FileType.dir) {
             updateIcon('folder');
-            setTimeout(() => {
-                const all = this.itemElem.nativeElement as HTMLElement;
-                all.addEventListener("drop", (ev: DragEvent) => {
-                    console.log(ev);
-                });
-            }, 0);
+            nextTick(() => AcceptDragItem(this.itemElem.nativeElement as HTMLElement, this.injector,
+                                          this.file.filename, this.fileManager, this.cwd));
         } else if (this.file.extension == '') {
             updateIcon('blank');
         } else {
             updateIcon(this.file.extension);
-       }
+        }
+
+        nextTick(() => AsDragItem(this.itemElem.nativeElement as HTMLElement, this.file.filename));
     }
 
     getPropCSS(order: number, width: number) {
@@ -216,4 +222,5 @@ function extension2type(ext: string) //{
     if (ext == null || ext == "") return "File";
     return ext.toUpperCase() + " File";
 } //}
+
 

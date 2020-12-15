@@ -20,7 +20,7 @@ export class WSChannelService {
     {
         this.connection      = null;
         this.waiter_list     = new Map();
-        this.request_timeout = 3000;
+        this.request_timeout = 5000;
         this.max_id          = 0;
         this.retry_base      = CONS.WS_RETRY_BASE;
         this.pendding_list   = [];
@@ -59,7 +59,7 @@ export class WSChannelService {
         }
     } //}
 
-    private __send(msg: BasicMessage, json: boolean, cb: {(resp: BasicMessage): void}) //{
+    private __send(msg: BasicMessage, json: boolean, cb: {(resp: BasicMessage): void}, timeout: number) //{
     {
         let id = this.max_id++;
         msg.messageId = id;
@@ -68,7 +68,7 @@ export class WSChannelService {
             setTimeout(() => this.__invalid_msg(), this.request_timeout);
             return;
         } else {
-            this.send_ws(msg, json, this.request_timeout).then(rs => cb(rs));
+            this.send_ws(msg, json, timeout).then(rs => cb(rs));
         }
     } //}
 
@@ -88,9 +88,15 @@ export class WSChannelService {
         });
     } //}
 
-    public send(msg: BasicMessage, json: boolean = true): Promise<BasicMessage> //{
+    public send(msg: BasicMessage, json: boolean = true, maxTimeout?: number): Promise<BasicMessage> //{
     {
-        return new Promise((resolve, _) => this.__send(msg, json, resolve));
+        return new Promise((resolve, reject) => this.__send(msg, json, (msg) => {
+            if(!!msg.error) {
+                reject(msg.error);
+            } else {
+                resolve(msg);
+            }
+        }, maxTimeout || this.request_timeout));
     } //}
 
     private reconnect() {

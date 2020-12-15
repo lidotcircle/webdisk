@@ -2,8 +2,8 @@ import { Component, OnInit, ElementRef, Input } from '@angular/core';
 import { AbsoluteView } from '../absolute-view/absolute-view';
 import { FileSystemManagerService } from '../../service/file-system-manager.service';
 import { FileStat } from '../../common';
-import { Subject } from 'rxjs';
-import { pathJoin } from '../../utils';
+import { Observable, Subject } from 'rxjs';
+import { path, pathJoin } from '../../utils';
 import * as crypto from 'crypto-js';
 import { UserSettingService } from '../../service/user-setting.service';
 const assert = console.assert;
@@ -39,7 +39,7 @@ interface FileSystem {
 }
 //}
 
-const blocksize = 128 * 1024;
+const blocksize = 1024 * 1024;
 
 class UploadOption {
     alwaysOverride: boolean = false;
@@ -60,6 +60,20 @@ export class UploadFileViewComponent extends AbsoluteView implements OnInit {
 
     private uploadOption: UploadOption;
     private uploadSize: Subject<number> = new Subject<number>();
+    private speedSub: Subject<number> = new Subject<number>();
+
+    private spendTime: number = 0;
+    private uploadedSize: number = 0;
+    private inProcessFile: string;
+    private finish: boolean;
+
+    get uploadConfirm(): Observable<number> {return this.uploadSize;}
+    get speed(): Observable<number> {return this.speedSub;}
+
+    get SpendTime()     {return this.spendTime;}
+    get UploadSize()    {return this.uploadedSize;}
+    get InProcessFile() {return this.inProcessFile;}
+    get Finish()        {return this.finish;}
 
     constructor(protected host: ElementRef,
                 private fileManager: FileSystemManagerService,
@@ -72,19 +86,31 @@ export class UploadFileViewComponent extends AbsoluteView implements OnInit {
         if(this.fileEntry == null || this.destination == null) {
             throw new Error("bad update session");
         }
-        this.upload()
-        .then(() => {
-            console.log('upload success');
-            // TODO
-        })
-        .catch((err) => {
-            console.warn(err);
-            // TODO
-        });
     }
 
-    private async upload() {
-        this.uploadEntry(this.fileEntry, this.destination);
+    public async upload() {
+        this.uploadConfirm.subscribe(v => this.uploadedSize += v);
+
+        const interval = 500;
+        let prev = 0;
+        const update_speed = () => {
+            if(this.finish) return;
+            const speed = (this.uploadedSize - prev) / (interval / 1000);
+            prev = this.uploadedSize;
+            this.speedSub.next(speed);
+            this.spendTime += interval;
+            setTimeout(() => update_speed(), interval);
+        };
+        update_speed();
+
+        this.uploadConfirm.subscribe(v => console.log(this.uploadedSize, "bytes"));
+        this.speed.subscribe(v => console.log(v / 1024, "kb/s"));
+
+        const remoteFilePath = pathJoin(this.destination, path.basename(this.fileEntry.name));
+        try {
+            await this.uploadEntry(this.fileEntry, remoteFilePath);
+        } finally {this.finish = true;}
+        console.log("total spend time: ", this.spendTime / 1000, "s");
     }
 
     private async uploadEntry(entry: FileSystemEntry, rpath: string) {
@@ -133,11 +159,13 @@ export class UploadFileViewComponent extends AbsoluteView implements OnInit {
 
 
     private async PopOverrideOptionWindow(): Promise<[boolean,boolean]> {
+        // override, remember
         return [true, true];
     }
 
     private async PopMergeOptionWindow(): Promise<[boolean,boolean,boolean]> {
-        return [true, true, true];
+        // merge, remember, cancel
+        return [true, true, false];
     }
 
     private async fileMD5(file: File, position: number = 0, length: number = null) {
@@ -148,8 +176,7 @@ export class UploadFileViewComponent extends AbsoluteView implements OnInit {
         let c = 0;
         while (length > c) {
             let u = Math.min(file.size - c - position, blocksize);
-            let v = crypto.lib.WordArray.create();
-            let b = new Uint8Array(await file.slice(position,position+u).arrayBuffer());
+            let b = new Uint8Array(await file.slice(position+c,position+c+u).arrayBuffer());
             m.update(crypto.lib.WordArray.create(b as any));
             c += b.byteLength;
         }
@@ -159,6 +186,7 @@ export class UploadFileViewComponent extends AbsoluteView implements OnInit {
 
     private async sendFile(fileData: File, filename: string): Promise<void> //{
     {
+        this.inProcessFile = filename;
         let stat: FileStat;
         try {
             stat = await this.fileManager.stat(filename);
@@ -204,17 +232,19 @@ export class UploadFileViewComponent extends AbsoluteView implements OnInit {
             }
         }
 
+        await this.fileManager.touch(filename);
         while(uploadsize < fileData.size) {
             let sliceSize = Math.min(blocksize, fileData.size - uploadsize);
             const buf = await fileData.slice(uploadsize, uploadsize + sliceSize).arrayBuffer();
             await this.fileManager.write(filename, uploadsize, buf);
             uploadsize += sliceSize;
+            this.uploadSize.next(sliceSize);
         }
 
         const rmd5 = await this.fileManager.md5(filename);
         const lmd5 = await this.fileMD5(fileData);
         if (rmd5 != lmd5) {
-            throw new Error(`upload file fail, unexpected md5 ${rmd5}`);
+            throw new Error(`upload file fail, unexpected md5 ${rmd5}, require ${lmd5}`);
         }
     } //}
 }

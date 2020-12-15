@@ -45,3 +45,13 @@ export function pathJoin(...pp: string[]): string {
     return res.join("/");
 }
 
+function downloadURI(uri: string, name: string = null)
+{
+    var link = document.createElement("a");
+    if (!!name) {
+        link.download = name;
+    }
+    link.href = uri;
+    link.click();
+}
+

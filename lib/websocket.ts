@@ -7,7 +7,7 @@ import * as proc from 'process';
 import { debug } from './logger';
 
 let bigIntSupport = true;
-try { BigInt(0); } catch (e) {bigIntSupport = false;}
+try { BigInt(0); const b = Buffer.alloc(8); b.readBigInt64BE(0);} catch (e) {bigIntSupport = false;}
 
 /** websocket operation code */
 export enum WebsocketOPCode {

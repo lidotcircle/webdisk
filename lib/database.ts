@@ -177,7 +177,7 @@ export class Database {
         await this.run(`CREATE TABLE IF NOT EXISTS ${KEY_USER_SETTINGS} (
             uid INTEGER PRIMARY KEY,
             settings TEXT NOT NULL,
-            FOREIGN KEY (uid) references ${KEY_USER}(uid) ON DELETE CASCADE;`);
+            FOREIGN KEY (uid) references ${KEY_USER}(uid) ON DELETE CASCADE);`);
     } //}
 
     private async __init__(): Promise<void> //{
@@ -477,10 +477,13 @@ export class Database {
 
         const str = JSON.stringify(settings);
         if (await this.getUserSettings(token) == null) {
-            const insert_data = createSQLInsertion(DBRelations.UserSettings, [{uid: uid, settings: str}]);
+            const setting = new DBRelations.UserSettings();
+            setting.uid = uid;
+            setting.settings = str;
+            const insert_data = createSQLInsertion(DBRelations.UserSettings, [setting]);
             await this.run(`INSERT INTO ${KEY_USER_SETTINGS} ${insert_data};`);
         } else {
-            await this.run(`UPDATE SET settings='${str}' WHERE uid=${uid};`);
+            await this.run(`UPDATE ${KEY_USER_SETTINGS} SET settings='${str}' WHERE uid=${uid};`);
         }
         return true;
     } //}

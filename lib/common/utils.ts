@@ -235,3 +235,20 @@ export function ForwardSetterProperty(...keys: string[]) {
     return ForwardGetterSetterProperty(false, true, ...keys);
 }
 
+export module path {
+    export function basename(filename): string {
+        if(!filename) return null;
+        let k = filename;
+        if(k.endsWith('/') || k.endsWith('\\')) k = k.substr(0, k.length -1);
+        const kk = k.split('/');
+        return kk[kk.length - 1];
+    }
+
+    export function extension(filename: string): string {
+        if(!filename || filename.endsWith('/')) return '';
+        const k = basename(filename).split('.');
+        if(k.length == 1) return '';
+        return k[k.length-1];
+    }
+}
+

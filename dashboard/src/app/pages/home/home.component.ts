@@ -101,22 +101,27 @@ export class HomeComponent implements OnInit, OnDestroy {
                 private KeyboardPress: KeyboardPressService,
                 private currentDirectory: CurrentDirectoryService,
                 private host: ElementRef) {
-        this.chdir('/');
     }
 
-    private subscription: Subscription;
+    private kbsubscription: Subscription;
+    private cwdSubscription: Subscription;
     ngOnInit(): void {
-        this.subscription = this.KeyboardPress.down.subscribe((kv) => {
+        this.kbsubscription = this.KeyboardPress.down.subscribe((kv) => {
             switch(kv.code) {
                 case Keycode.ESC:
                     this.select = [];
                     break;
             }
         });
+        this.cwdSubscription = this.currentDirectory.cwd.subscribe(new_cwd => {
+            this.chdir(new_cwd);
+        });
+        this.currentDirectory.cd('/');
     }
 
     ngOnDestroy(): void {
-        this.subscription.unsubscribe();
+        this.kbsubscription.unsubscribe();
+        this.cwdSubscription.unsubscribe();
     }
 
     private refresh() {
@@ -157,15 +162,16 @@ export class HomeComponent implements OnInit, OnDestroy {
             .then(files => {
                 this.files = files
                 this.refresh();
-                this.currentDirectory.cd('/');
             })
+        // TODO
             .catch(e => console.warn(e));
     }
 
-    onChdir(n: number) {
+    onDoubleClick(n: number) {
         const stat = this.files[n];
         if(stat.filetype == FileType.dir) {
-            this.chdir(stat.filename);
+            // TODO hint
+            this.currentDirectory.cd(stat.filename);
         }
     }
 

@@ -4,6 +4,7 @@ import { RPCRequestMessage, MiscMessageType, RPCResponseMessage } from '../commo
 import { UserDBService } from './user-db.service';
 
 const memcache: Map<string, string> = new Map<string, string>();
+const failHistoryM: Set<string> = new Set<string>();
 
 export enum SVGIconStyle {
     classic       = "classic",
@@ -26,12 +27,19 @@ export class FiletypeSvgIconService {
     constructor(private wschannel: WSChannelService,
                 private userDB: UserDBService) {
         this.userDB.createTable({fileicons: "&[extension+style], svgData"});
+        this.userDB.createTable({failHistory: "&[extension+style]"});
     }
     private get IconDB() {return this.userDB.table("fileicons");}
+    private get FailHistory() {return this.userDB.table("failHistory");}
 
     async getSvgIcon(ext: string, style: SVGIconStyle = SVGIconStyle.square_o): Promise<string> {
         if(extensionMapping.has(ext)) {
             ext = extensionMapping.get(ext);
+        }
+
+        if (failHistoryM.has(ext + '/' + style) ||
+           (await this.FailHistory.where({extension: ext, style: style}).toArray()).length > 0) {
+            throw new Error('failed');
         }
 
         if(memcache.has(ext + style)) {
@@ -61,7 +69,8 @@ export class FiletypeSvgIconService {
                 memcache.set(ext+style, svg);
                 return svg;
             } catch (err) {
-                console.log(err);
+                failHistoryM.add(ext + '/' + style);
+                this.FailHistory.add({extension: ext, style: style});
                 throw err;
             }
         }

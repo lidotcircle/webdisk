@@ -19,14 +19,18 @@ function AutoUpdateInChange(sm: string, gm?: string) {
                     get: function (target, prop, receiver) {
                         if (keys.indexOf(prop as string) >= 0) {
                             if(!!gm) {
-                                setTimeout(() => (target as any)[gm](prop), 0);
+                                const f = Reflect.get(target, gm) as Function;
+                                console.assert(typeof f === 'function');
+                                f.bind(target)(prop);
                             }
                         }
                         return Reflect.get(target, prop, receiver);
                     },
                     set: function (target, prop, value, receiver) {
                         if (keys.indexOf(prop as string) >= 0) {
-                            setTimeout(() => (target as any)[sm](prop), 0);
+                            const f = Reflect.get(target, sm) as Function;
+                            console.assert(typeof f === 'function');
+                            f.bind(target)(prop);
                         }
                         Reflect.set(target, prop,value, receiver);
                         return true;
@@ -46,6 +50,7 @@ class Setting extends UserSettings {}
 })
 export class UserSettingService extends Setting {
     private _saveFail: Subject<Error> = new Subject<Error>();
+    private stopAutomateSaving: boolean;
     get saveFail(): Observable<Error> {return this._saveFail;}
 
     constructor(private localstorage: AsyncLocalStorageService, 
@@ -53,34 +58,42 @@ export class UserSettingService extends Setting {
         super();
         this.accountManager.onLogin.subscribe(async () => {
             const settings = await this.accountManager.getUserSettings();
+            this.stopAutomateSaving = true;
             CopySourceEnumProp(settings, this);
+            this.stopAutomateSaving = false;
             await this.localstorage.set(SETTING_KEY, settings);
         });
         this.accountManager.onLogout.subscribe(async () => {
-            let o = new Setting();
+            let o = new UserSettings();
+            this.stopAutomateSaving = true;
             CopySourceEnumProp(o, this);
+            this.stopAutomateSaving = false;
             await this.localstorage.remove(SETTING_KEY);
         });
 
-        this.localstorage.get(SETTING_KEY, new Setting()).then(settings => {
+        this.localstorage.get(SETTING_KEY, new UserSettings()).then(settings => {
+            this.stopAutomateSaving = true;
             CopySourceEnumProp(settings, this);
+            this.stopAutomateSaving = false;
         });
     }
 
     private inSaving = false;
     private doubleSave = false;
     async saveSettings() {
+        if (this.stopAutomateSaving) return;
         if (this.inSaving) {
             this.doubleSave = true;
             return;
         }
         this.inSaving = true;
-        let settings = new Setting();
+        let settings = new UserSettings();
         assignTargetEnumProp(this, settings);
         try {
             await this.localstorage.set(SETTING_KEY, settings);
             await this.accountManager.updateUserSettings(settings);
         } catch (err) {
+            console.warn("save user settings fail", err);
             this._saveFail.next(err);
         }
         this.inSaving = false;

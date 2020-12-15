@@ -48,17 +48,13 @@ export class AccountManagerService {
         req.um_type = UserMessageType.Login;
         req.um_msg.username = username;
         req.um_msg.password = password;
-        const resp = await this.wschannel.send(req) as UserMessageLoginResponse;
-
-        if(resp.error) {
-            console.log("login fail: ", resp.error);
-            return false;
-        } else {
+        try {
+            const resp = await this.wschannel.send(req) as UserMessageLoginResponse;
             this.token = resp.um_msg.token;
             this.localstorage.set(CONS.Keys.LOGIN_TOKEN, this.token);
             nextTick(() => this._onLogin.next());
             return true;
-        }
+        } catch {return false;}
     } //}
 
     async logout(): Promise<void> //{
@@ -71,7 +67,9 @@ export class AccountManagerService {
         this.token = null;
         nextTick(() => this._onLogout.next());
 
-        await this.wschannel.send(req);
+        try {
+            await this.wschannel.send(req);
+        } catch {}
     } //}
 
     async getUserinfo(): Promise<UserInfo> //{
@@ -81,23 +79,16 @@ export class AccountManagerService {
         let req = new UserMessage() as UserMessageGetUserInfoRequest;
         req.um_type = UserMessageType.GetBasicUserInfo;
         req.um_msg.token = this.token;
-        const resp = await this.wschannel.send(req) as UserMessageGetUserInfoResponse;
-        if(resp.error || !resp.um_msg) {
-            console.warn('get userinfo fail');
-            return null;
-        } else {
+        try {
+            const resp = await this.wschannel.send(req) as UserMessageGetUserInfoResponse;
             return resp.um_msg;
+        } catch {
+            return null;
         }
     } //}
 
     // TODO
     async setUserinfo(info: UserInfo): Promise<boolean> {return false;}
-
-    private success(resp: BasicMessage): boolean //{
-    {
-        if(resp && resp.error) console.warn(resp.error);
-        return !!resp && !resp.error;
-    } //}
 
     async changePassword(oldpass: string, newpass: string): Promise<boolean> //{
     {
@@ -108,9 +99,12 @@ export class AccountManagerService {
         req.um_msg.token = this.token;
         req.um_msg.oldpass = oldpass;
         req.um_msg.newpass = newpass;
-        const resp = await this.wschannel.send(req);
-
-        return this.success(resp);
+        try {
+            await this.wschannel.send(req);
+            return true;
+        } catch {
+            return false;
+        }
     } //}
 
     async addUser(username: string, password: string, invCode: string): Promise<boolean> //{
@@ -121,8 +115,10 @@ export class AccountManagerService {
         req.um_msg.password = password;
         req.um_msg.invitationCode = invCode;
 
-        const resp = await this.wschannel.send(req);
-        return this.success(resp);
+        try {
+            await this.wschannel.send(req);
+            return true;
+        } catch {return false;}
     } //}
 
     async removeUser(username: string, password: string): Promise<boolean> //{
@@ -132,8 +128,9 @@ export class AccountManagerService {
         req.um_msg.username = username;
         req.um_msg.password = password;
 
-        const resp = await this.wschannel.send(req);
-        return this.success(resp);
+        try {
+            await this.wschannel.send(req);
+        } catch {return false;}
     } //}
 
     async genInvCodes(n: number): Promise<boolean> //{
@@ -144,8 +141,10 @@ export class AccountManagerService {
         req.um_msg.token = this.token;
         req.um_msg.n = n;
 
-        const resp = await this.wschannel.send(req);
-        return this.success(resp);
+        try {
+            await this.wschannel.send(req);
+            return true;
+        } catch {return false;}
     } //}
 
     async getInvCodes(): Promise<string[]> //{
@@ -156,8 +155,12 @@ export class AccountManagerService {
         req.um_type = UserMessageType.GetInvitationCode;
         req.um_msg.token = this.token;
 
-        const resp = await this.wschannel.send(req) as UserMessaageGetInvCodeResponse;
-        return resp?.um_msg?.InvCodes;
+        try { 
+            const resp = await this.wschannel.send(req) as UserMessaageGetInvCodeResponse;
+            return resp?.um_msg?.InvCodes;
+        } catch {
+            return null;
+        }
     } //}
 
     async getUserSettings(): Promise<UserSettings> //{
@@ -168,18 +171,12 @@ export class AccountManagerService {
         req.um_type = UserMessageType.GetUserSettings;
         req.um_msg.token = this.token;
         const resp = await this.wschannel.send(req) as UserMessageGetUserSettingsResponse;
-
-        if(resp.error || !resp.um_msg) {
-            console.warn('get userinfo fail');
-            return null;
-        } else {
-            return resp.um_msg.userSettings;
-        }
+        return resp.um_msg.userSettings;
     } //}
 
-    async updateUserSettings(settings: UserSettings): Promise<boolean> //{
+    async updateUserSettings(settings: UserSettings): Promise<void> //{
     {
-        if(this.token == null) return false;
+        if(this.token == null) throw new Error("not login");
 
         let req = new UserMessage() as UserMessageUpdateUserSettingsRequest;
         req.um_type = UserMessageType.UpdateUserSettings;
@@ -187,9 +184,7 @@ export class AccountManagerService {
         let s = new UserSettings();
         assignTargetEnumProp(settings, s);
         req.um_msg.userSettings = s;
-        const resp = await this.wschannel.send(req);
-
-        return this.success(resp);
+        await this.wschannel.send(req);
     } //}
 }
 

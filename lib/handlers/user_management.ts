@@ -31,97 +31,102 @@ class UserManagement extends MessageHandler {
 
         debug(`USER Manager: recieve ${msg.um_type} request`);
 
-        switch(msg.um_type) {
-            case UserMessageType.Login: {
-                const lmsg: UserMessageLoginRequest = msg;
-                lmsg.um_msg.username;
-                info(`user: ${lmsg.um_msg.username} try to login`);
-                const token = await DB.login(lmsg.um_msg.username, lmsg.um_msg.password);
-                if(token == null) {
-                    info(`${lmsg.um_msg.username} login fail, wrong password`);
-                    resp.error = 'username or password are wrong';
-                } else {
-                    info(`${lmsg.um_msg.username} login success`);
-                    (resp as UserMessageLoginResponse).um_msg.token = token;
-                }
-            } break;
+        try {
+            switch(msg.um_type) {
+                case UserMessageType.Login: {
+                    const lmsg: UserMessageLoginRequest = msg;
+                    lmsg.um_msg.username;
+                    info(`user: ${lmsg.um_msg.username} try to login`);
+                    const token = await DB.login(lmsg.um_msg.username, lmsg.um_msg.password);
+                    if(token == null) {
+                        info(`${lmsg.um_msg.username} login fail, wrong password`);
+                        throw new Error('username or password are wrong');
+                    } else {
+                        info(`${lmsg.um_msg.username} login success`);
+                        (resp as UserMessageLoginResponse).um_msg.token = token;
+                    }
+                } break;
 
-            case UserMessageType.Logout: {
-                await DB.logout((msg as UserMessageLogoutRequest).um_msg.token);
-            } break;
+                case UserMessageType.Logout: {
+                    await DB.logout((msg as UserMessageLogoutRequest).um_msg.token);
+                } break;
 
-            case UserMessageType.GetBasicUserInfo: {
-                const gmsg: UserMessageGetUserInfoRequest = msg;
-                const info = await DB.getUserInfo(gmsg.um_msg.token);
-                if(info == null) {
-                    resp.error = 'get account message fail';
-                } else {
-                    resp.um_msg = info;
-                }
-            } break;
+                case UserMessageType.GetBasicUserInfo: {
+                    const gmsg: UserMessageGetUserInfoRequest = msg;
+                    const info = await DB.getUserInfo(gmsg.um_msg.token);
+                    if(info == null) {
+                        throw new Error('get account message fail');
+                    } else {
+                        resp.um_msg = info;
+                    }
+                } break;
 
-            case UserMessageType.SetBasicUserInfo: {
-                const gmsg: UserMessageSetUserInfoRequest = msg;
-                // TODO
-                resp.error = 'not implement';
-            } break;
+                case UserMessageType.SetBasicUserInfo: {
+                    const gmsg: UserMessageSetUserInfoRequest = msg;
+                    // TODO
+                    throw new Error('set userinf onot implement');
+                } break;
 
-            case UserMessageType.ChangePassword: {
-                const gmsg: UserMessageChangePasswordRequest = msg;
-                if(!(await DB.changePassword(gmsg.um_msg.token, gmsg.um_msg.oldpass, gmsg.um_msg.newpass))) {
-                    resp.error = 'change password fail';
-                }
-            } break;
+                case UserMessageType.ChangePassword: {
+                    const gmsg: UserMessageChangePasswordRequest = msg;
+                    if(!(await DB.changePassword(gmsg.um_msg.token, gmsg.um_msg.oldpass, gmsg.um_msg.newpass))) {
+                        throw new Error('change password fail');
+                    }
+                } break;
 
-            case UserMessageType.GenerateInvitationCode: {
-                const gmsg: UserMessageGenInvCodeRequest = msg;
-                if(!(await DB.generateInvitationCode(gmsg.um_msg.token, gmsg.um_msg.n))) {
-                    resp.error = 'generate new invitationCode fail';
-                }
-            } break;
+                case UserMessageType.GenerateInvitationCode: {
+                    const gmsg: UserMessageGenInvCodeRequest = msg;
+                    if(!(await DB.generateInvitationCode(gmsg.um_msg.token, gmsg.um_msg.n))) {
+                        throw new Error('generate new invitationCode fail');
+                    }
+                } break;
 
-            case UserMessageType.GetInvitationCode: {
-                const gmsg: UserMessaageGetInvCodeRequest = msg;
-                const v = await DB.getInvitationCodes(gmsg.um_msg.token);
-                if(v) {
-                    const m: UserMessaageGetInvCodeResponse = resp;
-                    m.um_msg.InvCodes = v.map(c => c[0]);
-                } else {
-                    msg.error = 'get invitation codes fail, maybe a invalid token';
-                }
-            } break;
+                case UserMessageType.GetInvitationCode: {
+                    const gmsg: UserMessaageGetInvCodeRequest = msg;
+                    const v = await DB.getInvitationCodes(gmsg.um_msg.token);
+                    if(v) {
+                        const m: UserMessaageGetInvCodeResponse = resp;
+                        m.um_msg.InvCodes = v.map(c => c[0]);
+                    } else {
+                        throw new Error('get invitation codes fail, maybe a invalid token');
+                    }
+                } break;
 
-            case UserMessageType.AddUser: {
-                const gmsg: UserMessageAddUserRequest = msg;
-                const v = await DB.addUser(gmsg.um_msg.username, gmsg.um_msg.password, gmsg.um_msg.invitationCode);
-                if(!v) {
-                    resp.error = `add user ${gmsg.um_msg.username} fail`;
-                }
-            } break;
+                case UserMessageType.AddUser: {
+                    const gmsg: UserMessageAddUserRequest = msg;
+                    const v = await DB.addUser(gmsg.um_msg.username, gmsg.um_msg.password, gmsg.um_msg.invitationCode);
+                    if(!v) {
+                        throw new Error(`add user ${gmsg.um_msg.username} fail`);
+                    }
+                } break;
 
-            case UserMessageType.RemoveUser: {
-                const gmsg: UserMessageRemoveUserRequest = msg;
-                if(!(await DB.removeUser(gmsg.um_msg.token, gmsg.um_msg.username, gmsg.um_msg.password))) {
-                    resp.error = `remove user ${gmsg.um_msg.username} fail`;
-                }
-            } break;
+                case UserMessageType.RemoveUser: {
+                    const gmsg: UserMessageRemoveUserRequest = msg;
+                    if(!(await DB.removeUser(gmsg.um_msg.token, gmsg.um_msg.username, gmsg.um_msg.password))) {
+                        throw new Error(`remove user ${gmsg.um_msg.username} fail`);
+                    }
+                } break;
 
-            case UserMessageType.GetUserSettings: {
-                const gmsg: UserMessageGetUserSettingsRequest = msg;
-                const settings = await DB.getUserSettings(gmsg.um_msg.token);
-                (resp as UserMessageGetUserSettingsResponse).um_msg.userSettings = settings;
-            } break;
+                case UserMessageType.GetUserSettings: {
+                    const gmsg: UserMessageGetUserSettingsRequest = msg;
+                    const settings = await DB.getUserSettings(gmsg.um_msg.token);
+                    (resp as UserMessageGetUserSettingsResponse).um_msg.userSettings = settings;
+                } break;
 
-            case UserMessageType.UpdateUserSettings: {
-                const gmsg: UserMessageUpdateUserSettingsRequest = msg;
-                if (!(await DB.updateUserSettings(gmsg.um_msg.token, gmsg.um_msg.userSettings))) {
-                    resp.error = `update user settings fail`;
-                }
-            } break;
+                case UserMessageType.UpdateUserSettings: {
+                    const gmsg: UserMessageUpdateUserSettingsRequest = msg;
+                    if (!(await DB.updateUserSettings(gmsg.um_msg.token, gmsg.um_msg.userSettings))) {
+                        throw new Error(`update user settings fail`);
+                    }
+                } break;
 
-            default:
-                warn('unknown user message type, ignore it');
-                return;
+                default:
+                    warn('unknown user message type, ignore it');
+                    return;
+            }
+        } catch (err) {
+            warn(`USER MESSAGE ${msg.um_type}:`, err);
+            resp.error = err;
         }
 
         dispatcher.response(resp);

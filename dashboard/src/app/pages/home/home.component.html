@@ -9,7 +9,7 @@
             <div class="files">
                 <app-file *ngFor="let file of files; let i = index;" [file]="file"
                  (select)="onSelect(i)" [class]='select[i] ? "select" : ""'
-                 (doubleClick)="onChdir(i)"
+                 (doubleClick)="onDoubleClick(i)"
                  [view-style]='viewStyle'
                  [name-order]='detailFileView.nameOrder' [name-width]='detailFileView.nameWidth'
                  [date-order]='detailFileView.dateOrder' [date-width]='detailFileView.dateWidth'

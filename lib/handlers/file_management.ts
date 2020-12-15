@@ -15,7 +15,6 @@ import * as crypto from 'crypto';
 import { FileStat, FileType } from '../common/file_types';
 import { UserInfo } from '../common/db_types';
 import { Stats } from 'fs';
-const md5 = require('md5');
 
 function checkArgv(pat: string, argv: any[]) {
     if (!utils.checkArgv(pat, argv)) {
@@ -159,7 +158,7 @@ class FileManagement extends MessageHandler {
     private async fileSliceMD5(file: string, position: number, len: number): Promise<string> {
         const md5Digest = crypto.createHash("md5");
         const fd = await fs.promises.open(file, "r");
-        const buf = Buffer.alloc(4096);
+        const buf = Buffer.alloc(1024 * 1024);
         let o = 0;
         while (len > 0) {
             const n = Math.min(len, buf.byteLength);
@@ -169,7 +168,13 @@ class FileManagement extends MessageHandler {
                 // TODO or omit
                 throw new Error("file out of range");
             } else {
-                md5Digest.update(buf);
+                if(nb == buf.byteLength) {
+                    md5Digest.update(buf);
+                } else {
+                    let b2 = Buffer.alloc(nb);
+                    buf.copy(b2,0,0,nb);
+                    md5Digest.update(b2);
+                }
             }
             len -= n;
             o += n;
@@ -232,11 +237,15 @@ class FileManagement extends MessageHandler {
 
     private static asyncWrite = util.promisify(fs.write);
     private async write(file: string, position: number, buf: ArrayBuffer): Promise<number> {
-        console.log(buf);
+        try {
         const fd = await fs.promises.open(file, "r+");
         const rs = await FileManagement.asyncWrite(fd.fd, new Uint8Array(buf), 0, buf.byteLength, position);
         await fd.close();
         return rs.bytesWritten;
+        } catch (err) {
+            console.log(err);
+            throw err;
+        }
     }
 
     async access(req_msg: FileRequestMessage, resp: FileResponseMessage) {
