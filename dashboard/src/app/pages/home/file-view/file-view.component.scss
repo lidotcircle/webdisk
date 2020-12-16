@@ -1,0 +1,23 @@
+
+.file-view {
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    width: 100%;
+    height: 100%;
+
+    &::-webkit-scrollbar {
+        width: 0.3em;
+        background: #f3f3f3;
+    }
+    &::-webkit-scrollbar-thumb {
+        background-color: #777;
+    }
+
+    app-detail-view-header {
+        position: sticky;
+        top: 0em;
+    }
+}
+

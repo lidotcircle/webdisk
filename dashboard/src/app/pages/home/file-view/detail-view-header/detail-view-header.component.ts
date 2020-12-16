@@ -1,5 +1,5 @@
 import { Component, OnInit, Input, EventEmitter, Output, ViewChild, ElementRef } from '@angular/core';
-import { FileViewStyle } from '../home.component';
+import { FileViewStyle } from '../file-view.component';
 
 @Component({
     selector: 'app-detail-view-header',

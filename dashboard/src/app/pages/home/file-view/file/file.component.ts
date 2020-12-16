@@ -1,8 +1,8 @@
 import { Component, Input, OnInit, ViewChild, ElementRef, ViewEncapsulation, EventEmitter, Output } from '@angular/core';
-import { FileStat, FileType } from '../../../shared/common';
-import { nextTick, path } from '../../../shared/utils';
+import { FileStat, FileType } from 'src/app/shared/common';
+import { nextTick, path } from 'src/app/shared/utils';
 import { FiletypeSvgIconService } from 'src/app/shared/service/filetype-svg-icon.service';
-import { FileViewStyle } from '../home.component';
+import { FileViewStyle } from '../file-view.component';
 import { FileSystemManagerService } from 'src/app/shared/service/file-system-manager.service';
 import { CurrentDirectoryService } from 'src/app/shared/service/current-directory.service';
 import { InjectViewService } from 'src/app/shared/service/inject-view.service';

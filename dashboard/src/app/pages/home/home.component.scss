@@ -1,5 +1,5 @@
-@import '../../style/layout.scss';
-@import '../../style/utils.scss';
+@import 'src/app/style/layout.scss';
+@import 'src/app/style/utils.scss';
 
 @include container-content();
 
@@ -16,23 +16,9 @@ body {
         overflow: hidden;
         @include no-select();
 
-        .file-view {
-            display: flex;
-            flex-direction: column;
-            overflow-x: hidden;
-            overflow-y: scroll;
-            &::-webkit-scrollbar {
-                width: 0.3em;
-                background: #f3f3f3;
-            }
-            &::-webkit-scrollbar-thumb {
-                background-color: #777;
-            }
-
-            app-detail-view-header {
-                position: sticky;
-                top: 0em;
-            }
+        app-file-view {
+            width: 100%;
+            height: 100%;
         }
     }
 }
