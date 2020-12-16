@@ -3,6 +3,7 @@ import { FileSystemManagerService } from 'src/app/shared/service/file-system-man
 import { CurrentDirectoryService } from 'src/app/shared/service/current-directory.service';
 import { InjectViewService } from 'src/app/shared/service/inject-view.service';
 import { UploadFileViewComponent } from 'src/app/shared/shared-component/upload-file-view/upload-file-view.component';
+import { UserSettingService } from 'src/app/shared/service/user-setting.service';
 
 export function AsDragItem(elem: HTMLElement, filepath: string) {
     elem.addEventListener("dragstart", (ev: DragEvent) => {
@@ -14,7 +15,7 @@ export function AsDragItem(elem: HTMLElement, filepath: string) {
 }
 
 export function AcceptDragItem(elem: HTMLElement, injector: InjectViewService, destination: string, 
-                               fileManager: FileSystemManagerService, cwd: CurrentDirectoryService) {
+                               fileManager: FileSystemManagerService, cwd: CurrentDirectoryService, userSettings: UserSettingService) {
     elem.addEventListener("dragover", (ev: DragEvent) => {
         ev.preventDefault();
     });
@@ -44,14 +45,21 @@ export function AcceptDragItem(elem: HTMLElement, injector: InjectViewService, d
             }
         } else if (filepath != destination) {
             const b = path.basename(filepath);
-            fileManager.move(filepath, destination + "/" + b)
-            .then(() => {
-                cwd.justRefresh();
-            })
-            .catch((err) => {
-                // TODO
-                console.error(err);
-            });
+            let move = false;
+            if (userSettings.MoveFolderWithoutConfirm) {
+                move = true;
+            } else {
+            }
+            if (move) {
+                fileManager.move(filepath, destination + "/" + b)
+                    .then(() => {
+                        cwd.justRefresh();
+                    })
+                    .catch((err) => {
+                        // TODO
+                        console.error(err);
+                    });
+            }
         }
     });
 }

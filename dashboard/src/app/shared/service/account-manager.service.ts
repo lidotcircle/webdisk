@@ -24,6 +24,7 @@ import { EventEmitter } from 'events';
 import { assignTargetEnumProp, cons, CopySourceEnumProp, nextTick } from '../utils';
 import { Observable, Subject } from 'rxjs';
 import { SessionStorageService } from './session-storage.service';
+import { AsyncKVStorage } from './AsyncKVStorage';
 
 const ShortTermTokenStore = "SHORT_TERM_TOKEN_STATE";
 
@@ -32,20 +33,29 @@ const ShortTermTokenStore = "SHORT_TERM_TOKEN_STATE";
 })
 export class AccountManagerService {
     private token: Token;
-    private changeCallbacks: {(): void}[] = [];
-    private _onLogin  = new Subject<void>();
-    private _onLogout = new Subject<void>();
+    private changeCallbacks: {(): void}[];
+    private _onLogin: Subject<void>;
+    private _onLogout: Subject<void>;
+    private _accountSpecificStorage: AsyncKVStorage;
     get onLogin():  Observable<void> {return this._onLogin;}
     get onLogout(): Observable<void> {return this._onLogout;}
+    get accountStorage() {return this._accountSpecificStorage;}
 
     constructor(private localstorage: LocalStorageService,
                 private sessionstorage: SessionStorageService,
                 private wschannel: WSChannelService,
                 private router: Router) {
         this.token = this.localstorage.get(CONS.Keys.LOGIN_TOKEN, null);
+        this.changeCallbacks = [];
+        this._onLogin  = new Subject<void>();
+        this._onLogout = new Subject<void>();
+        this._accountSpecificStorage = new AsyncKVStorage('accountStorage');
+        this.onLogin .subscribe(() => this._accountSpecificStorage.clear());
+        this.onLogout.subscribe(() => this._accountSpecificStorage.clear());
     }
     get LoginToken(): Token {return this.token;}
     get isLogin(): boolean {return this.token != null;}
+
 
     async login(username: string, password: string): Promise<boolean> //{
     {

@@ -91,7 +91,7 @@ class ViewConfig {
 export class FileViewComponent implements OnInit, OnDestroy {
     files: FileStat[] = [];
     select: boolean[] = [];
-    // TODO save to local storage
+    // TODO save to account storage
     config: ViewConfig = new ViewConfig();
 
     get detailFileView(): FileDetailViewStyle {return this.config.detail;}

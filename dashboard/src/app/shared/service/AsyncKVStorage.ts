@@ -95,6 +95,10 @@ class AsyncKVStorageInner {
         await this.table.delete(key);
         await this.invoke_hooks(key);
     }
+
+    public async clear(): Promise<void> {
+        await this.table.clear();
+    }
 }
 
 export class AsyncKVStorage {
@@ -114,5 +118,8 @@ export class AsyncKVStorage {
 
     @ForwardMethod("inner", "remove")
     remove: TypeOfClassMethod<AsyncKVStorageInner, "remove">;
+
+    @ForwardMethod("inner", "clear")
+    clear: TypeOfClassMethod<AsyncKVStorageInner, "clear">;
 }
 
