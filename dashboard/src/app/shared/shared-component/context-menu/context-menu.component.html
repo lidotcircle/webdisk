@@ -3,7 +3,7 @@
     <div class="menu-entry menu-entry-level1" *ngFor="let entry of entries; let i=index; let ent=entry;">
         <div class="divider" *ngIf="entry.divide"><div class="divider-content"></div></div>
         <div [class]="(entry.enable() ? '' : 'menu-entry-disable ') + 'menu-entry-row menu-entry-row-level1'"
-             *ngIf="!entry.divide && entry.subMenus == null" (click)="entry.enable() && onLevel1Click(i) || preventClick($event)">
+             *ngIf="!entry.divide && entry.subMenus == null" (click)="entry.enable() ? onLevel1Click(i) : preventClick($event)">
                 <div class="menu-entry-row-icon">
                     <span class="material-icons"> {{ entry.icon }} </span>
                 </div>

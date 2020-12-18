@@ -1,13 +1,16 @@
 import { Injectable } from '@angular/core';
+import { Observable, Subject } from 'rxjs';
 import { ContextMenuComponent } from '../shared-component/context-menu/context-menu.component';
 import { InjectViewService } from './inject-view.service';
 
+// DISPLAY MENU ITEMS IN ORDER
 export enum MenuEntryType {
+    HomeMenuCLick,
     DirMenuClick,
     FileMenuClick,
-    HomeMenuCLick,
-    AllPresent,
+    FileView,
     Default,
+    AllPresent,
 }
 
 export type MenuItemClickCallback = () => void;
@@ -15,6 +18,11 @@ export class MenuEntryDivide {
     divide: boolean = true;
 }
 export class MenuEntry {
+    constructor(entryName?: string, icon?: string) {
+        this.entryName = entryName;
+        this.icon = icon;
+    }
+
     entryName: string;
     icon: string;
     enable: () => boolean = () => true;
@@ -38,6 +46,8 @@ function relateElem(target: HTMLElement, parentN: HTMLElement): boolean {
 export class RightMenuManagerService {
     private clickMenu = new Map<MenuEntryType, MenuEntry[]>();
     private defaultEntries: MenuEntry[] = [];
+    private _menuclick = new Subject<void>();
+    public get menuclick(): Observable<void> {return this._menuclick;}
 
     private menuView: ContextMenuComponent;
     private start: boolean = false;
@@ -47,33 +57,6 @@ export class RightMenuManagerService {
         document.body.addEventListener('click',       (ev: MouseEvent) => this.onbody_click.bind(this)(ev));
         document.body.addEventListener('contextmenu', (ev: MouseEvent) => this.onbody_menu.bind(this)(ev));
         this.StartContextMenu();
-
-        const entry = new MenuEntry();
-        entry.clickCallback = () => {console.log("hello");}
-        entry.entryName = "hello world";
-        entry.icon = "content_copy";
-        entry.enable = () => false;
-        const entry2 = new MenuEntry();
-        entry2.clickCallback = () => {console.log("world");}
-        entry2.entryName = "world hello";
-        entry2.enable = () => false;
-        entry.subMenus = [];
-        const divide = new MenuEntryDivide();
-        entry.subMenus.push(entry2);
-        entry.subMenus.push(divide);
-        entry.subMenus.push(entry2);
-        entry.subMenus.push(entry2);
-        entry.subMenus.push(divide);
-        entry.subMenus.push(entry2);
-        this.defaultEntries.push(entry);
-        this.defaultEntries.push(entry);
-        entry.subMenus.push(divide);
-        this.defaultEntries.push(entry);
-        this.defaultEntries.push(entry);
-        entry.subMenus.push(divide);
-        this.defaultEntries.push(entry);
-        this.defaultEntries.push(entry2);
-        this.registerMenuEntry(MenuEntryType.Default, this.defaultEntries);
     }
 
     public StartContextMenu() {
@@ -84,17 +67,25 @@ export class RightMenuManagerService {
     }
 
     private createRootMenuEntry(): MenuEntry {
+        this.registerMenuEntry(MenuEntryType.Default, this.defaultEntries);
+
         let ans = new MenuEntry();
         ans.entryName = 'root';
         ans.clickCallback = null;
         ans.subMenus = [];
-        for(const key of this.clickMenu.keys()) {
+        let keys = [];
+        for(const key of this.clickMenu.keys()) keys.push(key);
+        keys.sort();
+        for(const key of keys) {
             for(const entry of this.clickMenu.get(key)) {
                 ans.subMenus.push(entry);
             }
             ans.subMenus.push(new MenuEntryDivide());
         }
-        if(ans.subMenus.length > 0) ans.subMenus.pop();
+        while(ans.subMenus.length > 0 && 
+              ans.subMenus[ans.subMenus.length - 1] instanceof MenuEntryDivide) {
+            ans.subMenus.pop();
+        }
         return ans;
     }
 
@@ -122,10 +113,10 @@ export class RightMenuManagerService {
                 rootMenuEntry: this.createRootMenuEntry()
             });
         this.clickMenu.clear();
-        this.registerMenuEntry(MenuEntryType.Default, this.defaultEntries);
     }
 
     public registerMenuEntry(menutype: MenuEntryType, entries: MenuEntry[]) {
+        console.assert(!this.clickMenu.has(menutype));
         this.clickMenu.set(menutype, entries.slice(0));
     }
 }

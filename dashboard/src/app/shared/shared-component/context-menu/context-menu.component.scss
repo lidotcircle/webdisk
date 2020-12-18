@@ -10,6 +10,7 @@
     box-shadow: 0.1em 0.1em 0.3em 0.1em #CCC;
     padding: 0.3em 0em;
     z-index: 1;
+    font-size: small;
     @include no-select();
 
     display: flex;
@@ -28,7 +29,7 @@
     }
 
     .menu-entry-row {
-        padding: 0.4em 0.9em;
+        padding: 0.2em 0.9em;
         color: #333;
         display: flex;
         flex-direction: row;
@@ -41,7 +42,8 @@
         }
 
         .menu-entry-row-name {
-            padding: 0.5em 1em 0.8em 1em;
+            width: max-content;
+            padding: 0.1em 3em 0.4em 1em;
         }
 
         &:hover {

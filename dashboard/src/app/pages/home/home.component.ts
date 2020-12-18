@@ -8,7 +8,8 @@ import { Subscription } from 'rxjs';
 import { CurrentDirectoryService } from 'src/app/shared/service/current-directory.service';
 import { AccountManagerService } from 'src/app/shared/service/account-manager.service';
 import { cons, downloadURI } from 'src/app/shared/utils';
-import { RightMenuManagerService } from 'src/app/shared/service/right-menu-manager.service';
+import { MenuEntry, RightMenuManagerService } from 'src/app/shared/service/right-menu-manager.service';
+import { WindowNotifierService } from 'src/app/shared/service/window-notifier.service';
 
 
 @Component({
@@ -18,11 +19,28 @@ import { RightMenuManagerService } from 'src/app/shared/service/right-menu-manag
 })
 export class HomeComponent implements OnInit {
     constructor(private contextmenu: RightMenuManagerService,
-                private cwd: CurrentDirectoryService) {
-        contextmenu.StartContextMenu();
+                private cwd: CurrentDirectoryService,
+                private notifier: WindowNotifierService) {
+        this.contextmenu.StartContextMenu();
     }
 
     ngOnInit(): void {
+        setTimeout(() => {
+            this.notifier.create({
+                message: 'hello world',
+                title: 'hello',
+                buttons: [
+                    {name: 'ok'},
+                    {name: 'cancal'}
+                ],
+                inputs: [
+                    {label: 'youxi', name: 'i1', type: 'text'},
+                    {label: 'youxi', name: 'l1', type: 'text'}
+                ]
+            }).wait().then(() => {
+                console.log("okkk");
+            });
+        }, 1);
     }
 }
 

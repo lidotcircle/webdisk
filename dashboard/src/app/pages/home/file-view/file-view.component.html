@@ -1,5 +1,5 @@
 
-<div class="file-view">
+<div class="file-view" (contextmenu)="onFileViewContextMenu()">
     <app-detail-view-header class="detail-view-header"
                             [view-style]='viewStyle' [view-config]='detailFileView'>
     </app-detail-view-header>
@@ -8,6 +8,7 @@
         <app-file *ngFor="let file of files; let i = index;" [file]="file"
          (select)="onSelect(i)" [class]='select[i] ? "select" : ""'
          (doubleClick)="onDoubleClick(i)"
+         (menu)="onMenu(i)"
          [view-style]='viewStyle'
          [name-order]='detailFileView.nameOrder' [name-width]='detailFileView.nameWidth'
          [date-order]='detailFileView.dateOrder' [date-width]='detailFileView.dateWidth'

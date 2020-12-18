@@ -126,6 +126,7 @@ export class ViewDraggable extends ViewTrait {
 
     private touchmove(ev: TouchEvent) {
         if (!this.filter(ev.target as HTMLElement)) return;
+        ev.preventDefault();
         if(ev.touches.length == 1) {
             const touch = ev.touches.item(0);
             this.moveToNext(touch.screenX, touch.screenY);

@@ -1,5 +1,5 @@
 
-<div [class]="getItemClass()" (click)="onClick()" draggable='true' #fileitem>
+<div [class]="getItemClass()" (click)="onClick()" (contextmenu)="onContextMenu()" draggable='true' #fileitem>
     <div class="file-icon" #fileicon></div>
 
     <div class="file-props">

@@ -8,6 +8,8 @@ import { Subscription } from 'rxjs';
 import { CurrentDirectoryService } from 'src/app/shared/service/current-directory.service';
 import { AccountManagerService } from 'src/app/shared/service/account-manager.service';
 import { cons, downloadURI } from 'src/app/shared/utils';
+import { MenuEntry, MenuEntryType, RightMenuManagerService } from 'src/app/shared/service/right-menu-manager.service';
+import { WindowNotifierService } from 'src/app/shared/service/window-notifier.service';
 
 
 /** sortByName */
@@ -104,6 +106,8 @@ export class FileViewComponent implements OnInit, OnDestroy {
                 private accountManager: AccountManagerService,
                 private KeyboardPress: KeyboardPressService,
                 private currentDirectory: CurrentDirectoryService,
+                private menuManager: RightMenuManagerService,
+                private notifier: WindowNotifierService,
                 private host: ElementRef) {
     }
 
@@ -126,6 +130,27 @@ export class FileViewComponent implements OnInit, OnDestroy {
     ngOnDestroy(): void {
         this.kbsubscription.unsubscribe();
         this.cwdSubscription.unsubscribe();
+    }
+
+    onFileViewContextMenu() {
+        const forward = new MenuEntry();
+        forward.clickCallback = () => this.currentDirectory.forward();
+        forward.enable = () => this.currentDirectory.forwardable;
+        forward.entryName = 'Forward';
+        forward.icon = 'arrow_forward';
+
+        const back = new MenuEntry();
+        back.clickCallback = () => this.currentDirectory.back();
+        back.enable = () => this.currentDirectory.backable;
+        back.entryName = 'Back';
+        back.icon = 'arrow_back';
+
+        const refresh = new MenuEntry();
+        refresh.clickCallback = () => this.currentDirectory.justRefresh();
+        refresh.entryName = 'Refresh';
+        refresh.icon = 'refresh';
+
+        this.menuManager.registerMenuEntry(MenuEntryType.FileView, [refresh, forward, back]);
     }
 
     private refresh() {
@@ -183,6 +208,49 @@ export class FileViewComponent implements OnInit, OnDestroy {
                 downloadURI(uri, stat.basename);
             });
         }
+    }
+
+    onMenu(n: number) {
+        this.onSelect(n);
+        const entries: MenuEntry[] = [];
+
+        let menuType = MenuEntryType.FileMenuClick;
+        if (this.files[n].filetype == FileType.dir) {
+            menuType = MenuEntryType.DirMenuClick;
+            const chdir = new MenuEntry();
+            chdir.clickCallback = () => this.onDoubleClick(n);
+            chdir.entryName = "Open Folder";
+            chdir.icon = "folder_open";
+            entries.push(chdir);
+        } else {
+            const download = new MenuEntry();
+            download.clickCallback = () => this.onDoubleClick(n);
+            download.entryName = "Download File";
+            download.icon = "cloud_download";
+            entries.push(download);
+        }
+
+        const deleteEntry = new MenuEntry('Delete', 'delete');
+        deleteEntry.clickCallback = () => {
+        }
+        const copyEntry = new MenuEntry('Copy', 'content_copy');
+        copyEntry.clickCallback = () => {
+        }
+        const cutEntry = new MenuEntry('Cut', 'content_cut');
+        cutEntry.clickCallback = () => {
+        }
+        const pasteEntry = new MenuEntry('Paste', 'content_paste');
+        pasteEntry.clickCallback = () => {
+        }
+
+        for(const entry of [deleteEntry, copyEntry, cutEntry, pasteEntry]) {
+            entries.push(entry);
+        }
+
+        this.menuManager.registerMenuEntry(menuType, entries);
+    }
+
+    private delete_file(stat: FileStat) {
     }
 
     sortByName() {
