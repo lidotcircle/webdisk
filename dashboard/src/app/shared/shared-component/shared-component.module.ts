@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LoginBGComponent } from './login-bg/login-bg.component';
-import { NotifierComponent } from './notifier/notifier.component';
+import { MessageBoxComponent } from './message-box/message-box.component';
 import { ProgressBarComponent } from './progress-bar/progress-bar.component';
 import { UploadFileViewComponent } from './upload-file-view/upload-file-view.component';
 import { ContextMenuComponent } from './context-menu/context-menu.component';
@@ -16,7 +16,11 @@ import { FilePropertiesComponent } from './file-properties/file-properties.compo
 
 
 @NgModule({
-    declarations: [LoginBGComponent, NotifierComponent, ProgressBarComponent, UploadFileViewComponent, ContextMenuComponent, WindowToolbarComponent, FilePropertiesComponent],
+    declarations: [
+        LoginBGComponent, MessageBoxComponent, ProgressBarComponent,
+        UploadFileViewComponent, ContextMenuComponent, WindowToolbarComponent, 
+        FilePropertiesComponent
+    ],
     imports: [
         CommonModule,
         MatInputModule,
@@ -27,8 +31,9 @@ import { FilePropertiesComponent } from './file-properties/file-properties.compo
     ],
     exports: [
         LoginBGComponent,
-        NotifierComponent,
+        MessageBoxComponent,
         ProgressBarComponent
     ]
 })
 export class SharedComponentModule { }
+

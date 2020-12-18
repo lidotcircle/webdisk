@@ -1,8 +1,8 @@
 
-<div class="notifier">
+<div class="message-box">
     <app-window-toolbar class='drag-area' title='{{title}}' (close)="onClose()"></app-window-toolbar>
 
-    <form #fs1="ngForm" class='notifier-content' draggable='true' (dragstart)="preventDefaultAndStop($event)" novalidate>
+    <form #fs1="ngForm" class='message-box-content' draggable='true' (dragstart)="preventDefaultAndStop($event)" novalidate>
         <div class="message">{{ message }}</div>
 
         <div class='divider' *ngIf='inputs != null'></div>

@@ -3,7 +3,7 @@ import { assignTargetEnumProp } from '../../utils';
 import { AbsoluteView } from '../absolute-view/absolute-view';
 import { ViewDraggable } from '../absolute-view/trait/draggable';
 
-export class NotifierInput {
+export class MessageBoxInput {
     label: string;
     name: string;
     type?: string;
@@ -27,33 +27,33 @@ enum MatButtonType {
     Fab     = 'fab',
     MiniFab = 'mini-fab'
 }
-export class NotifierButton {
+export class MessageBoxButton {
     name: string;
     clickValue?: any;
     color?: MatColorType;
     btype?: MatButtonType;
 }
 
-class NotifierReturnData {
+class MessageBoxReturnData {
     closed: boolean;
     buttonValue: any;
     inputs: {[name: string]: string};
 }
 
 @Component({
-    selector: 'app-notifier',
-    templateUrl: './notifier.component.html',
-    styleUrls: ['./notifier.component.scss']
+    selector: 'app-message-box',
+    templateUrl: './message-box.component.html',
+    styleUrls: ['./message-box.component.scss']
 })
-export class NotifierComponent extends AbsoluteView implements OnInit {
+export class MessageBoxComponent extends AbsoluteView implements OnInit {
     @Input()
     title: string = 'origin';
     @Input()
     message: string = '';
     @Input()
-    inputs: NotifierInput[] = [];
+    inputs: MessageBoxInput[] = [];
     @Input()
-    buttons: NotifierButton[] = [];
+    buttons: MessageBoxButton[] = [];
 
     constructor(protected host: ElementRef) {
         super(host, new ViewDraggable());
@@ -85,7 +85,7 @@ export class NotifierComponent extends AbsoluteView implements OnInit {
     }
 
     private resolveM(closed: boolean, buttonNO?: number) {
-        this.resolveData = new NotifierReturnData();
+        this.resolveData = new MessageBoxReturnData();
         this.resolveData.closed = closed;
         if (this.inputs.length > 0) {
             this.resolveData.inputs = {};
@@ -102,13 +102,13 @@ export class NotifierComponent extends AbsoluteView implements OnInit {
         }
     }
 
-    private resolve: (data: NotifierReturnData) => void;
-    private resolveData: NotifierReturnData;
-    async waitClose(): Promise<NotifierReturnData> {
+    private resolve: (data: MessageBoxReturnData) => void;
+    private resolveData: MessageBoxReturnData;
+    async waitClose(): Promise<MessageBoxReturnData> {
         if (!!this.resolveData) return this.resolveData;
 
         if (this.resolve != null) {
-            throw new Error("don't wait notifier twice");
+            throw new Error("don't wait MessageBox twice");
         }
         return await new Promise((resolve, _) => {
             this.resolve = resolve;

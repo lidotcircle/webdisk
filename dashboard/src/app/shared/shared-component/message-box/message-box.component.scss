@@ -1,12 +1,12 @@
 @import 'src/app/style/utils.scss';
 
-.notifier {
+.message-box {
     display: flex;
     flex-direction: column;
     width: max-content;
     @include no-select();
 
-    .notifier-content {
+    .message-box-content {
         width: max-content;
         background-color: #f8f8f8;
         padding: 0.5em 0em;

@@ -2,14 +2,13 @@ import { Component, OnInit, ElementRef, OnDestroy, ViewEncapsulation } from '@an
 import { FileStat, FileType } from 'src/app/shared/common';
 import { FileSystemManagerService } from 'src/app/shared/service/file-system-manager.service';
 import { InjectViewService } from 'src/app/shared/service/inject-view.service';
-import { NotifierComponent } from 'src/app/shared/shared-component/notifier/notifier.component';
 import { KeyboardPressService, Keycode } from 'src/app/shared/service/keyboard-press.service';
 import { Subscription } from 'rxjs';
 import { CurrentDirectoryService } from 'src/app/shared/service/current-directory.service';
 import { AccountManagerService } from 'src/app/shared/service/account-manager.service';
 import { cons, downloadURI } from 'src/app/shared/utils';
 import { MenuEntry, MenuEntryType, RightMenuManagerService } from 'src/app/shared/service/right-menu-manager.service';
-import { WindowNotifierService } from 'src/app/shared/service/window-notifier.service';
+import { MessageBoxService } from 'src/app/shared/service/message-box.service';
 
 
 /** sortByName */
@@ -107,7 +106,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
                 private KeyboardPress: KeyboardPressService,
                 private currentDirectory: CurrentDirectoryService,
                 private menuManager: RightMenuManagerService,
-                private notifier: WindowNotifierService,
+                private messagebox: MessageBoxService,
                 private host: ElementRef) {
     }
 
