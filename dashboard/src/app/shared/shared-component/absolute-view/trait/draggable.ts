@@ -25,15 +25,19 @@ export class ViewDraggable extends ViewTrait {
 
     private filter: (target: HTMLElement) => boolean;
     private hostElem;
-    constructor(dragFilter: (target: HTMLElement) => boolean = always_return_true) {
+    private top: string;
+    private left: string;
+    constructor(dragFilter: (target: HTMLElement) => boolean = always_return_true, left='50%', top='50%') {
         super();
+        this.left = left;
+        this.top = top;
         this.filter = dragFilter;
     }
 
     public perform(host: HTMLElement) {
         this.hostElem = host;
-        this.hostElem.style.top    = '50%';
-        this.hostElem.style.left   = '50%';
+        this.hostElem.style.top    = this.top;
+        this.hostElem.style.left   = this.left;
         this.hostElem.setAttribute('draggable', 'true');
 
         if(hasTouchScreen()) {

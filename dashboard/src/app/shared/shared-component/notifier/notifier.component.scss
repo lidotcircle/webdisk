@@ -1,0 +1,36 @@
+@import 'src/app/style/utils.scss';
+
+app-notifier {
+    bottom: 0.3em;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-self: center;
+    @include no-select();
+
+    .notifier {
+        background-color: #eee;
+        border-radius: 1em;
+        padding: 0.4em 0.8em;
+        margin: 0em 1em;
+        flex-grow: 1;
+
+        &.decay {
+            animation: fadeOut 0.3s linear forwards;
+        }
+        @keyframes fadeOut {
+            0% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+
+        .message {
+            width: 100%;
+            text-align: center;
+        }
+    }
+}
+

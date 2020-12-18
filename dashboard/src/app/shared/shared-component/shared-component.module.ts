@@ -13,13 +13,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { FilePropertiesComponent } from './file-properties/file-properties.component';
+import { NotifierComponent } from './notifier/notifier.component';
 
 
 @NgModule({
     declarations: [
         LoginBGComponent, MessageBoxComponent, ProgressBarComponent,
         UploadFileViewComponent, ContextMenuComponent, WindowToolbarComponent, 
-        FilePropertiesComponent
+        FilePropertiesComponent, NotifierComponent
     ],
     imports: [
         CommonModule,
@@ -32,6 +33,7 @@ import { FilePropertiesComponent } from './file-properties/file-properties.compo
     exports: [
         LoginBGComponent,
         MessageBoxComponent,
+        NotifierComponent,
         ProgressBarComponent
     ]
 })

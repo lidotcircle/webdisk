@@ -1,4 +1,5 @@
 import { Component, OnInit, ElementRef, ViewContainerRef, OnDestroy, Input } from '@angular/core';
+import { MousePointerService } from '../../service/mouse-pointer.service';
 import { assignTargetEnumProp } from '../../utils';
 import { AbsoluteView } from '../absolute-view/absolute-view';
 import { ViewDraggable } from '../absolute-view/trait/draggable';
@@ -10,7 +11,7 @@ export class MessageBoxInput {
     initValue?: any;
 }
 
-enum MatColorType {
+export enum MatColorType {
     Basic    = 'basic',
     Primary  = 'primary',
     Accent   = 'accent',
@@ -18,7 +19,7 @@ enum MatColorType {
     Disabled = 'disabled',
     Link     = 'link'
 }
-enum MatButtonType {
+export enum MatButtonType {
     Basic   = 'basic',
     Raised  = 'raised',
     Flat    = 'flat',
@@ -55,8 +56,10 @@ export class MessageBoxComponent extends AbsoluteView implements OnInit {
     @Input()
     buttons: MessageBoxButton[] = [];
 
-    constructor(protected host: ElementRef) {
-        super(host, new ViewDraggable());
+    constructor(protected host: ElementRef,
+                private mousepointer: MousePointerService) {
+        super(host, new ViewDraggable(()=>true, 
+                                      mousepointer.coordinate[0].toString() + 'px', mousepointer.coordinate[1].toString() + 'px'));
     }
 
     ngOnInit(): void {

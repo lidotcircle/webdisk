@@ -9,6 +9,7 @@ import { AccountManagerService } from 'src/app/shared/service/account-manager.se
 import { cons, downloadURI } from 'src/app/shared/utils';
 import { MenuEntry, MenuEntryType, RightMenuManagerService } from 'src/app/shared/service/right-menu-manager.service';
 import { MessageBoxService } from 'src/app/shared/service/message-box.service';
+import { FileOperationService } from 'src/app/shared/service/file-operation.service';
 
 
 /** sortByName */
@@ -107,6 +108,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
                 private currentDirectory: CurrentDirectoryService,
                 private menuManager: RightMenuManagerService,
                 private messagebox: MessageBoxService,
+                private fileoperation: FileOperationService,
                 private host: ElementRef) {
     }
 
@@ -210,8 +212,15 @@ export class FileViewComponent implements OnInit, OnDestroy {
     }
 
     onMenu(n: number) {
-        this.onSelect(n);
+        if(!this.select[n]) {
+            this.onSelect(n);
+        }
         const entries: MenuEntry[] = [];
+        let selectFiles = [];
+        for(let i=0;i<this.files.length;i++) {
+            if(this.select[i]) selectFiles.push(this.files[i]);
+        }
+        console.assert(selectFiles.length > 0);
 
         let menuType = MenuEntryType.FileMenuClick;
         if (this.files[n].filetype == FileType.dir) {
@@ -231,6 +240,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
 
         const deleteEntry = new MenuEntry('Delete', 'delete');
         deleteEntry.clickCallback = () => {
+            this.fileoperation.delete(selectFiles);
         }
         const copyEntry = new MenuEntry('Copy', 'content_copy');
         copyEntry.clickCallback = () => {

@@ -1,5 +1,6 @@
 
 export * from '../../../../lib/common/utils';
+export * from './FileSystemEntry';
 
 export function nextTick(func) {
     setTimeout(func, 0);

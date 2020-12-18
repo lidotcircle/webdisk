@@ -3,41 +3,10 @@ import { AbsoluteView } from '../absolute-view/absolute-view';
 import { FileSystemManagerService } from '../../service/file-system-manager.service';
 import { FileStat } from '../../common';
 import { Observable, Subject } from 'rxjs';
-import { path, pathJoin } from '../../utils';
+import { FileSystemDirectoryEntry, FileSystemEntry, FileSystemFileEntry, path, pathJoin } from '../../utils';
 import * as crypto from 'crypto-js';
 import { UserSettingService } from '../../service/user-setting.service';
 const assert = console.assert;
-
-// FileSystem API declaration //{
-type FileSystemEntryCallback = (F: FileSystemEntry) => void;
-type ErrorCallback = (E: Error) => void;
-interface FileSystemEntry {
-    isFile: boolean,
-    isDirectory: boolean,
-    name: string,
-    fullPath: string,
-    filesystem: any,
-    getParent(s_cb: FileSystemEntryCallback, e_cb: ErrorCallback)
-};
-type FileSystemFlags = {exclusive: boolean, create: boolean};
-interface FileSystemDirectoryEntry extends FileSystemEntry {
-    createReader: () => FileSystemDirectoryReader,
-    getFile: (string, FileSystemFlags, FileSystemEntryCallback, ErrorCallback) => void,
-    getDirectory: (string, FileSystemFlags, FileSystemEntryCallback, ErrorCallback) => void
-}
-type FileSystemEntriesCallback = (entries: FileSystemEntry[]) => void;
-interface FileSystemDirectoryReader {
-    readEntries: (successCallback: FileSystemEntriesCallback, errorCallback: ErrorCallback) => void;
-}
-type FileCallback = (F: File) => void;
-interface FileSystemFileEntry extends FileSystemEntry {
-    file: (successCallback: FileCallback, errorCallback: ErrorCallback) => void
-}
-interface FileSystem {
-    name: string,
-    root: FileSystemDirectoryEntry
-}
-//}
 
 const blocksize = 1024 * 1024;
 

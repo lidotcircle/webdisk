@@ -9,6 +9,8 @@ import { AccountManagerService } from 'src/app/shared/service/account-manager.se
 import { cons, downloadURI } from 'src/app/shared/utils';
 import { MenuEntry, RightMenuManagerService } from 'src/app/shared/service/right-menu-manager.service';
 import { MessageBoxService } from 'src/app/shared/service/message-box.service';
+import { NotifierService } from 'src/app/shared/service/notifier.service';
+import { MousePointerService } from 'src/app/shared/service/mouse-pointer.service';
 
 
 @Component({
@@ -19,27 +21,13 @@ import { MessageBoxService } from 'src/app/shared/service/message-box.service';
 export class HomeComponent implements OnInit {
     constructor(private contextmenu: RightMenuManagerService,
                 private cwd: CurrentDirectoryService,
+                private notifier: NotifierService,
+                private mousepointer: MousePointerService,
                 private messagebox: MessageBoxService) {
         this.contextmenu.StartContextMenu();
+        console.log(this.mousepointer.coordinate);
     }
 
-    ngOnInit(): void {
-        setTimeout(() => {
-            this.messagebox.create({
-                message: 'hello world',
-                title: 'hello',
-                buttons: [
-                    {name: 'ok'},
-                    {name: 'cancal'}
-                ],
-                inputs: [
-                    {label: 'youxi', name: 'i1', type: 'text'},
-                    {label: 'youxi', name: 'l1', type: 'text'}
-                ]
-            }).wait().then(() => {
-                console.log("okkk");
-            });
-        }, 1);
-    }
+    ngOnInit(): void {}
 }
 
