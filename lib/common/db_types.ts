@@ -8,3 +8,9 @@ export class UserInfo {
     createTime: number = null;
 }
 
+export class NameEntry {
+    name: string = null;
+    destination: string = null;
+    validEnd: number = null;
+}
+

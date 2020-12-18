@@ -8,6 +8,7 @@ import { Subscription } from 'rxjs';
 import { CurrentDirectoryService } from 'src/app/shared/service/current-directory.service';
 import { AccountManagerService } from 'src/app/shared/service/account-manager.service';
 import { cons, downloadURI } from 'src/app/shared/utils';
+import { RightMenuManagerService } from 'src/app/shared/service/right-menu-manager.service';
 
 
 @Component({
@@ -16,6 +17,11 @@ import { cons, downloadURI } from 'src/app/shared/utils';
     styleUrls: ['./home.component.scss']
 })
 export class HomeComponent implements OnInit {
+    constructor(private contextmenu: RightMenuManagerService,
+                private cwd: CurrentDirectoryService) {
+        contextmenu.StartContextMenu();
+    }
+
     ngOnInit(): void {
     }
 }

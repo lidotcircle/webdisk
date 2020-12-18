@@ -235,6 +235,13 @@ export function ForwardSetterProperty(...keys: string[]) {
     return ForwardGetterSetterProperty(false, true, ...keys);
 }
 
+export function toInstanceOfType<T extends {new(): {}}>(constructor: T, origin: Object) {
+    if(origin == null) return origin;
+    let ans = new constructor();
+    assignTargetEnumProp(origin, ans);
+    return ans;
+}
+
 export module path {
     export function basename(filename): string {
         if(!filename) return null;

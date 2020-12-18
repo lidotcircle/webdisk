@@ -2,7 +2,7 @@ import { DB } from '../services';
 import { MessageHandler } from '../message_handler';
 import { MessageGateway } from '../message_gateway';
 import { BasicMessage, MessageType } from '../common/message';
-import { UserMessage, UserMessageType, UserMessageGetUserInfoRequest, UserMessageSetUserInfoRequest, UserMessageChangePasswordRequest, UserMessageGenInvCodeRequest, UserMessaageGetInvCodeRequest, UserMessaageGetInvCodeResponse, UserMessageAddUserRequest, UserMessageRemoveUserRequest, UserMessageGetUserSettingsRequest, UserMessageGetUserSettingsResponse, UserMessageUpdateUserSettingsRequest, UserMessageShortTermTokenGenerateRequest, UserMessageShortTermTokenGenerateResponse, UserMessageShortTermTokenClearRequest } from '../common/user_message';
+import { UserMessage, UserMessageType, UserMessageGetUserInfoRequest, UserMessageSetUserInfoRequest, UserMessageChangePasswordRequest, UserMessageGenInvCodeRequest, UserMessaageGetInvCodeRequest, UserMessaageGetInvCodeResponse, UserMessageAddUserRequest, UserMessageRemoveUserRequest, UserMessageGetUserSettingsRequest, UserMessageGetUserSettingsResponse, UserMessageUpdateUserSettingsRequest, UserMessageShortTermTokenGenerateRequest, UserMessageShortTermTokenGenerateResponse, UserMessageShortTermTokenClearRequest, UserMessageNewNameEntryRequest, UserMessageGetNameEntryRequest, UserMessageGetNameEntryResponse, UserMessageGetAllNameEntryRequest, UserMessageGetAllNameEntryResponse, UserMessageDeleteNameEntryRequest, UserMessageDeleteAllNameEntryRequest } from '../common/user_message';
 import { debug, info, warn, error } from '../logger';
 
 import { UserMessageLoginRequest, UserMessageLoginResponse,
@@ -129,6 +129,35 @@ class UserManagement extends MessageHandler {
                 case UserMessageType.ShortTermTokenClear: {
                     const gmsg: UserMessageShortTermTokenClearRequest = msg;
                     await DB.DeleteShortTermToken(gmsg.um_msg.token);
+                } break;
+
+                case UserMessageType.NewNameEntry: {
+                    const gmsg: UserMessageNewNameEntryRequest = msg;
+                    await DB.newEntryMapping(gmsg.um_msg.token, gmsg.um_msg.name,
+                                             gmsg.um_msg.destination, 
+                                             gmsg.um_msg.validPeriodMS);
+                } break;
+
+                case UserMessageType.GetNameEntry: {
+                    const gmsg: UserMessageGetNameEntryRequest = msg;
+                    const q = await DB.queryNameEntry(gmsg.um_msg.token, gmsg.um_msg.name);
+                    (resp as UserMessageGetNameEntryResponse).um_msg.entry = q;
+                } break;
+
+                case UserMessageType.GetAllNameEntry: {
+                    const gmsg: UserMessageGetAllNameEntryRequest = msg;
+                    const q = await DB.queryAllNameEntry(gmsg.um_msg.token);
+                    (resp as UserMessageGetAllNameEntryResponse).um_msg.entries = q;
+                } break;
+
+                case UserMessageType.DeleteNameEntry: {
+                    const gmsg: UserMessageDeleteNameEntryRequest = msg;
+                    await DB.deleteNameEntry(gmsg.um_msg.token, gmsg.um_msg.name);
+                } break;
+
+                case UserMessageType.DeleteAllNameEntry: {
+                    const gmsg: UserMessageDeleteAllNameEntryRequest = msg;
+                    await DB.deleteAllNameEntry(gmsg.um_msg.token);
                 } break;
 
                 default:

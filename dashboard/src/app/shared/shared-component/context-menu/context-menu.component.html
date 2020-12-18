@@ -1,0 +1,47 @@
+
+<div class="context-menu">
+    <div class="menu-entry menu-entry-level1" *ngFor="let entry of entries; let i=index; let ent=entry;">
+        <div class="divider" *ngIf="entry.divide"><div class="divider-content"></div></div>
+        <div [class]="(entry.enable() ? '' : 'menu-entry-disable ') + 'menu-entry-row menu-entry-row-level1'"
+             *ngIf="!entry.divide && entry.subMenus == null" (click)="entry.enable() && onLevel1Click(i) || preventClick($event)">
+                <div class="menu-entry-row-icon">
+                    <span class="material-icons"> {{ entry.icon }} </span>
+                </div>
+                <div class="menu-entry-row-name">
+                    {{ entry.entryName }}
+                </div>
+                <div class="menu-entry-row-next">
+                </div>
+        </div>
+        <div class="level1-sub-menu" *ngIf="!entry.divide && entry.subMenus != null">
+            <div class="menu-entry-row-level1 menu-entry-row" (click)="preventClick($event)">
+                <div class="menu-entry-row-icon">
+                    <span class="material-icons"> {{ entry.icon }} </span>
+                </div>
+                <div class="menu-entry-row-name">
+                    {{ entry.entryName }}
+                </div>
+                <div class="menu-entry-row-next">
+                    <span class="material-icons"> navigate_next </span>
+                </div>
+            </div>
+            <div class="context-menu-level2">
+                <div class="menu-entry menu-entry-level2" *ngFor="let subentry of entry.subMenus; let j=index;">
+                    <div class="divider" *ngIf="subentry.divide"><div class="divider-content"></div></div>
+                    <div [class]="(entry.enable() ? '' : 'menu-entry-disable ') + 'menu-entry-row'"
+                         *ngIf="!entry.divide" (click)="entry.enable() && onLevel2Click(i, j) || preventClick($event)">
+                        <div class="menu-entry-row-icon">
+                            <span class="material-icons"> {{ entry.icon }} </span>
+                        </div>
+                        <div class="menu-entry-row-name">
+                            {{ entry.entryName }}
+                        </div>
+                        <div class="menu-entry-row-next">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

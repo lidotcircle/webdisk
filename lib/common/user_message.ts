@@ -1,5 +1,5 @@
 import { MessageType, MessageId, MessageAck, BasicMessage } from './message';
-import { UserInfo, Token } from './db_types';
+import { UserInfo, Token, NameEntry } from './db_types';
 import { UserSettings } from './user_settings';
 
 export enum UserMessageType {
@@ -22,6 +22,12 @@ export enum UserMessageType {
 
     ShortTermTokenGenerate = "SHORT_TERM_TOKEN_GEN",
     ShortTermTokenClear = "SHORT_TERM_TOKEN_CLEAR",
+
+    NewNameEntry = "NEW_NAME_ENTRY",
+    GetNameEntry = "GET_NAME_ENTRY",
+    GetAllNameEntry = "GET_ALL_NAME_ENTRY",
+    DeleteNameEntry = "DELETE_NAME_ENTRY",
+    DeleteAllNameEntry = "DELETE_ALL_NAME_ENTRY",
 
     Uninit = "UNINIT"
 }
@@ -59,6 +65,7 @@ export interface UserMessageSetUserInfoRequest extends UserMessage {
 
 export interface UserMessageAddUserRequest extends UserMessage {
     um_msg: {
+        token: Token;
         username: string,
         password: string,
         invitationCode: string
@@ -131,6 +138,53 @@ export interface UserMessageShortTermTokenGenerateResponse extends UserMessage {
 }
 
 export interface UserMessageShortTermTokenClearRequest extends UserMessage {
+    um_msg: {
+        token: Token,
+    }
+}
+
+export interface UserMessageNewNameEntryRequest extends UserMessage {
+    um_msg: {
+        token: Token,
+        name: string,
+        destination: string,
+        validPeriodMS: number
+    }
+}
+
+export interface UserMessageGetNameEntryRequest extends UserMessage {
+    um_msg: {
+        token: Token,
+        name: string
+    }
+}
+
+export interface UserMessageGetNameEntryResponse extends UserMessage {
+    um_msg: {
+        entry: NameEntry;
+    }
+}
+
+export interface UserMessageGetAllNameEntryRequest extends UserMessage {
+    um_msg: {
+        token: Token
+    }
+}
+
+export interface UserMessageGetAllNameEntryResponse extends UserMessage {
+    um_msg: {
+        entries: NameEntry[];
+    }
+}
+
+export interface UserMessageDeleteNameEntryRequest extends UserMessage {
+    um_msg: {
+        token: Token,
+        name: string
+    }
+}
+
+export interface UserMessageDeleteAllNameEntryRequest extends UserMessage {
     um_msg: {
         token: Token,
     }

@@ -1,7 +1,7 @@
 import * as sqlite from 'sqlite3';
 import * as proc from 'process';
-import { makeid, validation, assignTargetEnumProp, cons } from './common/utils';
-import { Token, UserInfo } from './common/db_types';
+import { makeid, validation, assignTargetEnumProp, cons, toInstanceOfType } from './common/utils';
+import { NameEntry, Token, UserInfo } from './common/db_types';
 import { debug, info, warn, error } from './logger';
 import { UserSettings } from './common/user_settings';
 const MD5 = require('md5');
@@ -42,12 +42,17 @@ export module DBRelations {
         uid: number;
         settings: string;
     }
+
+    export class FileEntryNameMapping extends NameEntry {
+        uid: number;
+    }
 }
 const KEY_USER = 'users';
 const KEY_INVITATION = 'invitation';
 const KEY_TOKEN = 'tokens';
 const KEY_SHORTTERM_TOKEN = 'short_term_token';
 const KEY_USER_SETTINGS = 'settings';
+const KEY_FILE_ENTRY_MAPPING = 'entry_mapping';
 
 const RootUserInfo: DBRelations.User = new DBRelations.User();
 RootUserInfo.uid            = 1;
@@ -178,6 +183,14 @@ export class Database {
             uid INTEGER PRIMARY KEY,
             settings TEXT NOT NULL,
             FOREIGN KEY (uid) references ${KEY_USER}(uid) ON DELETE CASCADE);`);
+
+        await this.run(`CREATE TABLE IF NOT EXISTS ${KEY_FILE_ENTRY_MAPPING} (
+            name TEXT NOT NULL,
+            uid INTEGER NOT NULL,
+            destination TEXT NOT NULL,
+            validEnd INTEGER NOT NULL,
+            PRIMARY KEY(name),
+            FOREIGN KEY(uid) references ${KEY_USER}(uid) ON DELETE CASCADE);`);
     } //}
 
     private async __init__(): Promise<void> //{
@@ -291,13 +304,19 @@ export class Database {
     } //}
 
 
+    private async getUserRecordByUid(uid: number): Promise<DBRelations.User> //{
+    {
+        console.assert(uid >= 0);
+        const data = await this.get(`SELECT * FROM ${KEY_USER} WHERE uid=${uid}`);
+        return data;
+    } //}
+
     private async getUserRecord(token: Token): Promise<DBRelations.User> //{
     {
         const uid = await this.checkToken(token);
         if(uid < 0) return null;
 
-        const data = await this.get(`SELECT * FROM ${KEY_USER} WHERE uid=${uid}`);
-        return data;
+        return await this.getUserRecordByUid(uid);
     } //}
 
     async getUserInfo(token: Token): Promise<UserInfo> //{
@@ -502,6 +521,70 @@ export class Database {
             return null;
         }
     } //}
+
+
+    async newEntryMapping(token: Token, entryName: string, destination: string, validPeriodMS: number = null): Promise<void> {
+        validPeriodMS = validPeriodMS || 1000 * 60 * 60 * 24 * 365 * 20;
+        const uid = await this.checkToken(token);
+        if(uid < 0) return;
+
+        let record = new DBRelations.FileEntryNameMapping();
+        record.name = entryName;
+        record.uid = uid;
+        record.destination = destination;
+        record.validEnd = validPeriodMS + Date.now();
+        let insert_data = createSQLInsertion(DBRelations.FileEntryNameMapping, [record]);
+        await this.run("INSERT INTO ${KEY_FILE_ENTRY_MAPPING} ${insert_data};");
+    }
+
+    async queryNameEntry(token: Token, name: string): Promise<NameEntry> {
+        const uid = await this.checkToken(token);
+        if(uid < 0) throw new Error('bad token');
+
+        let ans: NameEntry[] = [];
+        const q = await this.all(`SELECT * FROM ${KEY_FILE_ENTRY_MAPPING} WHERE uid=${uid} AND name='${name}';`);
+        return toInstanceOfType(NameEntry, q) as NameEntry;
+    }
+
+    async queryAllNameEntry(token: Token): Promise<NameEntry[]> {
+        const uid = await this.checkToken(token);
+        if(uid < 0) throw new Error('bad token');
+
+        let ans: NameEntry[] = [];
+        const q = await this.all(`SELECT * FROM ${KEY_FILE_ENTRY_MAPPING} WHERE uid=${uid};`);
+        for(const m of q) {
+            ans.push(toInstanceOfType(NameEntry, m) as NameEntry);
+        }
+        return ans;
+    }
+
+    async deleteNameEntry(token: Token, name: string): Promise<void> {
+        const uid = await this.checkToken(token);
+        if(uid < 0) throw new Error('bad token');
+
+        await this.run(`DELETE FROM ${KEY_FILE_ENTRY_MAPPING} WHERE name='${name}' AND uid=${uid};`);
+    }
+
+    async deleteAllNameEntry(token: Token): Promise<void> {
+        const uid = await this.checkToken(token);
+        if(uid < 0) throw new Error('bad token');
+
+        await this.run(`DELETE FROM ${KEY_FILE_ENTRY_MAPPING} WHERE uid=${uid};`);
+    }
+
+    async queryValidNameEntry(name: string): Promise<{userinfo: UserInfo, destination: string}> {
+        const _record = await this.get(`SELECT * FROM ${KEY_FILE_ENTRY_MAPPING} WHERE name='${name}';`);
+        if(!_record) return null;
+
+        const record = toInstanceOfType(DBRelations.FileEntryNameMapping, _record) as DBRelations.FileEntryNameMapping;
+        if(!record.uid || !record.destination || !record.validEnd || record.validEnd < Date.now() || record.uid < 0) return null;
+        const userinfo = await this.getUserRecordByUid(record.uid);
+        if(!userinfo) return null;
+        return {
+            userinfo: userinfo,
+            destination: record.destination
+        };
+    }
 
 
     async GetUser(): Promise<any[]> {

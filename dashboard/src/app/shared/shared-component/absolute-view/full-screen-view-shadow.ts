@@ -1,12 +1,11 @@
 import { ElementRef } from '@angular/core';
-import { FullScreenView } from './full-screen-view';
+import { AbsoluteView } from './absolute-view';
+import { ViewFullscreen } from './trait/fullscreen';
+import { ViewShadowBackground } from './trait/shadow-background';
 
-export class FullScreenViewShadow extends FullScreenView {
+export class FullScreenViewShadow extends AbsoluteView {
     constructor(protected host: ElementRef) {
-        super(host);
-        const style = (host.nativeElement as HTMLElement).style;
-        style.background = "rgba(100, 100, 100, 0.3)";
-        style.zIndex     = "100";
+        super(host, new ViewFullscreen(), new ViewShadowBackground());
     }
 }
 

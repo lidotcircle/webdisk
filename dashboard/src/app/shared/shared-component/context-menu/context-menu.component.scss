@@ -1,0 +1,86 @@
+@import 'src/app/style/utils.scss';
+@import 'src/app/style/colors.scss';
+
+.context-menu, .context-menu-level2 {
+    width: auto;
+    background-color: white;
+    box-sizing: border-box;
+    border: 1pt #eee solid;
+    border-radius: 0em 0.3em 0.3em 0.3em;
+    box-shadow: 0.1em 0.1em 0.3em 0.1em #CCC;
+    padding: 0.3em 0em;
+    z-index: 1;
+    @include no-select();
+
+    display: flex;
+    flex-direction: column;
+
+    .divider {
+        padding: 0.2em 0em;
+
+        .divider-content {
+            height: 0.1pt;
+            width: 100%;
+            box-sizing: border-box;
+            border-radius: 0.1em;
+            background: #ddd;
+        }
+    }
+
+    .menu-entry-row {
+        padding: 0.4em 0.9em;
+        color: #333;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+
+        .menu-entry-row-icon {
+            width: 1.5em;
+            height: auto;
+            padding: 0em 0.3em;
+        }
+
+        .menu-entry-row-name {
+            padding: 0.5em 1em 0.8em 1em;
+        }
+
+        &:hover {
+            background-color: $color-menu-hover;
+        }
+
+        &.menu-entry-disable {
+            color: #777;
+
+            &:hover {
+                background-color: white;
+            }
+        }
+    }
+
+    .level1-sub-menu {
+        position: relative;
+        display: flex;
+        flex-direction: row;
+
+        .context-menu-level2 {
+            position: absolute;
+            left: 95%;
+            width: max-content;
+            display: none;
+            border-radius: 0.2em;
+        }
+
+        &:hover {
+            .menu-entry-row-level1 {
+                background-color: $color-menu-hover;
+            }
+        }
+
+        &:hover {
+            .context-menu-level2 {
+                display: flex;
+            }
+        }
+    }
+}
+
