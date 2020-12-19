@@ -25,7 +25,7 @@ export class HomeComponent implements OnInit {
                 private mousepointer: MousePointerService,
                 private messagebox: MessageBoxService) {
         this.contextmenu.StartContextMenu();
-        console.log(this.mousepointer.coordinate);
+        this.mousepointer.coordinate;
     }
 
     ngOnInit(): void {}

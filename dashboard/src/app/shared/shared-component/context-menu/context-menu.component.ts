@@ -1,6 +1,7 @@
-import { Component, ElementRef, Input, OnInit } from '@angular/core';
+import { Component, ElementRef, Input, OnDestroy, OnInit } from '@angular/core';
 import { MenuEntry, MenuEntryDivide } from '../../service/right-menu-manager.service';
 import { AbsoluteView } from '../absolute-view/absolute-view';
+import { DontOverflow } from '../absolute-view/trait/dont-overflow';
 
 @Component({
     selector: 'app-context-menu',
@@ -16,7 +17,7 @@ export class ContextMenuComponent extends AbsoluteView implements OnInit {
     private rootMenuEntry: MenuEntry;
 
     constructor(private _h: ElementRef) {
-        super(_h);
+        super(_h, new DontOverflow());
     }
     get element() {return this.elem;}
     get entries() {return this.rootMenuEntry.subMenus as MenuEntry[];}

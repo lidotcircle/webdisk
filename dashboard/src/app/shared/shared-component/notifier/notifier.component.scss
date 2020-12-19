@@ -7,6 +7,15 @@ app-notifier {
     flex-direction: column;
     align-self: center;
     @include no-select();
+    animation: fadeIn 0.3s linear forwards;
+    @keyframes fadeIn {
+        0% {
+            bottom: -1em;
+        }
+        100% {
+            bottom: 0.3em;
+        }
+    }
 
     .notifier {
         background-color: #eee;

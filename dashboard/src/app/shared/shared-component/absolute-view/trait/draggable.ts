@@ -1,6 +1,6 @@
 import { Observable, Subject } from 'rxjs';
-import { hasTouchScreen } from 'src/app/shared/utils';
-import { ViewTrait } from './view-trait';
+import { hasTouchScreen, nextTick } from 'src/app/shared/utils';
+import { DontOverflow } from './dont-overflow';
 
 function always_return_true(...args) {return true;}
 
@@ -11,33 +11,20 @@ export enum Orientation {
     top = 'top'
 }
 
-export class ViewDraggable extends ViewTrait {
+export class ViewDraggable extends DontOverflow {
     private prev: [number, number] = null;
-    private translateOffset: [number, number] = [0,0];
     private _overflow: Subject<Orientation> = new Subject<Orientation>();
     get overflow(): Observable<Orientation> {return this._overflow;}
-    private parentWidth: number;
-    private parentHeight: number;
-    private elemWidth: number;
-    private elemHeight: number;
-    private elemTop: number;
-    private elemLeft: number;
 
     private filter: (target: HTMLElement) => boolean;
-    private hostElem;
-    private top: string;
-    private left: string;
     constructor(dragFilter: (target: HTMLElement) => boolean = always_return_true, left='50%', top='50%') {
-        super();
-        this.left = left;
-        this.top = top;
+        super(left, top);
         this.filter = dragFilter;
     }
 
     public perform(host: HTMLElement) {
+        super.perform(host);
         this.hostElem = host;
-        this.hostElem.style.top    = this.top;
-        this.hostElem.style.left   = this.left;
         this.hostElem.setAttribute('draggable', 'true');
 
         if(hasTouchScreen()) {
@@ -51,34 +38,18 @@ export class ViewDraggable extends ViewTrait {
         }
     }
 
-    private refresh() {
-        const sa = window.getComputedStyle(this.hostElem);
-        this.elemWidth  = parseInt(sa.width);
-        this.elemHeight = parseInt(sa.height);
-        this.elemTop    = parseInt(sa.top);
-        this.elemLeft   = parseInt(sa.left);
-
-        let absoluteContainer = this.hostElem.parentElement;
-        while(absoluteContainer != document.body &&
-              !absoluteContainer.style.position.match(/absolute|relative/)) {
-            absoluteContainer = absoluteContainer.parentElement;
-        }
-        const sb = window.getComputedStyle(absoluteContainer);
-        this.parentWidth  = parseInt(sb.width);
-        this.parentHeight = parseInt(sb.height);
-    }
-
     private checkOverflow(tx: number, ty: number): boolean {
-        if(tx + this.elemLeft < 0) {
+        if(tx + this.left < 0) {
             this._overflow.next(Orientation.left);
             return true;
-        } else if (ty + this.elemTop < 0) {
+        } else if (ty + this.top < 0) {
             this._overflow.next(Orientation.top);
             return true;
-        } else if (tx + this.elemLeft + this.elemWidth > this.parentWidth) {
+        } else if (tx + this.left + this.elemWidth > this.parentWidth) {
             this._overflow.next(Orientation.right);
             return true;
-        } else if (ty + this.elemTop + this.elemHeight > this.parentHeight) {
+        } else if (ty + this.top + this.elemHeight > this.parentHeight) {
+            this._overflow.next(Orientation.bottom);
             return true;
         }
         return false;
@@ -87,7 +58,6 @@ export class ViewDraggable extends ViewTrait {
     private dragstart(ev: DragEvent) {
         if (!this.filter(ev.target as HTMLElement)) return;
 
-        this.refresh();
         const img = new Image();
         img.src = "assets/img/transparent-1pixel.png";
         ev.dataTransfer.setDragImage(img, 0, 0);
@@ -105,12 +75,10 @@ export class ViewDraggable extends ViewTrait {
         let dx = sx - this.prev[0];
         let dy = sy - this.prev[1];
         this.prev = [sx, sy];
-        const tx = this.translateOffset[0] + dx; 
-        const ty = this.translateOffset[1] + dy; 
 
-        if(!this.checkOverflow(tx, ty)) {
-            this.translateOffset = [tx, ty];
-            this.hostElem.style.transform  = `translate(${this.translateOffset[0]}px, ${this.translateOffset[1]}px)`;
+        if(!this.checkOverflow(dx, dy)) {
+            this.left += dx;
+            this.top += dy;
         }
     }
 
@@ -121,7 +89,6 @@ export class ViewDraggable extends ViewTrait {
 
     private touchstart(ev: TouchEvent) {
         if (!this.filter(ev.target as HTMLElement)) return;
-        this.refresh();
         if(ev.touches.length == 1) {
             const touch = ev.touches.item(0);
             this.prev = [touch.screenX, touch.screenY];
@@ -141,6 +108,5 @@ export class ViewDraggable extends ViewTrait {
         if (!this.filter(ev.target as HTMLElement)) return;
         this.prev = null;
     }
-
 }
 
