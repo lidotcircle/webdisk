@@ -1,0 +1,24 @@
+@import 'src/app/style/colors.scss';
+
+.progress-bar {
+    background-color: $color-bg-popwin;
+
+    .present {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        padding: 0.3em 0.5em 0.5em 0.5em;
+        box-sizing: border-box;
+        border-radius: 0.3em;
+
+        app-progress-circle {
+            width: 1.3em;
+            padding: 0.5em 1em 0.5em 0.5em;
+        }
+
+        .message {
+            width: max-content;
+        }
+    }
+}
+

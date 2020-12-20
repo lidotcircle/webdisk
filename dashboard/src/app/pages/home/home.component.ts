@@ -11,6 +11,7 @@ import { MenuEntry, RightMenuManagerService } from 'src/app/shared/service/right
 import { MessageBoxService } from 'src/app/shared/service/message-box.service';
 import { NotifierService } from 'src/app/shared/service/notifier.service';
 import { MousePointerService } from 'src/app/shared/service/mouse-pointer.service';
+import { MessageProgressBarService } from 'src/app/shared/service/message-progress-bar.service';
 
 
 @Component({
@@ -23,7 +24,8 @@ export class HomeComponent implements OnInit {
                 private cwd: CurrentDirectoryService,
                 private notifier: NotifierService,
                 private mousepointer: MousePointerService,
-                private messagebox: MessageBoxService) {
+                private messagebox: MessageBoxService,
+                private messageprogress: MessageProgressBarService) {
         this.contextmenu.StartContextMenu();
         this.mousepointer.coordinate;
     }

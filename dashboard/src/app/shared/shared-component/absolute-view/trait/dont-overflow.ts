@@ -20,14 +20,22 @@ export class DontOverflow extends ViewTrait {
     }
 
     protected get top(): number {
-        const v = this.hostElem.style.top;
+        let v = this.hostElem.style.top;
+        if(!v.endsWith('px')) {
+            const u = window.getComputedStyle(this.hostElem);
+            v = u.top;
+        }
         return parseInt(v.substring(0, v.length - 2));
     }
     protected set top(v: number) {
         this.hostElem.style.top = `${Math.floor(v)}px`;
     }
     protected get left(): number {
-        const v = this.hostElem.style.left;
+        let v = this.hostElem.style.left;
+        if(!v.endsWith('px')) {
+            const u = window.getComputedStyle(this.hostElem);
+            v = u.left;
+        }
         return parseInt(v.substring(0, v.length - 2));
     }
     protected set left(v: number) {

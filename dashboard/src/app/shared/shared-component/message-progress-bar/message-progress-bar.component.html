@@ -1,0 +1,12 @@
+
+<div class="progress-bar">
+    <app-window-toolbar title='{{title}}' (close)='onClose()'></app-window-toolbar>
+
+    <div class="present">
+        <app-progress-circle #progresscircle></app-progress-circle>
+        <div class="message">
+            {{ message }}
+        </div>
+    </div>
+</div>
+

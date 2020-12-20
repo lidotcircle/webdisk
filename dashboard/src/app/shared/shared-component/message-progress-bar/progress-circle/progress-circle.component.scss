@@ -1,0 +1,17 @@
+@import 'src/app/style/utils.scss';
+
+@include ratio-box('app-progress-circle', '.l1', '.l2', 1);
+
+app-progress-circle {
+    min-width: 1em;
+
+    .l1 {
+        color: blue;
+        fill: currentColor;
+    }
+
+    .progress-ring {
+        background-color: blue;
+    }
+}
+

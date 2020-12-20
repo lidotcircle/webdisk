@@ -1,4 +1,5 @@
 @import 'src/app/style/utils.scss';
+@import 'src/app/style/colors.scss';
 
 .message-box {
     display: flex;
@@ -8,7 +9,7 @@
 
     .message-box-content {
         width: max-content;
-        background-color: #f8f8f8;
+        background-color: $color-bg-popwin;
         padding: 0.5em 0em;
         width: 100%;
         border-radius: 0em 0em 0.3em 0.3em;
@@ -28,11 +29,23 @@
             display: flex;
             flex-direction: column;
             width: 100%;
-            padding: 0em 0.3em;
+            padding: 0em 0.3em 0.5em 0.3em;
             box-sizing: border-box;
 
             .input-pair {
                 width: 100%;
+
+                .checkbox-pair {
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    padding: 0.3em 0em 0.3em 0.6em;
+
+                    input {
+                        padding: 0em 0em 0em 0.8em;
+                        width: min-content;
+                    }
+                }
 
                 input {
                     width: 100%;

@@ -9,6 +9,8 @@ import { InjectViewService } from 'src/app/shared/service/inject-view.service';
 import { UploadFileViewComponent } from 'src/app/shared/shared-component/upload-file-view/upload-file-view.component';
 import { AcceptDragItem, AsDragItem } from './dragdrop';
 import { UserSettingService } from 'src/app/shared/service/user-setting.service';
+import { FileOperationService } from 'src/app/shared/service/file-operation.service';
+import { UploadSessionService } from 'src/app/shared/service/upload-session.service';
 
 
 @Component({
@@ -60,9 +62,11 @@ export class FileComponent implements OnInit {
 
     constructor(private svgIcon: FiletypeSvgIconService,
                 private fileManager: FileSystemManagerService,
+                private fileOperation: FileOperationService,
                 private cwd: CurrentDirectoryService,
                 private injector: InjectViewService,
-                private settings: UserSettingService) {}
+                private settings: UserSettingService,
+                private uploadservice: UploadSessionService) {}
 
     ngOnInit(): void {
         if(this.file == null || this.file.filename == null) {
@@ -82,14 +86,15 @@ export class FileComponent implements OnInit {
         if(this.file.filetype == FileType.dir) {
             updateIcon('folder');
             nextTick(() => AcceptDragItem(this.itemElem.nativeElement as HTMLElement, this.injector,
-                                          this.file.filename, this.fileManager, this.cwd, this.settings));
+                                          this.file.filename, this.fileManager, this.cwd, this.settings,
+                                          this.fileOperation, this.uploadservice));
         } else if (this.file.extension == '') {
             updateIcon('blank');
         } else {
             updateIcon(this.file.extension);
         }
 
-        nextTick(() => AsDragItem(this.itemElem.nativeElement as HTMLElement, this.file.filename));
+        nextTick(() => AsDragItem(this.itemElem.nativeElement as HTMLElement, this.file));
     }
 
     getPropCSS(order: number, width: number) {

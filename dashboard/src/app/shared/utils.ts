@@ -35,17 +35,6 @@ export function hasTouchScreen(): boolean {
     return hasTouchScreen;
 }
 
-export function pathJoin(...pp: string[]): string {
-    let res = [];
-    for(let p of pp) {
-        p = p.trim();
-        if (p.endsWith('/'))
-            p = p.substring(0, p.length - 1);
-        res.push(p);
-    }
-    return res.join("/");
-}
-
 export function downloadURI(uri: string, name: string = null)
 {
     var link = document.createElement("a");

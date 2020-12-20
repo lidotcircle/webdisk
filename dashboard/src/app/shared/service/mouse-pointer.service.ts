@@ -15,5 +15,8 @@ export class MousePointerService {
     }
 
     get coordinate(): [number, number] {return [Math.floor(this.clientX), Math.floor(this.clientY)];}
+    get pixelCoordinate(): [string, string] {
+        return [this.coordinate[0].toString() + 'px', this.coordinate[1].toString() + 'px'];
+    }
 }
 

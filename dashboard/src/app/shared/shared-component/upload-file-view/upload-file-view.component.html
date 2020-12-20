@@ -1,1 +1,24 @@
-<p>upload-file-view works!</p>
+
+<div class="upload-session">
+    <app-window-toolbar title='upload file' (close)="onClose()"></app-window-toolbar>
+    <div class="content">
+        <div class="message">
+            <table>
+                <tr>
+                    <td>Total Size:  {{ TotalSize }}</td>
+                    <td>Uploaded Size: {{ UploadedSize }}</td>
+                </tr>
+                <tr>
+                    <td>Time Cost: {{ SpendTime }}</td>
+                    <td>Time Remaining: {{ TimeRemaining }}</td>
+                </tr>
+                <tr class='upload-file-name'>
+                    <td>Upload Speed: {{ UploadSpeed }}</td>
+                    <td>File: {{ InProcessFile }}</td>
+                </tr>
+            </table>
+        </div>
+        <app-progress-bar [percent]='progressPercent'></app-progress-bar>
+    </div>
+</div>
+

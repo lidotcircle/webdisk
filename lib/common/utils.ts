@@ -251,11 +251,31 @@ export module path {
         return kk[kk.length - 1];
     }
 
+    export function dir(filename: string): string {
+        if(filename.endsWith('/')) {
+            filename = filename.substr(0, filename.length - 1);
+        }
+        const n = filename.split('/');
+        n.pop();
+        return n.join('/');
+    }
+
     export function extension(filename: string): string {
         if(!filename || filename.endsWith('/')) return '';
         const k = basename(filename).split('.');
         if(k.length == 1) return '';
         return k[k.length-1];
+    }
+
+    export function pathjoin(...pp: string[]): string {
+        let res = [];
+        for(let p of pp) {
+            p = p.trim();
+            if (p.endsWith('/'))
+                p = p.substring(0, p.length - 1);
+            res.push(p);
+        }
+        return res.join("/");
     }
 }
 

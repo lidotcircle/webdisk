@@ -1,0 +1,63 @@
+@import 'src/app/style/colors.scss';
+@import 'src/app/style/utils.scss';
+
+.upload-session {
+    background-color: $color-bg-popwin;
+    display: flex;
+    flex-direction: column;
+    @include no-select();
+
+    .content {
+        max-width: 100%;
+        display: flex;
+        flex-direction: column;
+
+        .message {
+            width: 100%;
+
+            table {
+                width: 100%;
+                font-size: smaller;
+                padding: 0.5em 0.8em;
+                border: solid 1pt rgba(100, 100, 100,0.5);
+
+                tr {
+                    padding: 0em 0.5em;
+                    width: 100%;
+
+                    td {
+                        max-width: 50%;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                    }
+
+                    td:first-child {
+                        padding-right: 0.3em;
+                    }
+
+                    td:last-child {
+                        margin-left: 1em;
+                    }
+
+                    &.upload-file-name {
+                        td:last-child {
+                            background: #efefef;
+                            text-align: left;
+                            direction: rtl;
+                            max-width: 30vw;
+                        }
+                    }
+                }
+            }
+        }
+
+        app-progress-bar {
+            border: solid 1pt rgba(100, 100, 100,0.5);
+            width: 100%;
+            padding: 0.5em;
+            box-sizing: border-box;
+        }
+    }
+}
+

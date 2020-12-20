@@ -1,6 +1,6 @@
 
 <div class="message-box">
-    <app-window-toolbar class='drag-area' title='{{title}}' (close)="onClose()"></app-window-toolbar>
+    <app-window-toolbar title='{{title}}' (close)="onClose()"></app-window-toolbar>
 
     <form #fs1="ngForm" class='message-box-content' draggable='true' (dragstart)="preventDefaultAndStop($event)" novalidate>
         <div class="message">{{ message }}</div>
@@ -8,7 +8,13 @@
         <div class='divider' *ngIf='inputs != null'></div>
         <div class="inputs"  *ngIf='inputs != null'>
             <div class="input-pair" *ngFor='let inputX of inputs; let i=index;'>
-                <mat-form-field hideRequiredMarker>
+                <div class='checkbox-pair' *ngIf='inputX.type == "checkbox"'>
+                    <label>{{inputX.label}}</label>
+                    <input type="checkbox" ngDefaultControl [ngModelOptions]='{standalone: true}'
+                           [(ngModel)]='inputs[i].initValue'>
+                </div>
+
+                <mat-form-field *ngIf='inputX.type != "checkbox"' hideRequiredMarker>
                     <mat-label>{{ inputX.label }}</mat-label>
                     <input matInput type='{{inputX.type}}'
                            [(ngModel)]='inputs[i].initValue' name='input-{{i}}'>
