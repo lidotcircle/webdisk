@@ -229,7 +229,7 @@ export class UploadFileViewComponent extends AbsoluteView implements OnInit {
             ]
         }).wait();
         const override = ans.buttonValue == 0;
-        const remember = !!ans['remember'];
+        const remember = !!ans.inputs['remember'];
         return [override, remember];
     } //}
 
@@ -249,7 +249,7 @@ export class UploadFileViewComponent extends AbsoluteView implements OnInit {
         }).wait();
         const merge = ans.buttonValue == 0;
         const override = ans.buttonValue == 1;
-        const remember = !!ans['remember'];
+        const remember = !!ans.inputs['remember'];
         return [merge, override, remember];
     } //}
 

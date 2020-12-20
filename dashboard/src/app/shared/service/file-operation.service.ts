@@ -4,10 +4,10 @@ import { MatButtonType } from '../shared-component/message-box/message-box.compo
 import { FileSystemEntry, path } from '../utils';
 import { CurrentDirectoryService } from './current-directory.service';
 import { FileSystemManagerService } from './file-system-manager.service';
-import { InjectViewService } from './inject-view.service';
 import { MessageBoxService } from './message-box.service';
 import { MessageProgressBarService } from './message-progress-bar.service';
 import { NotifierService } from './notifier.service';
+import { UploadSessionService } from './upload-session.service';
 import { UserSettingService } from './user-setting.service';
 
 @Injectable({
@@ -16,8 +16,8 @@ import { UserSettingService } from './user-setting.service';
 export class FileOperationService {
     constructor(private notifier: NotifierService,
                 private messagebox: MessageBoxService,
-                private injector: InjectViewService,
                 private filesystem: FileSystemManagerService,
+                private uploadservice: UploadSessionService,
                 private cwd: CurrentDirectoryService,
                 private settings: UserSettingService,
                 private messageprogress: MessageProgressBarService) {}
@@ -113,8 +113,47 @@ export class FileOperationService {
         }
     } //}
 
-    async upload(fileEntry: FileSystemEntry, destination: string) {
-    }
+    async upload(fileEntry: FileSystemEntry, destination: string) //{
+    {
+        await this.uploadservice.create(fileEntry, destination).upload();
+    } //}
+
+    private async new_folderorfile(destination: string, isfile: boolean = true) //{
+    {
+        const f = isfile ? 'file' : 'folder';
+        const ans = await this.messagebox.create({title: `new ${f}`, message: '', inputs: [
+            {label: `new ${f} name`, name: 'name', type: 'text'}
+        ], buttons: [
+            {name: 'confirm'},
+            {name: 'cancel'}
+        ]}).wait();;
+        if(ans.closed || ans.buttonValue == 1 || !ans.inputs['name'] || ans.inputs['name'].length == 0) {
+            return;
+        } else {
+            const p = path.pathjoin(destination, ans.inputs['name']);
+            try {
+                if(!isfile) {
+                    await this.filesystem.mkdir(p);
+                } else {
+                    await this.filesystem.touch(p);
+                }
+            } catch(err) {
+                this.reportError(`create ${f} in '${p}' fail: ` + err);
+                return;
+            }
+            this.reportSuccess(`create ${f} success: ${p}`);
+            this.cwd.justRefresh();
+        }
+    } //}
+
+    async new_folder(destination: string) //{
+    {
+        await this.new_folderorfile(destination, false);
+    } //}
+    async new_file(destination: string) //{
+    {
+        await this.new_folderorfile(destination, true);
+    } //}
 
     async delete(files: FileStat[]) //{
     {

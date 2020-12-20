@@ -21,6 +21,7 @@
                 <div class="menu-entry-row-name">
                     {{ entry.entryName }}
                 </div>
+                <div class="take-space"></div>
                 <div class="menu-entry-row-next">
                     <span class="material-icons"> navigate_next </span>
                 </div>
@@ -29,12 +30,12 @@
                 <div class="menu-entry menu-entry-level2" *ngFor="let subentry of entry.subMenus; let j=index;">
                     <div class="divider" *ngIf="subentry.divide"><div class="divider-content"></div></div>
                     <div [class]="(entry.enable() ? '' : 'menu-entry-disable ') + 'menu-entry-row'"
-                         *ngIf="!entry.divide" (click)="entry.enable() && onLevel2Click(i, j) || preventClick($event)">
+                         *ngIf="!entry.divide" (click)="entry.enable() ? onLevel2Click(i, j) : preventClick($event)">
                         <div class="menu-entry-row-icon">
-                            <span class="material-icons"> {{ entry.icon }} </span>
+                            <span class="material-icons"> {{ subentry.icon }} </span>
                         </div>
                         <div class="menu-entry-row-name">
-                            {{ entry.entryName }}
+                            {{ subentry.entryName }}
                         </div>
                         <div class="menu-entry-row-next">
                         </div>

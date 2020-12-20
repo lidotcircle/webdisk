@@ -20,7 +20,6 @@ export class NotifierComponent extends AbsoluteView implements OnInit {
     ngOnInit(): void {
         console.assert(this.message != null);
         console.assert(!this.duration || this.duration >= 300);
-        console.log('hello');
         this.duration = this.duration || 3000;
 
         setTimeout(() => {

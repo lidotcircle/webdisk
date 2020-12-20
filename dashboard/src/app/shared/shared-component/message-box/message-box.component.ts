@@ -93,7 +93,7 @@ export class MessageBoxComponent extends AbsoluteView implements OnInit {
         if (this.inputs.length > 0) {
             this.resolveData.inputs = {};
             for(const input of this.inputs) {
-                this.resolveData[input.name] = input.initValue;
+                this.resolveData.inputs[input.name] = input.initValue;
             }
         }
         if (buttonNO != null) {

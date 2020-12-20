@@ -10,6 +10,7 @@ import { cons, downloadURI } from 'src/app/shared/utils';
 import { MenuEntry, MenuEntryType, RightMenuManagerService } from 'src/app/shared/service/right-menu-manager.service';
 import { MessageBoxService } from 'src/app/shared/service/message-box.service';
 import { FileOperationService } from 'src/app/shared/service/file-operation.service';
+import { ClipboardContentType, ClipboardService } from 'src/app/shared/service/clipboard.service';
 
 
 /** sortByName */
@@ -109,6 +110,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
                 private menuManager: RightMenuManagerService,
                 private messagebox: MessageBoxService,
                 private fileoperation: FileOperationService,
+                private clipboard: ClipboardService,
                 private host: ElementRef) {
     }
 
@@ -133,6 +135,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
         this.cwdSubscription.unsubscribe();
     }
 
+    private setPaste = true;
     onFileViewContextMenu() {
         const forward = new MenuEntry();
         forward.clickCallback = () => this.currentDirectory.forward();
@@ -151,7 +154,23 @@ export class FileViewComponent implements OnInit, OnDestroy {
         refresh.entryName = 'Refresh';
         refresh.icon = 'refresh';
 
-        this.menuManager.registerMenuEntry(MenuEntryType.FileView, [refresh, forward, back]);
+        const pasteEntry = new MenuEntry('Paste', 'content_paste');
+        const pastecwd = this.currentDirectory.now;
+        pasteEntry.enable = () => this.clipboard.contenttype == ClipboardContentType.files;
+        pasteEntry.clickCallback = () => {
+            this.clipboard.paste((iscut, files: FileStat[]) => {
+                if(iscut) {
+                    this.fileoperation.move(files, pastecwd);
+                } else {
+                    this.fileoperation.copy(files, pastecwd);
+                }
+            });
+        }
+
+        const entries = [refresh, forward, back];
+        if(this.setPaste) entries.push(pasteEntry);
+        this.menuManager.registerMenuEntry(MenuEntryType.FileView, entries);
+        this.setPaste = true;
     }
 
     private refresh() {
@@ -211,6 +230,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
         }
     }
 
+    cuts = [];
     onMenu(n: number) {
         if(!this.select[n]) {
             this.onSelect(n);
@@ -221,6 +241,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
             if(this.select[i]) selectFiles.push(this.files[i]);
         }
         console.assert(selectFiles.length > 0);
+        const selectCopy = JSON.parse(JSON.stringify(this.select));
 
         let menuType = MenuEntryType.FileMenuClick;
         if (this.files[n].filetype == FileType.dir) {
@@ -244,22 +265,45 @@ export class FileViewComponent implements OnInit, OnDestroy {
         }
         const copyEntry = new MenuEntry('Copy', 'content_copy');
         copyEntry.clickCallback = () => {
+            this.clipboard.copy(ClipboardContentType.files, selectFiles);
+            this.select = [];
         }
         const cutEntry = new MenuEntry('Cut', 'content_cut');
         cutEntry.clickCallback = () => {
+            this.clipboard.cut(ClipboardContentType.files, selectFiles);
+            this.cuts = selectCopy;
+            this.select = [];
         }
         const pasteEntry = new MenuEntry('Paste', 'content_paste');
+        const pastecwd = this.currentDirectory.now;
+        pasteEntry.enable = () => this.clipboard.contenttype == ClipboardContentType.files;
         pasteEntry.clickCallback = () => {
+            this.clipboard.paste((iscut, files: FileStat[]) => {
+                if(iscut) {
+                    this.fileoperation.move(files, pastecwd);
+                } else {
+                    this.fileoperation.copy(files, pastecwd);
+                }
+            });
         }
+        this.setPaste = false;
 
-        for(const entry of [deleteEntry, copyEntry, cutEntry, pasteEntry]) {
+        const newFileEntry = new MenuEntry('New File', 'add_circle');
+        newFileEntry.clickCallback = () => {
+            this.fileoperation.new_file(this.currentDirectory.now).then(() => console.log('hello file'));
+        }
+        const newFolderEntry = new MenuEntry('New Folder', 'create_new_folder');
+        newFolderEntry.clickCallback = () => {
+            this.fileoperation.new_folder(this.currentDirectory.now);
+        }
+        const newEntry = new MenuEntry('New', 'add');
+        newEntry.subMenus = [newFileEntry, newFolderEntry];
+
+        for(const entry of [newEntry, deleteEntry, copyEntry, cutEntry, pasteEntry]) {
             entries.push(entry);
         }
 
         this.menuManager.registerMenuEntry(menuType, entries);
-    }
-
-    private delete_file(stat: FileStat) {
     }
 
     sortByName() {

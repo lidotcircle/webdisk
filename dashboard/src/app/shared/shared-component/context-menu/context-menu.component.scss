@@ -35,6 +35,10 @@
         flex-direction: row;
         align-items: center;
 
+        .take-space {
+            flex-grow: 1;
+        }
+
         .menu-entry-row-icon {
             width: 1.5em;
             height: auto;
@@ -44,6 +48,9 @@
         .menu-entry-row-name {
             width: max-content;
             padding: 0.1em 3em 0.4em 1em;
+        }
+
+        .menu-entry-row-next {
         }
 
         &:hover {
@@ -63,6 +70,10 @@
         position: relative;
         display: flex;
         flex-direction: row;
+
+        .menu-entry-row-level1 {
+            width: 100%;
+        }
 
         .context-menu-level2 {
             position: absolute;
