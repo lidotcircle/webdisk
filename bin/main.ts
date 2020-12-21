@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import * as http_server   from '../lib/http_server';
+import * as services      from '../lib/services';
 import * as child_process from 'child_process';
 import * as process       from 'process';
 import * as timer         from 'timers';
@@ -27,20 +28,19 @@ if (options["h"] == true) {
 let config_file = options["c"];
 let daemonized  = options["d"];
 
-
-function main() //{
+async function main() //{
 {
-    Config.GetConfig(config_file).then(() => {
-        let server = new http_server.HttpServer();
+    await Config.GetConfig(config_file);
+    await services.BootstrapService();
 
-        server.on("error", (err) => {
-            throw err;
-        });
-        server.on("listening", () => {
-            console.log(`listening at ${conf.listenAddress}:${conf.listenPort}`)
-        });
-        server.listen(conf.listenPort, conf.listenAddress);
+    let server = new http_server.HttpServer();
+    server.on("error", (err) => {
+        throw err;
     });
+    server.on("listening", () => {
+        console.log(`listening at ${conf.listenAddress}:${conf.listenPort}`)
+    });
+    server.listen(conf.listenPort, conf.listenAddress);
 } //}
 
 if (daemonized) {

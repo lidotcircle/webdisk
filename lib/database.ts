@@ -127,15 +127,7 @@ export function createSQLInsertion(relation: Function, records: any[], ignore: s
 export class Database {
     private m_database: sqlite.Database;
 
-    constructor(db: string) //{
-    {
-        if(!path.isAbsolute(db)) {
-            console.error(db);
-            throw new Error("require absolute path");
-        }
-        fs.mkdirSync(path.dirname(db), {recursive: true});
-        this.m_database = new sqlite.Database(db);
-    } //}
+    constructor() {}
 
     private async run(sql: string): Promise<void> //{
     {
@@ -231,8 +223,15 @@ export class Database {
         await this.run('PRAGMA FOREIGN_KEYS=ON');
     } //}
 
-    async init(): Promise<void> //{
+    async init(db: string): Promise<void> //{
     {
+        if(!path.isAbsolute(db)) {
+            console.error(db);
+            throw new Error("require absolute path");
+        }
+        fs.mkdirSync(path.dirname(db), {recursive: true});
+        this.m_database = new sqlite.Database(db);
+
         await this.__init__();
         await this.ensure_tables();
         info('initialize database success');

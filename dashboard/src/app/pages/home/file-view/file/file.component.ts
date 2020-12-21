@@ -151,7 +151,14 @@ export class FileComponent implements OnInit {
     }
 
     get FileType(): string {
-        return extension2type(this.file.extension);
+        switch(this.file.filetype) {
+            case FileType.dir: 
+                return 'Directory';
+            case FileType.socket:
+                return 'Socket';
+            default: 
+                return extension2type(this.file.extension);
+        }
     }
 
     get FileSize(): string {

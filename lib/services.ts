@@ -5,10 +5,14 @@ import { MessageType, MessageJSON, MessageBIN } from './common/message';
 import { error } from './logger';
 
 
-export const DB: db.Database = new db.Database(conf.sqlite3Database);
-DB.init().catch(() => {
-    error('database initialization fail.');
-});
+export const DB: db.Database = new db.Database();
+export async function BootstrapService() {
+    try { 
+        await DB.init(conf.sqlite3Database)
+    } catch (err) {
+        error('database initialization fail: ', err);
+    }
+}
 
 export const MessageHandlers: Map<MessageType, MessageHandler> = new Map<MessageType, MessageHandler>();
 export function registerMessageHandler(msg_type: MessageType, handler: MessageHandler) {
