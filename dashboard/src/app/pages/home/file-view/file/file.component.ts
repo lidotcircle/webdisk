@@ -6,11 +6,9 @@ import { FileViewStyle } from '../file-view.component';
 import { FileSystemManagerService } from 'src/app/shared/service/file-system-manager.service';
 import { CurrentDirectoryService } from 'src/app/shared/service/current-directory.service';
 import { InjectViewService } from 'src/app/shared/service/inject-view.service';
-import { UploadFileViewComponent } from 'src/app/shared/shared-component/upload-file-view/upload-file-view.component';
 import { AcceptDragItem, AsDragItem } from './dragdrop';
 import { UserSettingService } from 'src/app/shared/service/user-setting.service';
 import { FileOperationService } from 'src/app/shared/service/file-operation.service';
-import { UploadSessionService } from 'src/app/shared/service/upload-session.service';
 
 
 @Component({
@@ -65,8 +63,7 @@ export class FileComponent implements OnInit {
                 private fileOperation: FileOperationService,
                 private cwd: CurrentDirectoryService,
                 private injector: InjectViewService,
-                private settings: UserSettingService,
-                private uploadservice: UploadSessionService) {}
+                private settings: UserSettingService) {}
 
     ngOnInit(): void {
         if(this.file == null || this.file.filename == null) {
@@ -87,7 +84,7 @@ export class FileComponent implements OnInit {
             updateIcon('folder');
             nextTick(() => AcceptDragItem(this.itemElem.nativeElement as HTMLElement, this.injector,
                                           this.file.filename, this.fileManager, this.cwd, this.settings,
-                                          this.fileOperation, this.uploadservice));
+                                          this.fileOperation));
         } else if (this.file.extension == '') {
             updateIcon('blank');
         } else {

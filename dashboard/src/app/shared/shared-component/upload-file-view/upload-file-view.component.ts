@@ -3,7 +3,7 @@ import { AbsoluteView, BeAbsoluteView } from '../absolute-view/absolute-view';
 import { FileSystemManagerService } from '../../service/file-system-manager.service';
 import { FileStat } from '../../common';
 import { Observable, Subject } from 'rxjs';
-import { FileSystemDirectoryEntry, FileSystemEntry, FileSystemFileEntry, path } from '../../utils';
+import { FileSystemEntryWrapper, path } from '../../utils';
 import * as crypto from 'crypto-js';
 import { UserSettingService } from '../../service/user-setting.service';
 import { MessageBoxService } from '../../service/message-box.service';
@@ -30,7 +30,7 @@ class UploadOption {
 @BeAbsoluteView()
 export class UploadFileViewComponent extends AbsoluteView implements OnInit {
     @Input()
-    private fileEntry: FileSystemEntry;
+    private fileEntries: FileSystemEntryWrapper[];
     @Input()
     private destination: string;
 
@@ -96,7 +96,7 @@ export class UploadFileViewComponent extends AbsoluteView implements OnInit {
     }
 
     ngOnInit(): void {
-        if(this.fileEntry == null || this.destination == null) {
+        if(this.fileEntries == null || this.destination == null) {
             throw new Error("bad update session");
         }
     }
@@ -104,7 +104,10 @@ export class UploadFileViewComponent extends AbsoluteView implements OnInit {
     public async upload() //{
     {
         this.uploadConfirm.subscribe(v => this.uploadedSize += v);
-        this.totalSize = await this.getEntrySize(this.fileEntry);
+        this.totalSize = 0;
+        for(const entry of this.fileEntries) {
+            this.totalSize += entry.size;
+        }
 
         const interval = 500;
         let prev = 0;
@@ -119,57 +122,32 @@ export class UploadFileViewComponent extends AbsoluteView implements OnInit {
         };
         update_speed();
 
-        const remoteFilePath = path.pathjoin(this.destination, path.basename(this.fileEntry.name));
         try {
-            await this.uploadEntry(this.fileEntry, remoteFilePath);
+            for(const entry of this.fileEntries) {
+                const remoteFilePath = path.pathjoin(this.destination, path.basename(entry.name));
+                await this.uploadEntry(entry, remoteFilePath);
 
-            if(!this.closed) {
-                this.notifier.create({message: `upload success, total spend time: ${this.spendTime / 1000}s`, duration: 3000}).wait();
-            } else {
-                this.notifier.create({message: `stop upload, total spend time: ${this.spendTime / 1000}s`, duration: 3000}).wait();
+                if(!this.closed) {
+                    this.notifier.create({
+                        message: `upload success, total spend time: ${this.spendTime / 1000}s`, 
+                        duration: 3000
+                    }).wait();
+                } else {
+                    this.notifier.create({
+                        message: `stop upload, total spend time: ${this.spendTime / 1000}s`, 
+                        duration: 3000
+                    }).wait();
+                }
             }
         } catch (err) {
             this.notifier.create({message: `upload fail: ${err}`, duration: 5000}).wait();
         } finally {this.finish = true;}
     } //}
 
-    private async getEntrySize(entry: FileSystemEntry) //{
-    {
-        let ans = 0;
-        if(entry.isFile) {
-            let file: File = await new Promise((resolve, reject) => {
-                (entry as FileSystemFileEntry).file((f: File) => {
-                    resolve(f);
-                }, (err) => {
-                    reject(err);
-                });
-            });
-            ans += file.size;
-        } else {
-            let dir: FileSystemDirectoryEntry = entry as FileSystemDirectoryEntry;
-            let entries: FileSystemEntry[] = await new Promise((resolve, reject) => {
-                dir.createReader().readEntries(e => resolve(e), err => reject(err));
-            });
-            for (let i=0; i<entries.length;i++) {
-                let ent = entries[i];
-                ans += await this.getEntrySize(ent);
-            }
-        }
-
-        return ans;
-    } //}
-
-    private async uploadEntry(entry: FileSystemEntry, rpath: string) //{
+    private async uploadEntry(entry: FileSystemEntryWrapper, rpath: string) //{
     {
         if(entry.isFile) {
-            let file: File = await new Promise((resolve, reject) => {
-                (entry as FileSystemFileEntry).file((f: File) => {
-                    resolve(f);
-                }, (err) => {
-                    reject(err);
-                });
-            });
-            await this.sendFile(file, rpath);
+            await this.sendFile(entry.file, rpath);
         } else {
             let stat: FileStat
             try {
@@ -194,7 +172,7 @@ export class UploadFileViewComponent extends AbsoluteView implements OnInit {
                     await this.fileManager.mkdir(rpath);
                 } else if (skip) {
                     assert(skip);
-                    const skipsize = await this.getEntrySize(entry);
+                    const skipsize = entry.size;
                     this.speedSub.next(skipsize);
                     return;
                 } else {assert(merge);}
@@ -202,14 +180,9 @@ export class UploadFileViewComponent extends AbsoluteView implements OnInit {
                 await this.fileManager.mkdir(rpath);
             }
 
-            let dir: FileSystemDirectoryEntry = entry as FileSystemDirectoryEntry;
-            let entries: FileSystemEntry[] = await new Promise((resolve, reject) => {
-                dir.createReader().readEntries(e => resolve(e), err => reject(err));
-            });
-            for (let i=0; i<entries.length;i++) {
+            for (const ent of entry.children) {
                 if(this.closed) return;
 
-                let ent = entries[i];
                 await this.uploadEntry(ent, path.pathjoin(rpath, ent.name));
             }
         }

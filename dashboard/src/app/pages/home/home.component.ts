@@ -12,6 +12,7 @@ import { MessageBoxService } from 'src/app/shared/service/message-box.service';
 import { NotifierService } from 'src/app/shared/service/notifier.service';
 import { MousePointerService } from 'src/app/shared/service/mouse-pointer.service';
 import { MessageProgressBarService } from 'src/app/shared/service/message-progress-bar.service';
+import { OpenSystemChooseFilesService } from 'src/app/shared/service/open-system-choose-files.service';
 
 
 @Component({
@@ -25,9 +26,11 @@ export class HomeComponent implements OnInit {
                 private notifier: NotifierService,
                 private mousepointer: MousePointerService,
                 private messagebox: MessageBoxService,
+                private selectfiles: OpenSystemChooseFilesService,
                 private messageprogress: MessageProgressBarService) {
         this.contextmenu.StartContextMenu();
         this.mousepointer.coordinate;
+        this.selectfiles.getDirectory().then(console.log);
     }
 
     ngOnInit(): void {}

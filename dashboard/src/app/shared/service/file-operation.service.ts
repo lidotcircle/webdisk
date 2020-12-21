@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { FileStat } from '../common';
 import { MatButtonType } from '../shared-component/message-box/message-box.component';
-import { FileSystemEntry, path } from '../utils';
+import { FileSystemEntry, FileSystemEntryWrapper, path } from '../utils';
 import { CurrentDirectoryService } from './current-directory.service';
 import { FileSystemManagerService } from './file-system-manager.service';
 import { MessageBoxService } from './message-box.service';
@@ -113,9 +113,16 @@ export class FileOperationService {
         }
     } //}
 
-    async upload(fileEntry: FileSystemEntry, destination: string) //{
+    async upload(fileEntries: FileSystemEntryWrapper[] | FileSystemEntry[], destination: string) //{
     {
-        await this.uploadservice.create(fileEntry, destination).upload();
+        let entries = fileEntries as FileSystemEntryWrapper[];
+        if(fileEntries.length > 0 && !(fileEntries[0] instanceof FileSystemEntryWrapper)) {
+            entries = [];
+            for(const entry of fileEntries) {
+                entries.push(await FileSystemEntryWrapper.fromFileSystemEntry(entry as FileSystemEntry));
+            }
+        }
+        await this.uploadservice.create(entries, destination).upload();
     } //}
 
     private async new_folderorfile(destination: string, isfile: boolean = true) //{

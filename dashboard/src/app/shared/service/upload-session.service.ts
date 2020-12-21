@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { UploadFileViewComponent } from '../shared-component/upload-file-view/upload-file-view.component';
-import { FileSystemEntry } from '../utils';
+import { FileSystemEntryWrapper } from '../utils';
 import { InjectViewService } from './inject-view.service';
 
 class UploadHandler {
@@ -29,8 +29,8 @@ class UploadHandler {
 export class UploadSessionService {
     constructor(private injector: InjectViewService) {}
 
-    create(entry: FileSystemEntry, destination: string) {
-        const view = this.injector.inject(UploadFileViewComponent, {fileEntry: entry, destination: destination});
+    create(entries: FileSystemEntryWrapper[], destination: string) {
+        const view = this.injector.inject(UploadFileViewComponent, {fileEntries: entries, destination: destination});
         return new UploadHandler(view);
     }
 }

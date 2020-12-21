@@ -45,3 +45,10 @@ export function downloadURI(uri: string, name: string = null)
     link.click();
 }
 
+export function createNodeFromHtmlString(htmlText: string): HTMLElement
+{
+    let div = document.createElement("div");
+    div.innerHTML = htmlText.trim();
+    return div.firstChild as HTMLElement;
+}
+
