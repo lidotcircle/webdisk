@@ -2,17 +2,11 @@ import * as path from 'path';
 
 export module constants {
     export const rootdir = path.dirname(path.dirname(__filename));
-
-    export const WebResourceRoot = path.join(rootdir, "docroot");
-    export const CONFIG_PATH     = path.join(rootdir, "etc", "webdisk.json");
+    export const WebResourceRoot = path.join(rootdir, "dashboard");
+    export const CONFIG_PATH = path.join(rootdir, 'etc', 'webdisk.json');
 
     export const ServerName          = 'webdisk/0.0.1';
     export const DISK_PREFIX: string = "/disk";
-
-    export const NEW_FILE_PREFIX      = 'newfile';
-    export const NEW_FOLDER_PREFIX    = 'newfolder';
-    export const MAX_NEW_EXISTS       = 100;
-    export const TEMP_FILE_ENTRY_NAME = 'accepts';
 
     export const FILE_TYPE_MAP = new Map<string, string>([
         [".aac",    "audio/aac"],

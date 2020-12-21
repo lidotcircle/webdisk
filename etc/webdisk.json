@@ -1,10 +1,8 @@
+
 {
-    "Users": [
-        {
-            "UserName": "admin",
-            "DocRoot": "/",
-            "SID": "FzBPaYVgFpKaZh5t68tdIyTXfGWxTFp6",
-            "Password": "12345678"
-        }
-    ]
+    "listen_addr": "0.0.0.0",
+    "listen_port": 5445,
+    "static_resources": "resources",
+    "sqlite3_database": "wd.db"
 }
+

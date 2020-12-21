@@ -35,7 +35,7 @@ import { UserInfo } from './common/db_types';
  * @event close
  * @event error
  */
-export class HttpServer extends event.EventEmitter //{
+export class HttpServer extends event.EventEmitter
 {
     private httpServer: http.Server;
 
@@ -148,6 +148,7 @@ export class HttpServer extends event.EventEmitter //{
             response.end();
         }
         let header: boolean = request.method.toLowerCase() == "header";
+
         if(url.pathname.startsWith(cons.DiskPrefix)) {
             const token = url.searchParams.get(cons.DownloadTokenName);
             const stoken = url.searchParams.get(cons.DownloadShortTermTokenName);
@@ -169,10 +170,27 @@ export class HttpServer extends event.EventEmitter //{
                 DB.UserInfoByShortTermToken(stoken).then(userinfo => download(userinfo));
             }
         } else {
-            if (url.pathname == "/") url.pathname = "/index.html";
-            let fileName = path.resolve(constants.WebResourceRoot, url.pathname.substring(1));
-            return this.write_file_response(fileName, response, header, util.parseRangeField(request.headers.range));
+            let filename  = path.resolve(constants.WebResourceRoot, url.pathname.substring(1));
+            let indexfile = path.resolve(constants.WebResourceRoot, 'index.html');
+
+            this.responseNonPriviledgedFile(response, filename, indexfile, header, util.parseRangeField(request.headers.range));
         }
+    } //}
+
+    private async responseNonPriviledgedFile(response: http.ServerResponse, 
+                                             filename: string, indexfile: string, 
+                                             header: boolean, range: [number,number]) //{
+    {
+        let ansfile = filename;
+        try {
+            const stat = await fs.promises.stat(filename);
+            if (!stat.isFile && !stat.isSymbolicLink) {
+                ansfile = indexfile;
+            }
+        } catch {
+            ansfile = indexfile;
+        }
+        return await this.write_file_response(ansfile, response, header, range);
     } //}
 
     /** default listener of request event */
@@ -186,5 +204,5 @@ export class HttpServer extends event.EventEmitter //{
     {
         this.httpServer.listen(port, addr);
     } //}
-}; //}
+}
 

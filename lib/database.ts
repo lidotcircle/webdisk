@@ -1,5 +1,7 @@
 import * as sqlite from 'sqlite3';
 import * as proc from 'process';
+import * as fs from 'fs';
+import * as path from 'path';
 import { makeid, validation, assignTargetEnumProp, cons, toInstanceOfType } from './common/utils';
 import { NameEntry, Token, UserInfo } from './common/db_types';
 import { debug, info, warn, error } from './logger';
@@ -127,10 +129,11 @@ export class Database {
 
     constructor(db: string) //{
     {
-        if(!db.startsWith('/') && !db.startsWith('\\')) {
+        if(!path.isAbsolute(db)) {
             console.error(db);
             throw new Error("require absolute path");
         }
+        fs.mkdirSync(path.dirname(db), {recursive: true});
         this.m_database = new sqlite.Database(db);
     } //}
 
