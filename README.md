@@ -13,7 +13,7 @@ Build
 Nginx
 
 An example
-`
+```
 location / {
     proxy_pass http://localhost:5445/;
 }
@@ -26,4 +26,5 @@ location /ws {
     proxy_set_header    Host $http_host;
     proxy_set_header    X-Real-IP $remote_addr;
 }
-`
+```
+
