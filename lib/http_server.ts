@@ -170,6 +170,7 @@ export class HttpServer extends event.EventEmitter
                 DB.UserInfoByShortTermToken(stoken).then(userinfo => download(userinfo));
             }
         } else {
+            if(url.pathname == '/') url.pathname = '/index.html';
             let filename  = path.resolve(constants.WebResourceRoot, url.pathname.substring(1));
             let indexfile = path.resolve(constants.WebResourceRoot, 'index.html');
 

@@ -107,7 +107,8 @@ async function build_dashboard() //{
     await new Promise((resolve, reject) => {
         const child = child_proc.spawn('ng', ['build', '--prod'], {
             cwd: path.join(proc.cwd(), 'dashboard'), 
-            stdio: ['ignore', 'inherit', 'inherit']
+            stdio: ['ignore', 'inherit', 'inherit'],
+            shell: true
         });
         child.once('exit', (code, signal) => {
             if(code == 0) {
