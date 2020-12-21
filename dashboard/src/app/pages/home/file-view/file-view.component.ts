@@ -135,8 +135,16 @@ export class FileViewComponent implements OnInit, OnDestroy {
         this.cwdSubscription.unsubscribe();
     }
 
-    private setPaste = true;
-    onFileViewContextMenu() {
+    private menuItemSet = {
+        paste:  false,
+        upload: false,
+    }
+    private clear_menuItemSet() //{
+    {
+        for(const key in this.menuItemSet) this.menuItemSet[key] = false;
+    } //}
+    onFileViewContextMenu() //{
+    {
         const forward = new MenuEntry();
         forward.clickCallback = () => this.currentDirectory.forward();
         forward.enable = () => this.currentDirectory.forwardable;
@@ -154,24 +162,21 @@ export class FileViewComponent implements OnInit, OnDestroy {
         refresh.entryName = 'Refresh';
         refresh.icon = 'refresh';
 
-        const pasteEntry = new MenuEntry('Paste', 'content_paste');
-        const pastecwd = this.currentDirectory.now;
-        pasteEntry.enable = () => this.clipboard.contenttype == ClipboardContentType.files;
-        pasteEntry.clickCallback = () => {
-            this.clipboard.paste((iscut, files: FileStat[]) => {
-                if(iscut) {
-                    this.fileoperation.move(files, pastecwd);
-                } else {
-                    this.fileoperation.copy(files, pastecwd);
-                }
-            });
+        const entries = [refresh, forward, back];
+        if(!this.menuItemSet.paste) {
+            const pasteEntry = this.createMenuEntry_Paste();
+            entries.push(pasteEntry);
+            this.menuItemSet.paste = true;
+        }
+        if(!this.menuItemSet.upload) {
+            const uploadEntry = this.createMenuEntry_Upload(this.currentDirectory.now);
+            entries.push(uploadEntry);
+            this.menuItemSet.upload = true;
         }
 
-        const entries = [refresh, forward, back];
-        if(this.setPaste) entries.push(pasteEntry);
         this.menuManager.registerMenuEntry(MenuEntryType.FileView, entries);
-        this.setPaste = true;
-    }
+        this.clear_menuItemSet();
+    } //}
 
     private refresh() {
         this.select = [];
@@ -190,7 +195,8 @@ export class FileViewComponent implements OnInit, OnDestroy {
     }
 
     private prevSelect: number;
-    onSelect(n: number) {
+    onSelect(n: number) //{
+    {
         if(this.KeyboardPress.InPress(Keycode.Ctrl)) {
             this.select[n] = !this.select[n];
         } else if (this.KeyboardPress.InPress(Keycode.Shift) && this.prevSelect != null) {
@@ -204,7 +210,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
             this.select[n] = !ps;
         }
         this.prevSelect = n;
-    }
+    } //}
 
     private chdir(dir: string) {
         this.fileManager.getdir(dir)
@@ -230,8 +236,63 @@ export class FileViewComponent implements OnInit, OnDestroy {
         }
     }
 
+    private createMenuEntry_Paste() //{
+    {
+        const pasteEntry = new MenuEntry('Paste', 'content_paste');
+        const pastecwd = this.currentDirectory.now;
+        pasteEntry.enable = () => this.clipboard.contenttype == ClipboardContentType.files;
+        pasteEntry.clickCallback = () => {
+            this.clipboard.paste((iscut, files: FileStat[]) => {
+                if(iscut) {
+                    this.fileoperation.move(files, pastecwd);
+                } else {
+                    this.fileoperation.copy(files, pastecwd);
+                }
+            });
+        }
+        return pasteEntry;
+    } //}
+    private createMenuEntry_Upload(destination: string) //{
+    {
+        const uploadFileEntry = new MenuEntry('Upload File', 'attach_file');
+        const refresh = this.currentDirectory.now == destination;
+        uploadFileEntry.clickCallback = () => {
+            this.fileoperation.filechooser_upload_file_to(destination)
+                .finally(() => refresh ? this.currentDirectory.justRefresh() : null);
+        }
+        const uploadFilesEntry = new MenuEntry('Upload Files', 'list');
+        uploadFilesEntry.clickCallback = () => {
+            this.fileoperation.filechooser_upload_files_to(destination)
+                .finally(() => refresh ? this.currentDirectory.justRefresh() : null);
+        }
+        const uploadDirEntry = new MenuEntry('Upload Directory', 'folder');
+        uploadDirEntry.clickCallback = () => {
+            this.fileoperation.filechooser_upload_directory_to(destination)
+                .finally(() => refresh ? this.currentDirectory.justRefresh() : null);
+        }
+
+        const uploadEntry = new MenuEntry('Upload', 'cloud_upload');
+        uploadEntry.subMenus = [uploadFileEntry, uploadFilesEntry, uploadDirEntry];
+        return uploadEntry;
+    } //}
+    private createMenuEntry_New(destination: string) //{
+    {
+        const newFileEntry = new MenuEntry('New File', 'add_circle');
+        newFileEntry.clickCallback = () => {
+            this.fileoperation.new_file(destination);
+        }
+        const newFolderEntry = new MenuEntry('New Folder', 'create_new_folder');
+        newFolderEntry.clickCallback = () => {
+            this.fileoperation.new_folder(destination);
+        }
+        const newEntry = new MenuEntry('New', 'add');
+        newEntry.subMenus = [newFileEntry, newFolderEntry];
+        return newEntry;
+    } //}
+
     cuts = [];
-    onMenu(n: number) {
+    onMenu(n: number) //{
+    {
         if(!this.select[n]) {
             this.onSelect(n);
         }
@@ -251,6 +312,8 @@ export class FileViewComponent implements OnInit, OnDestroy {
             chdir.entryName = "Open Folder";
             chdir.icon = "folder_open";
             entries.push(chdir);
+            entries.push(this.createMenuEntry_Upload(this.files[n].filename));
+            this.menuItemSet.upload = true;
         } else {
             const download = new MenuEntry();
             download.clickCallback = () => this.onDoubleClick(n);
@@ -274,37 +337,17 @@ export class FileViewComponent implements OnInit, OnDestroy {
             this.cuts = selectCopy;
             this.select = [];
         }
-        const pasteEntry = new MenuEntry('Paste', 'content_paste');
-        const pastecwd = this.currentDirectory.now;
-        pasteEntry.enable = () => this.clipboard.contenttype == ClipboardContentType.files;
-        pasteEntry.clickCallback = () => {
-            this.clipboard.paste((iscut, files: FileStat[]) => {
-                if(iscut) {
-                    this.fileoperation.move(files, pastecwd);
-                } else {
-                    this.fileoperation.copy(files, pastecwd);
-                }
-            });
-        }
-        this.setPaste = false;
+        const pasteEntry = this.createMenuEntry_Paste();
+        this.menuItemSet.paste = true;
 
-        const newFileEntry = new MenuEntry('New File', 'add_circle');
-        newFileEntry.clickCallback = () => {
-            this.fileoperation.new_file(this.currentDirectory.now).then(() => console.log('hello file'));
-        }
-        const newFolderEntry = new MenuEntry('New Folder', 'create_new_folder');
-        newFolderEntry.clickCallback = () => {
-            this.fileoperation.new_folder(this.currentDirectory.now);
-        }
-        const newEntry = new MenuEntry('New', 'add');
-        newEntry.subMenus = [newFileEntry, newFolderEntry];
+        const newEntry = this.createMenuEntry_New(this.currentDirectory.now);
 
         for(const entry of [newEntry, deleteEntry, copyEntry, cutEntry, pasteEntry]) {
             entries.push(entry);
         }
 
         this.menuManager.registerMenuEntry(menuType, entries);
-    }
+    } //}
 
     sortByName() {
         this.files.sort(SortByName);

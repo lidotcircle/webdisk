@@ -30,7 +30,6 @@ export class HomeComponent implements OnInit {
                 private messageprogress: MessageProgressBarService) {
         this.contextmenu.StartContextMenu();
         this.mousepointer.coordinate;
-        this.selectfiles.getDirectory().then(console.log);
     }
 
     ngOnInit(): void {}

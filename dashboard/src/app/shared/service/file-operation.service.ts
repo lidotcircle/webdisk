@@ -7,6 +7,7 @@ import { FileSystemManagerService } from './file-system-manager.service';
 import { MessageBoxService } from './message-box.service';
 import { MessageProgressBarService } from './message-progress-bar.service';
 import { NotifierService } from './notifier.service';
+import { OpenSystemChooseFilesService } from './open-system-choose-files.service';
 import { UploadSessionService } from './upload-session.service';
 import { UserSettingService } from './user-setting.service';
 
@@ -20,6 +21,7 @@ export class FileOperationService {
                 private uploadservice: UploadSessionService,
                 private cwd: CurrentDirectoryService,
                 private settings: UserSettingService,
+                private filechooser: OpenSystemChooseFilesService,
                 private messageprogress: MessageProgressBarService) {}
 
     private async reportError(msg: string) //{
@@ -124,6 +126,21 @@ export class FileOperationService {
         }
         await this.uploadservice.create(entries, destination).upload();
     } //}
+    async filechooser_upload_file_to(destination: string, accept?: string) //{
+    {
+        const file = await this.filechooser.getFile(accept);
+        await this.upload([file], destination);
+    } //}
+    async filechooser_upload_files_to(destination: string, accept?: string) //{
+    {
+        const files = await this.filechooser.getFiles(accept);
+        await this.upload(files, destination);
+    } //}
+    async filechooser_upload_directory_to(destination: string) //{
+    {
+        const dir = await this.filechooser.getDirectory();
+        await this.upload([dir], destination);
+    } //}
 
     private async new_folderorfile(destination: string, isfile: boolean = true) //{
     {
@@ -152,7 +169,6 @@ export class FileOperationService {
             this.cwd.justRefresh();
         }
     } //}
-
     async new_folder(destination: string) //{
     {
         await this.new_folderorfile(destination, false);

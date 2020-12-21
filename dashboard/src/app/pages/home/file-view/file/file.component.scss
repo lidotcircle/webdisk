@@ -36,6 +36,7 @@ app-file {
         .file-icon {
             padding: 0.4em;
             width: 2em;
+            flex-shrink: 0;
 
             svg {
                 width: 100%;
