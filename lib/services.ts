@@ -10,7 +10,8 @@ export async function BootstrapService() {
     try { 
         await DB.init(conf.sqlite3Database)
     } catch (err) {
-        error('database initialization fail: ', err);
+        error('database initialization fail');
+        throw err;
     }
 }
 

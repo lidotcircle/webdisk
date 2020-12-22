@@ -226,8 +226,7 @@ export class Database {
     async init(db: string): Promise<void> //{
     {
         if(!path.isAbsolute(db)) {
-            console.error(db);
-            throw new Error("require absolute path");
+            throw new Error(`require absolute path: '${db}'`);
         }
         fs.mkdirSync(path.dirname(db), {recursive: true});
         this.m_database = new sqlite.Database(db);

@@ -38,6 +38,7 @@
     "gulp-sass": "^4.0.2",
     "gulp-sourcemaps": "^2.6.5",
     "gulp-typescript": "^6.0.0-alpha.1",
+    "kill-port": "^1.6.1",
     "merge2": "^1.3.0",
     "rimraf": "^3.0.2",
     "sass": "^1.26.3",
