@@ -272,7 +272,7 @@ export class AccountManagerService {
     } //}
 
     @AsyncMethodTokenNotNull()
-    private async newNameEntry(name: string, destination: string, validPeriodMS: number = null): Promise<void> {
+    async newNameEntry(name: string, destination: string, validPeriodMS: number = null): Promise<void> {
         let req = new UserMessage() as UserMessageNewNameEntryRequest;
         req.um_type = UserMessageType.NewNameEntry;
         req.um_msg.token = this.token;
@@ -283,7 +283,7 @@ export class AccountManagerService {
     }
 
     @AsyncMethodTokenNotNull()
-    private async getNameEntry(name: string): Promise<NameEntry> {
+    async getNameEntry(name: string): Promise<NameEntry> {
         let req = new UserMessage() as UserMessageGetNameEntryRequest;
         req.um_type = UserMessageType.GetNameEntry;
         req.um_msg.token = this.token;
@@ -293,7 +293,7 @@ export class AccountManagerService {
     }
 
     @AsyncMethodTokenNotNull()
-    private async getAllNameEntry(): Promise<NameEntry[]> {
+    async getAllNameEntry(): Promise<NameEntry[]> {
         let req = new UserMessage() as UserMessageGetAllNameEntryRequest;
         req.um_type = UserMessageType.GetAllNameEntry;
         req.um_msg.token = this.token;
@@ -304,7 +304,7 @@ export class AccountManagerService {
     }
 
     @AsyncMethodTokenNotNull()
-    private async deleteNameEntry(name: string): Promise<void> {
+    async deleteNameEntry(name: string): Promise<void> {
         let req = new UserMessage() as UserMessageDeleteNameEntryRequest;
         req.um_type = UserMessageType.DeleteNameEntry;
         req.um_msg.token = this.token;
@@ -313,7 +313,7 @@ export class AccountManagerService {
     }
 
     @AsyncMethodTokenNotNull()
-    private async deleteAllNameEntry(): Promise<void> {
+    async deleteAllNameEntry(): Promise<void> {
         let req = new UserMessage() as UserMessageDeleteAllNameEntryRequest;
         req.um_type = UserMessageType.DeleteAllNameEntry;
         req.um_msg.token = this.token;

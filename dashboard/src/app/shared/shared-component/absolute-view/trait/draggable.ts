@@ -38,6 +38,14 @@ export class ViewDraggable extends DontOverflow {
         }
     }
 
+    private toggle_move_cursor() {
+        if(this.hostElem.style.cursor == 'move') {
+            this.hostElem.style.cursor = '';
+        } else {
+            this.hostElem.style.cursor = 'move';
+        }
+    }
+
     private checkOverflow(tx: number, ty: number): boolean {
         if(tx + this.left < 0) {
             this._overflow.next(Orientation.left);
@@ -62,6 +70,7 @@ export class ViewDraggable extends DontOverflow {
         img.src = "assets/img/transparent-1pixel.png";
         ev.dataTransfer.setDragImage(img, 0, 0);
         this.prev = [ev.screenX, ev.screenY];
+        this.toggle_move_cursor();
     }
 
     private dragover(ev: DragEvent) {
@@ -85,6 +94,7 @@ export class ViewDraggable extends DontOverflow {
     private dragend(ev: DragEvent) {
         if (!this.filter(ev.target as HTMLElement)) return;
         this.prev = null
+        this.toggle_move_cursor();
     }
 
     private touchstart(ev: TouchEvent) {
@@ -93,6 +103,7 @@ export class ViewDraggable extends DontOverflow {
             const touch = ev.touches.item(0);
             this.prev = [touch.screenX, touch.screenY];
         }
+        this.toggle_move_cursor();
     }
 
     private touchmove(ev: TouchEvent) {
@@ -107,6 +118,7 @@ export class ViewDraggable extends DontOverflow {
     private touchend(ev: TouchEvent) {
         if (!this.filter(ev.target as HTMLElement)) return;
         this.prev = null;
+        this.toggle_move_cursor();
     }
 }
 

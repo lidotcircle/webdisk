@@ -7,6 +7,10 @@
     width: 100%;
     height: 100%;
 
+    &.waiting {
+        cursor: wait;
+    }
+
     &::-webkit-scrollbar {
         width: 0.3em;
         background: #f3f3f3;

@@ -11,7 +11,6 @@ import * as http  from 'http';
 import * as fs    from 'fs';
 import * as path  from 'path';
 import * as utilx from 'util';
-import * as pathx from 'path';
 
 import { URL }       from 'url';
 
@@ -67,12 +66,13 @@ export class HttpServer extends event.EventEmitter
     /** 
      * response a file or partial file that is in server to client, 
      * if whole file status code is [200 OK], if partial file status code is [206 partial content]
-     * @param { string } path file path
+     * @param { string } filename file path
      * @param { ServerResponse } res response stream
      * @param { boolean } header if true just response with HTTP header
      * @param { [number, number] } range range of file, null represent whole file
      */
-    private async write_file_response(path: string, res: http.ServerResponse, header: boolean, range: [number, number] = null) //{
+    private async write_file_response(filename: string, res: http.ServerResponse, header: boolean, range: [number, number],
+                                      attachment: boolean = false) //{
     {
         if (path == null) {
             res.statusCode = 500;
@@ -82,11 +82,16 @@ export class HttpServer extends event.EventEmitter
         if (range) success = 206;
         try {
             let astat = utilx.promisify(fs.stat);
-            let filestat = await astat(path);
+            let filestat = await astat(filename);
             if (!filestat.isFile)
                 throw new Error("file doesn't exist");
             if (range != null && filestat.size <= range[1]) 
                 throw new Error("request range is out of the file");
+
+            if(attachment) {
+                res.setHeader('Content-Disposition', `attachment; filename="${path.basename(filename)}"`);
+            }
+
             let content_length: number;
             let startposition: number;
             if (range == null) {
@@ -101,7 +106,7 @@ export class HttpServer extends event.EventEmitter
             }
             res.setHeader("Accept-Ranges", "bytes");
             res.setHeader("Content-Length", content_length);
-            let file_extension: string = pathx.extname(path);
+            let file_extension: string = path.extname(filename);
             let content_type: string   = constants.FILE_TYPE_MAP.get(file_extension) || constants.FILE_TYPE_MAP.get("unknown");
             res.setHeader("Content-Type", content_type);
             res.setHeader("Last-Modified", filestat.mtime.toUTCString());
@@ -116,7 +121,7 @@ export class HttpServer extends event.EventEmitter
                 res.end();
                 return;
             }
-            fs.open(path, "r", (err, fd) => {
+            fs.open(filename, "r", (err, fd) => {
                 if (err) {
                     res.writeHead(500);
                     return res.end();
@@ -140,14 +145,15 @@ export class HttpServer extends event.EventEmitter
     /** default listener of request event */
     protected onrequest(request: http.IncomingMessage, response: http.ServerResponse) //{
     {
-        response.setHeader("Server", constants.ServerName);
+        response.setHeader("Server", cons.ServerName);
         let url = new URL(request.url, `http:\/\/${request.headers.host}`);
         if (request.method.toLowerCase() != "get" && request.method.toLowerCase() != "header") {
             response.statusCode = 405;
             response.setHeader("Connection", "close");
             response.end();
         }
-        let header: boolean = request.method.toLowerCase() == "header";
+        const header: boolean = request.method.toLowerCase() == "header";
+        const range = util.parseRangeField(request.headers.range);
 
         if(url.pathname.startsWith(cons.DiskPrefix)) {
             const token = url.searchParams.get(cons.DownloadTokenName);
@@ -160,7 +166,7 @@ export class HttpServer extends event.EventEmitter
                 if (uinfo == null) {
                     return this.write_empty_response(response, 401);
                 }
-                let fileName = path.resolve(uinfo.rootPath, decodeURI(url.pathname.substring(constants.DISK_PREFIX.length + 1)));
+                let fileName = path.resolve(uinfo.rootPath, decodeURI(url.pathname.substring(cons.DiskPrefix.length + 1)));
                 let range: [number, number] = util.parseRangeField(request.headers.range);
                 this.write_file_response(fileName, response, header, range);
             };
@@ -169,12 +175,16 @@ export class HttpServer extends event.EventEmitter
             } else {
                 DB.UserInfoByShortTermToken(stoken).then(userinfo => download(userinfo));
             }
+        } else if (url.pathname.startsWith(cons.NamedLinkPREFIX)) {
+            let namedlink = url.pathname.substr(cons.NamedLinkPREFIX.length);
+            if(namedlink.startsWith('/')) namedlink = namedlink.substr(1);
+            this.responseNamedLink(response, namedlink, header, range);
         } else {
             if(url.pathname == '/') url.pathname = '/index.html';
             let filename  = path.resolve(constants.WebResourceRoot, url.pathname.substring(1));
             let indexfile = path.resolve(constants.WebResourceRoot, 'index.html');
 
-            this.responseNonPriviledgedFile(response, filename, indexfile, header, util.parseRangeField(request.headers.range));
+            this.responseNonPriviledgedFile(response, filename, indexfile, header, range);
         }
     } //}
 
@@ -192,6 +202,21 @@ export class HttpServer extends event.EventEmitter
             ansfile = indexfile;
         }
         return await this.write_file_response(ansfile, response, header, range);
+    } //}
+
+    private async responseNamedLink(response: http.ServerResponse,
+                                    namedlink: string, header: boolean, range: [number,number]) //{
+    {
+        try {
+            const user = await DB.queryValidNameEntry(namedlink);
+            const filename = path.resolve(user.userinfo.rootPath, user.destination.substr(1));
+            await this.write_file_response(filename, response, header, range, true);
+        } catch (err) {
+            console.error(err);
+            response.statusCode = 405;
+            response.setHeader("Connection", "close");
+            response.end();
+        }
     } //}
 
     /** default listener of request event */

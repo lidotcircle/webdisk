@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Subject, Observable } from 'rxjs';
+import { NotifierService } from './notifier.service';
 import { UserDBService } from './user-db.service';
 
 @Injectable({
@@ -12,9 +13,16 @@ export class CurrentDirectoryService {
     private _history: string[] = [];
     get history(): string[] {return this._history.slice(0);}
     
-    constructor() {}
+    constructor(private notifier: NotifierService) {}
 
+    private in_cd: boolean = false;
+    private last: string = null;
     private inner_cd(dir: string) {
+        if(this.in_cd) {
+            this.last = dir;
+            return;
+        }
+        this.in_cd = true;
         this._cwd.next(dir);
         this._history.push(dir);
     }
@@ -36,6 +44,23 @@ export class CurrentDirectoryService {
         this._back_history = [];
         this.inner_cd(dir);
     }
+
+    public confirmCD() {
+        this.in_cd = false;
+
+        if(this.last) {
+            this.cd(this.last);
+            this.last = null;
+        }
+    }
+
+    public rejectCD() {
+        this.in_cd = false;
+        this.notifier.create({message: `cd fail`, duration: 3000});
+        this.back();
+    }
+
+    public get inCD() {return this.in_cd;}
 
     public justRefresh() {
         this._cwd.next(this.now);

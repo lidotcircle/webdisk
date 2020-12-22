@@ -49,9 +49,10 @@
         .vertical-drag {
             position: absolute;
             right: 0em;
-            width: 0.1pt;
+            width: 1pt;
             height: 100%;
             outline: solid rgba(100, 100, 100, 0.4) 0.1pt;
+            cursor: e-resize;
         }
 
         &:hover {

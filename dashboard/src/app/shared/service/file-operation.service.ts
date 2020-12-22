@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { FileStat } from '../common';
 import { MatButtonType } from '../shared-component/message-box/message-box.component';
 import { FileSystemEntry, FileSystemEntryWrapper, path } from '../utils';
+import { AccountManagerService } from './account-manager.service';
 import { CurrentDirectoryService } from './current-directory.service';
 import { FileSystemManagerService } from './file-system-manager.service';
 import { MessageBoxService } from './message-box.service';
@@ -22,6 +23,7 @@ export class FileOperationService {
                 private cwd: CurrentDirectoryService,
                 private settings: UserSettingService,
                 private filechooser: OpenSystemChooseFilesService,
+                private accountManager: AccountManagerService,
                 private messageprogress: MessageProgressBarService) {}
 
     private async reportError(msg: string) //{
@@ -207,6 +209,23 @@ export class FileOperationService {
             }).wait();
             this.cwd.justRefresh();
         }
+    } //}
+
+    async shareFileWithNamedLink(filename: string, linkname: string, period: number) //{
+    {
+        try {
+            await this.accountManager.newNameEntry(linkname, filename, period);
+        } catch(err) {
+            await this.notifier.create({
+                message: `create named link ${linkname} to '${filename}' fail`,
+                duration: 3000
+            }).wait();
+            return;
+        }
+        await this.notifier.create({
+            message: `create named link ${linkname} to '${filename}' success`,
+            duration: 3000
+        }).wait();
     } //}
 }
 

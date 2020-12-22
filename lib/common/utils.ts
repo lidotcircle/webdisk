@@ -280,7 +280,9 @@ export module path {
 }
 
 export module cons {
+    export const ServerName = 'webdisk/0.0.1';
     export const DiskPrefix = '/disk';
+    export const NamedLinkPREFIX = "/link";
     export const DownloadTokenName = 'token';
     export const DownloadShortTermTokenName = 'stoken';
     export const ShortTermTokenValidPeriod = 2 * 60 * 60 * 1000;

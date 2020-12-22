@@ -5,9 +5,6 @@ export module constants {
     export const WebResourceRoot = path.join(rootdir, "dashboard");
     export const CONFIG_PATH = path.join(rootdir, 'etc', 'webdisk.json');
 
-    export const ServerName          = 'webdisk/0.0.1';
-    export const DISK_PREFIX: string = "/disk";
-
     export const FILE_TYPE_MAP = new Map<string, string>([
         [".aac",    "audio/aac"],
         [".abw",    "application/x-abiword"],

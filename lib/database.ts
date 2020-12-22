@@ -46,7 +46,7 @@ export module DBRelations {
     }
 
     export class FileEntryNameMapping extends NameEntry {
-        uid: number;
+        uid: number = -1;
     }
 }
 const KEY_USER = 'users';
@@ -535,7 +535,7 @@ export class Database {
         record.destination = destination;
         record.validEnd = validPeriodMS + Date.now();
         let insert_data = createSQLInsertion(DBRelations.FileEntryNameMapping, [record]);
-        await this.run("INSERT INTO ${KEY_FILE_ENTRY_MAPPING} ${insert_data};");
+        await this.run(`INSERT INTO ${KEY_FILE_ENTRY_MAPPING} ${insert_data};`);
     }
 
     async queryNameEntry(token: Token, name: string): Promise<NameEntry> {
@@ -575,12 +575,14 @@ export class Database {
 
     async queryValidNameEntry(name: string): Promise<{userinfo: UserInfo, destination: string}> {
         const _record = await this.get(`SELECT * FROM ${KEY_FILE_ENTRY_MAPPING} WHERE name='${name}';`);
-        if(!_record) return null;
+        if(!_record) throw new Error(`without named link '${name}'`);
 
         const record = toInstanceOfType(DBRelations.FileEntryNameMapping, _record) as DBRelations.FileEntryNameMapping;
-        if(!record.uid || !record.destination || !record.validEnd || record.validEnd < Date.now() || record.uid < 0) return null;
+        if(!record.uid || !record.destination || !record.validEnd || record.validEnd < Date.now() || record.uid < 0) {
+            throw new Error('bad record');
+        }
         const userinfo = await this.getUserRecordByUid(record.uid);
-        if(!userinfo) return null;
+        if(!userinfo) throw new Error(`get userinfo fail`);
         return {
             userinfo: userinfo,
             destination: record.destination

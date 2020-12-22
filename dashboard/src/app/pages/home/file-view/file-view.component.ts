@@ -1,4 +1,4 @@
-import { Component, OnInit, ElementRef, OnDestroy, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, ElementRef, OnDestroy, ViewEncapsulation, ViewChild } from '@angular/core';
 import { FileStat, FileType } from 'src/app/shared/common';
 import { FileSystemManagerService } from 'src/app/shared/service/file-system-manager.service';
 import { InjectViewService } from 'src/app/shared/service/inject-view.service';
@@ -6,7 +6,7 @@ import { KeyboardPressService, Keycode } from 'src/app/shared/service/keyboard-p
 import { Subscription } from 'rxjs';
 import { CurrentDirectoryService } from 'src/app/shared/service/current-directory.service';
 import { AccountManagerService } from 'src/app/shared/service/account-manager.service';
-import { cons, downloadURI } from 'src/app/shared/utils';
+import { cons, downloadURI, path } from 'src/app/shared/utils';
 import { MenuEntry, MenuEntryType, RightMenuManagerService } from 'src/app/shared/service/right-menu-manager.service';
 import { MessageBoxService } from 'src/app/shared/service/message-box.service';
 import { FileOperationService } from 'src/app/shared/service/file-operation.service';
@@ -116,11 +116,30 @@ export class FileViewComponent implements OnInit, OnDestroy {
 
     private kbsubscription: Subscription;
     private cwdSubscription: Subscription;
-    ngOnInit(): void {
+    ngOnInit(): void //{
+    {
         this.kbsubscription = this.KeyboardPress.down.subscribe((kv) => {
             switch(kv.code) {
                 case Keycode.ESC:
                     this.select = [];
+                    break;
+                case Keycode.DOWN:
+                    for(let i=0;i<this.files.length;i++) {
+                        if(this.select[i] == true) {
+                            this.select = [];
+                            this.select[(i + 1) % this.files.length] = true;
+                            break;
+                        }
+                    }
+                    break;
+                case Keycode.UP:
+                    for(let i=this.files.length-1;i>=0;i--) {
+                        if(this.select[i] == true) {
+                            this.select = [];
+                            this.select[(i + this.files.length - 1) % this.files.length] = true;
+                            break;
+                        }
+                    }
                     break;
             }
         });
@@ -128,7 +147,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
             this.chdir(new_cwd);
         });
         this.currentDirectory.cd('/');
-    }
+    } //}
 
     ngOnDestroy(): void {
         this.kbsubscription.unsubscribe();
@@ -143,6 +162,9 @@ export class FileViewComponent implements OnInit, OnDestroy {
     {
         for(const key in this.menuItemSet) this.menuItemSet[key] = false;
     } //}
+    /**
+     * callback of contextmenu event in fileview HTML Element
+     */
     onFileViewContextMenu() //{
     {
         const forward = new MenuEntry();
@@ -162,7 +184,9 @@ export class FileViewComponent implements OnInit, OnDestroy {
         refresh.entryName = 'Refresh';
         refresh.icon = 'refresh';
 
-        const entries = [refresh, forward, back];
+        const newEntry = this.createMenuEntry_New(this.currentDirectory.now);
+
+        const entries = [refresh, forward, back, newEntry];
         if(!this.menuItemSet.paste) {
             const pasteEntry = this.createMenuEntry_Paste();
             entries.push(pasteEntry);
@@ -178,8 +202,14 @@ export class FileViewComponent implements OnInit, OnDestroy {
         this.clear_menuItemSet();
     } //}
 
-    private refresh() {
+    /**
+     * refresh page, clear selection state of file items
+     * and re-sort items base on configuration
+     */
+    private refresh() //{
+    {
         this.select = [];
+        this.cuts = [];
         switch(this.sortby) {
             case SortByWhat.name:  this.sortByName(); break;
             case SortByWhat.date:  this.sortByDate(); break;
@@ -192,9 +222,13 @@ export class FileViewComponent implements OnInit, OnDestroy {
             for(const v of m) f.unshift([v]);
             this.files = f;
         }
-    }
+    } //}
 
     private prevSelect: number;
+    /**
+     * callback of selection of file item
+     * @param {number} n index of file item in #files
+     */
     onSelect(n: number) //{
     {
         if(this.KeyboardPress.InPress(Keycode.Ctrl)) {
@@ -212,17 +246,38 @@ export class FileViewComponent implements OnInit, OnDestroy {
         this.prevSelect = n;
     } //}
 
-    private chdir(dir: string) {
+    @ViewChild('fileview', {static: true})
+    private viewelem: ElementRef;
+    private toggle_wait() {
+        const elem = this.viewelem.nativeElement as HTMLElement;
+        elem.classList.toggle('waiting');
+    }
+
+    /**
+     * called by subscription of current directory service
+     * @param {string} dir latest direcotry request
+     */
+    private chdir(dir: string) //{
+    {
+        this.toggle_wait();
         this.fileManager.getdir(dir)
             .then(files => {
                 this.files = files
                 this.refresh();
+                this.currentDirectory.confirmCD();
             })
-        // TODO
-            .catch(e => console.warn(e));
-    }
+            .catch(e => {
+                this.currentDirectory.rejectCD();
+            })
+            .finally(() => this.toggle_wait());
+    } //}
 
-    onDoubleClick(n: number) {
+    /**
+     * callback of double click in file item
+     * @param {number} n index of file item in #files
+     */
+    onDoubleClick(n: number) //{
+    {
         const stat = this.files[n];
         if(stat.filetype == FileType.dir) {
             // TODO hint
@@ -234,7 +289,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
                 downloadURI(uri, stat.basename);
             });
         }
-    }
+    } //}
 
     private createMenuEntry_Paste() //{
     {
@@ -289,8 +344,38 @@ export class FileViewComponent implements OnInit, OnDestroy {
         newEntry.subMenus = [newFileEntry, newFolderEntry];
         return newEntry;
     } //}
+    private createMenuEntry_Share(filename: string) //{
+    {
+        const namedlinkEntry = new MenuEntry('Named Link', 'add_circle');
+        namedlinkEntry.clickCallback = async () => {
+            const ans = await this.messagebox.create({
+                title: 'Share File with Named Link',
+                message: path.basename(filename),
+                inputs: [
+                    {label: 'Named Link', name: 'link', type: 'text', initValue: ''},
+                    {label: 'Valid Period ms (default: Permanent)', name: 'period', type: 'number', initValue: 0}
+                ],
+                buttons: [
+                    {name: 'Confirm'},
+                    {name: 'Cancel'}
+                ]
+            }).wait();
+
+            if(ans.buttonValue == 0) {
+                const period = parseInt(ans.inputs['period']) == 0 ? parseInt(ans.inputs['period']) : null;
+                this.fileoperation.shareFileWithNamedLink(filename, ans.inputs['link'], period);
+            }
+        }
+        const shareEntry = new MenuEntry('Share with', 'link');
+        shareEntry.subMenus = [namedlinkEntry];
+        return shareEntry;
+    } //}
 
     cuts = [];
+    /**
+     * callback of contextmenu in file item
+     * @param {number} n index of file item in #files
+     */
     onMenu(n: number) //{
     {
         if(!this.select[n]) {
@@ -320,6 +405,9 @@ export class FileViewComponent implements OnInit, OnDestroy {
             download.entryName = "Download File";
             download.icon = "cloud_download";
             entries.push(download);
+
+            const share = this.createMenuEntry_Share(this.files[n].filename);
+            entries.push(share);
         }
 
         const deleteEntry = new MenuEntry('Delete', 'delete');
@@ -349,21 +437,26 @@ export class FileViewComponent implements OnInit, OnDestroy {
         this.menuManager.registerMenuEntry(menuType, entries);
     } //}
 
-    sortByName() {
+    private sortByName() //{
+    {
         this.files.sort(SortByName);
-    }
-    sortByDate() {
+    } //}
+    private sortByDate() //{
+    {
         this.files.sort(SortByDate);
-    }
-    sortByType() {
+    } //}
+    private sortByType() //{
+    {
         this.files.sort(SortByType);
-    }
-    sortBySize() {
+    } //}
+    private sortBySize() //{
+    {
         this.files.sort(SortBySize);
-    }
+    } //}
 
     private _order: boolean = true;
-    reverse() {
+    reverse() //{
+    {
         this._order = !this._order;
 
         const o = this.files;
@@ -371,7 +464,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
         for(let f of o) {
             this.files.unshift(f);
         }
-    }
+    } //}
 
     get FileOrder(): boolean {
         return this._order;
