@@ -15,6 +15,7 @@ import * as utls from './utils';
 import { URL } from 'url';
 import { MiscManager } from './handlers/misc_management';
 import { FileManager } from './handlers/file_management';
+import { cons } from './utils';
 
 
 /**
@@ -26,7 +27,7 @@ export function upgradeHandler(inc: http.IncomingMessage, socket: net.Socket, bu
     let date = (new Date()).toUTCString();
     if (inc.url != "/ws") {
         socket.end(utls.simpleHttpResponse(404, {
-            Server: constants.ServerName,
+            Server: cons.ServerName,
             Date: date,
             Connection: "close",
         }));
@@ -34,7 +35,7 @@ export function upgradeHandler(inc: http.IncomingMessage, socket: net.Socket, bu
     }
     if (new URL(inc.headers["origin"] as string).host != inc.headers.host) {
         socket.end(utls.simpleHttpResponse(403, {
-            Server: constants.ServerName,
+            Server: cons.ServerName,
             Date: date,
             Connection: "close",
         }));
@@ -42,7 +43,7 @@ export function upgradeHandler(inc: http.IncomingMessage, socket: net.Socket, bu
     }
     if (inc.headers.connection.toLowerCase() != "upgrade" || inc.headers.upgrade.toLowerCase() != "websocket" ) {
         socket.end(utls.simpleHttpResponse(406, {
-            Server: constants.ServerName,
+            Server: cons.ServerName,
             Date: date,
             Connection: "close",
         }));
@@ -55,7 +56,7 @@ export function upgradeHandler(inc: http.IncomingMessage, socket: net.Socket, bu
             throw new Error("sec-websocket-key fault");
     } catch (err) {
         socket.end(utls.simpleHttpResponse(406, {
-            Server: constants.ServerName,
+            Server: cons.ServerName,
             Date: date,
             Connection: "close",
         }));
@@ -63,7 +64,7 @@ export function upgradeHandler(inc: http.IncomingMessage, socket: net.Socket, bu
     }
     if (parseInt(inc.headers["sec-websocket-version"] as string) != 13) {
         socket.end(utls.simpleHttpResponse(426, {
-            Server: constants.ServerName,
+            Server: cons.ServerName,
             "Sec-WebSocket-Version": 13,
             Date: date,
             Connection: "close",
@@ -72,7 +73,7 @@ export function upgradeHandler(inc: http.IncomingMessage, socket: net.Socket, bu
     }
     // Accept
     let response = utls.simpleHttpResponse(101, {
-        Server: constants.ServerName,
+        Server: cons.ServerName,
         Date: date,
         Upgrade: "websocket",
         Connection: "Upgrade",
