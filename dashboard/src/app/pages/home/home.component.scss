@@ -16,9 +16,14 @@ body {
         overflow: hidden;
         @include no-select();
 
-        app-file-view {
+        .app-file-view {
             width: 100%;
             height: 100%;
+
+            app-file-view {
+                width: 100%;
+                height: 100%;
+            }
         }
     }
 }

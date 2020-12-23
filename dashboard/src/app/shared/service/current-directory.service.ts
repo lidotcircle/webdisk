@@ -23,8 +23,8 @@ export class CurrentDirectoryService {
             return;
         }
         this.in_cd = true;
-        this._cwd.next(dir);
         this._history.push(dir);
+        this._cwd.next(dir);
     }
 
     private _back_history: string[] = [];

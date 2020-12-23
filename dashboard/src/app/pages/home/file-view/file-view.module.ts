@@ -13,11 +13,12 @@ import { FileViewComponent } from './file-view.component';
     declarations: [FileComponent, FileSortComponent, DetailViewHeaderComponent, FileViewComponent],
     imports: [
         CommonModule,
+        SharedModule,
         FileViewRoutingModule
     ],
     exports: [
         FileViewComponent
     ]
 })
-export class FileViewModule { }
+export class FileViewModule {}
 

@@ -6,12 +6,25 @@ const routes: Routes = [
     {
         path: '',
         pathMatch: 'full',
-        component: HomeComponent
+        redirectTo: '/home/main/(fileview:fileview)'
+    },
+    {
+        path: 'main',
+        component: HomeComponent,
+
+        children: [
+            {
+                path: 'fileview',
+                outlet: 'fileview',
+                loadChildren: () => import('./file-view/file-view.module').then(m => m.FileViewModule)
+            },
+        ]
     }
 ];
 
 @NgModule({
-  imports: [RouterModule.forChild(routes)],
-  exports: [RouterModule]
+    imports: [RouterModule.forChild(routes)],
+    exports: [RouterModule]
 })
 export class HomeRoutingModule { }
+
