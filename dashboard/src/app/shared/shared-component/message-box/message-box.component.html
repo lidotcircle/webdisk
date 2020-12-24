@@ -5,7 +5,7 @@
     <form #fs1="ngForm" class='message-box-content' draggable='true' (dragstart)="preventDefaultAndStop($event)" novalidate>
         <div class="message">{{ message }}</div>
 
-        <div class='divider' *ngIf='inputs != null'></div>
+        <div class='divider' *ngIf='inputs != null && message.length > 0'></div>
         <div class="inputs"  *ngIf='inputs != null'>
             <div class="input-pair" *ngFor='let inputX of inputs; let i=index;'>
                 <div class='checkbox-pair' *ngIf='inputX.type == "checkbox"'>

@@ -1,0 +1,11 @@
+
+<div class="tools">
+    <div class="tool" *ngFor='let tooll1 of tools; let i=index;'>
+        <div class="divider"></div>
+
+        <div class="tool-item" *ngFor='let tool of tooll1; let j=index;'>
+            <app-fileview-tool [tool]='tools[i][j]'></app-fileview-tool>
+        </div>
+    </div>
+</div>
+

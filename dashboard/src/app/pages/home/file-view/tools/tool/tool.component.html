@@ -1,0 +1,14 @@
+
+<div class="l1">
+    <div class="l2">
+        <div [class]="(enable ? '' : 'disable') + ' tool'" (click)='onClick()'>
+            <div class="icon">
+                <mat-icon *ngIf=' tool.external' svgIcon='{{ tool.icon }}'></mat-icon>
+                <mat-icon *ngIf='!tool.external'> {{ tool.icon }} </mat-icon>
+            </div>
+
+            <div class="title"> {{ tool.name }} </div>
+        </div>
+    </div>
+</div>
+

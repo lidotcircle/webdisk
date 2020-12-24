@@ -15,10 +15,10 @@ export function AsDragItem(elem: HTMLElement, file: FileStat) {
 
 }
 
-export function AcceptDragItem(elem: HTMLElement, injector: InjectViewService, destination: string, 
-                               fileManager: FileSystemManagerService, cwd: CurrentDirectoryService, userSettings: UserSettingService,
-                               fileOperation: FileOperationService) {
+export function AcceptDragItem(elem: HTMLElement, destination: () => string, 
+                               fileOperation: FileOperationService, acceptDragItem: boolean = true, uploadHook?: () => void) {
     elem.addEventListener("dragover", (ev: DragEvent) => {
+        ev.stopPropagation();
         ev.preventDefault();
     });
     elem.addEventListener("drop", (ev: DragEvent) => {
@@ -29,14 +29,17 @@ export function AcceptDragItem(elem: HTMLElement, injector: InjectViewService, d
             for(let i=0; i<ev.dataTransfer.items.length; i++) {
                 const entry = ev.dataTransfer.items[i].webkitGetAsEntry();
                 if (entry.isFile || entry.isDirectory) { // FileSystemEntry
-                    fileOperation.upload([entry], destination)
-                        .catch(err => console.error(err));
+                    fileOperation.upload([entry], destination())
+                    .catch(err => console.error(err))
+                    .then(() => {
+                        if(uploadHook) uploadHook.bind(null)();
+                    });;
                 }
             }
-        } else if (filepath != destination) {
+        } else if (filepath != destination() && acceptDragItem) {
             const nf = new FileStat();
             nf.filename = filepath;
-            fileOperation.move([nf], destination);
+            fileOperation.move([nf], destination());
         }
     });
 }

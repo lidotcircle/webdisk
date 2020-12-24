@@ -6,11 +6,14 @@ import { KeyboardPressService, Keycode } from 'src/app/shared/service/keyboard-p
 import { Subscription } from 'rxjs';
 import { CurrentDirectoryService } from 'src/app/shared/service/current-directory.service';
 import { AccountManagerService } from 'src/app/shared/service/account-manager.service';
-import { cons, downloadURI, path } from 'src/app/shared/utils';
+import { cons, downloadURI, Life, path } from 'src/app/shared/utils';
 import { MenuEntry, MenuEntryType, RightMenuManagerService } from 'src/app/shared/service/right-menu-manager.service';
 import { MessageBoxService } from 'src/app/shared/service/message-box.service';
 import { FileOperationService } from 'src/app/shared/service/file-operation.service';
 import { ClipboardContentType, ClipboardService } from 'src/app/shared/service/clipboard.service';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Tool, ToolbarService, ToolType } from './toolbar.service';
+import { AcceptDragItem } from './file/dragdrop';
 
 
 /** sortByName */
@@ -102,7 +105,9 @@ export class FileViewComponent implements OnInit, OnDestroy {
     get sortby(): SortByWhat {return this.config.sort;}
     get sortReverse(): boolean {return this.config.reverse;}
 
+    private life: Life;
     constructor(private fileManager: FileSystemManagerService,
+                private toolbar: ToolbarService,
                 private viewInject: InjectViewService,
                 private accountManager: AccountManagerService,
                 private KeyboardPress: KeyboardPressService,
@@ -111,6 +116,8 @@ export class FileViewComponent implements OnInit, OnDestroy {
                 private messagebox: MessageBoxService,
                 private fileoperation: FileOperationService,
                 private clipboard: ClipboardService,
+                private router: Router,
+                private activatedroute: ActivatedRoute,
                 private host: ElementRef) {
     }
 
@@ -147,12 +154,164 @@ export class FileViewComponent implements OnInit, OnDestroy {
             this.chdir(new_cwd);
         });
         this.currentDirectory.cd('/');
+        /* example to router in auxiliary router
+        setTimeout(() => {
+            // this.router.navigateByUrl('/home/main/(fileview:tool)');
+            // this.router.navigate(['../tool'], {relativeTo: this.activatedroute});
+        }, 2000);
+        */
+        this.life = new Life();
+        this.setup_tools();
+
+        AcceptDragItem(this.host.nativeElement as HTMLElement, 
+            () => this.currentDirectory.now, 
+            this.fileoperation, false, 
+            () => this.currentDirectory.justRefresh());
+    } //}
+
+    private setup_tools() //{
+    {
+        const tool_home = new Tool('Home', 'home', false, () => this.currentDirectory.cd('/'));
+        const tool_refresh = new Tool('Refresh', 'refresh', false, () => this.currentDirectory.justRefresh()); 
+        const tool_forward = new Tool('Forward', 'arrow_forward', false,
+                                      () => this.currentDirectory.forward(),
+                                      () => this.currentDirectory.forwardable);
+        const tool_back    = new Tool('Back', 'arrow_back', false,
+                                      () => this.currentDirectory.back(), 
+                                      () => this.currentDirectory.backable);
+
+        this.toolbar.register(ToolType.Navigation, tool_home, this.life);
+        this.toolbar.register(ToolType.Navigation, tool_refresh, this.life);
+        this.toolbar.register(ToolType.Navigation, tool_back, this.life);
+        this.toolbar.register(ToolType.Navigation, tool_forward, this.life);
+
+        const tool_copy = new Tool('Copy', 'content_copy', false, () => {
+            this.clipboard.copy(ClipboardContentType.files, this.selectedFiles());
+            this.select = [];
+        }, () => this.has_select());
+        const tool_cut = new Tool('Cut', 'content_cut', false, () => {
+            this.clipboard.cut(ClipboardContentType.files, this.selectedFiles());
+            this.cuts = [];
+            this.select = [];
+        }, () => this.has_select());
+        const tool_paste = new Tool('Paste', 'content_paste', false, () => {
+            const pastecwd = this.currentDirectory.now;
+            this.clipboard.paste((iscut, files: FileStat[]) => {
+                if(iscut) {
+                    this.fileoperation.move(files, pastecwd);
+                } else {
+                    this.fileoperation.copy(files, pastecwd);
+                }
+            });
+        }, () => this.clipboard.contenttype == ClipboardContentType.files);
+        const tool_clear = new Tool('Clear', 'clear', false, () => {
+            this.select = [];
+        }, () => this.selectedFiles().length > 0);
+        const tool_reverseSelection = new Tool('Revert', 'tab', false, () => {
+            for(let i=0;i<this.files.length;i++) {
+                this.select[i] = !this.select[i];
+            }
+        }, () => this.selectedFiles().length > 0);
+
+        this.toolbar.register(ToolType.Clipboard, tool_copy, this.life);
+        this.toolbar.register(ToolType.Clipboard, tool_cut, this.life);
+        this.toolbar.register(ToolType.Clipboard, tool_paste, this.life);
+        this.toolbar.register(ToolType.Clipboard, tool_clear, this.life);
+        this.toolbar.register(ToolType.Clipboard, tool_reverseSelection, this.life);
+
+        const tool_delete = new Tool('Delete', 'delete', false, () => {
+            this.fileoperation.delete(this.selectedFiles());
+        }, () => this.selectedFiles().length > 0);
+        const tool_newfile = new Tool('File', 'add_circle', false, () => {
+            this.fileoperation.new_file(this.currentDirectory.now);
+        });
+        const tool_newfolder = new Tool('Folder', 'create_new_folder', false, () => {
+            this.fileoperation.new_folder(this.currentDirectory.now);
+        });
+        const tool_filter = new Tool('Filter', 'search', false, async () => {
+            const ans = await this.messagebox.create({
+                title: 'Search in Current Directory',
+                message: '',
+                inputs: [
+                    {label: 'filter regex', name: 'filter', type: 'text', initValue: ''}
+                ],
+                buttons: [
+                    {name: 'Confirm'},
+                    {name: 'Cancel'}
+                ]
+            }).wait();
+
+            const filter: string = ans.inputs['filter'] || '';
+            if(ans.buttonValue == 0 && filter.length > 0) {
+                const re = new RegExp(filter);
+                const newfiles = [];
+                for(const file of this.files) {
+                    if(file.filename.match(re)) {
+                        newfiles.push(file);
+                    }
+                }
+                this.files = newfiles;
+            }
+        });
+
+        this.toolbar.register(ToolType.FileManage, tool_delete, this.life);
+        this.toolbar.register(ToolType.FileManage, tool_newfile, this.life);
+        this.toolbar.register(ToolType.FileManage, tool_newfolder, this.life);
+        this.toolbar.register(ToolType.FileManage, tool_filter, this.life);
+
+        const tool_revert = new Tool('Reverse', 'swap_vert', false, () => this.reverse());
+        const tool_sortby = new Tool('Sortby', 'sortby', true, async () => {
+            const ans = await this.messagebox.create({
+                title: 'Sortby',
+                message: '',
+                buttons: [
+                    {name: 'Name', clickValue: SortByWhat.name},
+                    {name: 'Type', clickValue: SortByWhat.ftype},
+                    {name: 'Date', clickValue: SortByWhat.date},
+                    {name: 'Size', clickValue: SortByWhat.size}
+                ]
+            }).wait();
+            if(!ans.closed) {
+                this.config.sort = ans.buttonValue;
+                this.refresh();
+            }
+        });
+        const tool_hide_folder = new Tool('Hide Dir', 'hide_folder', true, () => {
+            let nfs = [];
+            this.files.forEach(file => {
+                if(file.filetype != FileType.dir) {
+                    nfs.push(file);
+                }
+            });
+            this.files = nfs;
+        }, () => {
+            for(const file of this.files) {
+                if(file.filetype == FileType.dir) {
+                    return true;
+                }
+            }
+            return false;
+        });
+        this.toolbar.register(ToolType.SortStuff, tool_revert, this.life);
+        this.toolbar.register(ToolType.SortStuff, tool_sortby, this.life);
+        this.toolbar.register(ToolType.SortStuff, tool_hide_folder, this.life);
     } //}
 
     ngOnDestroy(): void {
         this.kbsubscription.unsubscribe();
         this.cwdSubscription.unsubscribe();
+        this.life.die();
     }
+
+    private has_select() //{
+    {
+        for(let i=0;i<this.files.length;i++) {
+            if(this.select[i]) {
+                return true;
+            }
+        }
+        return false;
+    } //}
 
     private menuItemSet = {
         paste:  false,
@@ -217,10 +376,8 @@ export class FileViewComponent implements OnInit, OnDestroy {
             case SortByWhat.size:  this.sortBySize(); break;
         }
         if(this.sortReverse) {
-            const m = this.files;
-            const f = [];
-            for(const v of m) f.unshift([v]);
-            this.files = f;
+            this.config.reverse = !this.config.reverse;
+            this.reverse();
         }
     } //}
 
@@ -371,6 +528,15 @@ export class FileViewComponent implements OnInit, OnDestroy {
         return shareEntry;
     } //}
 
+    private selectedFiles(): FileStat[] //{
+    {
+        let selectFiles = [];
+        for(let i=0;i<this.files.length;i++) {
+            if(this.select[i]) selectFiles.push(this.files[i]);
+        }
+        return selectFiles;
+    } //}
+
     cuts = [];
     /**
      * callback of contextmenu in file item
@@ -382,10 +548,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
             this.onSelect(n);
         }
         const entries: MenuEntry[] = [];
-        let selectFiles = [];
-        for(let i=0;i<this.files.length;i++) {
-            if(this.select[i]) selectFiles.push(this.files[i]);
-        }
+        const selectFiles = this.selectedFiles();
         console.assert(selectFiles.length > 0);
         const selectCopy = JSON.parse(JSON.stringify(this.select));
 
@@ -454,10 +617,9 @@ export class FileViewComponent implements OnInit, OnDestroy {
         this.files.sort(SortBySize);
     } //}
 
-    private _order: boolean = true;
     reverse() //{
     {
-        this._order = !this._order;
+        this.config.reverse = !this.config.reverse;
 
         const o = this.files;
         this.files = [];
@@ -467,7 +629,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
     } //}
 
     get FileOrder(): boolean {
-        return this._order;
+        return !this.config.reverse;
     }
 
     get FileCount(): number {

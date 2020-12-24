@@ -136,15 +136,16 @@ class FileManagement extends MessageHandler {
     private async getdir(dir: string): Promise<FileStat[]> {
         const files = await fs.promises.readdir(dir);
         const ans = [];
+        let haserror = false;
         for(let f of files) {
             const g = path.join(dir, f);
             try {
                 ans.push(statToStat(await fs.promises.stat(g), g));
             } catch (err) {
-                console.log(err);
+                haserror = true;
             }
         }
-        if(ans.length == 0) {
+        if(ans.length == 0 && haserror) {
             throw new Error('getdir fail');
         }
         return ans;

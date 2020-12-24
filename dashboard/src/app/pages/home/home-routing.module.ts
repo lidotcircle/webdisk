@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import { HomeComponent } from './home.component';
+import { ToolComponent } from './tool/tool.component';
 
 const routes: Routes = [
     {
@@ -18,6 +19,11 @@ const routes: Routes = [
                 outlet: 'fileview',
                 loadChildren: () => import('./file-view/file-view.module').then(m => m.FileViewModule)
             },
+            {
+                path: 'tool',
+                outlet: 'fileview',
+                component: ToolComponent
+            }
         ]
     }
 ];

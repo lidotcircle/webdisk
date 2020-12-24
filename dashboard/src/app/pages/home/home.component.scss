@@ -14,15 +14,33 @@ body {
         display: flex;
         flex-direction: column;
         overflow: hidden;
+        align-items: flex-start;
         @include no-select();
 
-        .app-file-view {
+        .tools {
             width: 100%;
-            height: 100%;
+        }
 
-            app-file-view {
-                width: 100%;
+        .panel-row {
+            width: 100%;
+            flex-grow: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: row;
+
+            .panel {
+                width: 30%;
                 height: 100%;
+            }
+
+            .app-file-view {
+                width: 70%;
+                height: 100%;
+
+                app-file-view {
+                    width: 100%;
+                    height: 100%;
+                }
             }
         }
     }

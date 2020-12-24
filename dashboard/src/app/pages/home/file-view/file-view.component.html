@@ -1,8 +1,11 @@
 
 <div class="file-view" (contextmenu)="onFileViewContextMenu()" #fileview>
-    <app-detail-view-header class="detail-view-header"
-                            [view-style]='viewStyle' [view-config]='detailFileView'>
-    </app-detail-view-header>
+    <div class="sticky-top">
+        <app-tools></app-tools>
+        <app-detail-view-header class="detail-view-header"
+                                [view-style]='viewStyle' [view-config]='detailFileView'>
+        </app-detail-view-header>
+    </div>
 
     <div class="files">
         <app-file *ngFor="let file of files; let i = index;" [file]="file"

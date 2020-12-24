@@ -82,8 +82,7 @@ export class FileComponent implements OnInit {
 
         if(this.file.filetype == FileType.dir) {
             updateIcon('folder');
-            nextTick(() => AcceptDragItem(this.itemElem.nativeElement as HTMLElement, this.injector,
-                                          this.file.filename, this.fileManager, this.cwd, this.settings,
+            nextTick(() => AcceptDragItem(this.itemElem.nativeElement as HTMLElement, () => this.file.filename, 
                                           this.fileOperation));
         } else if (this.file.extension == '') {
             updateIcon('blank');

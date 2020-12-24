@@ -29,10 +29,12 @@ export class CurrentDirectoryService {
 
     private _back_history: string[] = [];
     public back(): void {
-        if(this._history.length > 0)
+        if(this._history.length > 1) {
             this._history.pop();
-
-        this.inner_cd(this._history.pop());
+            this.inner_cd(this._history.pop());
+        } else {
+            return;
+        }
     }
 
     public forward(): void {

@@ -2,8 +2,18 @@
 <div class="container">
     <div class="content">
 
-        <div class="app-file-view">
-            <router-outlet name='fileview'></router-outlet>
+        <div class="tools">
+            <app-tool></app-tool>
+        </div>
+
+        <div class="panel-row">
+            <div class="panel">
+                <app-directory-tree></app-directory-tree>
+            </div>
+
+            <div class="app-file-view">
+                <router-outlet name='fileview'></router-outlet>
+            </div>
         </div>
 
     </div>
