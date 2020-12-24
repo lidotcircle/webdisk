@@ -3,7 +3,7 @@ import { MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
 import { rootViewContainerRefSymbol } from './shared/utils';
 
-declare let require: any;
+declare const require: any;
 const sortbyicon = require('!raw-loader!src/assets/maticons/sortby.svg').default;
 const hide_foldericon = require('!raw-loader!src/assets/maticons/hide-folder.svg').default;
 

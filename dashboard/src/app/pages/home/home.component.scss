@@ -31,6 +31,22 @@ body {
             .panel {
                 width: 30%;
                 height: 100%;
+                overflow: scroll;
+
+                &::-webkit-scrollbar {
+                    width: 0.3em;
+                    height: 0.3em;
+                    background-color: transparent;
+                }
+                &::-webkit-scrollbar-thumb {
+                    background-color: rgba(180, 180, 180, 0);
+                    border-radius: 0.2em;
+                }
+                &:hover {
+                    &::-webkit-scrollbar-thumb {
+                        background-color: rgba(180, 180, 180, 0.7);
+                    }
+                }
             }
 
             .app-file-view {

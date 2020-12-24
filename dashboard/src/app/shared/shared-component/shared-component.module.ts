@@ -17,13 +17,14 @@ import { FilePropertiesComponent } from './file-properties/file-properties.compo
 import { NotifierComponent } from './notifier/notifier.component';
 import { MessageProgressBarComponent } from './message-progress-bar/message-progress-bar.component';
 import { ProgressCircleComponent } from './message-progress-bar/progress-circle/progress-circle.component';
+import { FileIconComponent } from './file-icon/file-icon.component';
 
 
 @NgModule({
     declarations: [
         LoginBGComponent, MessageBoxComponent, ProgressBarComponent,
         UploadFileViewComponent, ContextMenuComponent, WindowToolbarComponent, 
-        FilePropertiesComponent, NotifierComponent, MessageProgressBarComponent, ProgressCircleComponent
+        FilePropertiesComponent, NotifierComponent, MessageProgressBarComponent, ProgressCircleComponent, FileIconComponent
     ],
     imports: [
         CommonModule,
@@ -37,7 +38,8 @@ import { ProgressCircleComponent } from './message-progress-bar/progress-circle/
         LoginBGComponent,
         MessageBoxComponent,
         NotifierComponent,
-        ProgressBarComponent
+        ProgressBarComponent,
+        FileIconComponent
     ]
 })
 export class SharedComponentModule { }

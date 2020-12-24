@@ -1,6 +1,8 @@
 
 <div [class]="getItemClass()" (click)="onClick()" (contextmenu)="onContextMenu()" draggable='true' #fileitem>
-    <div class="file-icon" #fileicon></div>
+    <div class="file-icon" #fileicon>
+        <app-file-icon icon='{{ icon }}'></app-file-icon>
+    </div>
 
     <div class="file-props">
         <div class="file-prop file-name" [style]='getPropCSS(nameOrder, nameWidth)'> {{ FileName }}  </div>

@@ -3,6 +3,14 @@ import { WSChannelService } from './wschannel.service';
 import { RPCRequestMessage, MiscMessageType, RPCResponseMessage } from '../common';
 import { UserDBService } from './user-db.service';
 
+declare const require: any;
+const foldericon = require('!raw-loader!../../../../../resources/SVG/filetype/dist/icons/square-o/folder.svg').default;
+const blankicon  = require('!raw-loader!../../../../../resources/SVG/filetype/dist/icons/square-o/blank.svg').default;
+
+function keypair(icon: string, style: string): string {
+    return icon + '/' + style;
+}
+
 const memcache: Map<string, string> = new Map<string, string>();
 const failHistoryM: Set<string> = new Set<string>();
 
@@ -13,6 +21,10 @@ export enum SVGIconStyle {
     square_o      = "square-o",
     vivid         = "vivid"
 };
+
+memcache.set(keypair('folder', SVGIconStyle.square_o), foldericon);
+memcache.set(keypair('blank',  SVGIconStyle.square_o), blankicon);
+
 
 const extensionMapping: Map<string, string> = new Map<string, string>([
     ['cc', 'cpp'],
@@ -36,7 +48,7 @@ export class FiletypeSvgIconService {
         if(extensionMapping.has(ext)) {
             ext = extensionMapping.get(ext);
         }
-        const key = ext + '/' + style;
+        const key = keypair(ext, style);
 
         if (failHistoryM.has(key) ||
            (await this.FailHistory.where({extension: ext, style: style}).toArray()).length > 0) {

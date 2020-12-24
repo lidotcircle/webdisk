@@ -65,29 +65,19 @@ export class FileComponent implements OnInit {
                 private injector: InjectViewService,
                 private settings: UserSettingService) {}
 
+    private _icon: string = 'blank';
+    get icon() {return this._icon;}
     ngOnInit(): void {
         if(this.file == null || this.file.filename == null) {
             throw new Error('bad filename');
         }
 
-        const updateIcon = (icon: string) => {
-            this.svgIcon.getSvgIcon(icon)
-                .then(svg => (this.iconElem.nativeElement as HTMLElement).innerHTML = svg as string)
-                .catch(e => {
-                    if(icon != 'blank') {
-                        updateIcon('blank');
-                    }
-                });
-        }
-
         if(this.file.filetype == FileType.dir) {
-            updateIcon('folder');
-            nextTick(() => AcceptDragItem(this.itemElem.nativeElement as HTMLElement, () => this.file.filename, 
-                                          this.fileOperation));
+            this._icon = 'folder';
         } else if (this.file.extension == '') {
-            updateIcon('blank');
+            this._icon = 'blank';
         } else {
-            updateIcon(this.file.extension);
+            this._icon = this.file.extension;
         }
 
         nextTick(() => AsDragItem(this.itemElem.nativeElement as HTMLElement, this.file));
