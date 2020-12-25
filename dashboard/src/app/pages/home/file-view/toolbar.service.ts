@@ -7,6 +7,7 @@ export enum ToolType {
     Clipboard,
     FileManage,
     SortStuff,
+    LinkManage,
 }
 
 export class Tool {

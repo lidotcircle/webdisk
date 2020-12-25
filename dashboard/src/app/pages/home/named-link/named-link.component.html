@@ -1,0 +1,35 @@
+
+<div class="link-manager">
+    <div class="search-bar">
+        <app-search-bar (searchinput)='onsearchinput($event)' (searchenter)='onsearchenter($event)'></app-search-bar>
+    </div>
+
+    <div class="entries">
+        <div class="entry" *ngFor='let entry of outentries; let i=index;'>
+            <table>
+                <tr>
+                    <td>Name:</td>
+                    <td>{{ entry.name }}</td>
+                </tr>
+                <tr>
+                    <td>Destination:</td>
+                    <td>{{ entry.destination }}</td>
+                </tr>
+                <tr>
+                    <td>Valid Date:</td>
+                    <td>{{ getdate(i) }}</td>
+                </tr>
+            </table>
+
+            <div class="buttons">
+                <div class='button' (click)='oncopy(i)'>
+                    <mat-icon>content_copy</mat-icon>
+                </div>
+                <div class='button' (click)='ondelete(i)'>
+                    <mat-icon>delete</mat-icon>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

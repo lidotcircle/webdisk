@@ -295,6 +295,11 @@ export class FileViewComponent implements OnInit, OnDestroy {
         this.toolbar.register(ToolType.SortStuff, tool_revert, this.life);
         this.toolbar.register(ToolType.SortStuff, tool_sortby, this.life);
         this.toolbar.register(ToolType.SortStuff, tool_hide_folder, this.life);
+
+        const tool_namedlink = new Tool('NL', 'link', false, () => {
+            this.router.navigate(['../namedlink'], {relativeTo: this.activatedroute});
+        });
+        this.toolbar.register(ToolType.LinkManage, tool_namedlink, this.life);
     } //}
 
     ngOnDestroy(): void {

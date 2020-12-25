@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
+import { copyTextToClipboard } from '../utils';
 
 export enum ClipboardContentType {
     text,
@@ -19,11 +20,18 @@ export class ClipboardService {
 
     constructor() { }
 
-    copy(ctype: ClipboardContentType, obj: any) {
+    async copy(ctype: ClipboardContentType, obj: any): Promise<boolean> {
         this._contenttype = ctype;
         this.data = obj;
         this.iscut = false;
+        let ans = true;
+
+        if(this._contenttype == ClipboardContentType.text) {
+            ans = await copyTextToClipboard(obj);
+        }
+
         this.subject_recv_data.next({iscut: false, data: this.data});
+        return ans;
     }
 
     cut(ctype: ClipboardContentType, obj: any) {

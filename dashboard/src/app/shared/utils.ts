@@ -53,3 +53,39 @@ export function createNodeFromHtmlString(htmlText: string): HTMLElement
     return div.firstChild as HTMLElement;
 }
 
+function fallbackCopyTextToClipboard(text: string): boolean //{
+{
+    var textArea = document.createElement("textarea");
+    textArea.value = text;
+
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.position = "fixed";
+
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+        var successful = document.execCommand('copy');
+        return true;
+    } catch {
+        return false;
+    } finally {
+        document.body.removeChild(textArea);
+    }
+} //}
+export async function copyTextToClipboard(text: string) //{
+{
+    if (!navigator.clipboard) {
+        return fallbackCopyTextToClipboard(text);
+    }
+
+    try {
+        await navigator.clipboard.writeText(text);
+        return true;
+    } catch {
+        return false;
+    }
+} //}
+
