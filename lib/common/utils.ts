@@ -288,3 +288,51 @@ export module cons {
     export const ShortTermTokenValidPeriod = 2 * 60 * 60 * 1000;
 }
 
+const durUnitMap = new Map<string, number> //{
+([ 
+    ['ms', 1],
+
+    ['s', 1000],
+    ['second', 1000],
+    ['seconds', 1000],
+
+    ['min', 1000 * 60],
+    ['mins', 1000 * 60],
+    ['minite', 1000 * 60],
+    ['minites', 1000 * 60],
+
+    ['h', 1000 * 60 * 60],
+    ['hour', 1000 * 60 * 60],
+    ['hours', 1000 * 60 * 60],
+
+    ['d', 1000 * 60 * 60 * 24],
+    ['day', 1000 * 60 * 60 * 24],
+    ['days', 1000 * 60 * 60 * 24],
+
+    ['month', 1000 * 60 * 60 * 24 * 30],
+
+    ['y', 1000 * 60 * 60 * 24 * 365],
+    ['year', 1000 * 60 * 60 * 24 * 365],
+    ['years', 1000 * 60 * 60 * 24 * 365]
+]); //}
+export function duration2ms(dur: string): number //{
+{
+    dur = dur || '0s';
+    dur = dur.trim();
+    let ans = parseFloat(dur);
+    if (isNaN(ans) || ans <= 0) {
+        return 0;
+    }
+    let unit = '';
+    for(let i=1;i<dur.length;i++) {
+        const n = dur.substr(0, i);
+        const v = parseFloat(n);
+        if (v == ans) {
+            unit = dur.substr(i);
+            break;
+        }
+    }
+    const u = durUnitMap.get(unit) || 0;
+    return Math.floor(u * ans);
+} //}
+

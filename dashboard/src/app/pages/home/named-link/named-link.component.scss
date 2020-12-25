@@ -1,6 +1,10 @@
 
 .link-manager {
+    display: flex;
+    flex-direction: column;
     width: 100%;
+    height: 100%;
+    overflow: hidden;
 
     .search-bar {
         width: 100%;
@@ -14,6 +18,16 @@
         box-sizing: border-box;
         padding: 0em 0.8em;
         width: 100%;
+        overflow-x: hidden;
+        overflow-y: scroll;
+
+        &::-webkit-scrollbar {
+            width: 0.4em;
+            background: #f3f3f3;
+        }
+        &::-webkit-scrollbar-thumb {
+            background-color: #777;
+        }
 
         .entry {
             display: flex;
@@ -35,15 +49,25 @@
                 }
 
                 tr {
+                    width: 100%;
+
                     td {
                         padding: 0.3em 1em;
+
+                        div {
+                            overflow-x: hidden;
+                            text-overflow: ellipsis;
+                        }
                     }
 
                     td:first-child {
                         color: blue;
+                        width: 1%;
                     }
                     td:last-child {
                         color: green;
+                        font-size: small;
+                        font-family: monospace;
                     }
                 }
             }

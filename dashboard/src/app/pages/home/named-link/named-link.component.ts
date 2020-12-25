@@ -65,11 +65,11 @@ export class NamedLinkComponent implements OnInit {
 
     getdate(n: number): string {
         const date = this.outentries[n].validEnd;
-        if(date > Date.now() + 1000 * 60 * 60 * 24 * 10) {
+        if(date > Date.now() + 1000 * 60 * 60 * 24 * 365 * 10) {
             return 'infinity';
         } else {
             const n = new Date(date);
-            return n.toLocaleDateString();
+            return n.toLocaleString();
         }
     }
 

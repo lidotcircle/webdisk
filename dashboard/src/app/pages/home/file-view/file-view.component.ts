@@ -6,7 +6,7 @@ import { KeyboardPressService, Keycode } from 'src/app/shared/service/keyboard-p
 import { Subscription } from 'rxjs';
 import { CurrentDirectoryService } from 'src/app/shared/service/current-directory.service';
 import { AccountManagerService } from 'src/app/shared/service/account-manager.service';
-import { cons, downloadURI, Life, path } from 'src/app/shared/utils';
+import { cons, downloadURI, duration2ms, Life, path } from 'src/app/shared/utils';
 import { MenuEntry, MenuEntryType, RightMenuManagerService } from 'src/app/shared/service/right-menu-manager.service';
 import { MessageBoxService } from 'src/app/shared/service/message-box.service';
 import { FileOperationService } from 'src/app/shared/service/file-operation.service';
@@ -515,7 +515,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
                 message: path.basename(filename),
                 inputs: [
                     {label: 'Named Link', name: 'link', type: 'text', initValue: ''},
-                    {label: 'Valid Period ms (default: Permanent)', name: 'period', type: 'number', initValue: 0}
+                    {label: 'Valid Period (default: Permanent)', name: 'period', type: 'text', initValue: ''}
                 ],
                 buttons: [
                     {name: 'Confirm'},
@@ -524,7 +524,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
             }).wait();
 
             if(ans.buttonValue == 0) {
-                const period = parseInt(ans.inputs['period']) == 0 ? parseInt(ans.inputs['period']) : null;
+                const period = duration2ms(ans.inputs['period']);
                 this.fileoperation.shareFileWithNamedLink(filename, ans.inputs['link'], period);
             }
         }

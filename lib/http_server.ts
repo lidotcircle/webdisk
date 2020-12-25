@@ -89,7 +89,9 @@ export class HttpServer extends event.EventEmitter
                 throw new Error("request range is out of the file");
 
             if(attachment) {
-                res.setHeader('Content-Disposition', `attachment; filename="${path.basename(filename)}"`);
+                const bname = path.basename(filename);
+                let attachment = `attachment; filename*=UTF-8''${encodeURI(bname)}`;
+                res.setHeader('Content-Disposition', attachment);
             }
 
             let content_length: number;
@@ -158,7 +160,6 @@ export class HttpServer extends event.EventEmitter
         if(url.pathname.startsWith(cons.DiskPrefix)) {
             const token = url.searchParams.get(cons.DownloadTokenName);
             const stoken = url.searchParams.get(cons.DownloadShortTermTokenName);
-            console.log("hello file", token, stoken);
             if (token == null && stoken == null) {
                 return this.write_empty_response(response, 401);
             }
