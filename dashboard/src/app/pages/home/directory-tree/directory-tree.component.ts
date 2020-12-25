@@ -3,6 +3,7 @@ import { CurrentDirectoryService } from 'src/app/shared/service/current-director
 import { FileSystemManagerService } from 'src/app/shared/service/file-system-manager.service';
 import { path } from 'src/app/shared/utils';
 import { FileType } from '../../../../../../lib/common/file_types';
+import { LeftPanelService } from '../left-panel.service';
 
 @Component({
     selector: 'app-directory-tree',
@@ -23,7 +24,8 @@ export class DirectoryTreeComponent implements OnInit {
     get expanded() {return this._expanded;}
 
     constructor(private filesystem: FileSystemManagerService,
-                private cwd: CurrentDirectoryService) { 
+                private cwd: CurrentDirectoryService,
+                private leftpanel: LeftPanelService) { 
         this.children = [];
     }
 
@@ -76,6 +78,7 @@ export class DirectoryTreeComponent implements OnInit {
     */
     onGoto() {
         this.cwd.cd(this.directory);
+        this.leftpanel.toggle();
     }
 }
 

@@ -13,6 +13,7 @@ export class Tool {
     private _name: string;
     private _icon: string;
     private _external: boolean;
+    cssclass: string = '';
 
     constructor(name: string, icon: string, external_icon: boolean = false, clickhook?: () => void, enable?: () => boolean) {
         this._name = name;

@@ -30,7 +30,7 @@ export class CurrentDirectoryService {
     private _back_history: string[] = [];
     public back(): void {
         if(this._history.length > 1) {
-            this._history.pop();
+            this._back_history.push(this._history.pop());
             this.inner_cd(this._history.pop());
         } else {
             return;
