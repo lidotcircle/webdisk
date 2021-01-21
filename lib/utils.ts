@@ -174,3 +174,48 @@ export function BuffertoArrayBuffer(buf: Buffer): ArrayBuffer //{
     return ab;
 } //}
 
+export async function extractReadableStream(stream: stream.Readable, max: number = 0): Promise<Buffer> //{
+{
+    let datas: Buffer[] = [];
+    let tl = 0;
+
+    await new Promise((resolve, reject) => {
+        const removeAllListener = () => {
+            stream.removeListener('data', dataListener);
+            stream.removeListener('close', closeListener);
+            stream.removeListener('end', closeListener);
+            stream.removeListener('error', closeListener);
+        }
+        const closeListener = () => {
+            removeAllListener();
+            resolve();
+        }
+
+        const dataListener = (chunk: Buffer) => {
+            tl += chunk.length;
+            if(max > 0 && tl > max) {
+                removeAllListener();
+                return reject();
+            }
+            datas.push(chunk);
+        }
+
+        stream.on('close', closeListener);
+        stream.on('end', closeListener);
+        stream.on('error', closeListener);
+        stream.on('data', dataListener);
+    });
+    
+    let ans: Buffer = null;
+    if(datas.length > 0) {
+        ans = Buffer.alloc(tl);
+
+        let v = 0;
+        for(let n of datas) {
+            n.copy(ans, v, 0);
+            v += n.byteLength;
+        }
+    }
+    return ans;
+} //}
+
