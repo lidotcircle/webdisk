@@ -1,0 +1,26 @@
+
+<app-wrapper>
+
+<div class="label">Modify Password</div>
+<mat-form-field>
+    <mat-label>old passworld</mat-label>
+    <input matInput type='password' [(ngModel)]='modifypass.oldpassword' name='oldpass'>
+</mat-form-field>
+<mat-form-field>
+    <mat-label>new passworld</mat-label>
+    <input matInput type='password' [(ngModel)]='modifypass.newpassword' name='newpass' #newpass='ngModel'>
+</mat-form-field>
+<mat-form-field>
+    <mat-label>confirm new passworld</mat-label>
+    <input matInput type='password' [(ngModel)]='modifypass.confirmpass' name='confirmpass' #confirmpass='ngModel'>
+</mat-form-field>
+<button class="button" mat-raised-button color='primary' (click)='changepassword()'>
+    Confirm
+</button>
+
+<div class="seperator"></div>
+
+<button class="button" mat-raised-button color='primary' (click)='logout()'>Logout</button>
+
+</app-wrapper>
+

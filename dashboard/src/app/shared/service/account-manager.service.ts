@@ -132,19 +132,14 @@ export class AccountManagerService {
     async setUserinfo(info: UserInfo): Promise<boolean> { return false; }
 
     @AsyncMethodTokenNotNull()
-    async changePassword(oldpass: string, newpass: string): Promise<boolean> //{
+    async changePassword(oldpass: string, newpass: string): Promise<void> //{
     {
         let req = new UserMessage() as UserMessageChangePasswordRequest;
         req.um_type = UserMessageType.ChangePassword;
         req.um_msg.token = this.token;
         req.um_msg.oldpass = oldpass;
         req.um_msg.newpass = newpass;
-        try {
-            await this.wschannel.send(req);
-            return true;
-        } catch {
-            return false;
-        }
+        await this.wschannel.send(req);
     } //}
 
     @AsyncMethodTokenNotNull()

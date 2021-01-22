@@ -1,6 +1,6 @@
 
+<app-window title='{{title}}' (close)="onClose()">
 <div class="message-box">
-    <app-window-toolbar title='{{title}}' (close)="onClose()"></app-window-toolbar>
 
     <form #fs1="ngForm" class='message-box-content' draggable='true' (dragstart)="preventDefaultAndStop($event)" novalidate>
         <div class="message">{{ message }}</div>
@@ -42,4 +42,5 @@
         </div>
     </form>
 </div>
+</app-window>
 

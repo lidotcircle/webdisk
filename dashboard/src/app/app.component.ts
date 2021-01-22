@@ -6,10 +6,18 @@ import { rootViewContainerRefSymbol } from './shared/utils';
 declare const require: any;
 const sortbyicon = require('!raw-loader!src/assets/maticons/sortby.svg').default;
 const hide_foldericon = require('!raw-loader!src/assets/maticons/hide-folder.svg').default;
+const usersettings = require('!raw-loader!src/assets/maticons/user-settings.svg').default;
+const useraccount = require('!raw-loader!src/assets/maticons/user-account.svg').default;
+const logo = require('!raw-loader!src/assets/maticons/logo.svg').default;
+const nav_back = require('!raw-loader!src/assets/maticons/nav-back.svg').default;
 
 const icons = [
     {name: 'sortby', svg: sortbyicon},
-    {name: 'hide_folder', svg: hide_foldericon}
+    {name: 'hide_folder', svg: hide_foldericon},
+    {name: 'user-settings', svg: usersettings},
+    {name: 'user-account', svg: useraccount},
+    {name: 'logo', svg: logo},
+    {name: 'nav-back', svg: nav_back},
 ];
 
 @Component({

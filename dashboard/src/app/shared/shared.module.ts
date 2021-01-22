@@ -9,6 +9,7 @@ import { FormsModule } from '@angular/forms';
 import { SharedComponentModule } from './shared-component/shared-component.module';
 import { SharedDirectiveModule } from './shared-directive/shared-directive.module';
 import { HttpClientModule } from '@angular/common/http';
+import { SwiperModule } from 'swiper/angular';
 
 
 @NgModule({
@@ -23,6 +24,8 @@ import { HttpClientModule } from '@angular/common/http';
         MatButtonModule,
         MatIconModule,
         HttpClientModule,
+
+        SwiperModule,
 
         SharedDirectiveModule,
         SharedComponentModule

@@ -569,7 +569,17 @@ export class FileViewComponent implements OnInit, OnDestroy {
             this.menuItemSet.upload = true;
         } else {
             const download = new MenuEntry();
-            download.clickCallback = () => this.onDoubleClick(n);
+            download.clickCallback = () => {
+                this.accountManager.getShortTermToken().then(token => {
+                    for(const i in this.select) {
+                        if(this.select[i]) {
+                            const stat = this.files[i];
+                            const uri = `${cons.DiskPrefix}${stat.filename}?${cons.DownloadShortTermTokenName}=${token}`;
+                            downloadURI(uri, stat.basename);
+                        }
+                    }
+                });
+            }
             download.entryName = "Download File";
             download.icon = "cloud_download";
             entries.push(download);

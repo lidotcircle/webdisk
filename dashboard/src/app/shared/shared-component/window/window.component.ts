@@ -1,11 +1,11 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 
 @Component({
-    selector: 'app-window-toolbar',
-    templateUrl: './window-toolbar.component.html',
-    styleUrls: ['./window-toolbar.component.scss']
+  selector: 'app-window',
+  templateUrl: './window.component.html',
+  styleUrls: ['./window.component.scss']
 })
-export class WindowToolbarComponent implements OnInit {
+export class WindowComponent implements OnInit {
     @Input('title')
     title: string = 'webdisk';
 

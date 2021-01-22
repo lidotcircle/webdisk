@@ -4,7 +4,7 @@ import { CurrentDirectoryService } from 'src/app/shared/service/current-director
 import { InjectViewService } from 'src/app/shared/service/inject-view.service';
 import { UserSettingService } from 'src/app/shared/service/user-setting.service';
 import { FileOperationService } from 'src/app/shared/service/file-operation.service';
-import { FileStat } from '../../../../../../../lib/common/file_types';
+import { FileStat } from 'src/app/shared/common';
 
 export function AsDragItem(elem: HTMLElement, file: FileStat) {
     elem.addEventListener("dragstart", (ev: DragEvent) => {

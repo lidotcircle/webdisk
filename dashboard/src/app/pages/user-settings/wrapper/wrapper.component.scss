@@ -1,0 +1,56 @@
+@import 'src/app/style/utils.scss';
+
+app-wrapper {
+    .container {
+        padding: 0em 1.5em;
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+        overflow-y: scroll;
+
+        &::-webkit-scrollbar {
+            width: 0.5em;
+            background: #f3f3f3aa;
+        }
+        &::-webkit-scrollbar-thumb {
+            background-color: #777;
+        }
+
+        @media (max-width: 480px) {
+            &::-webkit-scrollbar {
+                display: none;
+            }
+        }
+
+
+        .content {
+            padding: 1em 0em;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+
+            .seperator {
+                width: 100%;
+                height: 2pt;
+                margin: 2em 0em 1.2em 0em;
+                border-radius: 1pt;
+                background-color: #eeeeeede;
+            }
+
+            .label {
+                width: 100%;
+                padding: 0em 0em 0.3em 0em;
+
+                @include no-select();
+                font-size: normal;
+                color: #555;
+            }
+
+            * {
+                width: 100%;
+            }
+        }
+    }
+}
+

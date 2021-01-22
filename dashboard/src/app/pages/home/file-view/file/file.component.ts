@@ -59,6 +59,7 @@ export class FileComponent implements OnInit {
     private itemElem: ElementRef;
 
     constructor(private svgIcon: FiletypeSvgIconService,
+                private host: ElementRef,
                 private fileManager: FileSystemManagerService,
                 private fileOperation: FileOperationService,
                 private cwd: CurrentDirectoryService,
@@ -70,6 +71,13 @@ export class FileComponent implements OnInit {
     ngOnInit(): void {
         if(this.file == null || this.file.filename == null) {
             throw new Error('bad filename');
+        }
+
+        if(this.file.filetype == FileType.dir) {
+            AcceptDragItem(this.host.nativeElement as HTMLElement,
+                           () => this.file.filename, 
+                           this.fileOperation, true, 
+                           () => this.cwd.justRefresh());
         }
 
         if(this.file.filetype == FileType.dir) {

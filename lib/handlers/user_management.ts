@@ -165,6 +165,13 @@ class UserManagement extends MessageHandler {
                     return;
             }
         } catch (err) {
+            if(err instanceof Error) {
+                err = {
+                    message: err.message,
+                    stack: err.stack,
+                    name: err.name
+                }
+            }
             warn(`USER MESSAGE ${msg.um_type}:`, err);
             resp.error = err;
         }

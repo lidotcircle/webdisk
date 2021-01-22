@@ -18,6 +18,11 @@ const routes: Routes = [
         path: 'home',
         loadChildren: () => import('./pages/home/home.module').then(m => m.HomeModule),
         canActivate: [ HomeGuard ]
+    },
+    {
+        path: 'settings',
+        loadChildren: () => import('./pages/user-settings/user-settings.module').then(m => m.UserSettingsModule),
+        canActivate: [ HomeGuard ]
     }
 ];
 

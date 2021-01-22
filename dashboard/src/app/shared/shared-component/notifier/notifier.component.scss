@@ -6,6 +6,7 @@ app-notifier {
     display: flex;
     flex-direction: column;
     align-self: center;
+    z-index: 2;
     @include no-select();
     animation: fadeIn 0.3s linear forwards;
     @keyframes fadeIn {

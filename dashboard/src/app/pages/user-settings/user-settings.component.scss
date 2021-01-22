@@ -1,0 +1,64 @@
+@import 'src/app/style/colors.scss';
+@import 'src/app/style/utils.scss';
+
+
+.content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    .settings {
+        flex-grow: 1;
+        overflow: hidden;
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+
+        .too-big-take-space {
+            background-color: #eee;
+
+            @media (min-width: 600px) {
+                width: 100px;
+            }
+
+            @media (min-width: 800px) {
+                width: 150px;
+            }
+
+            @media (min-width: 1000px) {
+                width: 20%;
+            }
+        }
+
+        .settings-nav {
+            @include no-select();
+            height: 100%;
+            width: 20%;
+            min-width: 120px;
+            background-color: $color-bg-TOP;
+
+            .nav-button {
+                background-color: $color-bg-TOP;
+                padding: 1em 0.8em;
+                box-sizing: border-box;
+                color: #333;
+
+                &.active {
+                    background-color: white;
+                }
+            }
+        }
+
+        .settings-panel {
+            height: 100%;
+            width: 80%;
+
+            .slide {
+                background-color: white;
+                height: 100%;
+            }
+        }
+    }
+}
+

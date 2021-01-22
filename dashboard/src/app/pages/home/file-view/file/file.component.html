@@ -10,6 +10,13 @@
         <div class="file-prop file-mode" [style]='getPropCSS(modeOrder, modeWidth)'> {{ FileMode }}  </div>
         <div class="file-prop file-type" [style]='getPropCSS(typeOrder, typeWidth)'> {{ FileType }}  </div>
         <div class="file-prop file-size" [style]='getPropCSS(sizeOrder, sizeWidth)'> {{ FileSize }}  </div>
+
+        <div class="hidden-panel">
+            <div class="file-v"> Filename:  {{ FileName }}  </div>
+            <div class="file-v"> LM Time:   {{ FileMTime }} </div>
+            <div class="file-v"> File Type: {{ FileType }}  </div>
+            <div class="file-v"> File Size: {{ FileSize }}  </div>
+        </div>
     </div>
 </div>
 

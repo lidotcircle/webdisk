@@ -5,7 +5,6 @@ import { MessageBoxComponent } from './message-box/message-box.component';
 import { ProgressBarComponent } from './progress-bar/progress-bar.component';
 import { UploadFileViewComponent } from './upload-file-view/upload-file-view.component';
 import { ContextMenuComponent } from './context-menu/context-menu.component';
-import { WindowToolbarComponent } from './window-toolbar/window-toolbar.component';
 
 import { MatInputModule } from '@angular/material/input';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -19,13 +18,16 @@ import { MessageProgressBarComponent } from './message-progress-bar/message-prog
 import { ProgressCircleComponent } from './message-progress-bar/progress-circle/progress-circle.component';
 import { FileIconComponent } from './file-icon/file-icon.component';
 import { SearchBarComponent } from './search-bar/search-bar.component';
+import { WindowComponent } from './window/window.component';
+import { PageTopComponent } from './page-top/page-top.component';
 
 
 @NgModule({
     declarations: [
         LoginBGComponent, MessageBoxComponent, ProgressBarComponent,
-        UploadFileViewComponent, ContextMenuComponent, WindowToolbarComponent, 
-        FilePropertiesComponent, NotifierComponent, MessageProgressBarComponent, ProgressCircleComponent, FileIconComponent, SearchBarComponent
+        UploadFileViewComponent, ContextMenuComponent,
+        FilePropertiesComponent, NotifierComponent, MessageProgressBarComponent, 
+        ProgressCircleComponent, FileIconComponent, SearchBarComponent, WindowComponent, PageTopComponent
     ],
     imports: [
         CommonModule,
@@ -41,7 +43,9 @@ import { SearchBarComponent } from './search-bar/search-bar.component';
         NotifierComponent,
         ProgressBarComponent,
         FileIconComponent,
-        SearchBarComponent
+        SearchBarComponent,
+        WindowComponent,
+        PageTopComponent
     ]
 })
 export class SharedComponentModule { }

@@ -1,0 +1,15 @@
+
+<div class="window">
+    <div class='window-toolbar'>
+        <div class='window-title'> {{ title }}</div>
+        <div class='take-space'></div>
+        <div class='window-close' (click)="onClose()">
+            <div class="window-close-circle">
+                <span class="material-icons"> close </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="window-content"><ng-content></ng-content></div>
+</div>
+

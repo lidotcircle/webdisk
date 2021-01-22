@@ -24,6 +24,7 @@ app-file {
     }
 
     .file-item.detail {
+        position: relative;
         max-width: 100%;
         display: flex;
         flex-direction: row;
@@ -60,6 +61,36 @@ app-file {
             }
 
             .file-name {
+            }
+
+            .hidden-panel {
+                display: none;
+                position: absolute;
+                flex-direction: column;
+                background-color: white;
+                box-shadow: 0.1em 0.1em 0.3em 0.1em #CCC;
+                padding: 0.5em 0.7em;
+                border-radius: 0.3em;
+                z-index: 1;
+            }
+        }
+
+        .file-props:hover {
+            .hidden-panel {
+                display: flex;
+                animation: showme 1.4s linear forwards;
+            }
+
+            @keyframes showme {
+                0% {
+                    opacity: 0;
+                }
+                94% {
+                    opacity: 0;
+                }
+                100% {
+                    opacity: 1;
+                }
             }
         }
     }

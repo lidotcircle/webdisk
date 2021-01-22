@@ -1,0 +1,32 @@
+@import 'src/app/style/colors.scss';
+@import 'src/app/style/utils.scss';
+
+.page-top {
+    @include no-select();
+
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    background-color: $color-bg-TOP;
+    width: 100%;
+
+    .back-button {
+        padding: 0.5em;
+        color: #555;
+
+        &:hover {
+            color: #ccc;
+            background-color: darken($color-bg-TOP, 2%);
+        }
+    }
+
+    .take-space {
+        flex-grow: 1;
+    }
+
+    .title {
+        font-size: large;
+        color: #999;
+    }
+}
+
