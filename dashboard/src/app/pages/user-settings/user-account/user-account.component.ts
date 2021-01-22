@@ -9,7 +9,7 @@ import { NotifierComponent } from 'src/app/shared/shared-component/notifier/noti
     styleUrls: ['./user-account.component.scss']
 })
 export class UserAccountComponent implements OnInit {
-    private modifypass = {oldpassword: '', newpassword: '', confirmpass: ''};
+    modifypass = {oldpassword: '', newpassword: '', confirmpass: ''};
 
     constructor(private accountManager: AccountManagerService,
                 private notifier: NotifierService) { }
