@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
+import { NameEntry } from 'src/app/shared/common';
 import { AccountManagerService } from 'src/app/shared/service/account-manager.service';
 import { ClipboardContentType, ClipboardService } from 'src/app/shared/service/clipboard.service';
 import { NotifierService } from 'src/app/shared/service/notifier.service';
+import { NotifierType } from 'src/app/shared/shared-component/notifier/notifier.component';
 import { cons } from 'src/app/shared/utils';
-import { NameEntry } from '../../../../../../lib/common/db_types';
 
 @Component({
     selector: 'app-named-link',
@@ -32,6 +33,7 @@ export class NamedLinkComponent implements OnInit {
         .catch(() => {
             this.notifier.create({
                 message: 'get named entry fail',
+                mtype: NotifierType.Error
             }).wait();
         });
     }
@@ -81,7 +83,7 @@ export class NamedLinkComponent implements OnInit {
         if (ans) {
             this.notifier.create({message: 'Copied the link to clipboard'}).wait();
         } else {
-            this.notifier.create({message: `Fail to copy the link: ${link}`}).wait();
+            this.notifier.create({message: `Fail to copy the link: ${link}`, mtype: NotifierType.Error}).wait();
         }
     }
 
@@ -100,7 +102,7 @@ export class NamedLinkComponent implements OnInit {
             }
             this.run_fileter();
         } catch {
-            this.notifier.create({message: `delete named link ${name} fail`});
+            this.notifier.create({message: `delete named link ${name} fail`, mtype: NotifierType.Error});
         }
     }
 }

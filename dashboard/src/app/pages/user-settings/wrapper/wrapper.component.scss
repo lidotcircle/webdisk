@@ -47,7 +47,31 @@ app-wrapper {
                 color: #555;
             }
 
-            * {
+            .key-value-table {
+                width: 100%;
+
+                tr {
+                    td {
+                        padding: 0.3em 0.5em;
+                        width: min-content;;
+                        box-sizing: border-box;
+
+                        &:nth-child(2n+1) {
+                            @include no-select();
+                        }
+
+                        &:nth-child(2n+0) {
+                            background: #c2c2c277;
+                            color: #777377de;
+                            white-space: nowrap;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                        }
+                    }
+                }
+            }
+
+            & > * {
                 width: 100%;
             }
         }

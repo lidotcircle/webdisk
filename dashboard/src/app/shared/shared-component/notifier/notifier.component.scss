@@ -1,45 +1,91 @@
 @import 'src/app/style/utils.scss';
+@import 'src/app/style/colors.scss';
 
 app-notifier {
-    bottom: 0.3em;
     width: 100%;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-self: center;
     z-index: 2;
+    overflow: hidden;
     @include no-select();
+
+    transition: transform 0.3s;
     animation: fadeIn 0.3s linear forwards;
     @keyframes fadeIn {
         0% {
-            bottom: -1em;
+            bottom: -1.5em;
         }
         100% {
-            bottom: 0.3em;
+            bottom: 0.5em;
         }
     }
 
-    .notifier {
-        background-color: #eee;
-        border-radius: 1em;
-        padding: 0.4em 0.8em;
-        margin: 0em 1em;
+    .too-large-take-space {
+        flex-shrink: 0;
+
+        @media (min-width: 480px) {
+            width: 50px;
+        }
+
+        @media (min-width: 800px) {
+            width: 20%;
+        }
+    }
+
+    .wrapper {
+        padding: 0.5em 1em;
+        background: transparent;
         flex-grow: 1;
 
-        &.decay {
-            animation: fadeOut 0.3s linear forwards;
-        }
-        @keyframes fadeOut {
-            0% {
-                opacity: 1;
-            }
-            100% {
-                opacity: 0;
+        @mixin typeWithColor($base, $type, $color) {
+            #{$base}[mtype=#{$type}] .notifier {
+                border-color: $color;
+                box-shadow: 0.1em 0.1em 0.2em 0em rgba($color, 0.4);
+
+                .icon {
+                    color: $color;
+                }
             }
         }
 
-        .message {
+        @include typeWithColor('&', 'info',  $color-info);
+        @include typeWithColor('&', 'warn',  $color-warn);
+        @include typeWithColor('&', 'error', $color-error);
+
+        .notifier {
             width: 100%;
-            text-align: center;
+            background-color: #fcfcfc;
+            border: solid 1pt;
+            border-radius: 1em;
+            padding: 0.4em 0.8em;
+
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+
+            &.decay {
+                animation: fadeOut 0.3s linear forwards;
+            }
+            @keyframes fadeOut {
+                0% {
+                    opacity: 1;
+                }
+                100% {
+                    opacity: 0;
+                }
+            }
+            
+            .icon {
+                padding: 0.4em 2.5em 0em 1.5em;
+                flex-shrink: 0;
+            }
+
+            .message {
+                flex-grow: 1;
+                text-align: left;
+                color: #555;
+            }
         }
     }
 }

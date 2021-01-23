@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Subject, Observable } from 'rxjs';
+import { NotifierType } from '../shared-component/notifier/notifier.component';
 import { NotifierService } from './notifier.service';
 import { UserDBService } from './user-db.service';
 
@@ -58,7 +59,7 @@ export class CurrentDirectoryService {
 
     public rejectCD() {
         this.in_cd = false;
-        this.notifier.create({message: `cd fail`, duration: 3000});
+        this.notifier.create({message: `cd fail`, mtype: NotifierType.Warn});
         this.back();
     }
 

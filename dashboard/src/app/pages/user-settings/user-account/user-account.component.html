@@ -1,5 +1,17 @@
 
 <app-wrapper>
+<div class="userinfo">
+    <table class="key-value-table">
+        <tr>
+            <td>Username</td> <td>{{userinfo.username}}</td>
+        </tr>
+        <tr>
+            <td>Register Date</td><td>{{ createTime }}</td>
+        </tr>
+    </table>
+</div>
+
+<div class="seperator"></div>
 
 <div class="label">Modify Password</div>
 <mat-form-field>

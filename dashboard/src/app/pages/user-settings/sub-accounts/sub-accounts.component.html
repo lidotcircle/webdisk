@@ -1,1 +1,17 @@
-<p>sub-accounts works!</p>
+
+<app-wrapper>
+<div class="label">Invitation Code</div>
+<div class="invitations">
+    <div class="inv-item" *ngFor='let inv of invitations; let i = index;'>
+        <div class="summary">
+            <div class="code" (click)='copyToClipboard(invitations[i])'>{{ inv }}</div>
+            <div class="take-space"></div>
+            <div class="detail-button"> + </div>
+        </div>
+        <div class="detail"> detail </div>
+    </div>
+</div>
+
+<button class="button" mat-raised-button color='primary' (click)='newinv(1)'>Generate New Invitation Code</button>
+</app-wrapper>
+

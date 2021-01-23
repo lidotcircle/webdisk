@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { FileStat } from '../common';
 import { MatButtonType } from '../shared-component/message-box/message-box.component';
+import { NotifierType } from '../shared-component/notifier/notifier.component';
 import { FileSystemEntry, FileSystemEntryWrapper, path } from '../utils';
 import { AccountManagerService } from './account-manager.service';
 import { CurrentDirectoryService } from './current-directory.service';
@@ -30,15 +31,12 @@ export class FileOperationService {
     {
         await this.notifier.create({
             message: msg,
-            duration: 2000
+            mtype: NotifierType.Error
         }).wait();
     } //}
     private async reportSuccess(msg: string) //{
     {
-        await this.notifier.create({
-            message: msg,
-            duration: 2000
-        }).wait();
+        await this.notifier.create({message: msg}).wait();
     } //}
 
     async move(files: FileStat[], destination: string) //{
@@ -197,16 +195,14 @@ export class FileOperationService {
                     this.filesystem.remover(file.filename);
                 } catch(err) {
                     await this.notifier.create({
-                        message: `Delete '${file.basename}' fail: ` + err.toString()
+                        message: `Delete '${file.basename}' fail: ` + err.toString(),
+                        mtype: NotifierType.Error
                     }).wait();
                     return;
                 }
             }
 
-            await this.notifier.create({
-                message: 'Delete success!',
-                duration: 2000
-            }).wait();
+            await this.notifier.create({message: 'Delete success!'}).wait();
             this.cwd.justRefresh();
         }
     } //}
@@ -218,13 +214,12 @@ export class FileOperationService {
         } catch(err) {
             await this.notifier.create({
                 message: `create named link ${linkname} to '${filename}' fail`,
-                duration: 3000
+                mtype: NotifierType.Error
             }).wait();
             return;
         }
         await this.notifier.create({
-            message: `create named link ${linkname} to '${filename}' success`,
-            duration: 3000
+            message: `create named link ${linkname} to '${filename}' success`
         }).wait();
     } //}
 }

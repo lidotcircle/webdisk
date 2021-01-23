@@ -11,6 +11,10 @@ const useraccount = require('!raw-loader!src/assets/maticons/user-account.svg').
 const logo = require('!raw-loader!src/assets/maticons/logo.svg').default;
 const nav_back = require('!raw-loader!src/assets/maticons/nav-back.svg').default;
 
+const info = require('!raw-loader!src/assets/maticons/information.svg').default;
+const warn = require('!raw-loader!src/assets/maticons/warning.svg').default;
+const error = require('!raw-loader!src/assets/maticons/error.svg').default;
+
 const icons = [
     {name: 'sortby', svg: sortbyicon},
     {name: 'hide_folder', svg: hide_foldericon},
@@ -18,6 +22,9 @@ const icons = [
     {name: 'user-account', svg: useraccount},
     {name: 'logo', svg: logo},
     {name: 'nav-back', svg: nav_back},
+    {name: 'info', svg: info},
+    {name: 'warn', svg: warn},
+    {name: 'error', svg: error},
 ];
 
 @Component({

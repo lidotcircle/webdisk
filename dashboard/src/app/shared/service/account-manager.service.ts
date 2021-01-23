@@ -173,17 +173,13 @@ export class AccountManagerService {
     } //}
 
     @AsyncMethodTokenNotNull()
-    async genInvCodes(n: number): Promise<boolean> //{
+    async genInvCodes(n: number): Promise<void> //{
     {
         let req = new UserMessage() as UserMessageGenInvCodeRequest;
         req.um_type = UserMessageType.GenerateInvitationCode;
         req.um_msg.token = this.token;
         req.um_msg.n = n;
-
-        try {
-            await this.wschannel.send(req);
-            return true;
-        } catch { return false; }
+        await this.wschannel.send(req);
     } //}
 
     @AsyncMethodTokenNotNull()
@@ -193,12 +189,8 @@ export class AccountManagerService {
         req.um_type = UserMessageType.GetInvitationCode;
         req.um_msg.token = this.token;
 
-        try {
-            const resp = await this.wschannel.send(req) as UserMessaageGetInvCodeResponse;
-            return resp?.um_msg?.InvCodes;
-        } catch {
-            return null;
-        }
+        const resp = await this.wschannel.send(req) as UserMessaageGetInvCodeResponse;
+        return resp.um_msg.InvCodes;
     } //}
 
     @AsyncMethodTokenNotNull()

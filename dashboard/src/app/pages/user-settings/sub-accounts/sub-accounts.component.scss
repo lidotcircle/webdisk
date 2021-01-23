@@ -1,0 +1,33 @@
+
+
+.invitations {
+    display: flex;
+    flex-direction: column;
+
+    .inv-item {
+        width: 100%;
+
+        .summary {
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+            white-space: nowrap;
+            overflow: hidden;
+
+            .code {
+                max-width: 80%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .take-space {
+                flex-grow: 1;
+            }
+
+            .detail-button {
+                width: min-content;
+            }
+        }
+    }
+}
+
