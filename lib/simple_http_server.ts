@@ -90,7 +90,7 @@ export class SimpleHttpServer extends event.EventEmitter //{
     } //}
 
     /** default listener of request event */
-    protected onrequest(request: http.IncomingMessage, response: http.ServerResponse) //{
+    protected async onrequest(request: http.IncomingMessage, response: http.ServerResponse) //{
     {
         response.setHeader("Server", cons.ServerName);
         let url = new URL(request.url, `http:\/\/${request.headers.host}`);
@@ -126,7 +126,15 @@ export class SimpleHttpServer extends event.EventEmitter //{
             response.end();
         } else {
             const method = urlmap[matcher.urlmatcher];
-            (this[method] as Function).bind(this)(request, url, response, matcher.params);
+            try {
+                const ans = (this[method] as Function).bind(this)(request, url, response, matcher.params);
+                if(ans instanceof Promise) {
+                    await ans;
+                }
+            } catch (err) {
+                response.statusCode = 500;
+                response.end();
+            }
         }
     } //}
 

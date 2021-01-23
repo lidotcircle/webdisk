@@ -2,12 +2,19 @@
 export type Token = string;
 
 export class UserPermission {
+    enable: boolean = true;
     write: boolean = true;
     chat:  boolean = true;
     offlineDownload: boolean = true;
 
     namedlinkquota: number = -1;
+    exceedLinkQuota(n: number): boolean {
+        return this.namedlinkquota != -1 && n > this.namedlinkquota;
+    }
     invitequota:    number = -1;
+    exceedInvQuota(n: number): boolean {
+        return this.invitequota != -1 && n > this.invitequota;
+    }
 
     relativePath: string = '/';
 

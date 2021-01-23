@@ -35,16 +35,10 @@ class UserManagement extends MessageHandler {
             switch(msg.um_type) {
                 case UserMessageType.Login: {
                     const lmsg: UserMessageLoginRequest = msg;
-                    lmsg.um_msg.username;
                     info(`user: ${lmsg.um_msg.username} try to login`);
                     const token = await DB.login(lmsg.um_msg.username, lmsg.um_msg.password);
-                    if(token == null) {
-                        info(`${lmsg.um_msg.username} login fail, wrong password`);
-                        throw new Error('username or password are wrong');
-                    } else {
-                        info(`${lmsg.um_msg.username} login success`);
-                        (resp as UserMessageLoginResponse).um_msg.token = token;
-                    }
+                    info(`${lmsg.um_msg.username} login success`);
+                    (resp as UserMessageLoginResponse).um_msg.token = token;
                 } break;
 
                 case UserMessageType.Logout: {
@@ -53,12 +47,7 @@ class UserManagement extends MessageHandler {
 
                 case UserMessageType.GetBasicUserInfo: {
                     const gmsg: UserMessageGetUserInfoRequest = msg;
-                    const info = await DB.getUserInfo(gmsg.um_msg.token);
-                    if(info == null) {
-                        throw new Error('get account message fail');
-                    } else {
-                        resp.um_msg = info;
-                    }
+                    resp.um_msg = await DB.getUserInfo(gmsg.um_msg.token);
                 } break;
 
                 case UserMessageType.SetBasicUserInfo: {
@@ -69,27 +58,19 @@ class UserManagement extends MessageHandler {
 
                 case UserMessageType.ChangePassword: {
                     const gmsg: UserMessageChangePasswordRequest = msg;
-                    if(!(await DB.changePassword(gmsg.um_msg.token, gmsg.um_msg.oldpass, gmsg.um_msg.newpass))) {
-                        throw new Error('change password fail');
-                    }
+                    await DB.changePassword(gmsg.um_msg.token, gmsg.um_msg.oldpass, gmsg.um_msg.newpass);
                 } break;
 
                 case UserMessageType.GenerateInvitationCode: {
                     const gmsg: UserMessageGenInvCodeRequest = msg;
-                    if(!(await DB.generateInvitationCode(gmsg.um_msg.token, gmsg.um_msg.n))) {
-                        throw new Error('generate new invitationCode fail');
-                    }
+                    await DB.generateInvitationCode(gmsg.um_msg.token, gmsg.um_msg.n);
                 } break;
 
                 case UserMessageType.GetInvitationCode: {
                     const gmsg: UserMessaageGetInvCodeRequest = msg;
                     const v = await DB.getInvitationCodes(gmsg.um_msg.token);
-                    if(v) {
-                        const m: UserMessaageGetInvCodeResponse = resp;
-                        m.um_msg.InvCodes = v.map(c => c[0]);
-                    } else {
-                        throw new Error('get invitation codes fail, maybe a invalid token');
-                    }
+                    const m: UserMessaageGetInvCodeResponse = resp;
+                    m.um_msg.InvCodes = v.map(c => c[0]);
                 } break;
 
                 case UserMessageType.DeleteInvitationCode: {
@@ -99,17 +80,12 @@ class UserManagement extends MessageHandler {
 
                 case UserMessageType.AddUser: {
                     const gmsg: UserMessageAddUserRequest = msg;
-                    const v = await DB.addUser(gmsg.um_msg.username, gmsg.um_msg.password, gmsg.um_msg.invitationCode);
-                    if(!v) {
-                        throw new Error(`add user ${gmsg.um_msg.username} fail`);
-                    }
+                    await DB.addUser(gmsg.um_msg.username, gmsg.um_msg.password, gmsg.um_msg.invitationCode);
                 } break;
 
                 case UserMessageType.RemoveUser: {
                     const gmsg: UserMessageRemoveUserRequest = msg;
-                    if(!(await DB.removeUser(gmsg.um_msg.token, gmsg.um_msg.username, gmsg.um_msg.password))) {
-                        throw new Error(`remove user ${gmsg.um_msg.username} fail`);
-                    }
+                    await DB.removeUser(gmsg.um_msg.token, gmsg.um_msg.username, gmsg.um_msg.password);
                 } break;
 
                 case UserMessageType.GetUserSettings: {
@@ -120,9 +96,7 @@ class UserManagement extends MessageHandler {
 
                 case UserMessageType.UpdateUserSettings: {
                     const gmsg: UserMessageUpdateUserSettingsRequest = msg;
-                    if (!(await DB.updateUserSettings(gmsg.um_msg.token, gmsg.um_msg.userSettings))) {
-                        throw new Error(`update user settings fail`);
-                    }
+                    await DB.updateUserSettings(gmsg.um_msg.token, gmsg.um_msg.userSettings);
                 } break;
 
                 case UserMessageType.ShortTermTokenGenerate: {

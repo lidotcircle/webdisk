@@ -6,12 +6,12 @@ import { makeid, validation, assignTargetEnumProp, cons, toInstanceOfType } from
 import { NameEntry, Token, UserInfo, UserPermission } from './common/db_types';
 import { debug, info, warn, error } from './logger';
 import { UserSettings } from './common/user_settings';
+import { ErrorMSG } from './common/string';
 const MD5 = require('md5');
 
 /** TODO */
 const LAST_ACTIVATION_SPAN       = (5 * 24 * 60 * 60 * 1000);
 const SHORT_TERM_TOKEN_LIVE_TIME = cons.ShortTermTokenValidPeriod;
-const MAX_INVITATION_CODE        = 20;
 const INVITAION_CODE_LENGTH      = 56;
 const TOKEN_LENGTH               = 56;
 
@@ -242,11 +242,13 @@ export class Database {
     {
         const now = Date.now();
         const data = await this.get(`SELECT uid, last FROM ${KEY_TOKEN} WHERE token='${token}';`);
-        if(!data) return -1;
+        if(!data) {
+            throw new Error(ErrorMSG.AuthenticationFail);
+        }
 
         if ((now - data.last) > LAST_ACTIVATION_SPAN) {
             await this.run(`DELETE FROM ${KEY_TOKEN} WHERE token='${token}';`);
-            return -1;
+            throw new Error(ErrorMSG.AuthenticationFail);
         } else {
             await this.run(`UPDATE ${KEY_TOKEN} SET last=${now} WHERE token='${token}';`);
             return data['uid'];
@@ -272,14 +274,15 @@ export class Database {
 
     async UserInfoByShortTermToken(stoken: Token): Promise<UserInfo> //{
     {
-        console.log("asdf");
         const record = await this.get(`SELECT * FROM ${KEY_SHORTTERM_TOKEN} WHERE token='${stoken}';`) as DBRelations.ShortTermToken;
-        if(!record) return null;
+        if(!record) {
+            throw new Error(ErrorMSG.BadToken);
+        }
 
         const now = Date.now();
         if((now - record.start) > SHORT_TERM_TOKEN_LIVE_TIME) {
             await this.run(`DELETE FROM ${KEY_SHORTTERM_TOKEN} WHERE token='${stoken}';`);
-            return null;
+            throw new Error(ErrorMSG.BadToken);
         } else {
             return await this.getUserInfo(record.ATtoken);
         }
@@ -288,7 +291,6 @@ export class Database {
     async RequestShortTermToken(token: Token): Promise<Token> //{
     {
         const uid = await this.checkToken(token);
-        if(uid < 0) return null;
 
         let obj = new DBRelations.ShortTermToken();
         obj.token = makeid(TOKEN_LENGTH);
@@ -316,15 +318,15 @@ export class Database {
     private async getUserRecord(token: Token): Promise<DBRelations.User> //{
     {
         const uid = await this.checkToken(token);
-        if(uid < 0) return null;
-
         return await this.getUserRecordByUid(uid);
     } //}
 
     async getUserInfo(token: Token): Promise<UserInfo> //{
     {
         const data = await this.getUserRecord(token);
-        if(!data) return null;
+        if(!data) {
+            throw new Error(ErrorMSG.AuthenticationFail);
+        }
 
         let ans = new UserInfo();
         assignTargetEnumProp(data, ans);
@@ -335,13 +337,15 @@ export class Database {
     async login(username: string, password: string): Promise<Token> //{
     {
         const data = await this.get(`SELECT uid, password FROM ${KEY_USER} WHERE username='${username}';`);
-        if(!data) return null;
+        if(!data) {
+            throw new Error(ErrorMSG.BadUsernamePassword)
+        }
         const uid: number = data["uid"];
 
         if(MD5(password) == data["password"]) {
             return await this.generateToken(uid);
         } else {
-            return null;
+            throw new Error(ErrorMSG.BadUsernamePassword)
         }
     } //}
 
@@ -367,16 +371,22 @@ export class Database {
         return await this.getPermisstionByInvCode(data['invitationCode']);
     } //}
 
-    async addUser(username: string, password: string, invitation: string): Promise<boolean> //{
+    async addUser(username: string, password: string, invitation: string): Promise<void> //{
     {
-        if(!validation.name(username) || !validation.password(password)) return false;
+        if(!validation.name(username) || !validation.password(password)) {
+            throw new Error(ErrorMSG.BadUsernamePassword);
+        }
 
         const data = await this.get(`SELECT uid FROM ${KEY_USER} WHERE username='${username}';`);
-        if(data) return false;
+        if(data) {
+            throw new Error(ErrorMSG.UserHasExisted);
+        }
 
         const dx = await this.get(`SELECT ownerUid, permission, invitedUid FROM ${KEY_INVITATION}
                                    WHERE invitationCode='${invitation}';`);
-        if(!dx || dx['invitedUid']) return false;
+        if(!dx || dx['invitedUid']) {
+            throw new Error(ErrorMSG.InvalidInvCode);
+        }
         const permission = UserPermission.fromString(dx['permission']);
 
         let user = new DBRelations.User();
@@ -386,11 +396,12 @@ export class Database {
         user.createTime = Date.now();
 
         const dy = await this.get(`SELECT rootPath FROM ${KEY_USER} WHERE uid=${dx["ownerUid"]};`);
-        if(!dy) throw new Error("database error");
+        if(!dy) {
+            throw new Error(ErrorMSG.DatabaseInternalFail);
+        }
 
         user.rootPath = path.join(dy["rootPath"], permission.relativePath);
         const insert  = createSQLInsertion(DBRelations.User, [user], ['uid']);
-        let ans = true;
         try {
             await this.run('BEGIN TRANSACTION;');
             await this.run(`INSERT INTO ${KEY_USER} ${insert};`);
@@ -401,38 +412,39 @@ export class Database {
             await this.run('COMMIT;');
         } catch (err) {
             await this.run('ROLLBACK;');
-            ans = false;
+            throw err;
         }
-        return ans;
     } //}
 
-    private async removeUserByUid(uid: number): Promise<boolean> //{
+    private async removeUserByUid(uid: number): Promise<void> //{
     {
-        if(uid <= 1) return false;
-        let ans: boolean = false;
+        if(uid <= 1) {
+            throw new Error(ErrorMSG.CantRemoveRootUser);
+        }
 
         try {
             await this.run('BEGIN TRANSACTION;');
             await this.run(`UPDATE ${KEY_INVITATION} SET invitedUid=NULL WHERE invitedUid=${uid};`);
             await this.run(`DELETE FROM ${KEY_USER} WHERE uid=${uid};`);
             await this.run('COMMIT;');
-            ans = true;
-        } catch {
+        } catch(err) {
             await this.run('ROLLBACK;');
+            throw err;
         }
 
-        return ans;
     } //}
 
-    async removeUser(token: Token, username: string, password: string): Promise<boolean> //{
+    async removeUser(token: Token, username: string, password: string): Promise<void> //{
     {
         const info = await this.getUserRecord(token);
-        if(!info) return false;
+        if(!info) {
+            throw new Error(ErrorMSG.AuthenticationFail);
+        }
 
         if(info.username == username && info.password == MD5(password)) {
-            return await this.removeUserByUid(info.uid);
+            await this.removeUserByUid(info.uid);
         } else {
-            return false;
+            throw new Error(ErrorMSG.BadUsernamePassword);
         }
     } //}
 
@@ -441,54 +453,62 @@ export class Database {
         await this.run(`DELETE FROM ${KEY_TOKEN} WHERE uid=${uid};`);
     } //}
     
-    async changePassword(token: Token, oldPassword: string, newPassword: string): Promise<boolean> //{
+    async changePassword(token: Token, oldPassword: string, newPassword: string): Promise<void> //{
     {
         const user = await this.getUserRecord(token);
-        if(!user) return false;
+        if(!user) {
+            throw new Error(ErrorMSG.AuthenticationFail);
+        }
 
         if(user.password == MD5(oldPassword) && validation.password(newPassword)) {
             const md5_new = MD5(newPassword);
             await this.run(`UPDATE ${KEY_USER} SET password='${md5_new}' WHERE uid=${user.uid}`);
             await this.removeTokenByUid(user.uid);
-            return true;
         } else {
-            return false;
+            throw new Error(ErrorMSG.BadOldPasswordOrNewPassword);
         }
     } //}
 
-    async resetPassword(username: string, newPassword: string, invitationCode: string): Promise<boolean> //{
+    async resetPassword(username: string, newPassword: string, invitationCode: string): Promise<void> //{
     {
         const record = await this.get(`SELECT * FROM ${KEY_USER} WHERE username='${username}';`) as DBRelations.User;
+        if(!record) {
+            throw new Error(ErrorMSG.PermissionDenied);
+        }
         // ADMINISTRATOR SHOULD RESET PASSWORD BY DIRECTLY MODIFYING DB
-        if(record.uid == RootUserInfo.uid) return false;
-        if(!record) return false;
+        if(record.uid == RootUserInfo.uid) {
+            throw new Error(ErrorMSG.PermissionDenied);
+        }
 
         if(record.invitationCode == invitationCode) {
             await this.run(`UPDATE ${KEY_USER} SET password='${MD5(newPassword)}' WHERE uid=${record.uid};`);
             await this.removeTokenByUid(record.uid);
-            return true;
         } else {
-            return false;
+            throw new Error(ErrorMSG.InvalidInvCode);
         }
     } //}
 
 
-    async generateInvitationCode(token: Token, n: number): Promise<boolean> //{
+    async generateInvitationCode(token: Token, n: number): Promise<void> //{
     {
-        if(n > MAX_INVITATION_CODE) return false;
         const uid = await this.checkToken(token);
-        if (uid < 0) return false;
+        const perm = await this.getPermisstionByUid(uid);
+        if(perm.exceedInvQuota(n)) {
+            throw new Error(ErrorMSG.ExceedQuota)
+        }
 
         const da = await this.all(`SELECT COUNT(*) FROM ${KEY_INVITATION} WHERE ownerUid=${uid};`);
         const total = n + da["COUNT(*)"];
-        if(total > MAX_INVITATION_CODE) return false;
-        const perm = JSON.stringify(UserPermission.inherit(await this.getPermisstionByUid(uid)));
+        if(perm.exceedInvQuota(total)) {
+            throw new Error(ErrorMSG.ExceedQuota)
+        }
+        const permstr = JSON.stringify(UserPermission.inherit(perm));
 
         let objs: DBRelations.InvitationCode[] = [];
         for(let i=0;i<n;i++) {
             let obj = new DBRelations.InvitationCode();
             obj.invitationCode = makeid(INVITAION_CODE_LENGTH);
-            obj.permission = perm;
+            obj.permission = permstr;
             obj.ownerUid = uid;
             obj.invitedUid = null;
             objs.push(obj);
@@ -496,13 +516,11 @@ export class Database {
 
         const insert = createSQLInsertion(DBRelations.InvitationCode, objs);
         await this.run(`INSERT INTO ${KEY_INVITATION} ${insert};`);
-        return true;
     } //}
 
     async getInvitationCodes(token: Token): Promise<[string, number][]> //{
     {
         const uid = await this.checkToken(token);
-        if(uid < 0) return [];
 
         const datas = await this.all(`SELECT invitationCode, invitedUid from ${KEY_INVITATION} WHERE ownerUid=${uid};`);
         return datas.map(dt => [dt["invitationCode"], dt["invitedUid"]]);
@@ -511,7 +529,6 @@ export class Database {
     async deleteInvitationCode(token: Token, code: string): Promise<void> //{
     {
         const uid = await this.checkToken(token);
-        if(uid < 0) throw new Error('bad user');
 
         if(token == RootUserInfo.invitationCode) {
             throw new Error("can't delete root invitation code");
@@ -521,10 +538,9 @@ export class Database {
     } //}
 
 
-    async updateUserSettings(token: Token, settings: UserSettings): Promise<boolean> //{
+    async updateUserSettings(token: Token, settings: UserSettings): Promise<void> //{
     {
         const uid = await this.checkToken(token);
-        if(uid < 0) return false;
 
         const str = JSON.stringify(settings);
         if (await this.getUserSettings(token) == null) {
@@ -536,28 +552,20 @@ export class Database {
         } else {
             await this.run(`UPDATE ${KEY_USER_SETTINGS} SET settings='${str}' WHERE uid=${uid};`);
         }
-        return true;
     } //}
 
     async getUserSettings(token: Token): Promise<UserSettings> //{
     {
         const uid = await this.checkToken(token);
-        if(uid < 0) return null;
 
         const data = await this.get(`SELECT * FROM ${KEY_USER_SETTINGS} WHERE uid=${uid}`);
-        if (!!data) {
-            const ans = JSON.parse(data["settings"]);
-            return ans;
-        } else {
-            return null;
-        }
+        return JSON.parse(data["settings"]);
     } //}
 
 
     async newEntryMapping(token: Token, entryName: string, destination: string, validPeriodMS: number = null): Promise<void> {
         validPeriodMS = validPeriodMS || 1000 * 60 * 60 * 24 * 365 * 20;
         const uid = await this.checkToken(token);
-        if(uid < 0) return;
 
         let record = new DBRelations.FileEntryNameMapping();
         record.name = entryName;
@@ -570,7 +578,6 @@ export class Database {
 
     async queryNameEntry(token: Token, name: string): Promise<NameEntry> {
         const uid = await this.checkToken(token);
-        if(uid < 0) throw new Error('bad token');
 
         let ans: NameEntry[] = [];
         const q = await this.all(`SELECT * FROM ${KEY_FILE_ENTRY_MAPPING} WHERE uid=${uid} AND name='${name}';`);
@@ -579,7 +586,6 @@ export class Database {
 
     async queryAllNameEntry(token: Token): Promise<NameEntry[]> {
         const uid = await this.checkToken(token);
-        if(uid < 0) throw new Error('bad token');
 
         let ans: NameEntry[] = [];
         const q = await this.all(`SELECT * FROM ${KEY_FILE_ENTRY_MAPPING} WHERE uid=${uid};`);
@@ -591,14 +597,12 @@ export class Database {
 
     async deleteNameEntry(token: Token, name: string): Promise<void> {
         const uid = await this.checkToken(token);
-        if(uid < 0) throw new Error('bad token');
 
         await this.run(`DELETE FROM ${KEY_FILE_ENTRY_MAPPING} WHERE name='${name}' AND uid=${uid};`);
     }
 
     async deleteAllNameEntry(token: Token): Promise<void> {
         const uid = await this.checkToken(token);
-        if(uid < 0) throw new Error('bad token');
 
         await this.run(`DELETE FROM ${KEY_FILE_ENTRY_MAPPING} WHERE uid=${uid};`);
     }

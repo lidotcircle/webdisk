@@ -122,7 +122,7 @@ export class HttpServer extends SimpleHttpServer
     } //}
 
     @simpleURL(cons.DiskPrefix + '/.+')
-    private diskFile(request: http.IncomingMessage, url: URL, response: http.ServerResponse) //{
+    private async diskFile(request: http.IncomingMessage, url: URL, response: http.ServerResponse) //{
     {
         const head: boolean = request.method.toLowerCase() == "head";
 
@@ -131,18 +131,18 @@ export class HttpServer extends SimpleHttpServer
         if (token == null && stoken == null) {
             return write_empty_response(response, 401);
         }
-        const download = (uinfo: UserInfo) => {
+        const download = async (uinfo: UserInfo) => {
             if (uinfo == null) {
                 return write_empty_response(response, 401);
             }
             let fileName = path.resolve(uinfo.rootPath, decodeURI(url.pathname.substring(cons.DiskPrefix.length + 1)));
             let range: [number, number] = util.parseRangeField(request.headers.range);
-            write_file_response(fileName, response, range, {head: head});
+            await write_file_response(fileName, response, range, {head: head});
         };
         if (!!token) {
-            DB.getUserInfo(token).then(userinfo => download(userinfo));
+            await download(await DB.getUserInfo(token));
         } else {
-            DB.UserInfoByShortTermToken(stoken).then(userinfo => download(userinfo));
+            await download(await DB.UserInfoByShortTermToken(stoken));
         }
     } //}
 
@@ -162,7 +162,7 @@ export class HttpServer extends SimpleHttpServer
             const filename = path.resolve(user.userinfo.rootPath, user.destination.substr(1));
             await write_file_response(filename, response, range, {head: head, attachment: true});
         } catch (err) {
-            console.error(err);
+            debug(err.message);
             response.statusCode = 405;
             response.setHeader("Connection", "close");
             response.end();
@@ -170,7 +170,7 @@ export class HttpServer extends SimpleHttpServer
     } //}
 
     @simpleURL('/.*')
-    private defaultURL(request: http.IncomingMessage, url: URL, response: http.ServerResponse) //{
+    private async defaultURL(request: http.IncomingMessage, url: URL, response: http.ServerResponse) //{
     {
         if(url.pathname == '/') url.pathname = '/index.html';
         const filename  = path.resolve(constants.WebResourceRoot, url.pathname.substring(1));
@@ -178,11 +178,11 @@ export class HttpServer extends SimpleHttpServer
         const head: boolean = request.method.toLowerCase() == "head";
         const range: [number, number] = util.parseRangeField(request.headers.range);
 
-        this.responseNonPriviledgedFile(response, filename, indexfile, head, range);
+        await this.responseNonPriviledgedFile(response, filename, indexfile, head, range);
     } //}
 
     @simpleURL('/clipboard/copy/:content')
-    private clipboard_copy(request: http.IncomingMessage, url: URL, response: http.ServerResponse, 
+    private async clipboard_copy(request: http.IncomingMessage, url: URL, response: http.ServerResponse, 
                            params: {content: string}) {
         if(params.content.length > (1 << 16)) {
             write_empty_response(response, 403);
@@ -203,7 +203,7 @@ export class HttpServer extends SimpleHttpServer
         }
     }
     @simpleURL('/clipboard/paste')
-    private clipboard_paste(request: http.IncomingMessage, url: URL, response: http.ServerResponse) {
+    private async clipboard_paste(request: http.IncomingMessage, url: URL, response: http.ServerResponse) {
         if(this.clipcontent == null) {
             write_empty_response(response, 404);
         } else {
@@ -212,7 +212,7 @@ export class HttpServer extends SimpleHttpServer
         }
     }
     @simpleURL('/clipboard/clear')
-    private clipboard_clear(request: http.IncomingMessage, url: URL, response: http.ServerResponse) {
+    private async clipboard_clear(request: http.IncomingMessage, url: URL, response: http.ServerResponse) {
         this.clipcontent = null;
         write_empty_response(response, 200);
     }
