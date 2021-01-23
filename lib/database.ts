@@ -311,6 +311,10 @@ export class Database {
     private async getUserRecordByUid(uid: number): Promise<DBRelations.User> //{
     {
         console.assert(uid >= 0);
+        const perm = await this.getPermisstionByUid(uid);
+        if(!perm.enable) {
+            throw new Error(ErrorMSG.AccountBeSuspended);
+        }
         const data = await this.get(`SELECT * FROM ${KEY_USER} WHERE uid=${uid}`);
         return data;
     } //}
@@ -341,6 +345,10 @@ export class Database {
             throw new Error(ErrorMSG.BadUsernamePassword)
         }
         const uid: number = data["uid"];
+        const perm = await this.getPermisstionByUid(uid);
+        if(!perm.enable) {
+            throw new Error(ErrorMSG.AccountBeSuspended);
+        }
 
         if(MD5(password) == data["password"]) {
             return await this.generateToken(uid);
@@ -369,6 +377,49 @@ export class Database {
         const data = await this.get(`SELECT invitationCode FROM ${KEY_USER}
                                      WHERE uid='${uid}';`);
         return await this.getPermisstionByInvCode(data['invitationCode']);
+    } //}
+
+    async getPermission(token: Token, invcode: string): Promise<UserPermission> //{
+    {
+        const uid = await this.checkToken(token);
+        const data = await this.get(`SELECT permission FROM ${KEY_INVITATION}
+                               WHERE invitationCode='${invcode}' AND ownerUid=${uid};`);
+        if(!data || !data['permission']) {
+            throw new Error(ErrorMSG.PermissionDenied);
+        }
+        return UserPermission.fromString(data['permission']);
+    } //}
+
+    async setPermission(token: Token, invcode: string, newperm: string): Promise<void> //{
+    {
+        if(invcode == RootUserInfo.invitationCode) {
+            throw new Error(ErrorMSG.PermissionDenied + ': modify root user is very danger');
+        }
+        const uid = await this.checkToken(token);
+        if(!UserPermission.validPermJSON(newperm)) {
+            throw new Error(ErrorMSG.BadJSON);
+        }
+        const perm = await UserPermission.fromString(newperm);
+        const ownerPerm = await this.getPermisstionByUid(uid);
+        if(!UserPermission.lessequal(perm, ownerPerm)) {
+            throw new Error(ErrorMSG.PermissionDenied);
+        }
+        await this.run(`UPDATE ${KEY_INVITATION} SET permission='${newperm}' WHERE invitationCode='${invcode}';`);
+    } //}
+
+    async getUserinfoByInvcode(token: Token, invcode: string): Promise<UserInfo> //{
+    {
+        const ownerUid = await this.checkToken(token);
+        const data = await this.get(`SELECT invitedUid FROM ${KEY_INVITATION}
+                                     WHERE ownerUid=${ownerUid} AND invitationCode='${invcode}';`);
+        if(!data || !data['invitedUid']) {
+            throw new Error(ErrorMSG.NotFound);
+        }
+
+        const vvv = await this.getUserRecordByUid(data['invitedUid']);
+        let ans = new UserInfo();
+        assignTargetEnumProp(vvv, ans);
+        return ans;
     } //}
 
     async addUser(username: string, password: string, invitation: string): Promise<void> //{
@@ -566,6 +617,11 @@ export class Database {
     async newEntryMapping(token: Token, entryName: string, destination: string, validPeriodMS: number = null): Promise<void> {
         validPeriodMS = validPeriodMS || 1000 * 60 * 60 * 24 * 365 * 20;
         const uid = await this.checkToken(token);
+        const perm = await this.getPermisstionByUid(uid);
+        const data = await this.all(`SELECT COUNT(*) FROM ${KEY_FILE_ENTRY_MAPPING} WHERE uid=${uid};`);
+        if(data && perm.exceedLinkQuota(data['COUNT(*)'])) {
+            throw new Error(ErrorMSG.ExceedQuota);
+        }
 
         let record = new DBRelations.FileEntryNameMapping();
         record.name = entryName;

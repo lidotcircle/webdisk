@@ -2,7 +2,7 @@ import { DB } from '../services';
 import { MessageHandler } from '../message_handler';
 import { MessageGateway } from '../message_gateway';
 import { BasicMessage, MessageType } from '../common/message';
-import { UserMessage, UserMessageType, UserMessageGetUserInfoRequest, UserMessageSetUserInfoRequest, UserMessageChangePasswordRequest, UserMessageGenInvCodeRequest, UserMessaageGetInvCodeRequest, UserMessaageGetInvCodeResponse, UserMessageAddUserRequest, UserMessageRemoveUserRequest, UserMessageGetUserSettingsRequest, UserMessageGetUserSettingsResponse, UserMessageUpdateUserSettingsRequest, UserMessageShortTermTokenGenerateRequest, UserMessageShortTermTokenGenerateResponse, UserMessageShortTermTokenClearRequest, UserMessageNewNameEntryRequest, UserMessageGetNameEntryRequest, UserMessageGetNameEntryResponse, UserMessageGetAllNameEntryRequest, UserMessageGetAllNameEntryResponse, UserMessageDeleteNameEntryRequest, UserMessageDeleteAllNameEntryRequest, UserMessaageDeleteInvCodeRequest } from '../common/user_message';
+import { UserMessage, UserMessageType, UserMessageGetUserInfoRequest, UserMessageSetUserInfoRequest, UserMessageChangePasswordRequest, UserMessageGenInvCodeRequest, UserMessaageGetInvCodeRequest, UserMessaageGetInvCodeResponse, UserMessageAddUserRequest, UserMessageRemoveUserRequest, UserMessageGetUserSettingsRequest, UserMessageGetUserSettingsResponse, UserMessageUpdateUserSettingsRequest, UserMessageShortTermTokenGenerateRequest, UserMessageShortTermTokenGenerateResponse, UserMessageShortTermTokenClearRequest, UserMessageNewNameEntryRequest, UserMessageGetNameEntryRequest, UserMessageGetNameEntryResponse, UserMessageGetAllNameEntryRequest, UserMessageGetAllNameEntryResponse, UserMessageDeleteNameEntryRequest, UserMessageDeleteAllNameEntryRequest, UserMessaageDeleteInvCodeRequest, UserMessageGetPermissionRequest, UserMessageGetPermissionResponse, UserMessageSetPermissionRequest, UserMessageGetUserInfoByInvCodeRequest, UserMessageGetUserInfoByInvCodeResponse } from '../common/user_message';
 import { debug, info, warn, error } from '../logger';
 
 import { UserMessageLoginRequest, UserMessageLoginResponse,
@@ -137,6 +137,23 @@ class UserManagement extends MessageHandler {
                 case UserMessageType.DeleteAllNameEntry: {
                     const gmsg: UserMessageDeleteAllNameEntryRequest = msg;
                     await DB.deleteAllNameEntry(gmsg.um_msg.token);
+                } break;
+
+                case UserMessageType.GetPermission: {
+                    const gmsg: UserMessageGetPermissionRequest = msg;
+                    const ans = await DB.getPermission(gmsg.um_msg.token, gmsg.um_msg.invCode);
+                    (resp as UserMessageGetPermissionResponse).um_msg.perm = ans;
+                } break;
+
+                case UserMessageType.SetPermission: {
+                    const gmsg: UserMessageSetPermissionRequest = msg;
+                    await DB.setPermission(gmsg.um_msg.token, gmsg.um_msg.invCode, JSON.stringify(gmsg.um_msg.perm));
+                } break;
+
+                case UserMessageType.GetUserinfoByInvCode: {
+                    const gmsg: UserMessageGetUserInfoByInvCodeRequest = msg;
+                    const ans = await DB.getUserinfoByInvcode(gmsg.um_msg.token, gmsg.um_msg.invCode);
+                    (resp as UserMessageGetUserInfoByInvCodeResponse).um_msg.info = ans;
                 } break;
 
                 default:

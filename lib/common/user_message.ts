@@ -1,5 +1,5 @@
 import { MessageType, MessageId, MessageAck, BasicMessage } from './message';
-import { UserInfo, Token, NameEntry } from './db_types';
+import { UserInfo, Token, NameEntry, UserPermission } from './db_types';
 import { UserSettings } from './user_settings';
 
 export enum UserMessageType {
@@ -29,6 +29,11 @@ export enum UserMessageType {
     GetAllNameEntry = "GET_ALL_NAME_ENTRY",
     DeleteNameEntry = "DELETE_NAME_ENTRY",
     DeleteAllNameEntry = "DELETE_ALL_NAME_ENTRY",
+
+    GetPermission = "GET_PERMISSION",
+    SetPermission = "SET_PREMISSION",
+
+    GetUserinfoByInvCode = "GET_USER_INFO_BY_INV_CODE",
 
     Uninit = "UNINIT"
 }
@@ -195,6 +200,40 @@ export interface UserMessageDeleteNameEntryRequest extends UserMessage {
 export interface UserMessageDeleteAllNameEntryRequest extends UserMessage {
     um_msg: {
         token: Token,
+    }
+}
+
+export interface UserMessageGetPermissionRequest extends UserMessage {
+    um_msg: {
+        token: Token,
+        invCode: string
+    }
+}
+
+export interface UserMessageGetPermissionResponse extends UserMessage {
+    um_msg: {
+        perm: UserPermission
+    }
+}
+
+export interface UserMessageSetPermissionRequest extends UserMessage {
+    um_msg: {
+        token: Token,
+        invCode: string,
+        perm: UserPermission
+    }
+}
+
+export interface UserMessageGetUserInfoByInvCodeRequest extends UserMessage {
+    um_msg: {
+        token: Token,
+        invCode: string
+    }
+}
+
+export interface UserMessageGetUserInfoByInvCodeResponse extends UserMessage {
+    um_msg: {
+        info: UserInfo
     }
 }
 

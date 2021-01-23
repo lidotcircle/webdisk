@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { InvitationStatus } from 'src/app/shared/common';
+import { UserInfo, UserPermission } from 'src/app/shared/common';
 import { AccountManagerService } from 'src/app/shared/service/account-manager.service';
 import { ClipboardContentType, ClipboardService } from 'src/app/shared/service/clipboard.service';
 import { NotifierService } from 'src/app/shared/service/notifier.service';
@@ -13,7 +13,7 @@ import { NotifierType } from 'src/app/shared/shared-component/notifier/notifier.
 export class SubAccountsComponent implements OnInit {
     invitations: string[];
     indexClassState: string[] = [];
-    details: InvitationStatus[] = [];
+    details: [UserInfo, UserPermission][] = [];
 
     constructor(private accountManager: AccountManagerService,
                 private clipboard: ClipboardService,
@@ -21,6 +21,12 @@ export class SubAccountsComponent implements OnInit {
 
     ngOnInit(): void {
         this.refresh();
+    }
+
+    createTime(n: number): string {
+        const info = this.details[n][0];
+        if(info == null) return '';
+        return (new Date(info.createTime)).toLocaleString();
     }
 
     async refresh() {
@@ -36,6 +42,8 @@ export class SubAccountsComponent implements OnInit {
         try {
             await this.accountManager.deleteInvCode(this.invitations[i]);
             this.notifier.create({message: 'delete invitation code success'}).wait();
+            this.details.splice(i, 1);
+            this.indexClassState.splice(i, 1);
             this.refresh();
         } catch {
             await this.notifier.create({message: 'delete invitation code fail', mtype: NotifierType.Error}).wait();
@@ -48,10 +56,13 @@ export class SubAccountsComponent implements OnInit {
     }
 
     private async fetchInvStatus(n: number): Promise<void> {
-        this.details[n] = null;
-        return new Promise((resolve) => {
-            setTimeout(() => resolve(), 2000);
-        });
+        const code = this.invitations[n];
+        let info;
+        try {
+            info = await this.accountManager.getUserInfoByInvcode(code);
+        } catch {}
+        const perm = await this.accountManager.getInvCodePermission(code);
+        this.details[n] = [info, perm];
     }
 
     async foldToggle(i: number): Promise<void> {
@@ -67,8 +78,12 @@ export class SubAccountsComponent implements OnInit {
                 try {
                     await this.fetchInvStatus(i);
                     this.indexClassState[i] = 'active';
-                } catch {
+                } catch (err) {
                     this.indexClassState[i] = null;
+                    await this.notifier.create({
+                        message: `get information of invitation code fail: ${err.message}`, 
+                        mtype: NotifierType.Warn
+                    }).wait();
                 }
             }
         }

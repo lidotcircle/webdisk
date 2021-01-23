@@ -111,7 +111,7 @@
 
             .not-used {
                 @include no-select();
-                padding: 1em;
+                padding: 0.5em 1em;
                 box-sizing: border-box;
                 text-align: center;
                 font-size: larger;

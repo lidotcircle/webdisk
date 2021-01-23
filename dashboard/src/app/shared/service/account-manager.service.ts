@@ -28,7 +28,12 @@ import {
     UserMessageGetAllNameEntryResponse,
     UserMessageDeleteNameEntryRequest,
     UserMessageDeleteAllNameEntryRequest,
-    UserMessaageDeleteInvCodeRequest
+    UserMessaageDeleteInvCodeRequest,
+    UserPermission,
+    UserMessageGetPermissionRequest,
+    UserMessageSetPermissionRequest,
+    UserMessageGetUserInfoByInvCodeRequest,
+    UserMessageGetUserInfoByInvCodeResponse
 } from '../common';
 import { Router } from '@angular/router';
 import { EventEmitter } from 'events';
@@ -308,6 +313,35 @@ export class AccountManagerService {
         req.um_type = UserMessageType.DeleteAllNameEntry;
         req.um_msg.token = this.token;
         await this.wschannel.send(req);
+    }
+
+    @AsyncMethodTokenNotNull()
+    async getInvCodePermission(invcode: string): Promise<UserPermission> {
+        let req = new UserMessage() as UserMessageGetPermissionRequest;
+        req.um_type = UserMessageType.GetPermission;
+        req.um_msg.token = this.token;
+        req.um_msg.invCode = invcode;
+        return UserPermission.fromString(JSON.stringify(await this.wschannel.send(req)));
+    }
+
+    @AsyncMethodTokenNotNull()
+    async setInvCodePermission(invcode: string, permission: UserPermission): Promise<void> {
+        let req = new UserMessage() as UserMessageSetPermissionRequest;
+        req.um_type = UserMessageType.SetPermission;
+        req.um_msg.token = this.token;
+        req.um_msg.invCode = invcode;
+        req.um_msg.perm = permission;
+        await this.wschannel.send(req);
+    }
+
+    @AsyncMethodTokenNotNull()
+    async getUserInfoByInvcode(invcode: string): Promise<UserInfo> {
+        let req = new UserMessage() as UserMessageGetUserInfoByInvCodeRequest;
+        req.um_type = UserMessageType.GetUserinfoByInvCode;
+        req.um_msg.token = this.token;
+        req.um_msg.invCode = invcode;
+        const ans = await this.wschannel.send(req) as UserMessageGetUserInfoByInvCodeResponse;
+        return ans.um_msg.info;
     }
 }
 

@@ -14,12 +14,22 @@
                 <mat-icon class='in-unfold' svgIcon='in_unfold'></mat-icon>
             </div>
         </div>
-        <div class="detail"> 
-            <div class="not-used" *ngIf='details[i] == null'>Not in Used</div>
-            <div class="info" *ngIf='details[i] != null'></div>
+        <div class="detail" *ngIf='details[i]'> 
+            <div class="not-used" *ngIf='details[i][0] == null'>Not in Used</div>
+            <div class="userinfo" *ngIf='details[i][0] != null'>
+                <table class="key-value-table">
+                    <tr>
+                        <td>Username</td> <td>{{details[i][0].username}}</td>
+                    </tr>
+                    <tr>
+                        <td>Register Date</td><td>{{ createTime(i) }}</td>
+                    </tr>
+                </table>
+            </div>
 
             <div class="space"></div>
-            <button class="button" mat-raised-button color='secondary' (click)='deleteInvCode(i)'>Delete Invitation Code</button>
+            <button class="button" [disabled]='details[i][0]' 
+                    mat-raised-button color='secondary' (click)='deleteInvCode(i)'>Delete Invitation Code</button>
         </div>
     </div>
 </div>

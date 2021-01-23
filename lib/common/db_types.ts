@@ -54,6 +54,19 @@ export class UserPermission {
 
         return true;
     }
+
+    static validPermJSON(perm: string): boolean {
+        try {
+            const p = JSON.parse(perm);
+            const v = new UserPermission();
+            for(const key in v) {
+                if(p[key] === undefined) return false;
+            }
+            return true;
+        } catch {
+            return false;
+        }
+    }
 }
 
 export class UserInfo {
@@ -66,11 +79,5 @@ export class NameEntry {
     name: string = null;
     destination: string = null;
     validEnd: number = null;
-}
-
-export class InvitationStatus {
-    code: string = null;
-    user: string = null;
-    permission: string = null;
 }
 
