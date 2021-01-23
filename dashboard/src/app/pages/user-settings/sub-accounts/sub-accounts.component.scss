@@ -1,4 +1,4 @@
-
+@import 'src/app/style/utils.scss';
 
 .invitations {
     display: flex;
@@ -6,6 +6,55 @@
 
     .inv-item {
         width: 100%;
+        outline: solid #babababa 2pt;
+        outline-offset: -2pt;
+        margin: 0.8em 0em 0.8em 0em;
+
+        &:nth-child(2n+0) {
+            .summary {
+                background-color: #dcdcdc;
+            }
+        }
+
+        &:nth-child(2n+1) {
+            .summary {
+                background-color: #ededed;
+            }
+        }
+
+        .summary {
+            .detail-button {
+                .in-fold {
+                    display: block;
+                }
+                .in-unfold {
+                    display: none;
+                }
+            }
+
+            &+.detail {
+                display: none;
+            }
+
+            &.active {
+                .detail-button {
+                    .in-fold {
+                        display: none;
+                    }
+                    .in-unfold {
+                        display: block;
+                    }
+                }
+
+                &+.detail {
+                    display: block;
+                }
+            }
+        }
+
+        .summary.process {
+            cursor: progress;
+        }
 
         .summary {
             width: 100%;
@@ -13,11 +62,31 @@
             flex-direction: row;
             white-space: nowrap;
             overflow: hidden;
+            padding: 0.5em 0.8em;
+            box-sizing: border-box;
+            color: #777;
 
             .code {
-                max-width: 80%;
-                overflow: hidden;
-                text-overflow: ellipsis;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                width: 80%;
+                @include no-select();
+
+                mat-icon {
+                    padding: 0em 0.5em 0em 0em;
+                    flex-shrink: 0;
+
+                    &:hover {
+                        color: black;
+                    }
+                }
+
+                .code-content {
+                    flex-grow: 1;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
             }
 
             .take-space {
@@ -26,6 +95,34 @@
 
             .detail-button {
                 width: min-content;
+
+                &:hover {
+                    color: black;
+                }
+            }
+        }
+
+        .detail {
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            padding: 0.5em 0.8em;
+
+            .not-used {
+                @include no-select();
+                padding: 1em;
+                box-sizing: border-box;
+                text-align: center;
+                font-size: larger;
+                font-family: fantasy;
+            }
+
+            .info {
+            }
+
+            & > * {
+                width: 100%;
             }
         }
     }

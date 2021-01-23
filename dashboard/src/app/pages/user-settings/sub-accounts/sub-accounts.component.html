@@ -3,15 +3,28 @@
 <div class="label">Invitation Code</div>
 <div class="invitations">
     <div class="inv-item" *ngFor='let inv of invitations; let i = index;'>
-        <div class="summary">
-            <div class="code" (click)='copyToClipboard(invitations[i])'>{{ inv }}</div>
+        <div [class]="'summary ' + (indexClassState[i] ? indexClassState[i] : '')">
+            <div class="code">
+                <mat-icon (click)='copyToClipboard(invitations[i])' svgIcon='wd-copy'></mat-icon>
+                <div class="code-content">{{ inv }}</div>
+            </div>
             <div class="take-space"></div>
-            <div class="detail-button"> + </div>
+            <div class="detail-button" (click)='foldToggle(i)'>
+                <mat-icon class='in-fold'   svgIcon='in_fold'></mat-icon>
+                <mat-icon class='in-unfold' svgIcon='in_unfold'></mat-icon>
+            </div>
         </div>
-        <div class="detail"> detail </div>
+        <div class="detail"> 
+            <div class="not-used" *ngIf='details[i] == null'>Not in Used</div>
+            <div class="info" *ngIf='details[i] != null'></div>
+
+            <div class="space"></div>
+            <button class="button" mat-raised-button color='secondary' (click)='deleteInvCode(i)'>Delete Invitation Code</button>
+        </div>
     </div>
 </div>
 
+<div class="space"></div>
 <button class="button" mat-raised-button color='primary' (click)='newinv(1)'>Generate New Invitation Code</button>
 </app-wrapper>
 

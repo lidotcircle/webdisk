@@ -15,6 +15,11 @@ const info = require('!raw-loader!src/assets/maticons/information.svg').default;
 const warn = require('!raw-loader!src/assets/maticons/warning.svg').default;
 const error = require('!raw-loader!src/assets/maticons/error.svg').default;
 
+const in_fold   = require('!raw-loader!src/assets/maticons/in_fold.svg').default;
+const in_unfold = require('!raw-loader!src/assets/maticons/in_unfold.svg').default;
+
+const wd_copy = require('!raw-loader!src/assets/maticons/wd_copy.svg').default;
+
 const icons = [
     {name: 'sortby', svg: sortbyicon},
     {name: 'hide_folder', svg: hide_foldericon},
@@ -25,6 +30,9 @@ const icons = [
     {name: 'info', svg: info},
     {name: 'warn', svg: warn},
     {name: 'error', svg: error},
+    {name: 'in_fold', svg: in_fold},
+    {name: 'in_unfold', svg: in_unfold},
+    {name: 'wd-copy', svg: wd_copy},
 ];
 
 @Component({

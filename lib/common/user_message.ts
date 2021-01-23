@@ -14,6 +14,7 @@ export enum UserMessageType {
 
     GenerateInvitationCode = "GENERATE_INVITATIONCODE",
     GetInvitationCode      = "GET_INVITATIONCODE",
+    DeleteInvitationCode   = "DELETE_INVITATIONCODE",
 
     ChangePassword = "CHANGE_PASSWORD",
 
@@ -95,6 +96,13 @@ export interface UserMessaageGetInvCodeRequest extends UserMessage {
 export interface UserMessaageGetInvCodeResponse extends UserMessage {
     um_msg: {
         InvCodes: string[]
+    }
+}
+
+export interface UserMessaageDeleteInvCodeRequest extends UserMessage {
+    um_msg: {
+        token: Token,
+        InvCode: string
     }
 }
 

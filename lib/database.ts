@@ -3,7 +3,7 @@ import * as proc from 'process';
 import * as fs from 'fs';
 import * as path from 'path';
 import { makeid, validation, assignTargetEnumProp, cons, toInstanceOfType } from './common/utils';
-import { NameEntry, Token, UserInfo } from './common/db_types';
+import { NameEntry, Token, UserInfo, UserPermission } from './common/db_types';
 import { debug, info, warn, error } from './logger';
 import { UserSettings } from './common/user_settings';
 const MD5 = require('md5');
@@ -25,6 +25,7 @@ export module DBRelations {
     export class InvitationCode {
         ownerUid: number;
         invitationCode: string;
+        permission: string;
         invitedUid: number;
     }
 
@@ -61,13 +62,13 @@ RootUserInfo.uid            = 1;
 RootUserInfo.username       = 'administrator';
 RootUserInfo.password       = 'e10adc3949ba59abbe56e057f20f883e'; // MD5 of 123456
 RootUserInfo.rootPath       = proc.env["HOME"];
-RootUserInfo.ring           = 0;
 RootUserInfo.invitationCode = 'ROOT_DOESNT_NEED_INVITATION_CODE';
 RootUserInfo.createTime     = Date.now();
 
 const RootInvitation: DBRelations.InvitationCode = new DBRelations.InvitationCode();
 RootInvitation.ownerUid       = RootUserInfo.uid;
 RootInvitation.invitationCode = RootUserInfo.invitationCode;
+RootInvitation.permission     = '{}';
 RootInvitation.invitedUid     = RootUserInfo.uid;
 
 type SQLFiled = string | number | null | undefined;
@@ -203,13 +204,13 @@ export class Database {
                             username TEXT(128) NOT NULL UNIQUE,
                             password TEXT(256) NOT NULL,
                             rootPath TEXT(512) NOT NULL,
-                            ring     INTEGER NOT NULL CHECK(ring >= 0),
                             invitationCode TEXT(256) NOT NULL UNIQUE,
                             createTime INTEGER NOT NULL CHECK(createTime > 0),
                             FOREIGN KEY (invitationCode) references ${KEY_INVITATION}(invitationCode));`);
         await this.run(`CREATE TABLE ${KEY_INVITATION} (
                             ownerUid INTEGER NOT NULL,
                             invitationCode TEXT(256) PRIMARY KEY,
+                            permission TEXT NOT NULL,
                             invitedUid INTEGER,
                             FOREIGN KEY (ownerUid)   references ${KEY_USER}(uid),
                             FOREIGN KEY (invitedUid) references ${KEY_USER}(uid));`);
@@ -350,6 +351,21 @@ export class Database {
         return;
     } //}
 
+    private async getPermisstionByInvCode(code: string): Promise<UserPermission> //{
+    {
+        const data = await this.get(`SELECT permission FROM ${KEY_INVITATION}
+                                     WHERE invitationCode='${code}';`);
+        if(!data || !data['permission']) {
+            throw new Error('bad invitation code, can\'t find this');
+        }
+        return UserPermission.fromString(data['permission']);
+    } //}
+    private async getPermisstionByUid(uid: number): Promise<UserPermission> //{
+    {
+        const data = await this.get(`SELECT invitationCode FROM ${KEY_USER}
+                                     WHERE uid='${uid}';`);
+        return await this.getPermisstionByInvCode(data['invitationCode']);
+    } //}
 
     async addUser(username: string, password: string, invitation: string): Promise<boolean> //{
     {
@@ -358,9 +374,10 @@ export class Database {
         const data = await this.get(`SELECT uid FROM ${KEY_USER} WHERE username='${username}';`);
         if(data) return false;
 
-        const dx = await this.get(`SELECT ownerUid, invitedUid FROM ${KEY_INVITATION}
+        const dx = await this.get(`SELECT ownerUid, permission, invitedUid FROM ${KEY_INVITATION}
                                    WHERE invitationCode='${invitation}';`);
         if(!dx || dx['invitedUid']) return false;
+        const permission = UserPermission.fromString(dx['permission']);
 
         let user = new DBRelations.User();
         user.invitationCode = invitation;
@@ -368,11 +385,10 @@ export class Database {
         user.password = MD5(password);
         user.createTime = Date.now();
 
-        const dy = await this.get(`SELECT ring, rootPath FROM ${KEY_USER} WHERE uid=${dx["ownerUid"]};`);
+        const dy = await this.get(`SELECT rootPath FROM ${KEY_USER} WHERE uid=${dx["ownerUid"]};`);
         if(!dy) throw new Error("database error");
 
-        user.ring     = dy["ring"];
-        user.rootPath = dy["rootPath"];
+        user.rootPath = path.join(dy["rootPath"], permission.relativePath);
         const insert  = createSQLInsertion(DBRelations.User, [user], ['uid']);
         let ans = true;
         try {
@@ -466,11 +482,13 @@ export class Database {
         const da = await this.all(`SELECT COUNT(*) FROM ${KEY_INVITATION} WHERE ownerUid=${uid};`);
         const total = n + da["COUNT(*)"];
         if(total > MAX_INVITATION_CODE) return false;
+        const perm = JSON.stringify(UserPermission.inherit(await this.getPermisstionByUid(uid)));
 
         let objs: DBRelations.InvitationCode[] = [];
         for(let i=0;i<n;i++) {
             let obj = new DBRelations.InvitationCode();
             obj.invitationCode = makeid(INVITAION_CODE_LENGTH);
+            obj.permission = perm;
             obj.ownerUid = uid;
             obj.invitedUid = null;
             objs.push(obj);
@@ -488,6 +506,18 @@ export class Database {
 
         const datas = await this.all(`SELECT invitationCode, invitedUid from ${KEY_INVITATION} WHERE ownerUid=${uid};`);
         return datas.map(dt => [dt["invitationCode"], dt["invitedUid"]]);
+    } //}
+
+    async deleteInvitationCode(token: Token, code: string): Promise<void> //{
+    {
+        const uid = await this.checkToken(token);
+        if(uid < 0) throw new Error('bad user');
+
+        if(token == RootUserInfo.invitationCode) {
+            throw new Error("can't delete root invitation code");
+        }
+
+        await this.run(`DELETE FROM ${KEY_INVITATION} WHERE ownerUid='${uid}' AND invitationCode='${code}';`);
     } //}
 
 

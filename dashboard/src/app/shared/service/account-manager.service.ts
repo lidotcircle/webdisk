@@ -27,7 +27,8 @@ import {
     UserMessageGetAllNameEntryRequest,
     UserMessageGetAllNameEntryResponse,
     UserMessageDeleteNameEntryRequest,
-    UserMessageDeleteAllNameEntryRequest
+    UserMessageDeleteAllNameEntryRequest,
+    UserMessaageDeleteInvCodeRequest
 } from '../common';
 import { Router } from '@angular/router';
 import { EventEmitter } from 'events';
@@ -83,7 +84,7 @@ export class AccountManagerService {
     get isLogin(): boolean { return this.token != null; }
 
 
-    async login(username: string, password: string): Promise<boolean> //{
+    async login(username: string, password: string): Promise<void> //{
     {
         this.token = null;
 
@@ -91,13 +92,10 @@ export class AccountManagerService {
         req.um_type = UserMessageType.Login;
         req.um_msg.username = username;
         req.um_msg.password = password;
-        try {
-            const resp = await this.wschannel.send(req) as UserMessageLoginResponse;
-            this.token = resp.um_msg.token;
-            this.localstorage.set(CONS.Keys.LOGIN_TOKEN, this.token);
-            nextTick(() => this._onLogin.next());
-            return true;
-        } catch { return false; }
+        const resp = await this.wschannel.send(req) as UserMessageLoginResponse;
+        this.token = resp.um_msg.token;
+        this.localstorage.set(CONS.Keys.LOGIN_TOKEN, this.token);
+        nextTick(() => this._onLogin.next());
     } //}
 
     @AsyncMethodTokenNotNull()
@@ -143,7 +141,7 @@ export class AccountManagerService {
     } //}
 
     @AsyncMethodTokenNotNull()
-    async addUser(username: string, password: string, invCode: string): Promise<boolean> //{
+    async addUser(username: string, password: string, invCode: string): Promise<void> //{
     {
         let req = new UserMessage() as UserMessageAddUserRequest;
         req.um_type = UserMessageType.AddUser;
@@ -152,14 +150,11 @@ export class AccountManagerService {
         req.um_msg.password = password;
         req.um_msg.invitationCode = invCode;
 
-        try {
-            await this.wschannel.send(req);
-            return true;
-        } catch { return false; }
+        await this.wschannel.send(req);
     } //}
 
     @AsyncMethodTokenNotNull()
-    async removeUser(username: string, password: string): Promise<boolean> //{
+    async removeUser(username: string, password: string): Promise<void> //{
     {
         let req = new UserMessage() as UserMessageRemoveUserRequest;
         req.um_type = UserMessageType.RemoveUser;
@@ -167,9 +162,7 @@ export class AccountManagerService {
         req.um_msg.username = username;
         req.um_msg.password = password;
 
-        try {
-            await this.wschannel.send(req);
-        } catch { return false; }
+        await this.wschannel.send(req);
     } //}
 
     @AsyncMethodTokenNotNull()
@@ -191,6 +184,16 @@ export class AccountManagerService {
 
         const resp = await this.wschannel.send(req) as UserMessaageGetInvCodeResponse;
         return resp.um_msg.InvCodes;
+    } //}
+
+    @AsyncMethodTokenNotNull()
+    async deleteInvCode(code: string): Promise<void> //{
+    {
+        let req = new UserMessage() as UserMessaageDeleteInvCodeRequest;
+        req.um_type = UserMessageType.DeleteInvitationCode;
+        req.um_msg.token = this.token;
+        req.um_msg.InvCode = code;
+        await this.wschannel.send(req);
     } //}
 
     @AsyncMethodTokenNotNull()
