@@ -450,7 +450,9 @@ export class FileViewComponent implements OnInit, OnDestroy {
             const token = await this.accountManager.getShortTermToken();
             const uri = `${cons.DiskPrefix}${stat.filename}?${cons.DownloadShortTermTokenName}=${token}`;
 
-            if(stat.extension === 'mp4') {
+            const extension = stat.extension;
+            const video_extension = ['mp4', 'mkv', 'avi'];
+            if(video_extension.indexOf(stat.extension) >= 0) {
                 await this.videoPlayer.create({src: uri}).wait();
             } else {
                 downloadURI(uri, stat.basename);
