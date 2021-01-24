@@ -4,14 +4,6 @@ import { ViewTrait } from './trait/view-trait';
 
 
 export class AbsoluteView {
-    private ref: ComponentRef<AbsoluteView> = null;
-    set componentRef(ref: ComponentRef<AbsoluteView>) {
-        if(this.ref != null || ref == null) {
-            throw new Error('bad bad component ref');
-        }
-        this.ref = ref;
-    }
-
     protected elem:  HTMLElement;
     private traits: ViewTrait[];
     constructor(protected host: ElementRef, ...traits: ViewTrait[]) {
@@ -29,10 +21,6 @@ export class AbsoluteView {
 
     __ngOnDestroy__(): void {
         for(const trait of this.traits) trait.destroyHook();
-    }
-
-    destroy() {
-        nextTick(() => this.ref.destroy());
     }
 }
 

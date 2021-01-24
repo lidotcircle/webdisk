@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { ContextMenuComponent } from '../shared-component/context-menu/context-menu.component';
-import { InjectViewService } from './inject-view.service';
+import { InjectedComponentHandler, InjectViewService } from './inject-view.service';
 
 // DISPLAY MENU ITEMS IN ORDER
 export enum MenuEntryType {
@@ -49,7 +49,7 @@ export class RightMenuManagerService {
     private _menuclick = new Subject<void>();
     public get menuclick(): Observable<void> {return this._menuclick;}
 
-    private menuView: ContextMenuComponent;
+    private menuView: InjectedComponentHandler<ContextMenuComponent>;
     private start: boolean = false;
 
     constructor(private injector: InjectViewService) {
@@ -99,7 +99,7 @@ export class RightMenuManagerService {
     private onbody_menu(ev: MouseEvent) {
         ev.preventDefault();
         if(this.menuView) {
-            if(relateElem(ev.target as HTMLElement, this.menuView.element)) {
+            if(relateElem(ev.target as HTMLElement, this.menuView.instance.element)) {
                 return;
             }
             this.onbody_click(ev);

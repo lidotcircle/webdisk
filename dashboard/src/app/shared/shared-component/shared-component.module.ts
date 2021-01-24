@@ -20,6 +20,9 @@ import { FileIconComponent } from './file-icon/file-icon.component';
 import { SearchBarComponent } from './search-bar/search-bar.component';
 import { WindowComponent } from './window/window.component';
 import { PageTopComponent } from './page-top/page-top.component';
+import { MediaModule } from './media/media.module';
+import { SoleWindowComponent } from './sole-window/sole-window.component';
+import { SoleVideoPlayerComponent } from './sole-window/sole-video-player/sole-video-player.component';
 
 
 @NgModule({
@@ -27,7 +30,7 @@ import { PageTopComponent } from './page-top/page-top.component';
         LoginBGComponent, MessageBoxComponent, ProgressBarComponent,
         UploadFileViewComponent, ContextMenuComponent,
         FilePropertiesComponent, NotifierComponent, MessageProgressBarComponent, 
-        ProgressCircleComponent, FileIconComponent, SearchBarComponent, WindowComponent, PageTopComponent
+        ProgressCircleComponent, FileIconComponent, SearchBarComponent, WindowComponent, PageTopComponent, SoleWindowComponent, SoleVideoPlayerComponent
     ],
     imports: [
         CommonModule,
@@ -35,7 +38,9 @@ import { PageTopComponent } from './page-top/page-top.component';
         MatButtonModule,
         MatIconModule,
         FormsModule,
-        HttpClientModule
+        HttpClientModule,
+
+        MediaModule
     ],
     exports: [
         LoginBGComponent,
@@ -45,7 +50,9 @@ import { PageTopComponent } from './page-top/page-top.component';
         FileIconComponent,
         SearchBarComponent,
         WindowComponent,
-        PageTopComponent
+        PageTopComponent,
+
+        MediaModule
     ]
 })
 export class SharedComponentModule { }

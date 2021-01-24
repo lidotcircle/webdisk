@@ -1,0 +1,15 @@
+
+<vm-player 
+    #player
+    playsinline
+    (vPlaybackReady)='onPlaybackReady()'
+    >
+    <vm-video cross-origin="true">
+        <source data-src='{{ source }}' type="video/mp4" />
+    </vm-video> 
+
+    <vm-default-ui>
+        <tap-sides-to-seek></tap-sides-to-seek>
+    </vm-default-ui>
+</vm-player>
+

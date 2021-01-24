@@ -1,0 +1,21 @@
+
+.container {
+    width: 100%;
+
+    .content {
+        display: flex;
+        display: column;
+        overflow: hidden;
+        width: 100%;
+
+        .take-space {
+            width: 100%;
+            flex-grow: 1;
+        }
+
+        ng-content {
+            width: 100%;
+        }
+    }
+}
+

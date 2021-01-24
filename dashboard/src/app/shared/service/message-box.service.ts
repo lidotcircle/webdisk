@@ -1,15 +1,15 @@
 import { Injectable } from '@angular/core';
 import { MessageBoxButton, MessageBoxComponent, MessageBoxInput } from '../shared-component/message-box/message-box.component';
-import { InjectViewService } from './inject-view.service';
+import { InjectedComponentHandler, InjectViewService } from './inject-view.service';
 
 class MessageBoxHandler {
-    private view: MessageBoxComponent;
-    constructor(view: MessageBoxComponent) {
+    private view: InjectedComponentHandler<MessageBoxComponent>;
+    constructor(view: InjectedComponentHandler<MessageBoxComponent>) {
         this.view = view;
     }
 
     async wait() {
-        const ans = await this.view.waitClose();
+        const ans = await this.view.instance.waitClose();
         this.view.destroy();
         return ans;
     }

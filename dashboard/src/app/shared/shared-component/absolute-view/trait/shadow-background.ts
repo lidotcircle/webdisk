@@ -2,7 +2,7 @@ import { ViewBackground } from './background';
 
 export class ViewShadowBackground extends ViewBackground {
     constructor() {
-        super(100, 100, 100, 0.3);
+        super(88, 88, 88, 0.7);
     }
 }
 

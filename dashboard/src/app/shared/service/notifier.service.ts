@@ -1,19 +1,19 @@
 import { Injectable } from '@angular/core';
 import { NotifierComponent, NotifierType } from '../shared-component/notifier/notifier.component';
-import { InjectViewService } from './inject-view.service';
+import { InjectedComponentHandler, InjectViewService } from './inject-view.service';
 
 const viewrefindex = Symbol('viewindex');
 let viewindexcount = 0;
-const notifierviews: NotifierComponent[] = [];
+const notifierviews: InjectedComponentHandler<NotifierComponent>[] = [];
 
 class NotifierHandler {
-    private view: NotifierComponent;
-    constructor(view: NotifierComponent) {
+    private view: InjectedComponentHandler<NotifierComponent>;
+    constructor(view: InjectedComponentHandler<NotifierComponent>) {
         this.view = view;
     }
 
     async wait() {
-        await this.view.waitTimeout();
+        await this.view.instance.waitTimeout();
         this.view.destroy();
 
         const ind: number = this.view[viewrefindex];
@@ -35,13 +35,13 @@ export class NotifierService {
         const view = this.injector.inject(NotifierComponent, data);
         view[viewrefindex] = viewindexcount++;
         notifierviews.push(view);
-        view.viewinit().then(() => {
-            const mvpx = view.height;
+        view.instance.viewinit().then(() => {
+            const mvpx = view.instance.height;
 
             for(const vi in notifierviews) {
                 const v = notifierviews[vi];
                 if(v != view) {
-                    v.upup(mvpx);
+                    v.instance.upup(mvpx);
                 }
             }
         });

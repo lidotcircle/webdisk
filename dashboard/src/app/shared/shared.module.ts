@@ -10,6 +10,7 @@ import { SharedComponentModule } from './shared-component/shared-component.modul
 import { SharedDirectiveModule } from './shared-directive/shared-directive.module';
 import { HttpClientModule } from '@angular/common/http';
 import { SwiperModule } from 'swiper/angular';
+import { MediaModule } from './shared-component/media/media.module';
 
 
 @NgModule({
@@ -28,7 +29,7 @@ import { SwiperModule } from 'swiper/angular';
         SwiperModule,
 
         SharedDirectiveModule,
-        SharedComponentModule
+        SharedComponentModule,
     ]
 })
 export class SharedModule { }

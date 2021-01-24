@@ -1,12 +1,12 @@
 import { Injectable } from '@angular/core';
 import { UploadFileViewComponent } from '../shared-component/upload-file-view/upload-file-view.component';
 import { FileSystemEntryWrapper } from '../utils';
-import { InjectViewService } from './inject-view.service';
+import { InjectedComponentHandler, InjectViewService } from './inject-view.service';
 
 class UploadHandler {
     private destoryed = false;
-    constructor(private view: UploadFileViewComponent) {
-        this.view.registerClose(() => {
+    constructor(private view: InjectedComponentHandler<UploadFileViewComponent>) {
+        this.view.instance.registerClose(() => {
             if(this.destoryed) return;
 
             this.view.destroy();
@@ -15,7 +15,7 @@ class UploadHandler {
     }
 
     async upload() {
-        await this.view.upload();
+        await this.view.instance.upload();
 
         if(this.destoryed) return;
         this.view.destroy();
