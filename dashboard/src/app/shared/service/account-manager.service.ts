@@ -33,7 +33,8 @@ import {
     UserMessageGetPermissionRequest,
     UserMessageSetPermissionRequest,
     UserMessageGetUserInfoByInvCodeRequest,
-    UserMessageGetUserInfoByInvCodeResponse
+    UserMessageGetUserInfoByInvCodeResponse,
+    UserMessageGetPermissionResponse
 } from '../common';
 import { Router } from '@angular/router';
 import { EventEmitter } from 'events';
@@ -321,16 +322,17 @@ export class AccountManagerService {
         req.um_type = UserMessageType.GetPermission;
         req.um_msg.token = this.token;
         req.um_msg.invCode = invcode;
-        return UserPermission.fromString(JSON.stringify(await this.wschannel.send(req)));
+        const ans = await this.wschannel.send(req) as UserMessageGetPermissionResponse;
+        return UserPermission.fromString(JSON.stringify(ans.um_msg.perm));
     }
 
     @AsyncMethodTokenNotNull()
-    async setInvCodePermission(invcode: string, permission: UserPermission): Promise<void> {
+    async setInvCodePermission(invcode: string, partial_permission: {[key: string]: any}): Promise<void> {
         let req = new UserMessage() as UserMessageSetPermissionRequest;
         req.um_type = UserMessageType.SetPermission;
         req.um_msg.token = this.token;
         req.um_msg.invCode = invcode;
-        req.um_msg.perm = permission;
+        req.um_msg.perm = partial_permission;
         await this.wschannel.send(req);
     }
 

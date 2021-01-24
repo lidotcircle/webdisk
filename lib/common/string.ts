@@ -12,6 +12,7 @@ export module ErrorMSG {
     export const CantRemoveRootUser = 'Can\'t remove root user';
     export const BadToken = 'bad token';
     export const BadJSON = 'bad json';
+    export const BadFormat = 'bad format';
     export const NotFound = 'Not found';
     export const AccountBeSuspended = 'Account be suspended';
 }

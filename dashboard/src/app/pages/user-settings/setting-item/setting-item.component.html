@@ -1,0 +1,6 @@
+
+<app-checkbox *ngIf='setting.type=="checkbox"' 
+              [name]='setting.name' 
+              [init]='setting.initvalue'
+              (change)='onchange($event)'></app-checkbox>
+

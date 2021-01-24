@@ -59,6 +59,7 @@ app-notifier {
             border: solid 1pt;
             border-radius: 1em;
             padding: 0.4em 0.8em;
+            box-sizing: border-box;
 
             display: flex;
             flex-direction: row;

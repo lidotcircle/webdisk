@@ -55,6 +55,23 @@ export class UserPermission {
         return true;
     }
 
+    static validPartial(perm: {[key: string]: any}): boolean {
+        if(typeof perm !== 'object') {
+            return false;
+        }
+        const v = new UserPermission();
+        for(const key in perm) {
+            if(v[key] === undefined) {
+                return false;
+            }
+            const t = typeof perm[key];
+            if(t != 'string' && t != 'number' && t != 'boolean') {
+                return false;
+            }
+        }
+        return true;
+    }
+
     static validPermJSON(perm: string): boolean {
         try {
             const p = JSON.parse(perm);

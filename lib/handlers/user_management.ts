@@ -147,7 +147,7 @@ class UserManagement extends MessageHandler {
 
                 case UserMessageType.SetPermission: {
                     const gmsg: UserMessageSetPermissionRequest = msg;
-                    await DB.setPermission(gmsg.um_msg.token, gmsg.um_msg.invCode, JSON.stringify(gmsg.um_msg.perm));
+                    await DB.setPermission(gmsg.um_msg.token, gmsg.um_msg.invCode, gmsg.um_msg.perm);
                 } break;
 
                 case UserMessageType.GetUserinfoByInvCode: {

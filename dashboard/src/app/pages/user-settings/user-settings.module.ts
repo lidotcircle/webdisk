@@ -10,6 +10,9 @@ import { FileOperationsComponent } from './file-operations/file-operations.compo
 import { DisplayComponent } from './display/display.component';
 import { AboutComponent } from './about/about.component';
 import { WrapperComponent } from './wrapper/wrapper.component';
+import { SettingItemComponent } from './setting-item/setting-item.component';
+import { CheckboxComponent } from './setting-item/checkbox/checkbox.component';
+import { InputComponent } from './setting-item/input/input.component';
 
 
 @NgModule({
@@ -20,7 +23,10 @@ import { WrapperComponent } from './wrapper/wrapper.component';
         FileOperationsComponent,
         DisplayComponent,
         AboutComponent,
-        WrapperComponent
+        WrapperComponent,
+        SettingItemComponent,
+        CheckboxComponent,
+        InputComponent
     ],
     imports: [
         CommonModule,

@@ -27,6 +27,12 @@
                 </table>
             </div>
 
+            <div class="permission">
+                <div class="perm-item" *ngFor='let item of permsSetting[i]; let j = index;'>
+                    <app-setting-item [setting]='item'></app-setting-item>
+                </div>
+            </div>
+
             <div class="space"></div>
             <button class="button" [disabled]='details[i][0]' 
                     mat-raised-button color='secondary' (click)='deleteInvCode(i)'>Delete Invitation Code</button>

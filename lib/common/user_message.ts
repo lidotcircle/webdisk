@@ -220,7 +220,7 @@ export interface UserMessageSetPermissionRequest extends UserMessage {
     um_msg: {
         token: Token,
         invCode: string,
-        perm: UserPermission
+        perm: {[key: string]: any}
     }
 }
 

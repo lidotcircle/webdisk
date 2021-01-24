@@ -311,27 +311,26 @@ export class Database {
     private async getUserRecordByUid(uid: number): Promise<DBRelations.User> //{
     {
         console.assert(uid >= 0);
-        const perm = await this.getPermisstionByUid(uid);
-        if(!perm.enable) {
-            throw new Error(ErrorMSG.AccountBeSuspended);
-        }
         const data = await this.get(`SELECT * FROM ${KEY_USER} WHERE uid=${uid}`);
+        if(!data) {
+            throw new Error(ErrorMSG.AuthenticationFail);
+        }
         return data;
     } //}
 
     private async getUserRecord(token: Token): Promise<DBRelations.User> //{
     {
         const uid = await this.checkToken(token);
+        const perm = await this.getPermisstionByUid(uid);
+        if(!perm.enable) {
+            throw new Error(ErrorMSG.AccountBeSuspended);
+        }
         return await this.getUserRecordByUid(uid);
     } //}
 
     async getUserInfo(token: Token): Promise<UserInfo> //{
     {
         const data = await this.getUserRecord(token);
-        if(!data) {
-            throw new Error(ErrorMSG.AuthenticationFail);
-        }
-
         let ans = new UserInfo();
         assignTargetEnumProp(data, ans);
         return ans;
@@ -390,21 +389,29 @@ export class Database {
         return UserPermission.fromString(data['permission']);
     } //}
 
-    async setPermission(token: Token, invcode: string, newperm: string): Promise<void> //{
+    async setPermission(token: Token, invcode: string, newperm: {[key: string]: any}): Promise<void> //{
     {
         if(invcode == RootUserInfo.invitationCode) {
             throw new Error(ErrorMSG.PermissionDenied + ': modify root user is very danger');
         }
         const uid = await this.checkToken(token);
-        if(!UserPermission.validPermJSON(newperm)) {
-            throw new Error(ErrorMSG.BadJSON);
-        }
-        const perm = await UserPermission.fromString(newperm);
-        const ownerPerm = await this.getPermisstionByUid(uid);
-        if(!UserPermission.lessequal(perm, ownerPerm)) {
+        const data = await this.get(`SELECT permission FROM ${KEY_INVITATION}
+                                     WHERE ownerUid=${uid} AND invitationCode='${invcode}';`);
+        if(!data || !data['permission']) {
             throw new Error(ErrorMSG.PermissionDenied);
         }
-        await this.run(`UPDATE ${KEY_INVITATION} SET permission='${newperm}' WHERE invitationCode='${invcode}';`);
+        const oldperm = UserPermission.fromString(data['permission']);
+        if(!UserPermission.validPartial(newperm)) {
+            throw new Error(ErrorMSG.BadFormat);
+        }
+        assignTargetEnumProp(newperm, oldperm);
+
+        const ownerPerm = await this.getPermisstionByUid(uid);
+        if(!UserPermission.lessequal(oldperm, ownerPerm)) {
+            throw new Error(ErrorMSG.PermissionDenied);
+        }
+        const permjson = JSON.stringify(oldperm);
+        await this.run(`UPDATE ${KEY_INVITATION} SET permission='${permjson}' WHERE invitationCode='${invcode}';`);
     } //}
 
     async getUserinfoByInvcode(token: Token, invcode: string): Promise<UserInfo> //{
