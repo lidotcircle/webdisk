@@ -1,0 +1,16 @@
+
+app-setting-item {
+    width: 100%;
+
+    .sv-seperator {
+        width: 100%;
+        height: 2px;
+        background-color: #777;
+        margin: 0.5em 0em;
+    }
+
+    &:nth-child(1) .sv-seperator {
+        display: none;
+    }
+}
+

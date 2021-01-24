@@ -64,7 +64,7 @@ export class SubAccountsComponent implements OnInit {
         for(const key in perm) {
             const s = new SettingItem();
             s.property = key;
-            s.name = key; // TODO
+            s.name = UserPermission.getName(key);
             s.initvalue = perm[key];
             s.change = (() => {
                 const code = this.invitations[n];
@@ -77,8 +77,10 @@ export class SubAccountsComponent implements OnInit {
                 }
             })();
 
-            if(typeof perm[key] == 'boolean') {
-                s.type = 'checkbox';
+            switch(typeof perm[key]) {
+                case 'boolean': s.type = 'checkbox'; break;
+                case 'number':  s.type = 'number'; break;
+                case 'string':  s.type = 'text'; break;
             }
 
             if(typeof s.type === 'string') {

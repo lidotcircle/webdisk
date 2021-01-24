@@ -1,6 +1,14 @@
 
+<div class="sv-seperator"></div>
+
 <app-checkbox *ngIf='setting.type=="checkbox"' 
               [name]='setting.name' 
               [init]='setting.initvalue'
               (change)='onchange($event)'></app-checkbox>
+
+<app-input *ngIf='setting.type=="text" || setting.type=="number"' 
+           [name]='setting.name' 
+            type ='{{setting.type}}' 
+           [init]='setting.initvalue'
+           (change)='onchange($event)'></app-input>
 

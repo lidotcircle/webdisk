@@ -1,5 +1,8 @@
 
-<mat-checkbox class='checkbox'
-              labelPosition='after'
-              [(ngModel)]='initvalue' (change)='onchange()'>{{ name }}</mat-checkbox>
+<div class="boxbox">
+    <div class="name">{{ name }}</div>
+    <div class="take-space"></div>
+    <mat-checkbox class='checkbox'
+                  [(ngModel)]='initvalue' (change)='onchange()'></mat-checkbox>
+</div>
 

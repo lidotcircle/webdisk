@@ -1,1 +1,10 @@
-<p>input works!</p>
+
+<div class="boxbox">
+    <div class="name">{{ name }}</div>
+    <div class="take-space"></div>
+    <mat-form-field>
+        <input matInput type='{{ type }}'
+               [(ngModel)]='initvalue' (change)='onchange($event)'>
+    </mat-form-field>
+</div>
+

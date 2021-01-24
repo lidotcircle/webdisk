@@ -28,9 +28,8 @@
             </div>
 
             <div class="permission">
-                <div class="perm-item" *ngFor='let item of permsSetting[i]; let j = index;'>
-                    <app-setting-item [setting]='item'></app-setting-item>
-                </div>
+                <app-setting-item *ngFor='let item of permsSetting[i]; let j = index;' [setting]='item'>
+                </app-setting-item>
             </div>
 
             <div class="space"></div>

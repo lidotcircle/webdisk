@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, Output } from '@angular/core';
+import { Component, Input, OnInit, Output, ViewEncapsulation } from '@angular/core';
 import { Subject } from 'rxjs';
 
 export class SettingItem {
@@ -13,7 +13,8 @@ export class SettingItem {
 @Component({
     selector: 'app-setting-item',
     templateUrl: './setting-item.component.html',
-    styleUrls: ['./setting-item.component.scss']
+    styleUrls: ['./setting-item.component.scss'],
+    encapsulation: ViewEncapsulation.None
 })
 export class SettingItemComponent implements OnInit {
     @Input('setting')

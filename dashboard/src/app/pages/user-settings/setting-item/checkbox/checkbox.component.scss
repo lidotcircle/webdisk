@@ -1,5 +1,23 @@
+@import 'src/app/style/utils.scss';
 
-.checkbox {
-    width: 100%;
+.boxbox {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    .name {
+        @include no-select();
+        padding: 0em 0.5em;
+        color: #555;
+    }
+
+    .take-space {
+        flex-grow: 1;
+    }
+
+    .checkbox {
+        flex-shrink: 0;
+        width: min-content;
+    }
 }
 

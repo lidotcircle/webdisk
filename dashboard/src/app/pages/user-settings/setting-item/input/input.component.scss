@@ -1,0 +1,28 @@
+@import 'src/app/style/utils.scss';
+
+.boxbox {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    .name {
+        @include no-select();
+        padding: 0em 0.5em;
+        color: #555;
+        white-space: nowrap;
+    }
+
+    .take-space {
+        flex-grow: 1;
+    }
+
+    mat-form-field {
+        width: 20%;
+
+        input {
+            width: 100%;
+            text-align: right;
+        }
+    }
+}
+

@@ -121,6 +121,11 @@
             .info {
             }
 
+            .permission {
+                padding: 0.5em;
+                box-sizing: border-box;
+            }
+
             & > * {
                 width: 100%;
             }

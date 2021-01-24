@@ -1,22 +1,41 @@
 
 export type Token = string;
 
-export class UserPermission {
+class UserPermissionFields {
     enable: boolean = true;
     write: boolean = true;
     chat:  boolean = true;
     offlineDownload: boolean = true;
+    downloadFile: boolean = true;
 
     namedlinkquota: number = -1;
+    invitequota:    number = -1;
+
+    relativePath: string = '/';
+
+    protected static nameMapping: {[key: string]: string} = {
+        enable: 'Enable Account',
+        write:  'Enable write permission',
+        chat:   'Allow chat',
+        offlineDownload: 'Allow offline download',
+        downloadFile: 'Allow download File',
+
+        namedlinkquota: 'Named Link quota',
+        invitequota:    'Invitation code quota',
+
+        relativePath: 'relative path'
+    };
+}
+
+export class UserPermission extends UserPermissionFields //{
+{
     exceedLinkQuota(n: number): boolean {
         return this.namedlinkquota != -1 && n > this.namedlinkquota;
     }
-    invitequota:    number = -1;
     exceedInvQuota(n: number): boolean {
         return this.invitequota != -1 && n > this.invitequota;
     }
 
-    relativePath: string = '/';
 
     static fromString(permission: string): UserPermission {
         const ans = new UserPermission();
@@ -84,7 +103,12 @@ export class UserPermission {
             return false;
         }
     }
-}
+
+    static getName(prop: string) {
+        const ans = UserPermissionFields.nameMapping[prop];
+        return ans ? ans : prop;
+    }
+} //}
 
 export class UserInfo {
     username: string = null;
