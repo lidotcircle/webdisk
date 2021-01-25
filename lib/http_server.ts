@@ -286,9 +286,9 @@ export class HttpServer extends SimpleHttpServer
     } //}
 
     /** default listener of request event */
-    protected onupgrade(inc: http.IncomingMessage, socket: net.Socket, buf: Buffer) //{
+    protected onupgrade(request: http.IncomingMessage, socket: net.Socket, buf: Buffer) //{
     {
-        upgradeHandler(inc, socket, buf);
+        upgradeHandler(request, socket, buf);
     } //}
 }
 

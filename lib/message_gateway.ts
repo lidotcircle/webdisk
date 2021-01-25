@@ -7,7 +7,6 @@ import * as events from 'events';
 import { constants } from './constants';
 import { BasicMessage, MessageEncoder, MessageType } from './common/message';
 import { debug, info, warn, error } from './logger';
-import { WebsocketM, WebsocketOPCode } from './websocket';
 import { MessageSerializer, MessageHandlers, registerMessageHandler } from './services';
 import { UserManager } from './handlers/user_management';
 import * as utls from './utils';
@@ -16,115 +15,40 @@ import { URL } from 'url';
 import { MiscManager } from './handlers/misc_management';
 import { FileManager } from './handlers/file_management';
 import { cons } from './utils';
+import { request as wsrequest, connection as wsconnection, IMessage } from 'websocket';
 
-
-/**
- * a handler of upgrade event in http server, it will accept websocket connection,
- * paramters just like parameters of upgrade event
- */
 export function upgradeHandler(inc: http.IncomingMessage, socket: net.Socket, buf: Buffer) //{
 {
-    let date = (new Date()).toUTCString();
-    if (inc.url != "/ws") {
-        socket.end(utls.simpleHttpResponse(404, {
-            Server: cons.ServerName,
-            Date: date,
-            Connection: "close",
-        }));
-        return;
-    }
-    if (new URL(inc.headers["origin"] as string).host != inc.headers.host) {
-        socket.end(utls.simpleHttpResponse(403, {
-            Server: cons.ServerName,
-            Date: date,
-            Connection: "close",
-        }));
-        return;
-    }
-    if (inc.headers.connection.toLowerCase() != "upgrade" || inc.headers.upgrade.toLowerCase() != "websocket" ) {
-        socket.end(utls.simpleHttpResponse(406, {
-            Server: cons.ServerName,
-            Date: date,
-            Connection: "close",
-        }));
-        return;
-    }
-    let en_ws_key: string = inc.headers["sec-websocket-key"] as string;
+    const wsreq = new wsrequest(socket, inc, {httpServer: null, assembleFragments: true});
     try {
-        let ws_key = Buffer.from(en_ws_key || "", 'base64').toString('ascii');
-        if(ws_key.length != 16)
-            throw new Error("sec-websocket-key fault");
-    } catch (err) {
-        socket.end(utls.simpleHttpResponse(406, {
-            Server: cons.ServerName,
-            Date: date,
-            Connection: "close",
-        }));
-        return;
+        wsreq.readHandshake();
+    } catch {
+        return wsreq.reject(400);
     }
-    if (parseInt(inc.headers["sec-websocket-version"] as string) != 13) {
-        socket.end(utls.simpleHttpResponse(426, {
-            Server: cons.ServerName,
-            "Sec-WebSocket-Version": 13,
-            Date: date,
-            Connection: "close",
-        }));
-        return;
-    }
-    // Accept
-    let response = utls.simpleHttpResponse(101, {
-        Server: cons.ServerName,
-        Date: date,
-        Upgrade: "websocket",
-        Connection: "Upgrade",
-        "Sec-WebSocket-Accept": utls.WebSocketAcceptKey(en_ws_key)
-    });
-    socket.write(response);
-    new MessageGateway(socket);
+    const connection = wsreq.accept();
+    new MessageGateway(connection);
 } //}
 
 
 export class MessageGateway extends events.EventEmitter {
-    private websocket: WebsocketM;
+    private websocket: wsconnection;
     private invalid:   boolean;
 
-    /**
-     * @constructor
-     * @param {net.Socket} socket upgrade http socket
-     */
-    constructor(socket: net.Socket) //{
+    constructor(ws: wsconnection) //{
     {
         super();
+        this.websocket = ws;
 
-        debug(`new websocket connection from ${socket.remoteAddress}:${socket.remotePort}`);
-        socket.removeAllListeners();
-        this.websocket = new WebsocketM(socket);
-        this.invalid = false;
-        const ping = () => {
-            this.websocket.ping();
-            if(!this.invalid) {
-                setTimeout(ping, 5000);
-            }
-        }
-        ping();
-
+        debug(`recieve ws connection from ${this.websocket.remoteAddress}`);
         this.websocket.on("message", this.onmessage.bind(this));
         this.websocket.on("error", (err: Error) => {
-            if (this.invalid) return;
             this.invalid = true;
-            debug(`websocket throw exception: ${err}, ${this.invalid}`);
-            this.websocket.close(1004);
+            debug(`websocket throw error: ${err}`);
         });
-        this.websocket.on("timeout", () => {
+        this.websocket.on("close", (code: number, desc: string) => {
             this.invalid = true;
-            debug(`websocket timeout`);
-        });
-        this.websocket.on("close", (clean: boolean) => {
-            debug(`websocket closed, clean ? ${clean}`);
+            debug(`websocket closed`);
             this.emit('close');
-        });
-        this.websocket.on("end", () => {
-            this.websocket.close();
         });
     } //}
 
@@ -134,21 +58,20 @@ export class MessageGateway extends events.EventEmitter {
         this.websocket.send(msg, cb);
     } //}
 
-    /** message dispatcher, dispatch message base on message type */
-    private onmessage(msg: Buffer | string) //{
+    private onmessage(msg: IMessage) //{
     {
         if(this.invalid) return;
         let message: BasicMessage;
 
-        if (typeof(msg) == 'string') {
+        if (msg.type == 'utf8') {
             try {
-                message = MessageSerializer.JSONSerializer.decode(msg);
+                message = MessageSerializer.JSONSerializer.decode(msg.utf8Data);
             } catch (err) {
                 warn('recieve a bad message ', err);
             }
         } else {
             try {
-                message = MessageSerializer.BINSerializer.decode(utls.BuffertoArrayBuffer(msg));
+                message = MessageSerializer.BINSerializer.decode(utls.BuffertoArrayBuffer(msg.binaryData));
             } catch (err) {
                 warn('recieve a bad message ', err);
             }

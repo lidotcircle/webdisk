@@ -20,6 +20,7 @@
     "node-getopt": "^0.3.2",
     "smart-buffer": "^4.1.0",
     "sqlite3": "^5.0.0",
+    "websocket": "^1.0.33",
     "winston": "^3.2.1"
   },
   "devDependencies": {
@@ -30,6 +31,7 @@
     "@types/node-getopt": "^0.2.31",
     "@types/sqlite3": "^3.1.6",
     "@types/tmp": "^0.1.0",
+    "@types/websocket": "^1.0.1",
     "bootstrap": "^4.4.1",
     "browserify": "^16.5.1",
     "dart-sass": "^1.25.0",
