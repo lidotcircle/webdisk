@@ -5,6 +5,7 @@ import * as fs    from 'fs';
 import * as path  from 'path';
 import * as http  from 'http';
 import * as utilx from 'util';
+import * as stream from 'stream';
 
 import { URL }       from 'url';
 
@@ -15,11 +16,72 @@ import { upgradeHandler } from './message_gateway';
 import { debug, info, warn, error } from './logger';
 import { DB } from './services';
 
-import * as annautils from 'annautils';
 import { cons } from './utils';
 import { UserInfo } from './common/db_types';
 import { SimpleHttpServer, simpleURL } from './simple_http_server';
+import { Writable } from 'stream';
 
+async function writeFileToWritable(filename: string, startPosition: number,
+                                   writer: Writable, length: number = -1): Promise<number> //{
+{
+    const options = {
+        flags: 'r',
+        start: startPosition
+    };
+    if(length >= 0) {
+        options['end'] = startPosition + length;
+    }
+    const fstream = fs.createReadStream(filename, options);
+
+    return await new Promise((resolve: (n: number) => void, reject) => {
+        let writed = 0;
+        let finished = false;
+        const ok = () => {
+            if(finished) return;
+            finished = true;
+            resolve(writed);
+        }
+        const failByOther = () => fail(new Error('closed by connection\'s endpoint'));
+        const fail = (err) => {
+            if(finished) return;
+
+            finished = true;
+            fstream.close();
+            writer.removeListener('error', fail);
+            writer.removeListener('close', failByOther);
+            reject(err);
+        }
+
+        let prevCheck = 0;
+        let stopThis = 0;
+        const checkWriterLive = () => {
+            if(finished) return;
+
+            stopThis = prevCheck == writed ? ++stopThis : 0;
+            if(stopThis > 3) {
+                return fail(new Error('timeout'));
+            }
+            prevCheck = writed;
+            setTimeout(checkWriterLive, 5000);
+        }
+        checkWriterLive();
+
+        fstream
+        .on('end', ok)
+        .on('data', buf => writed += buf.length)
+        .on('error', fail)
+        .on('close', ok);
+
+        writer
+        .on('error', fail)
+        .on('close', failByOther);
+
+        fstream.pipe(writer, {end: false});
+    });
+} //}
+
+
+let nnn: number = 1;
 /** 
  * response a file or partial file that is in server to client, 
  * if whole file status code is [200 OK], if partial file status code is [206 partial content]
@@ -84,21 +146,11 @@ async function write_file_response(filename: string,         //{
             res.end();
             return;
         }
-        fs.open(filename, "r", (err, fd) => {
-            if (err) {
-                res.writeHead(500);
-                return res.end();
-            }
-            res.writeHead(success);
-            annautils.stream.fdWriteToWritable(fd, startposition, res, content_length, 1024, false, (err, nbytes) => {
-                if (err != null) {
-                    res.statusCode = 500;
-                    return res.end();
-                }
-                res.end();
-            });
-        });
+        res.writeHead(success);
+        await writeFileToWritable(filename, startposition, res, content_length);
+        res.end();
     } catch (err) {
+        error(err.message);
         res.statusCode = 404;
         res.end(`<h1>${err}</h1>`);
         return;

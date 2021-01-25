@@ -315,11 +315,13 @@ export class WebsocketM extends event.EventEmitter //{
             let opc = opcs.shift();
             let msg = msgs.shift();
             let res = reserveds.shift();
+            /*
             debug(JSON.stringify({
                 opc: opc,
                 fin: fin,
                 msglen: msg.length,
             }, null, 1));
+            */
             switch(opc) {
                 case WebsocketOPCode.Binary:
                 case WebsocketOPCode.Text:

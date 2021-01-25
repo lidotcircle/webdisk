@@ -2,7 +2,7 @@ import * as http  from 'http';
 import * as event from 'events';
 import { URL } from 'url';
 import { cons } from './utils';
-import { info } from './logger';
+import { error, info } from './logger';
 
 const AsUrlMap = Symbol('http server url');
 /**
@@ -132,8 +132,10 @@ export class SimpleHttpServer extends event.EventEmitter //{
                     await ans;
                 }
             } catch (err) {
+                console.error(err);
+                error(err.message);
                 response.statusCode = 500;
-                response.end();
+                response.end(`<h1>Internal Server Error ${err.message}</h1>`);
             }
         }
     } //}
