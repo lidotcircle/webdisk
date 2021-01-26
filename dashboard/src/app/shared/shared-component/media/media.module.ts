@@ -6,6 +6,7 @@ import { VideoPlayerComponent } from './video-player/video-player.component';
 import { VimeModule } from '@vime/angular';
 import { ImageViewerComponent } from './image-viewer/image-viewer.component';
 import { NgxAudioPlayerModule } from 'ngx-audio-player';
+import { MatIconModule } from '@angular/material/icon';
 
 
 @NgModule({
@@ -13,6 +14,7 @@ import { NgxAudioPlayerModule } from 'ngx-audio-player';
     imports: [
         CommonModule,
         VimeModule,
+        MatIconModule,
         NgxAudioPlayerModule,
     ],
     exports: [

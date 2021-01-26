@@ -16,6 +16,5 @@ export class SoleImageViewerComponent extends SoleWindowClickClose implements On
         super();
     }
 
-    ngOnInit(): void {
-    }
+    ngOnInit(): void {}
 }

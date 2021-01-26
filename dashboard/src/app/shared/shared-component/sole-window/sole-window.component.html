@@ -2,7 +2,13 @@
 <div class="container">
     <div class="content">
         <div class="take-space" (click)='onbgclick()'></div>
-        <ng-content></ng-content>
+
+        <div class="wrapper">
+            <div class="row-take-space" (click)='onbgclick()'></div>
+            <ng-content></ng-content>
+            <div class="row-take-space" (click)='onbgclick()'></div>
+        </div>
+
         <div class="take-space" (click)='onbgclick()'></div>
     </div>
 </div>
