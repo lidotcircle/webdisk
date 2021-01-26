@@ -256,14 +256,17 @@ export class AccountManagerService {
     {
         if (this.shortTermToken == null) {
             const ans = this.sessionstorage.get(ShortTermTokenStore, null);;
-            if (!ans || (Date.now() - ans.start) > (cons.ShortTermTokenValidPeriod / 2)) {
-                await this.refreshShortTermToken();
-            } else {
+            if(!ans) {
                 this.shortTermToken = ans.token;
                 this.shortTermTokenStartPoint = ans.start;
+            } else {
+                await this.refreshShortTermToken();
             }
         }
 
+        if ((Date.now() - this.shortTermTokenStartPoint) > (cons.ShortTermTokenValidPeriod / 2)) {
+            await this.refreshShortTermToken();
+        }
         return this.shortTermToken;
     } //}
 

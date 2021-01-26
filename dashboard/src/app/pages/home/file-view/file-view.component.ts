@@ -14,7 +14,7 @@ import { ClipboardContentType, ClipboardService } from 'src/app/shared/service/c
 import { ActivatedRoute, Router } from '@angular/router';
 import { Tool, ToolbarService, ToolType } from './toolbar.service';
 import { AcceptDragItem } from './file/dragdrop';
-import { OpenVideoService } from 'src/app/shared/service/open-file/open-video.service';
+import { FileViewerService } from './plugins/file-viewer.service';
 
 
 /** sortByName */
@@ -118,8 +118,8 @@ export class FileViewComponent implements OnInit, OnDestroy {
                 private fileoperation: FileOperationService,
                 private clipboard: ClipboardService,
                 private router: Router,
-                private videoPlayer: OpenVideoService,
                 private activatedroute: ActivatedRoute,
+                private fileviewer: FileViewerService,
                 private host: ElementRef) {
     }
 
@@ -444,17 +444,11 @@ export class FileViewComponent implements OnInit, OnDestroy {
     {
         const stat = this.files[n];
         if(stat.filetype == FileType.dir) {
-            // TODO hint
             this.currentDirectory.cd(stat.filename);
         } else if (stat.filetype == FileType.reg) {
-            const token = await this.accountManager.getShortTermToken();
-            const uri = `${cons.DiskPrefix}${stat.filename}?${cons.DownloadShortTermTokenName}=${token}`;
-
-            const extension = stat.extension;
-            const video_extension = ['mp4', 'mkv', 'avi'];
-            if(video_extension.indexOf(stat.extension) >= 0) {
-                await this.videoPlayer.create({src: uri}).wait();
-            } else {
+            if(!await this.fileviewer.view(stat)) {
+                const token = await this.accountManager.getShortTermToken();
+                const uri = `${cons.DiskPrefix}${stat.filename}?${cons.DownloadShortTermTokenName}=${token}`;
                 downloadURI(uri, stat.basename);
             }
         }
