@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import { FileStat } from 'src/app/shared/common';
 import { AccountManagerService } from 'src/app/shared/service/account-manager.service';
 import { InjectViewService } from 'src/app/shared/service/inject-view.service';
-import { OpenVideoService } from 'src/app/shared/service/open-file/open-video.service';
+import { OpenFileService } from 'src/app/shared/service/open-file/open-file.service';
 import { cons } from 'src/app/shared/utils';
 
 type FOpenFileView = (fileviewservice: FileViewerService, file: FileStat) => Promise<void>;
 
 import {default as handler_video} from './video';
+import {default as handler_audio} from './audio';
 
 
 @Injectable({
@@ -15,13 +16,14 @@ import {default as handler_video} from './video';
 })
 export class FileViewerService {
     get injector() {return this._injector;}
-    get videoplayer() {return this._videoplayer;}
+    get openfile() {return this._openfile;}
     
     private handlerMap: Map<string, FOpenFileView> = new Map();
     constructor(private _injector: InjectViewService,
-                private _videoplayer: OpenVideoService,
+                private _openfile: OpenFileService,
                 private accountManager: AccountManagerService) {
-        this.registerHandlerEntries(handler_video, ['mp4', 'mkv']);
+        this.registerHandlerEntries(handler_video, ['mp4', 'mkv', 'webm']);
+        this.registerHandlerEntries(handler_audio, ['mp3', 'wav', 'ogg']);
     }
 
     private registerHandlerEntries(handle: FOpenFileView, extensions: string[]) {

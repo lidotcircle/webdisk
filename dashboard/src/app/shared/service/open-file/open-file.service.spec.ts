@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { OpenVideoService } from './open-video.service';
+import { OpenFileService } from './open-file.service';
 
-describe('OpenVideoService', () => {
-  let service: OpenVideoService;
+describe('OpenFileService', () => {
+  let service: OpenFileService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(OpenVideoService);
+    service = TestBed.inject(OpenFileService);
   });
 
   it('should be created', () => {

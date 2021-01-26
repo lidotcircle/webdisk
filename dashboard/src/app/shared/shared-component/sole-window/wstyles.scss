@@ -1,0 +1,24 @@
+
+@mixin incenter() {
+    app-sole-window {
+        width: 100%;
+
+        .wrapper {
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+
+            .take-space {
+                flex-grow: 1;
+            }
+
+            .player {
+                padding: 1em;
+                box-sizing: border-box;
+                width: 100%;
+                max-width: 600px;
+            }
+        }
+    }
+}
+

@@ -23,6 +23,7 @@ import { PageTopComponent } from './page-top/page-top.component';
 import { MediaModule } from './media/media.module';
 import { SoleWindowComponent } from './sole-window/sole-window.component';
 import { SoleVideoPlayerComponent } from './sole-window/sole-video-player/sole-video-player.component';
+import { SoleAudioPlayerComponent } from './sole-window/sole-audio-player/sole-audio-player.component';
 
 
 @NgModule({
@@ -30,7 +31,7 @@ import { SoleVideoPlayerComponent } from './sole-window/sole-video-player/sole-v
         LoginBGComponent, MessageBoxComponent, ProgressBarComponent,
         UploadFileViewComponent, ContextMenuComponent,
         FilePropertiesComponent, NotifierComponent, MessageProgressBarComponent, 
-        ProgressCircleComponent, FileIconComponent, SearchBarComponent, WindowComponent, PageTopComponent, SoleWindowComponent, SoleVideoPlayerComponent
+        ProgressCircleComponent, FileIconComponent, SearchBarComponent, WindowComponent, PageTopComponent, SoleWindowComponent, SoleVideoPlayerComponent, SoleAudioPlayerComponent
     ],
     imports: [
         CommonModule,
