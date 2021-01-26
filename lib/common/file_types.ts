@@ -22,7 +22,7 @@ export class FileStat {
         if(this.filetype == FileType.dir) return '';
         const k = this.basename.split('.');
         if(k.length == 1) return '';
-        return k[k.length-1];
+        return k[k.length-1].toLowerCase();
     }
 
     get basename(): string {

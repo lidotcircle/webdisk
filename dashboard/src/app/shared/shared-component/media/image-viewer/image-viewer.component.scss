@@ -1,0 +1,21 @@
+
+div.image-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+
+    div.image {
+        width: 100%;
+
+        img {
+            width: 100%;
+        }
+    }
+
+    div.tools {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+    }
+}
+

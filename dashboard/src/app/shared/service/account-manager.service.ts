@@ -256,7 +256,7 @@ export class AccountManagerService {
     {
         if (this.shortTermToken == null) {
             const ans = this.sessionstorage.get(ShortTermTokenStore, null);;
-            if(!ans) {
+            if(ans) {
                 this.shortTermToken = ans.token;
                 this.shortTermTokenStartPoint = ans.start;
             } else {

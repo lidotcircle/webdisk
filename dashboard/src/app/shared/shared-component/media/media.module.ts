@@ -13,11 +13,12 @@ import { NgxAudioPlayerModule } from 'ngx-audio-player';
     imports: [
         CommonModule,
         VimeModule,
-        NgxAudioPlayerModule
+        NgxAudioPlayerModule,
     ],
     exports: [
         AudioPlayerComponent,
-        VideoPlayerComponent
+        VideoPlayerComponent,
+        ImageViewerComponent
     ]
 })
 export class MediaModule { }

@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { SoleAudioPlayerComponent } from '../../shared-component/sole-window/sole-audio-player/sole-audio-player.component';
+import { SoleImageViewerComponent } from '../../shared-component/sole-window/sole-image-viewer/sole-image-viewer.component';
 import { SoleVideoPlayerComponent } from '../../shared-component/sole-window/sole-video-player/sole-video-player.component';
 import { InjectedComponentHandler, InjectViewService } from '../inject-view.service';
 import { OpenFileHandler } from './open-file-handler';
@@ -22,6 +23,14 @@ export class OpenFileService {
         title: string
     }): OpenFileHandler<SoleAudioPlayerComponent> {
         const injecthandler = this.injector.inject(SoleAudioPlayerComponent, data);
+        return new OpenFileHandler(injecthandler);
+    }
+
+    createImage(data: {
+        images: string[],
+        index: number
+    }): OpenFileHandler<SoleImageViewerComponent> {
+        const injecthandler = this.injector.inject(SoleImageViewerComponent, data);
         return new OpenFileHandler(injecthandler);
     }
 }

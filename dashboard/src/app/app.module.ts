@@ -7,6 +7,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
 
+
 @NgModule({
     declarations: [
         AppComponent,
@@ -16,7 +17,7 @@ import { MatIconModule } from '@angular/material/icon';
         AppRoutingModule,
         HttpClientModule,
         MatIconModule,
-        BrowserAnimationsModule
+        BrowserAnimationsModule,
     ],
     providers: [],
     bootstrap: [AppComponent]

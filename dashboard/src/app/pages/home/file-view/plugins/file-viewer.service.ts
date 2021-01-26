@@ -5,10 +5,11 @@ import { InjectViewService } from 'src/app/shared/service/inject-view.service';
 import { OpenFileService } from 'src/app/shared/service/open-file/open-file.service';
 import { cons } from 'src/app/shared/utils';
 
-type FOpenFileView = (fileviewservice: FileViewerService, file: FileStat) => Promise<void>;
+type FOpenFileView = (fileviewservice: FileViewerService, file: FileStat, files: FileStat[], activeIndex: number) => Promise<void>;
 
-import {default as handler_video} from './video';
-import {default as handler_audio} from './audio';
+import {default as reg_video} from './video';
+import {default as reg_audio} from './audio';
+import {default as reg_image} from './image';
 
 
 @Injectable({
@@ -22,11 +23,12 @@ export class FileViewerService {
     constructor(private _injector: InjectViewService,
                 private _openfile: OpenFileService,
                 private accountManager: AccountManagerService) {
-        this.registerHandlerEntries(handler_video, ['mp4', 'mkv', 'webm']);
-        this.registerHandlerEntries(handler_audio, ['mp3', 'wav', 'ogg']);
+        reg_video(this);
+        reg_audio(this);
+        reg_image(this);
     }
 
-    private registerHandlerEntries(handle: FOpenFileView, extensions: string[]) {
+    public registerHandlerEntries(handle: FOpenFileView, extensions: string[]) {
         for(const ext of extensions) {
             if(this.handlerMap.has(ext)) {
                 throw new Error(`bad entry, ${ext}`);
@@ -35,10 +37,10 @@ export class FileViewerService {
         }
     }
 
-    async view(file: FileStat): Promise<boolean> {
-        const handler = this.handlerMap.get(file.extension);
+    async view(files: FileStat[], activeIndex: number): Promise<boolean> {
+        const handler = this.handlerMap.get(files[activeIndex].extension);
         if(handler != null) {
-            await handler(this, file);
+            await handler(this, files[activeIndex], files, activeIndex);
             return true;
         } else {
             return false;

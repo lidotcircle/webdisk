@@ -446,7 +446,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
         if(stat.filetype == FileType.dir) {
             this.currentDirectory.cd(stat.filename);
         } else if (stat.filetype == FileType.reg) {
-            if(!await this.fileviewer.view(stat)) {
+            if(!await this.fileviewer.view(this.files, n)) {
                 const token = await this.accountManager.getShortTermToken();
                 const uri = `${cons.DiskPrefix}${stat.filename}?${cons.DownloadShortTermTokenName}=${token}`;
                 downloadURI(uri, stat.basename);
