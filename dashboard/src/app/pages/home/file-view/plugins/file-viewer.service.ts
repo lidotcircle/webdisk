@@ -10,6 +10,7 @@ type FOpenFileView = (fileviewservice: FileViewerService, file: FileStat, files:
 import {default as reg_video} from './video';
 import {default as reg_audio} from './audio';
 import {default as reg_image} from './image';
+import {default as reg_pdf  } from './pdf';
 
 
 @Injectable({
@@ -26,6 +27,7 @@ export class FileViewerService {
         reg_video(this);
         reg_audio(this);
         reg_image(this);
+        reg_pdf  (this);
     }
 
     public registerHandlerEntries(handle: FOpenFileView, extensions: string[]) {

@@ -1,0 +1,6 @@
+
+<app-sole-window (bgclick)='onexit()'>
+    <app-pdf-viewer class='player' [src]='src' [page]='page' (pageChange)='pageChange.emit($event)'
+                    [filename]='filename'></app-pdf-viewer>
+</app-sole-window>
+

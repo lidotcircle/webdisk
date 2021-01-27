@@ -28,6 +28,7 @@
     "material-icons": "^0.5.2",
     "md5": "^2.3.0",
     "ngx-audio-player": "^11.0.2",
+    "ngx-extended-pdf-viewer": "^8.0.0-beta.3",
     "rxjs": "~6.6.0",
     "swiper": "^6.4.7",
     "tslib": "^2.0.0",

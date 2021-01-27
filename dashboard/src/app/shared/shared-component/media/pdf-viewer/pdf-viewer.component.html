@@ -1,0 +1,10 @@
+
+<ngx-extended-pdf-viewer [src]='pdfsrc' [filenameForDownload]='filename'
+    height='100vh'
+    [useBrowserLocale]="true"
+    [textLayer]="true"
+    [showHandToolButton]="true"
+    [showPresentationModeButton]="true"
+    [minifiedJSLibraries]="true"
+    [page]='page' (pageChange)='pageChange.emit($event)'></ngx-extended-pdf-viewer>
+

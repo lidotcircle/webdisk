@@ -7,20 +7,24 @@ import { VimeModule } from '@vime/angular';
 import { ImageViewerComponent } from './image-viewer/image-viewer.component';
 import { NgxAudioPlayerModule } from 'ngx-audio-player';
 import { MatIconModule } from '@angular/material/icon';
+import { NgxExtendedPdfViewerModule } from 'ngx-extended-pdf-viewer';
+import { PdfViewerComponent } from './pdf-viewer/pdf-viewer.component';
 
 
 @NgModule({
-    declarations: [AudioPlayerComponent, VideoPlayerComponent, ImageViewerComponent],
+    declarations: [AudioPlayerComponent, VideoPlayerComponent, ImageViewerComponent, PdfViewerComponent],
     imports: [
         CommonModule,
         VimeModule,
         MatIconModule,
         NgxAudioPlayerModule,
+        NgxExtendedPdfViewerModule
     ],
     exports: [
         AudioPlayerComponent,
         VideoPlayerComponent,
-        ImageViewerComponent
+        ImageViewerComponent,
+        PdfViewerComponent
     ]
 })
 export class MediaModule { }
