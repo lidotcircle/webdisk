@@ -25,6 +25,7 @@
     "crypto-js": "^4.0.0",
     "dexie": "^3.0.3",
     "is-promise": "^4.0.0",
+    "material-icons": "^0.5.2",
     "md5": "^2.3.0",
     "ngx-audio-player": "^11.0.2",
     "rxjs": "~6.6.0",

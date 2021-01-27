@@ -79,6 +79,18 @@ div.image-container {
             height: 20%;
             max-height: 80px;
             transition: 0.5s transform;
+
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+
+            mat-icon {
+                flex-grow: 1;
+                height: auto;
+                box-sizing: border-box;
+                padding: 0.7em;
+            }
         }
     }
 }
