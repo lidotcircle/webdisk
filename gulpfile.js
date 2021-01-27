@@ -236,6 +236,12 @@ async function serve() //{
 } //}
 gulp.task("serve", serve);
 
+async function host() //{
+{
+    await restart_backend_server();
+} //}
+gulp.task("host", gulp.series("release", host));
+
 /** TASK clean */
 gulp.task("clean", () => {
     let dirs = [
