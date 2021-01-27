@@ -11,6 +11,7 @@ import {default as reg_video} from './video';
 import {default as reg_audio} from './audio';
 import {default as reg_image} from './image';
 import {default as reg_pdf  } from './pdf';
+import { UserSettingService } from 'src/app/shared/service/user-setting.service';
 
 
 @Injectable({
@@ -23,7 +24,8 @@ export class FileViewerService {
     private handlerMap: Map<string, FOpenFileView> = new Map();
     constructor(private _injector: InjectViewService,
                 private _openfile: OpenFileService,
-                private accountManager: AccountManagerService) {
+                private accountManager: AccountManagerService,
+                private usersetting: UserSettingService) {
         reg_video(this);
         reg_audio(this);
         reg_image(this);
@@ -58,8 +60,13 @@ export class FileViewerService {
     }
 
     async ValidHttpResourceURL(filename: string): Promise<string> {
-        const token = await this.accountManager.getShortTermToken();
-        return `${cons.DiskPrefix}${filename}?${cons.DownloadShortTermTokenName}=${token}`;
+        if(this.usersetting.UsingLoginTokenInPlayer) {
+            const token = this.accountManager.LoginToken;
+            return `${cons.DiskPrefix}${filename}?${cons.DownloadTokenName}=${token}`;
+        } else {
+            const token = await this.accountManager.getShortTermToken();
+            return `${cons.DiskPrefix}${filename}?${cons.DownloadShortTermTokenName}=${token}`;
+        }
     }
 }
 

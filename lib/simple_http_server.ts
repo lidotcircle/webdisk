@@ -3,6 +3,7 @@ import * as event from 'events';
 import { URL } from 'url';
 import { cons } from './utils';
 import { error, info } from './logger';
+import { HttpError } from './errors';
 
 const AsUrlMap = Symbol('http server url');
 /**
@@ -134,8 +135,14 @@ export class SimpleHttpServer extends event.EventEmitter //{
             } catch (err) {
                 console.error(err);
                 error(err.message);
-                response.statusCode = 500;
-                response.end(`<h1>Internal Server Error ${err.message}</h1>`);
+
+                if(err instanceof HttpError) {
+                    response.statusCode = err.code;
+                    response.end();
+                } else {
+                    response.statusCode = 500;
+                    response.end(`<h1>Internal Server Error ${err.message}</h1>`);
+                }
             }
         }
     } //}
