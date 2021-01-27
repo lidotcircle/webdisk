@@ -2,6 +2,13 @@
 import * as utils from './utils';
 
 
+let hasSharedArrayBuffer = true;
+try {
+    SharedArrayBuffer;
+} catch {
+    hasSharedArrayBuffer = false;
+}
+
 export enum MessageType {
     UserManagement = "USER_MANAGEMENT",
     FileManagement = "FILE_MANAGEMENT",
@@ -241,7 +248,7 @@ export class BINSerialization {
     private getBuffer(v: any): ArrayBuffer | SharedArrayBuffer //{
     {
         if(v instanceof ArrayBuffer)       return v;
-        if(v instanceof SharedArrayBuffer) return v;
+        if(hasSharedArrayBuffer && v instanceof SharedArrayBuffer) return v;
 
         let viewBuf = false;
         if(v instanceof Int8Array)         viewBuf = true;
@@ -420,8 +427,8 @@ export class BINSerialization {
     decode(view: DataView | ArrayBuffer | SharedArrayBuffer): any //{
     {
         if (view instanceof ArrayBuffer)       view = new DataView(view);
-        if (view instanceof SharedArrayBuffer) view = new DataView(view);
-        return this.general_decode_handler(view)[0];
+        if (hasSharedArrayBuffer && view instanceof SharedArrayBuffer) view = new DataView(view);
+        return this.general_decode_handler(view as DataView)[0];
     } //}
 }
 
