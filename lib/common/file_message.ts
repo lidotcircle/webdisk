@@ -14,6 +14,7 @@ export class FileMessage extends BasicMessage {
 }
 
 export enum FileRequest {
+    APPEND         = "APPEND",
     CHMOD          = "CHMOD",
     COPY           = "COPY",
     COPYR          = "COPYR",

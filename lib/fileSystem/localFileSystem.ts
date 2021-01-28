@@ -162,7 +162,7 @@ export class LocalFileSystem extends FileSystem {
     }
 
     async append(file: string, buf: ArrayBuffer): Promise<void> {
-        await fs.promises.appendFile(file, buf);
+        await fs.promises.appendFile(file, Buffer.from(buf));
     }
 
     static asyncWrite = util.promisify(fs.write);

@@ -88,6 +88,10 @@ class FileManagement extends MessageHandler {
         return ans;
     }
 
+    private async append(file: string, buffer: ArrayBuffer) {
+        await service.filesystem.append(file, buffer);
+    }
+
     private async chmod(file: string, mode: number) {
         await service.filesystem.chmod(file, mode);
     }
@@ -163,6 +167,10 @@ class FileManagement extends MessageHandler {
         debug(`${user.username} make ${req.fm_request} request`);
         try {
             switch(req.fm_request) {
+                case FileRequest.APPEND: {
+                    checkArgv('sf', argv);
+                    await this.append(this.resolveUserPath(user, argv[0]), argv[1]);
+                } break;
                 case FileRequest.CHMOD: {
                     checkArgv('sn', argv);
                     await this.chmod(this.resolveUserPath(user, argv[0]), argv[1]);

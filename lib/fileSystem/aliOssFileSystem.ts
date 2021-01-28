@@ -9,6 +9,11 @@ const alioss = require('ali-oss');
 type OSS = typeof ossprototype;
 class FileSystemNotImplemented extends Error {}
 
+class AliOSSFileStat extends FileStat {
+    etag: string;
+    objectType: string;
+}
+
 export class AliOSSFileSystem extends FileSystem {
     private bucket: OSS;
 
@@ -39,13 +44,14 @@ export class AliOSSFileSystem extends FileSystem {
         return list.objects[0];
     }
 
-    private metadataToFileStat(metaData: ObjectMeta): FileStat {
-        const ans = new FileStat();
+    private metadataToFileStat(metaData: ObjectMeta): AliOSSFileStat {
+        const ans = new AliOSSFileStat();
         ans.size = metaData.size;
         ans.filename = this.resolveObjectNameToFilename(metaData.name);
         ans.filetype = FileType.reg;
         ans.mode = 623;
-        ans['etag'] = metaData.etag;
+        ans.etag = metaData.etag;
+        ans.objectType = metaData.type;
 
         const time = new Date(metaData.lastModified).getTime(); 
         ans.mtimeMs = time;
@@ -54,8 +60,8 @@ export class AliOSSFileSystem extends FileSystem {
         return ans;
     }
 
-    private prefixToFileStat(prefix: string): FileStat {
-        const ans = new FileStat();
+    private prefixToFileStat(prefix: string): AliOSSFileStat {
+        const ans = new AliOSSFileStat();
         ans.size = 4 * 4096;
         ans.mode = 6123;
         ans.filename = this.resolveObjectNameToFilename(prefix);
@@ -220,13 +226,44 @@ export class AliOSSFileSystem extends FileSystem {
         return resp.content;
     } //}
 
+    private async versions(file: string): Promise<{versionId: string, lastModified: string}[]> //{
+    {
+        const ans = [];
+        const objname = this.resolveFilenameToObjectName(file);
+        const query = {prefix: objname, 'max-keys': 20};
+        let cont = true;
+
+        const add = v => {
+            if(v.name != objname) {
+                cont = false;
+                return;
+            } else {
+                ans.push({versionId: v.versionId, lastModified: v.lastModified});
+            }
+        }
+        while(cont) {
+            const resp = await (this.bucket as any).getBucketVersions(query);
+            cont = resp.isTruncated;
+            query['keyMarker'] = resp.nextKeyMarker;
+            query['versionIdMarker'] = resp.nextVersionIdMarker;
+            if(resp.objects) {
+                resp.objects.forEach(add);
+            }
+
+            if(resp.deleteMarker) {
+                resp.deleteMarker.forEach(add);
+            }
+        }
+
+        return ans;
+    } //}
     async remove(path: string) //{
     {
-        const fstat = await this.stat(path);
-        if(fstat.filetype == FileType.dir) {
-            throw new Error('Bad Entry');
+        const versions = await this.versions(path);
+        for(const ver of versions) {
+            await this.bucket.delete(this.resolveFilenameToObjectName(path), 
+                {timeout: 5000, versionId: ver.versionId} as any);
         }
-        await this.bucket.delete(this.resolveFilenameToObjectName(path), {timeout: 5000});
     } //}
 
     async remover(path: string) //{
@@ -253,12 +290,12 @@ export class AliOSSFileSystem extends FileSystem {
         }
     } //}
 
-    async stat(file: string): Promise<FileStat> //{
+    async stat(file: string): Promise<AliOSSFileStat> //{
     {
         if(file == '/') {
             return this.prefixToFileStat('');
         }
-        let ans: FileStat;
+        let ans: AliOSSFileStat;
 
         if(file.endsWith('/')) file = file.substr(0, file.length - 1);
         const prefix = this.resolveFilenameToObjectName(file);
@@ -303,7 +340,7 @@ export class AliOSSFileSystem extends FileSystem {
             const fstat = await this.stat(file);
             req = {position: fstat.size};
         } catch {}
-        await this.bucket.append(objname, buf, req);
+        await this.bucket.append(objname, Buffer.from(buf), req);
     } //}
 
     async write(file: string, position: number, buf: ArrayBuffer): Promise<number> {
@@ -315,7 +352,6 @@ export class AliOSSFileSystem extends FileSystem {
                               startPosition: number,
                               length: number = -1): Promise<number> 
     {
-        console.log(filename, startPosition, length);
         if(length < 0) {
             const stat = await this.stat(filename);
             length = stat.size - startPosition;

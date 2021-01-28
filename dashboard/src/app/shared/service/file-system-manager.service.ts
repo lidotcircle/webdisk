@@ -58,6 +58,11 @@ export class FileSystemManagerService {
         return ans;
     }
 
+    async append(file: string, buffer: ArrayBuffer): Promise<void> {
+        this.absolutePath(file);
+        await this.sendTo(FileRequest.APPEND, file, buffer);
+    }
+
     async chmod(file: string, mode: string | number): Promise<void> {
         this.absolutePath(file);
         let _mode = mode;

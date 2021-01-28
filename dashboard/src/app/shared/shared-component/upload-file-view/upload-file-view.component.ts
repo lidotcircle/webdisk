@@ -292,13 +292,12 @@ export class UploadFileViewComponent extends AbsoluteView implements OnInit {
             }
         }
 
-        await this.fileManager.touch(filename);
         while(uploadsize < fileData.size) {
             if(this.closed) return;
 
             let sliceSize = Math.min(blocksize, fileData.size - uploadsize);
             const buf = await fileData.slice(uploadsize, uploadsize + sliceSize).arrayBuffer();
-            await this.fileManager.write(filename, uploadsize, buf);
+            await this.fileManager.append(filename, buf);
             uploadsize += sliceSize;
             this.uploadSize.next(sliceSize);
         }
