@@ -7,14 +7,19 @@ import { FileSystem } from './fileSystem/fileSystem';
 import { AccessControl } from './accessControl/acl';
 
 
-// Database
 export const DB: Database = conf.DB;
+class Service {
+    // Database
+    get DB(): Database {return conf.DB;}
 
-// File System Abstraction
-export const filesystem: FileSystem = conf.FSAbstraction;
+    // File System Abstraction
+    get filesystem(): FileSystem {return conf.FSAbstraction;}
 
-// Access Control
-export const acl: AccessControl = new AccessControl();
+    // Access Control
+    private _acl = new AccessControl();
+    get acl(): AccessControl {return this._acl;}
+}
+export const service = new Service();
 
 
 export const MessageHandlers: Map<MessageType, MessageHandler> = new Map<MessageType, MessageHandler>();

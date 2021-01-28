@@ -7,7 +7,7 @@ import * as events from 'events';
 import { constants } from './constants';
 import { BasicMessage, MessageEncoder, MessageType } from './common/message';
 import { debug, info, warn, error } from './logger';
-import { MessageSerializer, MessageHandlers, registerMessageHandler, acl } from './services';
+import { MessageSerializer, MessageHandlers, registerMessageHandler, service } from './services';
 import { UserManager } from './handlers/user_management';
 import * as utls from './utils';
 
@@ -95,7 +95,7 @@ export class MessageGateway extends events.EventEmitter {
             warn('get a message without handler, ignore it');
         } else {
             try {
-                await acl.CheckMessage(message);
+                await service.acl.CheckMessage(message);
             } catch (err) {
                 console.error('Access Denied:', err);
                 const msg = new BasicMessage();

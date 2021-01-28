@@ -36,6 +36,10 @@ class Config {
             }
             await _this.DB.init(dbpath);
         }
+
+        {
+            const m = _this.FSAbstraction;
+        }
     }
 
     public get listenAddress() {
@@ -64,6 +68,7 @@ class Config {
 
     private fsabs: FileSystem;
     public get FSAbstraction(): FileSystem {
+        if(!this.__init) throw new Error('config doesn\'t initialize');
         if(this.fsabs) return this.fsabs;
 
         switch(this.filesystem.type) {

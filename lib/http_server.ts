@@ -14,7 +14,7 @@ import { constants } from './constants';
 import { upgradeHandler } from './message_gateway';
 
 import { debug, info, warn, error } from './logger';
-import { DB, filesystem } from './services';
+import { DB, service } from './services';
 
 import { cons } from './utils';
 import { UserInfo } from './common/db_types';
@@ -51,7 +51,7 @@ async function write_file_response(filename: string,         //{
     let success: number = 200;
     if (range) success = 206;
 
-    let filestat = await filesystem.stat(filename);
+    let filestat = await service.filesystem.stat(filename);
     if (filestat.filetype != FileType.reg)
         throw new NotFound();
     if (range != null && filestat.size <= range[1]) 
@@ -112,7 +112,7 @@ async function write_file_response(filename: string,         //{
     }
 
     res.writeHead(success);
-    await filesystem.writeFileToWritable(filename, res, startposition, content_length);
+    await service.filesystem.writeFileToWritable(filename, res, startposition, content_length);
     res.end();
 } //}
 
@@ -228,7 +228,7 @@ export class HttpServer extends SimpleHttpServer
     {
         let ansfile = filename;
         try {
-            const stat = await filesystem.stat(filename);
+            const stat = await service.filesystem.stat(filename);
             if (stat.filetype != FileType.reg && stat.filetype != FileType.symbol) {
                 ansfile = indexfile;
             }

@@ -1,4 +1,4 @@
-import { DB, filesystem } from '../services';
+import { DB, service } from '../services';
 import { MessageHandler } from '../message_handler';
 import { MessageGateway } from '../message_gateway';
 import { BasicMessage, MessageType } from '../common/message';
@@ -11,6 +11,7 @@ import * as utils from '../utils';
 import * as util from 'util';
 import { FileStat, FileType } from '../common/file_types';
 import { UserInfo } from '../common/db_types';
+import { FileSystem } from 'lib/fileSystem/fileSystem';
 
 function checkArgv(pat: string, argv: any[]) {
     if (!utils.checkArgv(pat, argv)) {
@@ -88,67 +89,67 @@ class FileManagement extends MessageHandler {
     }
 
     private async chmod(file: string, mode: number) {
-        await filesystem.chmod(file, mode);
+        await service.filesystem.chmod(file, mode);
     }
 
     private async copy(src: string, dst: string) {
-        await filesystem.copy(src, dst);
+        await service.filesystem.copy(src, dst);
     }
 
     private async copyr(src: string, dst: string) {
-        await filesystem.copyr(src, dst);
+        await service.filesystem.copyr(src, dst);
     }
 
     private async execFile(file: string, argv: string[]): Promise<string> {
-        return await filesystem.execFile(file, argv);
+        return await service.filesystem.execFile(file, argv);
     }
 
     private async getdir(dir: string): Promise<FileStat[]> {
-        return await filesystem.getdir(dir);
+        return await service.filesystem.getdir(dir);
     }
     
     private async fileMD5(file: string): Promise<string> {
-        return await filesystem.fileMD5(file);
+        return await service.filesystem.fileMD5(file);
     }
 
     private async fileSliceMD5(file: string, position: number, len: number): Promise<string> {
-        return await filesystem.fileSliceMD5(file, position, len);
+        return await service.filesystem.fileSliceMD5(file, position, len);
     }
 
     private async mkdir(dir: string) {
-        await filesystem.mkdir(dir);
+        await service.filesystem.mkdir(dir);
     }
 
     private async move(src: string, dst: string) {
-        await filesystem.move(src, dst);
+        await service.filesystem.move(src, dst);
     }
 
     private async read(file: string, position: number, length: number): Promise<Buffer> {
-        return await filesystem.read(file, position, length);
+        return await service.filesystem.read(file, position, length);
     }
 
     private async remove(path: string) {
-        await filesystem.remove(path);
+        await service.filesystem.remove(path);
     }
 
     private async remover(path: string) {
-        await filesystem.remover(path);
+        await service.filesystem.remover(path);
     }
 
     private async stat(file: string): Promise<FileStat> {
-        return await filesystem.stat(file);
+        return await service.filesystem.stat(file);
     }
 
     private async touch(path: string) {
-        await filesystem.touch(path);
+        await service.filesystem.touch(path);
     }
 
     private async truncate(file: string, len: number) {
-        await filesystem.truncate(file, len);
+        await service.filesystem.truncate(file, len);
     }
 
     private async write(file: string, position: number, buf: ArrayBuffer): Promise<number> {
-        return await filesystem.write(file, position, buf);
+        return await service.filesystem.write(file, position, buf);
     }
 
     async access(req_msg: FileRequestMessage, resp: FileResponseMessage) {
