@@ -8,7 +8,7 @@ import * as path from 'path';
 
 import { FileSystem } from "./fileSystem";
 import { FileStat, FileType } from '../common/file_types';
-import { Writable } from 'stream';
+import { pipeline, Writable } from 'stream';
 
 
 function statToStat(fstat: fs.Stats, file: string): FileStat {
@@ -161,6 +161,10 @@ export class LocalFileSystem extends FileSystem {
         await fs.promises.truncate(file, len);
     }
 
+    async append(file: string, buf: ArrayBuffer): Promise<void> {
+        await fs.promises.appendFile(file, buf);
+    }
+
     static asyncWrite = util.promisify(fs.write);
     async write(file: string, position: number, buf: ArrayBuffer): Promise<number> {
         try {
@@ -188,51 +192,15 @@ export class LocalFileSystem extends FileSystem {
         }
         const fstream = fs.createReadStream(filename, options);
 
-        return await new Promise((resolve: (n: number) => void, reject) => {
-            let writed = 0;
-            let finished = false;
-            const ok = () => {
-                if(finished) return;
-                finished = true;
-                resolve(writed);
-            }
-            const failByOther = () => fail(new Error('closed by connection\'s endpoint'));
-            const fail = (err) => {
-                if(finished) return;
-
-                finished = true;
-                fstream.close();
-                writer.removeListener('error', fail);
-                writer.removeListener('close', failByOther);
-                reject(err);
-            }
-
-            let prevCheck = 0;
-            let stopThis = 0;
-            const checkWriterLive = () => {
-                if(finished) return;
-
-                stopThis = prevCheck == writed ? ++stopThis : 0;
-                if(stopThis > 3) {
-                    return fail(new Error('timeout'));
-                }
-                prevCheck = writed;
-                setTimeout(checkWriterLive, 5000);
-            }
-            checkWriterLive();
-
-            fstream
-                .on('end', ok)
-                .on('data', buf => writed += buf.length)
-                .on('error', fail)
-                .on('close', ok);
-
-            writer
-                .on('error', fail)
-                .on('close', failByOther);
-
-            fstream.pipe(writer, {end: false});
-        });
+        try {
+            /* block when other endpoint closed connection, expect throw error
+            await util.promisify(pipeline)(fstream, writer);
+            return 0;
+            */
+             return await utils.pipelineWithTimeout(fstream, writer, 5000);
+        } finally {
+            fstream.close();
+        }
     } //}
 }
 

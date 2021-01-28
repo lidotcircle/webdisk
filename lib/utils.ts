@@ -1,5 +1,6 @@
 /* UTILS */
 export * from './common/utils';
+export * from './utils/stream';
 
 import * as fs   from 'fs';
 import * as path from 'path';

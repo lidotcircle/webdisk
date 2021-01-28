@@ -240,7 +240,7 @@ class FileManagement extends MessageHandler {
             }
         } catch (err) {
             console.error(err);
-            resp.error = err.toString();
+            resp.error = err.message || 'Unexpected Error';
         }
     }
 }

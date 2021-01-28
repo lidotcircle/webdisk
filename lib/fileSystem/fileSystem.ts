@@ -76,6 +76,10 @@ export class FileSystem {
         throw new FileSystemNotImplemented();
     }
 
+    async append(file: string, buf: ArrayBuffer): Promise<void> {
+        throw new FileSystemNotImplemented();
+    }
+
     async write(file: string, position: number, buf: ArrayBuffer): Promise<number> {
         throw new FileSystemNotImplemented();
     }

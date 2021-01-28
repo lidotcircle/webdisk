@@ -9,6 +9,7 @@ import { UserSettingService } from '../../service/user-setting.service';
 import { MessageBoxService } from '../../service/message-box.service';
 import { NotifierService } from '../../service/notifier.service';
 import { ViewDraggable } from '../absolute-view/trait/draggable';
+import { NotifierType } from '../notifier/notifier.component';
 const assert = console.assert;
 
 const blocksize = 1024 * 1024;
@@ -140,7 +141,7 @@ export class UploadFileViewComponent extends AbsoluteView implements OnInit {
                 }
             }
         } catch (err) {
-            this.notifier.create({message: `upload fail: ${err}`, duration: 5000}).wait();
+            this.notifier.create({message: `upload fail: ${err}`, mtype: NotifierType.Error,duration: 5000}).wait();
         } finally {this.finish = true;}
     } //}
 

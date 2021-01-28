@@ -6,6 +6,7 @@ import { constants } from './constants';
 import { FileSystem } from './fileSystem/fileSystem';
 import { LocalFileSystem } from './fileSystem/localFileSystem';
 import { Database } from './database';
+import { AliOSSFileSystem } from './fileSystem/aliOssFileSystem';
 
 
 class Config {
@@ -14,7 +15,7 @@ class Config {
     private listen_port: number      = 5445;
     private static_resources: string = 'resources';
     private sqlite3_database: string = '~/.webdisk/wd.db';
-    private filesystem: {type: string, data?: {}} = {type: 'local'};
+    private filesystem: {type: string, data?: any} = {type: 'local'};
 
     private constructor() {};
     public static global_config: Config = new Config();
@@ -73,6 +74,7 @@ class Config {
 
         switch(this.filesystem.type) {
             case 'local': this.fsabs = new LocalFileSystem(); break;
+            case 'alioss': this.fsabs = new AliOSSFileSystem(this.filesystem.data); break;
         }
 
         if(this.fsabs == null) {
