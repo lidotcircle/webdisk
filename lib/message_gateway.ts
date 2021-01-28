@@ -15,11 +15,16 @@ import { URL } from 'url';
 import { MiscManager } from './handlers/misc_management';
 import { FileManager } from './handlers/file_management';
 import { cons } from './utils';
-import { request as wsrequest, connection as wsconnection, IMessage } from 'websocket';
+import { request as wsrequest, connection as wsconnection, IMessage, IServerConfig } from 'websocket';
 
 export function upgradeHandler(inc: http.IncomingMessage, socket: net.Socket, buf: Buffer) //{
 {
-    const wsreq = new wsrequest(socket, inc, {httpServer: null, assembleFragments: true});
+    const wsreq = new wsrequest(socket, inc, {
+        httpServer: null, 
+        assembleFragments: true, 
+        keepalive: true,
+        keepaliveInterval: 3000
+    });
     try {
         wsreq.readHandshake();
     } catch {

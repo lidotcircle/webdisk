@@ -20,6 +20,7 @@ export class SoleWindowComponent extends FullScreenViewShadow implements OnInit,
     }
 
     private subscription: Subscription;
+    private backed: boolean = false;
     ngOnInit(): void {
         this.subscription = this.keyboard.up.subscribe(key => {
             const elem = this.host.nativeElement as HTMLElement;
@@ -28,10 +29,21 @@ export class SoleWindowComponent extends FullScreenViewShadow implements OnInit,
                 this._bgclick.next();
             }
         });
+
+        window.addEventListener('popstate', (event) => {
+            event.preventDefault();
+            this.backed = true;
+            this.onbgclick();
+        });
+
+        history.pushState({page: 'new sole window'}, 'sole window', `${location.href}?window`);
     }
 
     ngOnDestroy(): void {
         this.subscription.unsubscribe();
+        if(!this.backed) {
+            history.back();
+        }
     }
 
     onbgclick() {

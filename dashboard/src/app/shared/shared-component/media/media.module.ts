@@ -9,10 +9,11 @@ import { NgxAudioPlayerModule } from 'ngx-audio-player';
 import { MatIconModule } from '@angular/material/icon';
 import { NgxExtendedPdfViewerModule } from 'ngx-extended-pdf-viewer';
 import { PdfViewerComponent } from './pdf-viewer/pdf-viewer.component';
+import { LoadingBarComponent } from './image-viewer/loading-bar/loading-bar.component';
 
 
 @NgModule({
-    declarations: [AudioPlayerComponent, VideoPlayerComponent, ImageViewerComponent, PdfViewerComponent],
+    declarations: [AudioPlayerComponent, VideoPlayerComponent, ImageViewerComponent, PdfViewerComponent, LoadingBarComponent],
     imports: [
         CommonModule,
         VimeModule,

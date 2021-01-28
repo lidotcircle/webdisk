@@ -125,6 +125,7 @@ export class ImageViewerComponent implements OnInit {
 
         if(this.imageIndex > 0) {
             this.onReset();
+            this._loaded = false;
             this.imageIndex--;
         }
     }
@@ -134,8 +135,15 @@ export class ImageViewerComponent implements OnInit {
 
         if(this.imageIndex < this.images.length - 1) {
             this.onReset();
+            this._loaded = false;
             this.imageIndex++;
         }
+    }
+
+    private _loaded = false;
+    get loaded(): boolean {return this._loaded;}
+    onImageLoad() {
+        this._loaded = true;
     }
 
     move(x: number, y: number) {

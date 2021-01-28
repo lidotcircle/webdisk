@@ -1,14 +1,26 @@
 
 <div class="image-container">
+    <div class="take-space-to-full"></div>
     <div class="image" #imagex>
         <div class="take-space"></div>
 
         <div class="image-transform" #imageanchor>
-            <img [src]="images[imageIndex]" draggable='false'>
+            <img (load)='onImageLoad()' [src]="images[imageIndex]" draggable='false'>
+
+            <div class="loading-icon">
+                <div class="take-space"></div>
+                <div class="icon" *ngIf='!loaded'>
+                    <div class="take-space"></div>
+                    <app-loading-bar></app-loading-bar>
+                    <div class="take-space"></div>
+                </div>
+                <div class="take-space"></div>
+            </div>
         </div>
 
         <div class="take-space"></div>
     </div>
+    <div class="take-space-to-full"></div>
 
     <div class="tools-wrapper">
         <div class="tools-nav" (click)='toggleTools()'>
