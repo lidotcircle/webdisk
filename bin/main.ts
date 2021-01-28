@@ -8,7 +8,7 @@ import * as timer         from 'timers';
 import * as proc          from 'process';
 import { constants }      from '../lib/constants';
 
-import { Config, conf } from '../lib/config';
+import { GetConfig, conf } from '../lib/config';
 const getopt = require('node-getopt');
 
 let __opt = getopt.create([
@@ -30,8 +30,7 @@ let daemonized  = options["d"];
 
 async function main() //{
 {
-    await Config.GetConfig(config_file);
-    await services.BootstrapService();
+    await GetConfig(config_file);
 
     let server = new http_server.HttpServer();
     server.on("error", (err) => {

@@ -7,7 +7,7 @@ import * as events from 'events';
 import { constants } from './constants';
 import { BasicMessage, MessageEncoder, MessageType } from './common/message';
 import { debug, info, warn, error } from './logger';
-import { MessageSerializer, MessageHandlers, registerMessageHandler } from './services';
+import { MessageSerializer, MessageHandlers, registerMessageHandler, acl } from './services';
 import { UserManager } from './handlers/user_management';
 import * as utls from './utils';
 
@@ -85,12 +85,28 @@ export class MessageGateway extends events.EventEmitter {
         if(message == null) {
             warn('recieve a bad message which doesn\'t meet requirement of basic message, ignore it');
         } else {
-            if(!MessageHandlers.has(message.messageType)) {
-                warn('get a message without handler, ignore it');
-            } else {
-                const handler = MessageHandlers.get(message.messageType);
-                handler.handleRequest(this, message);
+            this.dispatch(message);
+        }
+    } //}
+
+    private async dispatch(message: BasicMessage) //{
+    {
+        if(!MessageHandlers.has(message.messageType)) {
+            warn('get a message without handler, ignore it');
+        } else {
+            try {
+                await acl.CheckMessage(message);
+            } catch (err) {
+                console.error('Access Denied:', err);
+                const msg = new BasicMessage();
+                msg.error = err;
+                msg.messageAck = message.messageId;
+                this.response(msg);
+                return;
             }
+
+            const handler = MessageHandlers.get(message.messageType);
+            await handler.handleRequest(this, message);
         }
     } //}
 

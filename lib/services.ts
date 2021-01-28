@@ -1,19 +1,21 @@
 import { conf } from './config';
-import * as db from './database';
+import { Database } from './database';
 import { MessageHandler } from './message_handler';
 import { MessageType, MessageJSON, MessageBIN } from './common/message';
 import { error } from './logger';
+import { FileSystem } from './fileSystem/fileSystem';
+import { AccessControl } from './accessControl/acl';
 
 
-export const DB: db.Database = new db.Database();
-export async function BootstrapService() {
-    try { 
-        await DB.init(conf.sqlite3Database)
-    } catch (err) {
-        error('database initialization fail');
-        throw err;
-    }
-}
+// Database
+export const DB: Database = conf.DB;
+
+// File System Abstraction
+export const filesystem: FileSystem = conf.FSAbstraction;
+
+// Access Control
+export const acl: AccessControl = new AccessControl();
+
 
 export const MessageHandlers: Map<MessageType, MessageHandler> = new Map<MessageType, MessageHandler>();
 export function registerMessageHandler(msg_type: MessageType, handler: MessageHandler) {

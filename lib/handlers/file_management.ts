@@ -1,49 +1,21 @@
-import { DB } from '../services';
+import { DB, filesystem } from '../services';
 import { MessageHandler } from '../message_handler';
 import { MessageGateway } from '../message_gateway';
 import { BasicMessage, MessageType } from '../common/message';
 import { debug, info, warn, error } from '../logger';
 import { FileMessage, FileMessageType, FileRequestMessage, FileResponseMessage, FileRequest } from '../common/file_message';
 import { changeObject, subStringInObject } from '../utils';
-import * as fs from 'fs';
-import * as child_proc from 'child_process';
 import path from 'path';
 import * as annautils from 'annautils';
 import * as utils from '../utils';
 import * as util from 'util';
-import * as crypto from 'crypto';
 import { FileStat, FileType } from '../common/file_types';
 import { UserInfo } from '../common/db_types';
-import { Stats } from 'fs';
 
 function checkArgv(pat: string, argv: any[]) {
     if (!utils.checkArgv(pat, argv)) {
         throw new Error('bad argument');
     }
-}
-
-function statToStat(fstat: Stats, file: string): FileStat {
-    const ans = new FileStat();
-    utils.assignTargetEnumProp(fstat, ans);
-    ans["filename"] = file;
-    if (fstat.isBlockDevice()) {
-        ans["filetype"] = FileType.block;
-    } else if (fstat.isDirectory()) {
-        ans["filetype"] = FileType.dir;
-    } else if (fstat.isFile()) {
-        ans["filetype"] = FileType.reg;
-    } else if (fstat.isCharacterDevice()) {
-        ans["filetype"] = FileType.char;
-    } else if (fstat.isSymbolicLink()) {
-        ans["filetype"] = FileType.symbol;
-    } else if (fstat.isFIFO()) {
-        ans["filetype"] = FileType.fifo;
-    } else if (fstat.isSocket()) {
-        ans["filetype"] = FileType.socket;
-    } else {
-        ans["filetype"] = FileType.unknown;
-    }
-    return ans;
 }
 
 function replaceUserRootPath(obj: object, userRoot: string) {
@@ -63,6 +35,10 @@ function replaceUserRootPath(obj: object, userRoot: string) {
 class FileManagement extends MessageHandler {
     private static GMSG = new FileMessage();
     private id: number = 0;
+
+    constructor() {
+        super();
+    }
 
     async handleRequest(dispatcher: MessageGateway, msg: FileMessage) {
         for(let prop in FileManagement.GMSG) {
@@ -112,141 +88,67 @@ class FileManagement extends MessageHandler {
     }
 
     private async chmod(file: string, mode: number) {
-        await fs.promises.chmod(file, mode.toString(8));
+        await filesystem.chmod(file, mode);
     }
 
     private async copy(src: string, dst: string) {
-        await fs.promises.copyFile(src, dst);
+        await filesystem.copy(src, dst);
     }
 
     private async copyr(src: string, dst: string) {
-        await annautils.fs.promisify.copyr(src, dst);
+        await filesystem.copyr(src, dst);
     }
 
-    private async execFile(file: string, argv: string[]) {
-        return await new Promise((resolve, reject) => {
-            child_proc.execFile(file, argv, (err, stdout, stderr) => {
-                if(err) return reject(err);
-                if(stderr && (!stdout || stdout.length == 0)) return reject(stderr);
-                resolve(stdout);
-            });
-        });
+    private async execFile(file: string, argv: string[]): Promise<string> {
+        return await filesystem.execFile(file, argv);
     }
 
     private async getdir(dir: string): Promise<FileStat[]> {
-        const files = await fs.promises.readdir(dir);
-        const ans = [];
-        let haserror = false;
-        for(let f of files) {
-            const g = path.join(dir, f);
-            try {
-                ans.push(statToStat(await fs.promises.stat(g), g));
-            } catch (err) {
-                haserror = true;
-            }
-        }
-        if(ans.length == 0 && haserror) {
-            throw new Error('getdir fail');
-        }
-        return ans;
+        return await filesystem.getdir(dir);
     }
     
     private async fileMD5(file: string): Promise<string> {
-        const stat = await fs.promises.stat(file);
-        return await this.fileSliceMD5(file, 0, stat.size);
+        return await filesystem.fileMD5(file);
     }
 
     private async fileSliceMD5(file: string, position: number, len: number): Promise<string> {
-        const md5Digest = crypto.createHash("md5");
-        const fd = await fs.promises.open(file, "r");
-        const buf = Buffer.alloc(1024 * 1024);
-        let o = 0;
-        while (len > 0) {
-            const n = Math.min(len, buf.byteLength);
-            const nb = (await FileManagement.asyncRead(fd.fd,buf,0,n,position+o)).bytesRead;
-            if (nb < n) {
-                md5Digest.update(Buffer.from(buf,0,nb));
-                // TODO or omit
-                throw new Error("file out of range");
-            } else {
-                if(nb == buf.byteLength) {
-                    md5Digest.update(buf);
-                } else {
-                    let b2 = Buffer.alloc(nb);
-                    buf.copy(b2,0,0,nb);
-                    md5Digest.update(b2);
-                }
-            }
-            len -= n;
-            o += n;
-        }
-        await fd.close();
-        return md5Digest.digest("hex");
+        return await filesystem.fileSliceMD5(file, position, len);
     }
 
     private async mkdir(dir: string) {
-        await fs.promises.mkdir(dir, {recursive: true});
+        await filesystem.mkdir(dir);
     }
 
     private async move(src: string, dst: string) {
-        await fs.promises.rename(src, dst);
+        await filesystem.move(src, dst);
     }
 
-    private static asyncRead = util.promisify(fs.read);
     private async read(file: string, position: number, length: number): Promise<Buffer> {
-        const fd = await fs.promises.open(file, "r");
-        let buf = Buffer.alloc(length);
-        const nb = (await FileManagement.asyncRead(fd.fd, buf, 0, length, position)).bytesRead;
-        await fd.close();
-        return Buffer.from(buf, 0, nb);
+        return await filesystem.read(file, position, length);
     }
 
     private async remove(path: string) {
-        const stat = await fs.promises.stat(path);
-        if(stat.isDirectory()) {
-            await fs.promises.rmdir(path);
-        } else {
-            await fs.promises.unlink(path);
-        }
+        await filesystem.remove(path);
     }
 
     private async remover(path: string) {
-        await annautils.fs.promisify.removeRecusive(path);
+        await filesystem.remover(path);
     }
 
     private async stat(file: string): Promise<FileStat> {
-        const fstat = await fs.promises.stat(file)
-        return statToStat(fstat, file);
+        return await filesystem.stat(file);
     }
 
     private async touch(path: string) {
-        let cur = new Date();
-        let f = null;
-        try {
-            f = await fs.promises.stat(path);
-        } catch {}
-        if(!!f) {
-            await fs.promises.utimes(path, cur, cur);
-        } else {
-            await (await fs.promises.open(path, 'w')).close();
-        }
+        await filesystem.touch(path);
     }
 
     private async truncate(file: string, len: number) {
-        await fs.promises.truncate(file, len);
+        await filesystem.truncate(file, len);
     }
 
-    private static asyncWrite = util.promisify(fs.write);
     private async write(file: string, position: number, buf: ArrayBuffer): Promise<number> {
-        try {
-        const fd = await fs.promises.open(file, "r+");
-        const rs = await FileManagement.asyncWrite(fd.fd, new Uint8Array(buf), 0, buf.byteLength, position);
-        await fd.close();
-        return rs.bytesWritten;
-        } catch (err) {
-            console.log(err);
-            throw err;
-        }
+        return await filesystem.write(file, position, buf);
     }
 
     async access(req_msg: FileRequestMessage, resp: FileResponseMessage) {
@@ -336,6 +238,7 @@ class FileManagement extends MessageHandler {
                     break;
             }
         } catch (err) {
+            console.error(err);
             resp.error = err.toString();
         }
     }
