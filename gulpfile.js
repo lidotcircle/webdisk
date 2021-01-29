@@ -240,7 +240,7 @@ async function host() //{
 {
     await restart_backend_server();
 } //}
-gulp.task("host", gulp.series("release", host));
+gulp.task("host", host);
 
 /** TASK clean */
 gulp.task("clean", () => {
