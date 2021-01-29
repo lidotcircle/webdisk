@@ -3,10 +3,11 @@ import * as utils from './utils';
 import * as proc from 'process';
 import path from 'path';
 import { constants } from './constants';
-import { FileSystem } from './fileSystem/fileSystem';
+import { FileSystem, FileSystemType, IFileSystemConfig } from './fileSystem/fileSystem';
 import { LocalFileSystem } from './fileSystem/localFileSystem';
 import { Database } from './database';
-import { AliOSSFileSystem } from './fileSystem/aliOssFileSystem';
+import { AliOSSFileSystem, IAliOSSFileSystemConfig } from './fileSystem/aliOssFileSystem';
+import { IMultiFileSystemConfig, MultiFileSystem } from './fileSystem/multiFileSystem';
 
 
 class Config {
@@ -15,7 +16,7 @@ class Config {
     private listen_port: number      = 5445;
     private static_resources: string = 'resources';
     private sqlite3_database: string = '~/.webdisk/wd.db';
-    private filesystem: {type: string, data?: any} = {type: 'local'};
+    private filesystem: IFileSystemConfig = {type: FileSystemType.local};
 
     private constructor() {};
     public static global_config: Config = new Config();
@@ -23,7 +24,7 @@ class Config {
     /** this function call should await immediately */
     public static async GetConfig(conf: string): Promise<void> {
         const _this = Config.global_config;
-        console.assert(_this.__init == false);
+        console.assert(_this.__init == false, 'fail: init config twice');
         _this.__init = true;
 
         const data = await fs.promises.readFile(conf);
@@ -42,14 +43,23 @@ class Config {
             const m = _this.FSAbstraction;
         }
     }
+    private requireInit() //{
+    {
+        if(!this.__init) {
+            throw new Error('config doesn\'t initialize');
+        }
+    } //}
 
     public get listenAddress() {
+        this.requireInit();
         return this.listen_addr;
     }
     public get listenPort() {
+        this.requireInit();
         return this.listen_port;
     }
     public get staticResources() {
+        this.requireInit();
         if (this.static_resources.startsWith('/')) {
             return this.static_resources;
         } else if (this.static_resources.startsWith('~')) {
@@ -69,12 +79,13 @@ class Config {
 
     private fsabs: FileSystem;
     public get FSAbstraction(): FileSystem {
-        if(!this.__init) throw new Error('config doesn\'t initialize');
+        this.requireInit();
         if(this.fsabs) return this.fsabs;
 
         switch(this.filesystem.type) {
-            case 'local': this.fsabs = new LocalFileSystem(); break;
-            case 'alioss': this.fsabs = new AliOSSFileSystem(this.filesystem.data); break;
+            case FileSystemType.local:  this.fsabs = new LocalFileSystem(this.filesystem); break;
+            case FileSystemType.alioss: this.fsabs = new AliOSSFileSystem(this.filesystem as IAliOSSFileSystemConfig); break;
+            case FileSystemType.multi:  this.fsabs = new MultiFileSystem(this.filesystem as IMultiFileSystemConfig); break;
         }
 
         if(this.fsabs == null) {
@@ -85,7 +96,7 @@ class Config {
 }
 
 export const conf: Config = Config.global_config;
-export function GetConfig(configfile: string) {
-    Config.GetConfig(configfile);
+export async function GetConfig(configfile: string) {
+    await Config.GetConfig(configfile);
 }
 

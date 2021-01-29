@@ -6,17 +6,29 @@
     "sqlite3_database": "~/.webdisk/wd.db",
 
     "filesystem": {
-        "type": "local"
-    },
-
-    "filesystem-ar": {
-        "type": "alioss",
-        "data": {
-            "region": "",
-            "accessKeyId": "",
-            "accessKeySecret": "",
-            "bucket": ""
-        }
+        "type": "multi",
+        "data": [
+            {
+                "srcPrefix": "/notexist",
+                "dstPrefix": "/",
+                "config": {
+                    "type": "alioss",
+                    "data": {
+                        "region": "",
+                        "accessKeyId": "",
+                        "accessKeySecret": "",
+                        "bucket": ""
+                    }
+                }
+            },
+            {
+                "srcPrefix": "/",
+                "dstPrefix": "/",
+                "config": {
+                    "type": "local"
+                }
+            }
+        ]
     }
 }
 

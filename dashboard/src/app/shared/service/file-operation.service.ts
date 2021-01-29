@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { FileStat } from '../common';
+import { FileStat, FileType } from '../common';
 import { MatButtonType } from '../shared-component/message-box/message-box.component';
 import { NotifierType } from '../shared-component/notifier/notifier.component';
 import { FileSystemEntry, FileSystemEntryWrapper, path } from '../utils';
@@ -67,6 +67,7 @@ export class FileOperationService {
                 try {
                     await this.filesystem.move(file.filename, dn);
                 } catch(err) {
+                    console.log(err);
                     this.reportError(err);
                     b.stop();
                     this.cwd.justRefresh();
@@ -90,7 +91,11 @@ export class FileOperationService {
             b.pushMessage('copy ' + path.basename(file.filename) + ' to ' + destination);
             const dn = path.pathjoin(destination, path.basename(file.filename));
             try {
-                await this.filesystem.copyr(file.filename, dn);
+                if(file.filetype == FileType.dir) {
+                    await this.filesystem.copyr(file.filename, dn);
+                } else {
+                    await this.filesystem.copy(file.filename, dn);
+                }
             } catch(err) {
                 this.reportError(err);
                 b.stop();
@@ -192,7 +197,7 @@ export class FileOperationService {
         if(!confirmOP.closed && confirmOP.buttonValue == 0) {
             for(const file of files) {
                 try {
-                    this.filesystem.remover(file.filename);
+                    await this.filesystem.remover(file.filename);
                 } catch(err) {
                     await this.notifier.create({
                         message: `Delete '${file.basename}' fail: ` + err.toString(),

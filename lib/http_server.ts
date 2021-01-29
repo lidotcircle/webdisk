@@ -86,10 +86,11 @@ async function write_file_response(filename: string,         //{
     res.setHeader("Content-Type", content_type);
     res.setHeader("Last-Modified", filestat.mtime.toUTCString());
     if(range != null) {
-        if (range[1] != -1)
+        if (range[1] != -1) {
             res.setHeader("Content-Range", `bytes ${range[0]}-${range[1]}/${filestat.size}`);
-        else
+        } else {
             res.setHeader("Content-Range", `bytes ${range[0]}-${filestat.size - 1}/${filestat.size}`);
+        }
     }
 
     if(headers['if-none-match'] == etag) {

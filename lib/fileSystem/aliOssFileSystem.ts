@@ -1,6 +1,6 @@
 import { FileStat, FileType } from '../common/file_types';
 import { pipeline, Readable, Writable } from 'stream';
-import { FileSystem } from './fileSystem';
+import { FileSystem, FileSystemType, IFileSystemConfig } from './fileSystem';
 import { prototype as ossprototype, ListBucketsQueryType, Bucket, HTTPMethods, ObjectMeta} from 'ali-oss';
 import { default as fetch } from 'node-fetch';
 import { pipelineWithTimeout } from '../utils';
@@ -9,22 +9,32 @@ const alioss = require('ali-oss');
 type OSS = typeof ossprototype;
 class FileSystemNotImplemented extends Error {}
 
+enum OSSObjectType {
+    Normal = 'Normal',           // Normal Object can't be appended
+    Appendable = 'Appendable'    // Appendable object can't be copied
+}
 class AliOSSFileStat extends FileStat {
     etag: string;
-    objectType: string;
+    objectType: OSSObjectType;
+}
+
+export interface IAliOSSFileSystemConfig extends IFileSystemConfig {
+    data: {
+        accessKeyId: string;
+        accessKeySecret: string;
+        region: string;
+        bucket: string;
+    };
 }
 
 export class AliOSSFileSystem extends FileSystem {
     private bucket: OSS;
 
-    constructor(data: {
-        accessKeyId: string,
-        accessKeySecret: string,
-        region?: string,
-        bucket?: string
-    }) {
+    get FSType(): FileSystemType {return FileSystemType.alioss;}
+
+    constructor(config: IAliOSSFileSystemConfig) {
         super();
-        this.bucket = new alioss(data);
+        this.bucket = new alioss(config.data);
         this.initAliOSS();
     }
 
@@ -51,7 +61,7 @@ export class AliOSSFileSystem extends FileSystem {
         ans.filetype = FileType.reg;
         ans.mode = 623;
         ans.etag = metaData.etag;
-        ans.objectType = metaData.type;
+        ans.objectType = metaData.type as OSSObjectType;
 
         const time = new Date(metaData.lastModified).getTime(); 
         ans.mtimeMs = time;
@@ -90,7 +100,14 @@ export class AliOSSFileSystem extends FileSystem {
         if(dst.endsWith('/')) {
             throw new Error('Bad Entry');
         }
-        await this.bucket.copy(this.resolveFilenameToObjectName(dst), this.resolveFilenameToObjectName(src), {timeout: 5000});
+        const src_stat = await this.stat(src);
+        if(src_stat.objectType == OSSObjectType.Appendable) {
+            const srcstream = await this.createReadableStream(src, 0, src_stat.size);
+            await this.createNewFileWithReadableStream(dst, srcstream);
+        } else {
+            await this.bucket.copy(this.resolveFilenameToObjectName(dst), 
+                                   this.resolveFilenameToObjectName(src), {timeout: 5000});
+        }
     } //}
 
     async copyr(src: string, dst: string) //{
@@ -174,21 +191,24 @@ export class AliOSSFileSystem extends FileSystem {
             throw new Error('Bad Entry');
         }
 
+        let s;
         try {
-            const s = await this.stat(dst);
-            throw new Error('File Already Exist');
+            s = await this.stat(dst);
         } catch {}
+        if(s) {
+            throw new Error('File Already Exist');
+        }
 
         await this.copy(src, dst);
         await this.remove(src);
     } //}
-
     async move(src: string, dst: string) //{
     {
-        try {
+        const st = await this.stat(src);
+        if(st.filetype == FileType.reg) {
             await this.movefile(src, dst);
             return;
-        } catch {}
+        }
 
         if(!src.endsWith('/')) src += '/';
         if(!dst.endsWith('/')) dst += '/';
@@ -203,14 +223,15 @@ export class AliOSSFileSystem extends FileSystem {
             query['marker'] = resp.nextMarker;
 
             if(resp.objects) {
-                resp.objects.forEach(async obj => {
+                for(const obj of resp.objects) {
                     if(obj.name.endsWith('/')) {
                         await this.bucket.delete(obj.name, {timeout: 5000});
                     } else {
                         const d = dst_prefix + obj.name.substr(src_prefix.length);
-                        await this.movefile(obj.name, d);
+                        await this.movefile(this.resolveObjectNameToFilename(obj.name), 
+                                            this.resolveObjectNameToFilename(d));
                     }
-                });
+                }
             }
         }
     } //}
@@ -257,7 +278,7 @@ export class AliOSSFileSystem extends FileSystem {
 
         return ans;
     } //}
-    async remove(path: string) //{
+    private async removeAnEntry(path: string) //{
     {
         const versions = await this.versions(path);
         for(const ver of versions) {
@@ -265,7 +286,26 @@ export class AliOSSFileSystem extends FileSystem {
                 {timeout: 5000, versionId: ver.versionId} as any);
         }
     } //}
+    async remove(path: string)//{
+    {
+        const st = await this.stat(path);
+        if(st.filetype == FileType.dir) {
+            throw new Error('bad operation in directory: remove');
+        } else {
+            this.removeAnEntry(path);
+        }
+    } //}
+    async rmdir(path: string) //{
+    {
+        const st = await this.stat(path);
+        if(st.filetype != FileType.dir) {
+            throw new Error('bad operation in file: rmdir');
+        } else {
+            this.removeAnEntry(path);
+        }
+    } //}
 
+    /*
     async remover(path: string) //{
     {
         try {
@@ -289,6 +329,7 @@ export class AliOSSFileSystem extends FileSystem {
             }
         }
     } //}
+    */
 
     async stat(file: string): Promise<AliOSSFileStat> //{
     {
@@ -297,22 +338,28 @@ export class AliOSSFileSystem extends FileSystem {
         }
         let ans: AliOSSFileStat;
 
-        if(file.endsWith('/')) file = file.substr(0, file.length - 1);
         const prefix = this.resolveFilenameToObjectName(file);
-        const resp = await this.bucket.list({prefix: prefix, 'max-keys': 1, delimiter: '/'}, {timeout: 3000});
-        if(resp.objects && resp.objects.length > 0) {
-            if(resp.objects[0].name == prefix) {
-                ans = this.metadataToFileStat(resp.objects[0]);
-            } else {
-                throw new Error('File Not Found');
+
+        { // Directory
+            const resp = await this.bucket.list({prefix: prefix + (prefix.endsWith('/') ? '' : '/'), 'max-keys': 1}, {timeout: 3000});
+            if(resp.objects || resp.prefixes) {
+                ans = this.prefixToFileStat(prefix);
             }
-        } else if(resp.prefixes && resp.prefixes.length > 0) {
-            if(resp.prefixes[0] == prefix + '/') {
-                ans = this.prefixToFileStat(resp.prefixes[0]);
-            } else {
-                throw new Error('File Not Found');
+        }
+
+        { // File
+            if(ans == null && !file.endsWith('/')) {
+                const resp = await this.bucket.list({prefix: prefix, 'max-keys': 1}, {timeout: 3000});
+                if (resp.objects && 
+                    resp.objects.length > 0 && 
+                    resp.objects[0].name == prefix) 
+                {
+                    ans = this.metadataToFileStat(resp.objects[0]);
+                }
             }
-        } else {
+        }
+
+        if(ans == null) {
             throw new Error('File Not Found');
         }
         return ans;
@@ -347,25 +394,21 @@ export class AliOSSFileSystem extends FileSystem {
         throw new FileSystemNotImplemented();
     }
 
-    async writeFileToWritable(filename: string, //{
-                              writer: Writable, 
-                              startPosition: number,
-                              length: number = -1): Promise<number> 
+    async createReadableStream(filename: string, position: number, length: number): Promise<Readable> //{
     {
-        if(length < 0) {
-            const stat = await this.stat(filename);
-            length = stat.size - startPosition;
-            if(length < 0) {
-                throw new Error('request too large');
-            }
-        }
         const objname = this.resolveFilenameToObjectName(filename);
-        const stream = await this.bucket.getStream(objname, {
+        return (await this.bucket.getStream(objname, {
             headers: {
-                'Range': `bytes=${startPosition}-${startPosition+length}`
+                'Range': `bytes=${position}-${position+length}`
             }
-        });
-        return await pipelineWithTimeout((stream.stream as Readable), writer, 5000);
+        })).stream;
+    } //}
+
+    async createNewFileWithReadableStream(filename: string, reader: Readable): Promise<number> //{
+    {
+        const objname = this.resolveFilenameToObjectName(filename);
+        const resp = await this.bucket.put(objname, reader);
+        return resp.res.size;
     } //}
 }
 

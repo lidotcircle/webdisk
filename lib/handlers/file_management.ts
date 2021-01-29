@@ -164,7 +164,7 @@ class FileManagement extends MessageHandler {
             resp.error = 'invalid token access file service';
             return;
         }
-        debug(`${user.username} make ${req.fm_request} request`);
+        debug(`${user.username} make '${req.fm_request}' request`);
         try {
             switch(req.fm_request) {
                 case FileRequest.APPEND: {

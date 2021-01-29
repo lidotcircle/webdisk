@@ -6,12 +6,13 @@ import * as utils from '../utils';
 import * as crypto from 'crypto';
 import * as path from 'path';
 
-import { FileSystem } from "./fileSystem";
+import { FileSystem, FileSystemType, IFileSystemConfig } from "./fileSystem";
 import { FileStat, FileType } from '../common/file_types';
-import { pipeline, Writable } from 'stream';
+import { pipeline, Readable, Writable } from 'stream';
 
 
-function statToStat(fstat: fs.Stats, file: string): FileStat {
+function statToStat(fstat: fs.Stats, file: string): FileStat //{
+{
     const ans = new FileStat();
     utils.assignTargetEnumProp(fstat, ans);
     ans["filename"] = file;
@@ -33,11 +34,18 @@ function statToStat(fstat: fs.Stats, file: string): FileStat {
         ans["filetype"] = FileType.unknown;
     }
     return ans;
-}
+} //}
 
 
 export class LocalFileSystem extends FileSystem {
-    constructor() {super();}
+    constructor(config: IFileSystemConfig) {
+        super();
+        if(config.type != this.FSType) {
+            throw new Error(`Bad filesystem constructor for ${config.type}`);
+        }
+    }
+
+    get FSType(): FileSystemType {return FileSystemType.local;}
 
     async chmod(file: string, mode: number) {
         await fs.promises.chmod(file, mode.toString(8));
@@ -127,16 +135,15 @@ export class LocalFileSystem extends FileSystem {
     }
 
     async remove(path: string) {
-        const stat = await fs.promises.stat(path);
-        if(stat.isDirectory()) {
-            await fs.promises.rmdir(path);
-        } else {
-            await fs.promises.unlink(path);
-        }
+        await fs.promises.unlink(path);
+    }
+
+    async rmdir(path: string) {
+        await fs.promises.rmdir(path);
     }
 
     async remover(path: string) {
-        await annautils.fs.promisify.removeRecusive(path);
+        await fs.promises.rmdir(path, {recursive: true});
     }
 
     async stat(file: string): Promise<FileStat> {
@@ -178,29 +185,24 @@ export class LocalFileSystem extends FileSystem {
         }
     }
 
-    async writeFileToWritable(filename: string, //{
-                              writer: Writable, 
-                              startPosition: number,
-                              length: number = -1): Promise<number> 
+    async createReadableStream(filename: string, position: number, length: number): Promise<Readable> //{
     {
         const options = {
             flags: 'r',
-            start: startPosition
+            start: position
         };
         if(length >= 0) {
-            options['end'] = startPosition + length;
+            options['end'] = position + length;
         }
-        const fstream = fs.createReadStream(filename, options);
+        return fs.createReadStream(filename, options);
+    } //}
 
-        try {
-            /* block when other endpoint closed connection, expect throw error
-            await util.promisify(pipeline)(fstream, writer);
-            return 0;
-            */
-             return await utils.pipelineWithTimeout(fstream, writer, 5000);
-        } finally {
-            fstream.close();
-        }
+    async createNewFileWithReadableStream(filename: string, reader: Readable): Promise<number> //{
+    {
+        const ws = fs.createWriteStream(filename, {flags: 'w'});
+        const ans = await utils.pipelineWithTimeout(reader, ws);
+        ws.end();
+        return ans;
     } //}
 }
 
