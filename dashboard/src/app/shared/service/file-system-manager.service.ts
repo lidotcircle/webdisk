@@ -9,6 +9,8 @@ export enum FileSystemEvent {
     UPDATE = 'UPDATE'
 }
 
+const LongLongTimeout = 60 * 1000;
+
 @Injectable({
     providedIn: 'root'
 })
@@ -31,14 +33,14 @@ export class FileSystemManagerService {
         }
     }
 
-    private async sendTo(req_type: FileRequest, ...argv): Promise<any> {
-        const req = new FileRequestMessage();
-        req.fm_type = FileMessageType.Request;
-        this.authWithToken(req);
-        req.fm_msg.fm_request = req_type;
-        req.fm_msg.fm_request_argv = argv;
+    private async sendTo(req: {type: FileRequest, timeout?: number}, ...argv): Promise<any> {
+        const reqmsg = new FileRequestMessage();
+        reqmsg.fm_type = FileMessageType.Request;
+        this.authWithToken(reqmsg);
+        reqmsg.fm_msg.fm_request = req.type;
+        reqmsg.fm_msg.fm_request_argv = argv;
         let binary: boolean = hasArrayBuffer(argv);
-        const resp = await this.wschannel.send(req, !binary);
+        const resp = await this.wschannel.send(reqmsg, !binary, req.timeout);
 
         if(resp.error) {
             throw resp.error;
@@ -50,7 +52,7 @@ export class FileSystemManagerService {
     async getdir(dir: string): Promise<FileStat[]> {
         this.absolutePath(dir);
         const ans = [];
-        for(let stat of await this.sendTo(FileRequest.GETDIR, dir)) {
+        for(let stat of await this.sendTo({type: FileRequest.GETDIR}, dir)) {
             let newStat = new FileStat();
             assignTargetEnumProp(stat, newStat);
             ans.push(newStat);
@@ -60,7 +62,10 @@ export class FileSystemManagerService {
 
     async append(file: string, buffer: ArrayBuffer): Promise<void> {
         this.absolutePath(file);
-        await this.sendTo(FileRequest.APPEND, file, buffer);
+        await this.sendTo({
+            type: FileRequest.APPEND, 
+            timeout: Math.max(5000, buffer.byteLength / (1024 * 100))
+        }, file, buffer);
     }
 
     async chmod(file: string, mode: string | number): Promise<void> {
@@ -74,85 +79,94 @@ export class FileSystemManagerService {
             }
         }
 
-        await this.sendTo(FileRequest.CHMOD, file, _mode);
+        await this.sendTo({type: FileRequest.CHMOD}, file, _mode);
     }
 
     async copy(src_file: string, dst_file: string): Promise<void> {
         this.absolutePath(src_file);
         this.absolutePath(dst_file);
 
-        await this.sendTo(FileRequest.COPY, src_file, dst_file);
+        await this.sendTo({type: FileRequest.COPY, timeout: LongLongTimeout}, src_file, dst_file);
     }
 
     async copyr(src_file: string, dst_file: string): Promise<void> {
         this.absolutePath(src_file);
         this.absolutePath(dst_file);
 
-        await this.sendTo(FileRequest.COPYR, src_file, dst_file);
+        await this.sendTo({type: FileRequest.COPYR, timeout: LongLongTimeout}, src_file, dst_file);
     }
 
     async execute(file: string): Promise<string> {
         this.absolutePath(file);
-        return await this.sendTo(FileRequest.EXECUTE, file);
+        return await this.sendTo({type: FileRequest.EXECUTE, timeout: LongLongTimeout}, file);
     }
 
     async md5(file: string): Promise<string> {
         this.absolutePath(file);
-        return await this.sendTo(FileRequest.FILEMD5, file);
+        return await this.sendTo({type: FileRequest.FILEMD5, timeout: LongLongTimeout}, file);
     }
 
     async sliceMd5(file: string, position: number, length: number): Promise<string> {
         this.absolutePath(file);
-        return await this.sendTo(FileRequest.FILEMD5_SLICE, file, position, length);
+        return await this.sendTo({
+            type: FileRequest.FILEMD5_SLICE, 
+            timeout: LongLongTimeout
+        }, file, position, length);
     }
 
     async mkdir(dir: string): Promise<void> {
         this.absolutePath(dir);
-        return await this.sendTo(FileRequest.MKDIR, dir);
+        return await this.sendTo({type: FileRequest.MKDIR}, dir);
     }
 
     async move(src_file: string, dst_file: string): Promise<void> {
         this.absolutePath(src_file);
         this.absolutePath(dst_file);
 
-        await this.sendTo(FileRequest.MOVE, src_file, dst_file);
+        await this.sendTo({type: FileRequest.MOVE, timeout: LongLongTimeout}, src_file, dst_file);
     }
 
     async remove(file: string): Promise<void> {
         this.absolutePath(file);
-        return await this.sendTo(FileRequest.REMOVE, file);
+        return await this.sendTo({type: FileRequest.REMOVE}, file);
     }
 
     async remover(file: string): Promise<void> {
         this.absolutePath(file);
-        return await this.sendTo(FileRequest.REMOVER, file);
+        return await this.sendTo({type: FileRequest.REMOVER}, file);
     }
 
     async stat(file: string): Promise<FileStat> {
         this.absolutePath(file);
         let ans = new FileStat();
-        assignTargetEnumProp(await this.sendTo(FileRequest.STAT, file), ans);
+        assignTargetEnumProp(await this.sendTo({type: FileRequest.STAT}, file), ans);
         return ans;
     }
 
     async touch(file: string): Promise<void> {
         this.absolutePath(file);
-        return await this.sendTo(FileRequest.TOUCH, file);
+        return await this.sendTo({type: FileRequest.TOUCH}, file);
     }
 
     async truncate(file: string, length: number): Promise<void> {
         this.absolutePath(file);
-        return await this.sendTo(FileRequest.TRUNCATE, file, length);
+        return await this.sendTo({type: FileRequest.TRUNCATE}, file, length);
     }
 
     async read(file: string, position: number = 0, length: number = -1): Promise<ArrayBuffer> {
         this.absolutePath(file);
-        return await this.sendTo(FileRequest.READ, file, position, length);
+        return await this.sendTo({
+            type: FileRequest.READ, 
+            timeout: Math.max(5000, length / (100 * 1024))
+        }, file, position, length);
     }
 
     async write(file: string, position: number = 0, buf: ArrayBuffer): Promise<number> {
         this.absolutePath(file);
-        return await this.sendTo(FileRequest.WRITE, file, position, buf);
+        return await this.sendTo({
+            type: FileRequest.WRITE, 
+            timeout: Math.max(5000, buf.byteLength / (100 * 1024))
+        }, file, position, buf);
     }
 }
 

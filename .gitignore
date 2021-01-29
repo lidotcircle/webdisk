@@ -3,6 +3,7 @@ dist/*
 release/*
 testme/*
 docroot/*
+etc/webdisk.json
 *.log
 core
 gulp-web.js
