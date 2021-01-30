@@ -18,7 +18,8 @@
                         "region": "",
                         "accessKeyId": "",
                         "accessKeySecret": "",
-                        "bucket": ""
+                        "bucket": "",
+                        "secure": false
                     }
                 }
             },
