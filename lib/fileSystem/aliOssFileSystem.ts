@@ -4,6 +4,7 @@ import { FileSystem, FileSystemType, IFileSystemConfig } from './fileSystem';
 import { prototype as ossprototype, ListBucketsQueryType, Bucket, HTTPMethods, ObjectMeta} from 'ali-oss';
 import { default as fetch } from 'node-fetch';
 import { pipelineWithTimeout } from '../utils';
+import * as assert from 'assert';
 
 const alioss = require('ali-oss');
 type OSS = typeof ossprototype;
@@ -39,7 +40,7 @@ export class AliOSSFileSystem extends FileSystem {
     }
 
     private resolveFilenameToObjectName(filename: string): string {
-        console.assert(filename.startsWith('/'), `bad filename ${filename}`);
+        assert.equal(filename.startsWith('/'), true, `bad filename ${filename}`);
         return filename.substr(1);
     }
     private resolveObjectNameToFilename(objectName: string): string {
@@ -238,10 +239,15 @@ export class AliOSSFileSystem extends FileSystem {
 
     async read(file: string, position: number, length: number): Promise<Buffer> //{
     {
+        if(length==0) {
+            const st = await this.stat(file);
+            assert.equal(st.size >= position, true);
+            return Buffer.alloc(0);
+        }
         const objname = this.resolveFilenameToObjectName(file);
         const resp = await this.bucket.get(objname, null, {
             headers: {
-                'Range': `bytes=${position}-${position+length}`
+                'Range': `bytes=${position}-${position+length-1}`
             }
         });
         return resp.content;
@@ -399,7 +405,7 @@ export class AliOSSFileSystem extends FileSystem {
         const objname = this.resolveFilenameToObjectName(filename);
         return (await this.bucket.getStream(objname, {
             headers: {
-                'Range': `bytes=${position}-${position+length}`
+                'Range': `bytes=${position}-${position+length-1}`
             }
         })).stream;
     } //}

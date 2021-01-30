@@ -64,7 +64,7 @@ export class FileSystemManagerService {
         this.absolutePath(file);
         await this.sendTo({
             type: FileRequest.APPEND, 
-            timeout: Math.max(5000, buffer.byteLength / (1024 * 100))
+            timeout: Math.max(5000, buffer.byteLength / (1 * 1024))
         }, file, buffer);
     }
 
@@ -157,7 +157,7 @@ export class FileSystemManagerService {
         this.absolutePath(file);
         return await this.sendTo({
             type: FileRequest.READ, 
-            timeout: Math.max(5000, length / (100 * 1024))
+            timeout: Math.max(5000, length / (1 * 1024))
         }, file, position, length);
     }
 
@@ -165,7 +165,7 @@ export class FileSystemManagerService {
         this.absolutePath(file);
         return await this.sendTo({
             type: FileRequest.WRITE, 
-            timeout: Math.max(5000, buf.byteLength / (100 * 1024))
+            timeout: Math.max(5000, buf.byteLength / (1 * 1024))
         }, file, position, buf);
     }
 }
