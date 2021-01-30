@@ -16,6 +16,7 @@ class Config {
     private listen_port: number      = 5445;
     private static_resources: string = 'resources';
     private sqlite3_database: string = '~/.webdisk/wd.db';
+    private allow_http_redirect: boolean = true;
     private filesystem: IFileSystemConfig = {type: FileSystemType.local};
 
     private constructor() {};
@@ -93,6 +94,8 @@ class Config {
         }
         return this.fsabs;
     }
+
+    public get AllowHttpRedirection(): boolean {return this.allow_http_redirect;}
 }
 
 export const conf: Config = Config.global_config;

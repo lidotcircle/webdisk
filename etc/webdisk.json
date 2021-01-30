@@ -4,12 +4,13 @@
     "listen_port": 5445,
     "static_resources": "resources",
     "sqlite3_database": "~/.webdisk/wd.db",
+    "allow_http_redirect": true,
 
     "filesystem": {
         "type": "multi",
         "data": [
             {
-                "srcPrefix": "/notexist",
+                "srcPrefix": "/noexists",
                 "dstPrefix": "/",
                 "config": {
                     "type": "alioss",

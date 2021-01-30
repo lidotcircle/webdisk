@@ -7,6 +7,7 @@ import { NameEntry, Token, UserInfo, UserPermission } from './common/db_types';
 import { debug, info, warn, error } from './logger';
 import { UserSettings } from './common/user_settings';
 import { ErrorMSG } from './common/string';
+import { conf } from './config';
 const MD5 = require('md5');
 
 /** TODO */
@@ -124,6 +125,10 @@ export function createSQLInsertion(relation: Function, records: any[], ignore: s
     return ans;
 } //}
 
+module cache {
+    export const UserSettingsCache: {[key: string]: UserSettings} = {};
+    export const InvCodePermissionCache: {[key: string]: UserPermission} = {};
+}
 
 export class Database {
     private m_database: sqlite.Database;
@@ -600,6 +605,9 @@ export class Database {
     {
         const uid = await this.checkToken(token);
 
+        if(cache.UserSettingsCache[uid]) {
+            delete cache.UserSettingsCache[uid];
+        }
         const str = JSON.stringify(settings);
         if (await this.getUserSettings(token) == null) {
             const setting = new DBRelations.UserSettings();
@@ -612,16 +620,25 @@ export class Database {
         }
     } //}
 
+    private async getUserSettingsByUid(uid: number): Promise<UserSettings> //{
+    {
+        if(cache.UserSettingsCache[uid] != null)
+            return cache.UserSettingsCache[uid];
+        const data = await this.get(`SELECT * FROM ${KEY_USER_SETTINGS} WHERE uid=${uid}`);
+        const ans = UserSettings.fromJSON(data && data["settings"] || '{}');
+        cache.UserSettingsCache[uid] = ans;
+        return ans;
+    } //}
+
     async getUserSettings(token: Token): Promise<UserSettings> //{
     {
         const uid = await this.checkToken(token);
-
-        const data = await this.get(`SELECT * FROM ${KEY_USER_SETTINGS} WHERE uid=${uid}`);
-        return JSON.parse(data["settings"]);
+        return await this.getUserSettingsByUid(uid);
     } //}
 
 
-    async newEntryMapping(token: Token, entryName: string, destination: string, validPeriodMS: number = null): Promise<void> {
+    async newEntryMapping(token: Token, entryName: string, destination: string, validPeriodMS: number = null): Promise<void> //{
+    {
         validPeriodMS = validPeriodMS || 1000 * 60 * 60 * 24 * 365 * 20;
         const uid = await this.checkToken(token);
         const perm = await this.getPermisstionByUid(uid);
@@ -637,17 +654,19 @@ export class Database {
         record.validEnd = validPeriodMS + Date.now();
         let insert_data = createSQLInsertion(DBRelations.FileEntryNameMapping, [record]);
         await this.run(`INSERT INTO ${KEY_FILE_ENTRY_MAPPING} ${insert_data};`);
-    }
+    } //}
 
-    async queryNameEntry(token: Token, name: string): Promise<NameEntry> {
+    async queryNameEntry(token: Token, name: string): Promise<NameEntry> //{
+    {
         const uid = await this.checkToken(token);
 
         let ans: NameEntry[] = [];
         const q = await this.all(`SELECT * FROM ${KEY_FILE_ENTRY_MAPPING} WHERE uid=${uid} AND name='${name}';`);
         return toInstanceOfType(NameEntry, q) as NameEntry;
-    }
+    } //}
 
-    async queryAllNameEntry(token: Token): Promise<NameEntry[]> {
+    async queryAllNameEntry(token: Token): Promise<NameEntry[]> //{
+    {
         const uid = await this.checkToken(token);
 
         let ans: NameEntry[] = [];
@@ -656,21 +675,24 @@ export class Database {
             ans.push(toInstanceOfType(NameEntry, m) as NameEntry);
         }
         return ans;
-    }
+    } //}
 
-    async deleteNameEntry(token: Token, name: string): Promise<void> {
+    async deleteNameEntry(token: Token, name: string): Promise<void> //{
+    {
         const uid = await this.checkToken(token);
 
         await this.run(`DELETE FROM ${KEY_FILE_ENTRY_MAPPING} WHERE name='${name}' AND uid=${uid};`);
-    }
+    } //}
 
-    async deleteAllNameEntry(token: Token): Promise<void> {
+    async deleteAllNameEntry(token: Token): Promise<void> //{
+    {
         const uid = await this.checkToken(token);
 
         await this.run(`DELETE FROM ${KEY_FILE_ENTRY_MAPPING} WHERE uid=${uid};`);
-    }
+    } //}
 
-    async queryValidNameEntry(name: string): Promise<{userinfo: UserInfo, destination: string}> {
+    async queryValidNameEntry(name: string): Promise<{userinfo: UserInfo, destination: string, allowRedirect: boolean}> //{
+    {
         const _record = await this.get(`SELECT * FROM ${KEY_FILE_ENTRY_MAPPING} WHERE name='${name}';`);
         if(!_record) throw new Error(`without named link '${name}'`);
 
@@ -679,12 +701,13 @@ export class Database {
             throw new Error('bad record');
         }
         const userinfo = await this.getUserRecordByUid(record.uid);
-        if(!userinfo) throw new Error(`get userinfo fail`);
+        const redirect = await this.allowRedirectByUID(record.uid);
         return {
             userinfo: userinfo,
-            destination: record.destination
+            destination: record.destination,
+            allowRedirect: redirect
         };
-    }
+    } //}
 
 
     async GetUser(): Promise<any[]> {
@@ -698,5 +721,24 @@ export class Database {
     async ShowToken(): Promise<any[]> {
         return await this.all(`SELECT * FROM ${KEY_TOKEN};`);
     }
+
+
+    private async allowRedirectByUID(uid: number): Promise<boolean> //{
+    {
+        if(!conf.AllowHttpRedirection) return false;
+
+        const permission = await this.getPermisstionByUid(uid);
+        const settings = await this.getUserSettingsByUid(uid);
+        return permission.allowHttpRedirect && settings.HttpRedirect;
+    } //}
+
+    async allowRedirectByUsername(username: string): Promise<boolean> //{
+    {
+        const record = await this.get(`SELECT * FROM ${KEY_USER} WHERE username='${username}';`) as DBRelations.User;
+        if(!record || !record.uid) {
+            throw new Error(ErrorMSG.UserNotFound);
+        }
+        return await this.allowRedirectByUID(record.uid);
+    } //}
 }
 

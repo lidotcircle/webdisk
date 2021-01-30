@@ -8,7 +8,7 @@ class UserPermissionFields {
     offlineDownload: boolean = true;
     downloadFile: boolean = true;
 
-    allowAliossRedirect: boolean = true;
+    allowHttpRedirect: boolean = true;
 
     namedlinkquota: number = -1;
     invitequota:    number = -1;
@@ -22,7 +22,7 @@ class UserPermissionFields {
         offlineDownload: 'Allow offline download',
         downloadFile: 'Allow download File',
 
-        allowAliossRedirect: 'Allow Aliyun OSS Redirect',
+        allowHttpRedirect: 'Allow HTTP Redirect (eg. aliyun OSS)',
 
         namedlinkquota: 'Named Link quota',
         invitequota:    'Invitation code quota',

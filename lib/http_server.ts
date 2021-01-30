@@ -43,6 +43,7 @@ async function write_file_response(filename: string,         //{
                                    options: {
                                        attachment?: boolean,
                                        head?: boolean,
+                                       allowRedirect?: boolean
                                    })
 {
     if (filename == null) {
@@ -112,7 +113,7 @@ async function write_file_response(filename: string,         //{
         return;
     }
 
-    if(await service.filesystem.canRedirect(filename)) {
+    if(options.allowRedirect && await service.filesystem.canRedirect(filename)) {
         const redirectUrls = await service.filesystem.redirect(filename);
         throw new TemporaryRedirect(redirectUrls);
     } else {
@@ -152,9 +153,10 @@ export class HttpServer extends SimpleHttpServer
             if (uinfo == null) {
                 throw new Unauthorized();
             }
-            let fileName = path.resolve(uinfo.rootPath, decodeURI(url.pathname.substring(cons.DiskPrefix.length + 1)));
-            let range: [number, number] = util.parseRangeField(request.headers.range);
-            await write_file_response(fileName, request.headers, response, range, {head: head});
+            const filename = path.resolve(uinfo.rootPath, decodeURI(url.pathname.substring(cons.DiskPrefix.length + 1)));
+            const range: [number, number] = util.parseRangeField(request.headers.range);
+            const allowRedirect = await DB.allowRedirectByUsername(uinfo.username);
+            await write_file_response(filename, request.headers, response, range, {head: head, allowRedirect: allowRedirect});
         };
         if (!!token) {
             await download(await DB.getUserInfo(token));
@@ -176,7 +178,11 @@ export class HttpServer extends SimpleHttpServer
 
         const user = await DB.queryValidNameEntry(namedlink);
         const filename = path.resolve(user.userinfo.rootPath, user.destination.substr(1));
-        await write_file_response(filename, request.headers, response, range, {head: head, attachment: true});
+        await write_file_response(filename, request.headers, response, range, {
+            head: head, 
+            attachment: true, 
+            allowRedirect: user.allowRedirect
+        });
     } //}
 
     @simpleURL('/.*')
