@@ -11,7 +11,7 @@ import { constants } from '../constants';
 
 const alioss = require('ali-oss');
 type OSS = typeof ossprototype;
-class FileSystemNotImplemented extends Error {}
+class AliOSSFileSystemNotImplemented extends Error {}
 
 enum OSSObjectType {
     Normal = 'Normal',           // Normal Object can't be appended
@@ -112,7 +112,7 @@ export class AliOSSFileSystem extends FileSystem {
     }
 
     async chmod(file: string, mode: number) {
-        throw new FileSystemNotImplemented();
+        throw new AliOSSFileSystemNotImplemented();
     }
 
     async copy(src: string, dst: string) //{
@@ -160,7 +160,7 @@ export class AliOSSFileSystem extends FileSystem {
     } //}
 
     async execFile(file: string, argv: string[]): Promise<string> {
-        throw new FileSystemNotImplemented();
+        throw new AliOSSFileSystemNotImplemented();
     }
 
     async getdir(dir: string): Promise<FileStat[]> //{
@@ -394,14 +394,14 @@ export class AliOSSFileSystem extends FileSystem {
     {
         try {
             const fstat = await this.stat(file);
-            throw new FileSystemNotImplemented();
+            throw new AliOSSFileSystemNotImplemented();
         } catch {
             await this.bucket.put(this.resolveFilenameToObjectName(file), Buffer.alloc(0));
         }
     } //}
 
     async truncate(file: string, len: number) {
-        throw new FileSystemNotImplemented();
+        throw new AliOSSFileSystemNotImplemented();
     }
 
     async append(file: string, buf: ArrayBuffer): Promise<void> //{
@@ -416,7 +416,7 @@ export class AliOSSFileSystem extends FileSystem {
     } //}
 
     async write(file: string, position: number, buf: ArrayBuffer): Promise<number> {
-        throw new FileSystemNotImplemented();
+        throw new AliOSSFileSystemNotImplemented();
     }
 
     async createReadableStream(filename: string, position: number, length: number): Promise<Readable> //{

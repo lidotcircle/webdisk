@@ -1,17 +1,11 @@
 import * as crypto from 'crypto';
 
 import { FileStat, FileType } from "../common/file_types";
-import { Writable } from 'stream';
+import { Readable, Writable } from 'stream';
 import { AliOSSFileSystem, IAliOSSFileSystemConfig } from './aliOssFileSystem';
 import { FileSystem, FileSystemType, IFileSystemConfig } from './fileSystem';
 import { LocalFileSystem } from './localFileSystem';
 
-
-class FileSystemNotImplemented extends Error {
-    constructor() {
-        super('File System API Not Implemented');
-    }
-}
 
 export class FSMapping {
     srcPrefix: string;
@@ -106,20 +100,17 @@ export class MultiFileSystem extends FileSystem {
         await hd.filesystem.chmod(hd.filename, mode);
     } //}
 
-    async copy(src: string, dst: string) {
+    async copy(src: string, dst: string) //{
+    {
         const srch = this.resolveToFs(src);
         const dsth = this.resolveToFs(dst);
 
         if(srch.filesystem == dsth.filesystem) {
             await srch.filesystem.copy(srch.filename, dsth.filename);
         } else {
-            throw new FileSystemNotImplemented();
+            await super.copy(src, dst);
         }
-    }
-
-    async copyr(src: string, dst: string) {
-        throw new FileSystemNotImplemented();
-    }
+    } //}
 
     async execFile(file: string, argv: string[]): Promise<string> //{
     {
@@ -156,16 +147,17 @@ export class MultiFileSystem extends FileSystem {
         await hd.filesystem.mkdir(hd.filename);
     } //}
 
-    async move(src: string, dst: string) {
+    async move(src: string, dst: string) //{
+    {
         const srch = this.resolveToFs(src);
         const dsth = this.resolveToFs(dst);
 
         if(srch.filesystem == dsth.filesystem) {
             await srch.filesystem.move(srch.filename, dsth.filename);
         } else {
-            throw new FileSystemNotImplemented();
+            await super.move(src, dst);
         }
-    }
+    } //}
 
     async read(file: string, position: number, length: number): Promise<Buffer> //{
     {
@@ -241,6 +233,18 @@ export class MultiFileSystem extends FileSystem {
     {
         const hd = this.resolveToFs(filename);
         return await hd.filesystem.writeFileToWritable(hd.filename, writer, startPosition, length);
+    } //}
+
+    async createReadableStream(filename: string, position: number, length: number): Promise<Readable> //{
+    {
+        const hd = this.resolveToFs(filename);
+        return await hd.filesystem.createReadableStream(hd.filename, position, length);
+    } //}
+
+    async createNewFileWithReadableStream(filename: string, reader: Readable): Promise<number> //{
+    {
+        const hd = this.resolveToFs(filename);
+        return await hd.filesystem.createNewFileWithReadableStream(hd.filename, reader);
     } //}
 
     async canRedirect(filename: string): Promise<boolean> //{

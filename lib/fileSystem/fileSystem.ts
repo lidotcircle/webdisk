@@ -3,6 +3,8 @@ import * as utils from '../utils';
 
 import { FileStat, FileType } from "../common/file_types";
 import { Readable, Writable } from 'stream';
+import path from 'path';
+import assert from 'assert';
 
 class FileSystemNotImplemented extends Error {
     constructor() {
@@ -31,17 +33,40 @@ export class FileSystem {
      * @param {string} src full path of src file 
      * @param {string} dst full path of dst file, overwrite origin file if exists
      */
-    async copy(src: string, dst: string) {
-        throw new FileSystemNotImplemented();
-    }
+    async copy(src: string, dst: string) //{
+    {
+        const ss = await this.stat(src);
+        assert.equal(ss.filetype, FileType.reg);
+        const rs = await this.createReadableStream(src, 0, ss.size);
+        await this.createNewFileWithReadableStream(dst, rs);
+    } //}
 
     /**
-     * @param {string} src src should be a directory
+     * @param {string} src src can be a directory or a file
      * @param {string} dst if dst exists dst should be a directory, otherwise dst will be create
      */
-    async copyr(src: string, dst: string) {
-        throw new FileSystemNotImplemented();
-    }
+    async copyr(src: string, dst: string) //{
+    {
+        const ss = await this.stat(src);
+
+        if(ss.filetype == FileType.dir) {
+            try {
+                const ds = await this.stat(dst);
+            } catch {
+                await this.mkdir(dst);
+            }
+            const subdirs = await this.getdir(src);
+            for(const file of subdirs) {
+                if(file.filetype == FileType.dir) {
+                    await this.copyr(file.filename, path.join(dst, file.basename));
+                } else {
+                    await this.copy(file.filename, path.join(dst, file.basename));
+                }
+            }
+        } else {
+            this.copy(src, dst);
+        }
+    } //}
 
     async execFile(file: string, argv: string[]): Promise<string> {
         throw new FileSystemNotImplemented();
@@ -87,9 +112,11 @@ export class FileSystem {
      * @param {string} src should exist
      * @param {string} dst shouldn't exist
      */
-    async move(src: string, dst: string) {
-        throw new FileSystemNotImplemented();
-    }
+    async move(src: string, dst: string) //{
+    {
+        await this.copyr(src, dst);
+        await this.remover(src);
+    } //}
 
     async read(file: string, position: number, length: number): Promise<Buffer> {
         throw new FileSystemNotImplemented();

@@ -1,5 +1,4 @@
 import * as fs from 'fs';
-import * as annautils from 'annautils';
 import * as child_proc from 'child_process';
 import * as util from 'util';
 import * as utils from '../utils';
@@ -53,10 +52,6 @@ export class LocalFileSystem extends FileSystem {
 
     async copy(src: string, dst: string) {
         await fs.promises.copyFile(src, dst);
-    }
-
-    async copyr(src: string, dst: string) {
-        await annautils.fs.promisify.copyr(src, dst);
     }
 
     async execFile(file: string, argv: string[]): Promise<string> {
