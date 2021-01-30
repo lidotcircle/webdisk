@@ -8,7 +8,7 @@ import * as stream from 'stream';
 import * as crypto from 'crypto';
 
 import { URL }       from 'url';
-import { BadRequest, HttpError, NotAcceptable, NotFound, PayloadTooLarge, Unauthorized, URITooLarge } from './errors';
+import { BadRequest, HttpUnexpected, NotAcceptable, NotFound, PayloadTooLarge, TemporaryRedirect, Unauthorized, URITooLarge } from './errors';
 
 import { constants } from './constants';
 import { upgradeHandler } from './message_gateway';
@@ -112,8 +112,13 @@ async function write_file_response(filename: string,         //{
         return;
     }
 
-    res.writeHead(success);
-    await service.filesystem.writeFileToWritable(filename, res, startposition, content_length);
+    if(await service.filesystem.canRedirect(filename)) {
+        const redirectUrls = await service.filesystem.redirect(filename);
+        throw new TemporaryRedirect(redirectUrls);
+    } else {
+        res.writeHead(success);
+        await service.filesystem.writeFileToWritable(filename, res, startposition, content_length);
+    }
     res.end();
 } //}
 

@@ -242,5 +242,17 @@ export class MultiFileSystem extends FileSystem {
         const hd = this.resolveToFs(filename);
         return await hd.filesystem.writeFileToWritable(hd.filename, writer, startPosition, length);
     } //}
+
+    async canRedirect(filename: string): Promise<boolean> //{
+    {
+        const hd = this.resolveToFs(filename);
+        return await hd.filesystem.canRedirect(hd.filename);
+    } //}
+
+    async redirect(filename: string): Promise<string[]> //{
+    {
+        const hd = this.resolveToFs(filename);
+        return await hd.filesystem.redirect(hd.filename);
+    } //}
 }
 

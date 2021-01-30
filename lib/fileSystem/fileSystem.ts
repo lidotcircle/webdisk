@@ -184,5 +184,13 @@ export class FileSystem {
     async createNewFileWithReadableStream(filename: string, reader: Readable): Promise<number> {
         throw new FileSystemNotImplemented();
     }
+
+    async canRedirect(filename: string): Promise<boolean> {
+        return false;
+    }
+
+    async redirect(filename: string): Promise<string[]> {
+        throw new FileSystemNotImplemented();
+    }
 }
 

@@ -4,7 +4,10 @@ import { FileSystem, FileSystemType, IFileSystemConfig } from './fileSystem';
 import { prototype as ossprototype, ListBucketsQueryType, Bucket, HTTPMethods, ObjectMeta} from 'ali-oss';
 import { default as fetch } from 'node-fetch';
 import { pipelineWithTimeout } from '../utils';
-import * as assert from 'assert';
+import assert from 'assert';
+import path from 'path';
+import { TemporaryRedirect } from '../errors';
+import { constants } from '../constants';
 
 const alioss = require('ali-oss');
 type OSS = typeof ossprototype;
@@ -25,17 +28,20 @@ export interface IAliOSSFileSystemConfig extends IFileSystemConfig {
         accessKeySecret: string;
         region: string;
         bucket: string;
+        secure?: boolean;
     };
 }
 
 export class AliOSSFileSystem extends FileSystem {
     private bucket: OSS;
+    private config: IAliOSSFileSystemConfig;
 
     get FSType(): FileSystemType {return FileSystemType.alioss;}
 
     constructor(config: IAliOSSFileSystemConfig) {
         super();
         this.bucket = new alioss(config.data);
+        this.config = config;
         this.initAliOSS();
     }
 
@@ -84,12 +90,25 @@ export class AliOSSFileSystem extends FileSystem {
     }
 
     private async getObjectSignatureUrl(objectName: string, method: HTTPMethods = 'GET', expires: number = 3600) {
-        return await this.bucket.signatureUrl(objectName, {expires: 3600, method: method});
+        const filename = this.resolveObjectNameToFilename(objectName);
+        const content_type = constants.FILE_TYPE_MAP.get(path.extname(filename)) || 
+                                                         constants.FILE_TYPE_MAP.get('unknown');
+        const response_header = {
+            'Content-Type': content_type
+        };
+        return await this.bucket.signatureUrl(objectName, {expires: 3600, method: method, response: response_header as any});
     }
 
     async initAliOSS() {
         // check
         await this.bucket.list({prefix: "", delimiter: '/', "max-keys": 1}, {timeout: 5000});
+
+        await this.bucket.putBucketCORS(this.config.data.bucket, [
+            {
+                allowedOrigin: '*',
+                allowedMethod: ['GET', 'PUT']
+            }
+        ]);
     }
 
     async chmod(file: string, mode: number) {
@@ -415,6 +434,16 @@ export class AliOSSFileSystem extends FileSystem {
         const objname = this.resolveFilenameToObjectName(filename);
         const resp = await this.bucket.put(objname, reader);
         return resp.res.size;
+    } //}
+
+    async canRedirect(filename: string): Promise<boolean> //{
+    {
+        return true;
+    } //}
+
+    async redirect(filename: string): Promise<string[]> //{
+    {
+        return [await this.getObjectSignatureUrl(this.resolveFilenameToObjectName(filename), 'GET')];
     } //}
 }
 

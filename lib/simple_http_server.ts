@@ -1,9 +1,10 @@
 import * as http  from 'http';
 import * as event from 'events';
+import * as assert from 'assert';
 import { URL } from 'url';
 import { cons } from './utils';
 import { error, info } from './logger';
-import { HttpError } from './errors';
+import { HttpClientError, HttpRedirection, HttpServerError, HttpUnexpected } from './errors';
 
 const AsUrlMap = Symbol('http server url');
 /**
@@ -136,10 +137,31 @@ export class SimpleHttpServer extends event.EventEmitter //{
                 console.error(err);
                 error(err.message);
 
-                if(err instanceof HttpError) {
-                    response.statusCode = err.code;
-                    response.end();
-                } else {
+                if(err instanceof HttpUnexpected) {
+                    try {
+                    if(err instanceof HttpClientError || 
+                       err instanceof HttpServerError) 
+                    {
+                        response.statusCode = err.code;
+                        response.end();
+                    } else  {
+                        assert.equal(err instanceof HttpRedirection, true);
+                        const redirection = err as HttpRedirection;
+                        let location = '';
+                        for(const url of redirection.urls) {
+                            location += (url + ',')
+                        }
+                        assert.equal(location.length > 0, true);
+                        location = location.substr(0, location.length - 1);
+                        response.statusCode = redirection.code;
+                        response.setHeader('Location', location);
+                        response.end();
+                    }
+                    return;
+                    } catch (e) {err = e;}
+                }
+
+                {
                     response.statusCode = 500;
                     response.end(`<h1>Internal Server Error ${err.message}</h1>`);
                 }
