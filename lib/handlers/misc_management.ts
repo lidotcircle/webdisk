@@ -5,6 +5,11 @@ import { BasicMessage, MessageType } from '../common/message';
 import { debug, info, warn, error } from '../logger';
 import { MiscMessage, MiscMessageType, RPCRequestMessage, RPCResponseMessage } from '../common/misc_message';
 import isPromise from 'is-promise';
+import * as download from '../download/download';
+
+setTimeout(() => {
+    download.startTask('https://v.hoopchina.com.cn/hupuapp/bbs/687/17183687/thread__17183687_20210131073820_8407.mp4?auth_key=1612085266-0-0-aaa22ebad6b1e3f46e6e38d67e457e1f');
+}, 1000);
 
 const RPCHandlers: Map<string, Function> = new Map<string, Function>();
 export function registerRPC(funcname: string, func: Function): boolean {

@@ -14,6 +14,7 @@ export module ErrorMSG {
     export const BadJSON = 'bad json';
     export const BadFormat = 'bad format';
     export const NotFound = 'Not found';
+    export const NotImplemented = 'Not Implemented';
     export const UserNotFound = 'User Not Found';
     export const AccountBeSuspended = 'Account be suspended';
 }

@@ -96,7 +96,7 @@ class UserManagement extends MessageHandler {
 
                 case UserMessageType.UpdateUserSettings: {
                     const gmsg: UserMessageUpdateUserSettingsRequest = msg;
-                    await DB.updateUserSettings(gmsg.um_msg.token, gmsg.um_msg.userSettings);
+                    await DB.setUserSettings(gmsg.um_msg.token, gmsg.um_msg.userSettings);
                 } break;
 
                 case UserMessageType.ShortTermTokenGenerate: {

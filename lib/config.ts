@@ -5,7 +5,7 @@ import path from 'path';
 import { constants } from './constants';
 import { FileSystem, FileSystemType, IFileSystemConfig } from './fileSystem/fileSystem';
 import { LocalFileSystem } from './fileSystem/localFileSystem';
-import { Database } from './database';
+import { Database, createDB } from './database/database';
 import { AliOSSFileSystem, IAliOSSFileSystemConfig } from './fileSystem/aliOssFileSystem';
 import { IMultiFileSystemConfig, MultiFileSystem } from './fileSystem/multiFileSystem';
 
@@ -73,7 +73,7 @@ class Config {
     private _db: Database;
     public get DB() {
         if(this._db == null) {
-            this._db = new Database();
+            this._db = createDB();
         }
         return this._db;
     }

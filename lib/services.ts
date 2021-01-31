@@ -1,5 +1,5 @@
 import { conf } from './config';
-import { Database } from './database';
+import { Database } from './database/database';
 import { MessageHandler } from './message_handler';
 import { MessageType, MessageJSON, MessageBIN } from './common/message';
 import { error } from './logger';
