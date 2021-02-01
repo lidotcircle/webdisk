@@ -15,10 +15,10 @@
                 "config": {
                     "type": "alioss",
                     "data": {
-                        "region": "oss-cn-beijing",
-                        "accessKeyId": "LTAI4GHWAR5dWJJRG2gTTfzR",
-                        "accessKeySecret": "KhUeqpXsi0FXJBZQc4FGp5Q91vpXPA",
-                        "bucket": "helloldy",
+                        "region": "",
+                        "accessKeyId": "",
+                        "accessKeySecret": "",
+                        "bucket": "",
                         "secure": true
                     }
                 }
