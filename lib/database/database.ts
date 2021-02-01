@@ -13,27 +13,41 @@ import { createSQLInsertion } from './utils';
 const MD5 = require('md5');
 
 import { INVITAION_CODE_LENGTH, KEY_INVITATION, KEY_USER, RootInvitation, RootUserInfo } from './constants';
-import { DB_Download } from './modules/download';
+import { DB_Download, IDBDownload } from './modules/download';
 
 import { DB_UserSettings,   IDBUserSettings } from './modules/user_settings';
 import { DB_NamedEntry,     IDBNamedEntry } from './modules/named_entry';
 import { DB_ShortTermToken, IDBShortTermToken } from './modules/short_term_token';
 import { DB_Token,          IDBToken } from './modules/token';
+import { EventEmitter } from 'events';
+import { DB_Utils } from './modules/utils';
 
 
-export type Database = WDDatabase & IDBToken & IDBUserSettings & IDBNamedEntry & IDBShortTermToken;
+export type Database = WDDatabase & IDBToken & IDBUserSettings & IDBNamedEntry & IDBShortTermToken & IDBDownload;
 export function createDB(): Database {return WDDatabase.createDB();}
 type precond = () => Promise<void>;
 
+export interface WDDatabase {
+    on(event: 'select', listener: (tables: string[], sql: string) => void): this;
+    on(event: 'update', listener: (table : string  , sql: string) => void): this;
+    on(event: 'insert', listener: (table : string  , sql: string) => void): this;
+    on(event: 'delete', listener: (table : string  , sql: string) => void): this;
+
+    on(event: 'init', listener: () => void): this;
+}
+
+@DB_Utils
 @DB_Download
 @DB_NamedEntry
 @DB_ShortTermToken
 @DB_UserSettings
 @DB_Token
-export class WDDatabase {
+export class WDDatabase extends EventEmitter {
     private m_database: sqlite.Database;
     protected preconditions: precond[] = [];
-    private constructor() {}
+    private constructor() {
+        super();
+    }
 
     static createDB(): Database //{
     {
@@ -126,7 +140,62 @@ export class WDDatabase {
             await precond();
         }
 
+        this.m_database.on("trace", sql => this.tracesql(sql));
         info('initialize database success');
+        this.emit('init');
+    } //}
+    get initialized(): boolean {return this._init_;}
+
+    private tracesql(sql: string) //{
+    {
+        sql = sql.trim();
+        const op = sql.substr(0, Math.min(sql.length, 6)).toLowerCase();
+        switch(op) {
+            case 'select': {
+                const m = sql.match(/[fF][rR][oO][mM]\s+((\w+\s*([aA][sS]\s+\w+)?,?\s*)+)[wW][hH][eE][rR][eE]/);
+                const tables = [];
+                if(!!m) {
+                    const ts = m[1];
+                    const tts = ts.split(',');
+                    for(let t of tts) {
+                        t = t.trim();
+                        const m = t.match(/(\w+)(\s+[aA][sS])?/);
+                        t = m[1];
+                        tables.push(t);
+                    }
+                    this.emit('select', tables, sql);
+                } else {
+                    debug('unrecognized select', sql);
+                }
+            } break;
+            case 'update': {
+                const m = sql.match(/[uU][pP][dD][aA][tT][eE]\s+(\w+)/);
+                if(!!m) {
+                    this.emit('update', m[1], sql);
+                } else {
+                    debug('unrecognized update', sql);
+                }
+            } break;
+            case 'insert': {
+                const m = sql.match(/[iI][nN][sS][eE][rR][tT]\s+[iI][nN][tT][oO]\s+(\w+)/);
+                if(!!m) {
+                    this.emit('insert', m[1], sql);
+                } else {
+                    debug('unrecognized insert', sql);
+                }
+            } break;
+            case 'delete': {
+                const m = sql.match(/[dD][eE][lL][eE][tT][eE]\s+[fF][rR][oO][mM]\s+(\w+)/);
+                if(!!m) {
+                    this.emit('delete', m[1], sql);
+                } else {
+                    debug('unrecognized delete', sql);
+                }
+            } break;
+
+            default:
+                debug('unrecognized sql', sql);
+        }
     } //}
 
 

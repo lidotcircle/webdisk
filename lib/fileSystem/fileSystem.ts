@@ -198,7 +198,7 @@ export class FileSystem {
             await util.promisify(pipeline)(fstream, writer);
             return 0;
             */
-             return await utils.pipelineWithTimeout(fstream, writer, 5000);
+             return await utils.pipelineWithTimeout(fstream, writer);
         } finally {
             fstream.destroy();
         }

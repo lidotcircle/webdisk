@@ -10,16 +10,16 @@
         "type": "multi",
         "data": [
             {
-                "srcPrefix": "/noexists",
+                "srcPrefix": "/home/prack/mydisk/alioss/",
                 "dstPrefix": "/",
                 "config": {
                     "type": "alioss",
                     "data": {
-                        "region": "",
-                        "accessKeyId": "",
-                        "accessKeySecret": "",
-                        "bucket": "",
-                        "secure": false
+                        "region": "oss-cn-beijing",
+                        "accessKeyId": "LTAI4GHWAR5dWJJRG2gTTfzR",
+                        "accessKeySecret": "KhUeqpXsi0FXJBZQc4FGp5Q91vpXPA",
+                        "bucket": "helloldy",
+                        "secure": true
                     }
                 }
             },

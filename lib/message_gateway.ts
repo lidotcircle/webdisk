@@ -34,6 +34,9 @@ export function upgradeHandler(inc: http.IncomingMessage, socket: net.Socket, bu
     new MessageGateway(connection);
 } //}
 
+export interface MessageGateway {
+    on(event: 'close', listener: () => void): this;
+}
 
 export class MessageGateway extends events.EventEmitter {
     private websocket: wsconnection;
@@ -117,6 +120,11 @@ export class MessageGateway extends events.EventEmitter {
         } else {
             this.send(MessageSerializer.JSONSerializer.encode(msg));
         }
+    } //}
+
+    public notify(msg: BasicMessage) //{
+    {
+        this.response(msg);
     } //}
 }
 

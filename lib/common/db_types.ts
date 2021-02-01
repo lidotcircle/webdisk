@@ -126,3 +126,16 @@ export class NameEntry {
     validEnd: number = null;
 }
 
+export class DownloadTask {
+    taskId: number = null;
+    url: string = null;
+    name: string = null;
+    size: number = null;
+    partial: boolean = false;
+    finish: boolean = false;
+    fail: boolean = false;
+    downloaded: number = null;
+    temporaryFile: string = null;
+    destination: string = null;
+}
+
