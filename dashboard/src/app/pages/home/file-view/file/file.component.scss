@@ -66,6 +66,7 @@ app-file {
             .hidden-panel {
                 display: none;
                 position: absolute;
+                top: 100%;
                 flex-direction: column;
                 background-color: white;
                 box-shadow: 0.1em 0.1em 0.3em 0.1em #CCC;
@@ -78,14 +79,18 @@ app-file {
         .file-props:hover {
             .hidden-panel {
                 display: flex;
-                animation: showme 1.4s linear forwards;
+                animation: showme 1s linear forwards;
+
+                &:hover {
+                    display: none;
+                }
             }
 
             @keyframes showme {
                 0% {
                     opacity: 0;
                 }
-                94% {
+                74% {
                     opacity: 0;
                 }
                 100% {

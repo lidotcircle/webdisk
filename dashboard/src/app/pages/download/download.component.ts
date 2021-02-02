@@ -19,6 +19,11 @@ export class DownloadComponent implements OnInit, OnDestroy {
     subscription: Subscription;
     ngOnInit(): void //{
     {
+        this.tasks = [];
+        for(const tid of this.downloadservice.taskIDs) {
+            this.tasks.push(this.downloadservice.queryByTaskID(tid));
+        }
+
         this.subscription = this.downloadservice.update.subscribe(v => {
             if(v == null) {
                 this.tasks = [];

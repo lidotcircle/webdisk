@@ -11,7 +11,7 @@ import { default as mktemp } from 'mktemp';
 import { KEY_DOWNLOAD } from '../database/constants';
 import { error, info } from '../logger';
 import { makeid, pipelineWithTimeout } from '../utils';
-import { pipeline, Readable } from 'stream';
+import { pipeline, Readable, Writable } from 'stream';
 import {default as contentDisposition} from 'content-disposition';
 
 
@@ -35,7 +35,8 @@ export async function startTask(usertoken: string, url: string, destination: str
 
     const cdis = head.headers.get('content-disposition');
     if(cdis) {
-        task.name = task.name || contentDisposition.parse(cdis)?.parameters?.filename;
+        task.name = contentDisposition.parse(cdis)?.parameters?.filename || task.name;
+        console.log(cdis, task.name);
     }
 
     if(head.headers.get('content-length')) {
@@ -186,17 +187,7 @@ class DownloadManager {
         const writer = await fs.createWriteStream(task.temporaryFile, {flags: 'w'});
         const reader = (await fetch(task.url)).body;
 
-        reader.on('data', (data: Buffer) => {
-            task.downloaded += data.byteLength;
-            service.DB.PushContent(task.taskId, task.downloaded);
-        });
-
-        const options = {};
-        task.cancel = () => {
-            options['canceled'] = true;
-            task.canceled = true;
-        }
-        await pipelineWithTimeout(reader as Readable, writer, options);
+        await this.pipedownload(task, reader as Readable, writer);
     } //}
 
     private async downloadWithAppend(task: DownloadTask & Cancelable): Promise<void> //{
@@ -204,9 +195,19 @@ class DownloadManager {
         const writer = await fs.createWriteStream(task.temporaryFile, {flags: 'a'});
         const reader = (await fetch(task.url, {headers: {'Range': `bytes=${task.downloaded}-`}})).body;
 
+        await this.pipedownload(task, reader as Readable, writer);
+    } //}
+
+    private async pipedownload(task: DownloadTask & Cancelable, reader: Readable, writer: Writable): Promise<void> //{
+    {
+        let prev = task.downloaded;
         reader.on('data', (data: Buffer) => {
             task.downloaded += data.byteLength;
-            service.DB.PushContent(task.taskId, task.downloaded);
+
+            if(task.downloaded - prev > 1024 * 1024 || task.downloaded == task.size) {
+                prev = task.downloaded;
+                service.DB.PushContent(task.taskId, task.downloaded);
+            }
         });
 
         const options = {};
@@ -214,7 +215,7 @@ class DownloadManager {
             options['canceled'] = true;
             task.canceled = true;
         }
-        await pipelineWithTimeout(reader as Readable, writer, options);
+        await pipelineWithTimeout(reader, writer, options);
     } //}
 }
 

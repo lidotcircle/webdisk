@@ -19,6 +19,7 @@ const in_fold   = require('!raw-loader!src/assets/maticons/in_fold.svg').default
 const in_unfold = require('!raw-loader!src/assets/maticons/in_unfold.svg').default;
 
 const wd_copy = require('!raw-loader!src/assets/maticons/wd_copy.svg').default;
+const download = require('!raw-loader!src/assets/maticons/download.svg').default;
 
 const icons = [
     {name: 'sortby', svg: sortbyicon},
@@ -33,6 +34,7 @@ const icons = [
     {name: 'in_fold', svg: in_fold},
     {name: 'in_unfold', svg: in_unfold},
     {name: 'wd-copy', svg: wd_copy},
+    {name: 'wd-download', svg: download},
 ];
 
 @Component({
