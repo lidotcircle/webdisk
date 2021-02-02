@@ -139,3 +139,10 @@ export class DownloadTask {
     destination: string = null;
 }
 
+export class StorePassword {
+    passid: number;
+    where: string;
+    account: string;
+    pass: string;
+}
+

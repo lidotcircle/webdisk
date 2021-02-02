@@ -21,9 +21,10 @@ import { DB_ShortTermToken, IDBShortTermToken } from './modules/short_term_token
 import { DB_Token,          IDBToken } from './modules/token';
 import { EventEmitter } from 'events';
 import { DB_Utils } from './modules/utils';
+import { DB_StorePass, IDBStorePass } from './modules/storePass';
 
 
-export type Database = WDDatabase & IDBToken & IDBUserSettings & IDBNamedEntry & IDBShortTermToken & IDBDownload;
+export type Database = WDDatabase & IDBToken & IDBUserSettings & IDBNamedEntry & IDBShortTermToken & IDBDownload & IDBStorePass;
 export function createDB(): Database {return WDDatabase.createDB();}
 type precond = () => Promise<void>;
 
@@ -37,6 +38,7 @@ export interface WDDatabase {
 }
 
 @DB_Utils
+@DB_StorePass
 @DB_Download
 @DB_NamedEntry
 @DB_ShortTermToken

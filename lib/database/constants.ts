@@ -14,6 +14,7 @@ export const KEY_SHORTTERM_TOKEN    = 'short_term_token';
 export const KEY_USER_SETTINGS      = 'settings';
 export const KEY_FILE_ENTRY_MAPPING = 'entry_mapping';
 export const KEY_DOWNLOAD           = 'download';
+export const KEY_STORE_PASS         = 'store_pass';
 
 export const RootUserInfo: DBRelations.User = new DBRelations.User();
 RootUserInfo.uid            = 1;

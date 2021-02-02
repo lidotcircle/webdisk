@@ -1,4 +1,4 @@
-import { DownloadTask, NameEntry, Token, UserInfo } from "../common/db_types";
+import { DownloadTask, NameEntry, StorePassword, Token, UserInfo } from "../common/db_types";
 
 export module DBRelations {
     export class User extends UserInfo {
@@ -36,6 +36,10 @@ export module DBRelations {
     }
 
     export class StreamDownloadTask extends DownloadTask {
+        uid: number;
+    }
+
+    export class StoredPass extends StorePassword {
         uid: number;
     }
 }

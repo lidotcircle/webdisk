@@ -1,9 +1,10 @@
-import { DownloadTask } from '../db_types';
+import { DownloadTask, StorePassword } from '../db_types';
 import { MessageType, BasicMessage, MessageSource } from './message';
 
 export enum MiscMessageType {
     RPC            = "RPC",
     DownloadManage = "DOWNLOAD_MANAGE",
+    StorePassword  = "STORE_PASS",
     Uninit         = "UNINIT"
 }
 
@@ -101,5 +102,35 @@ export class DownloadManageEventFailMessage extends DownloadManageEventMessage {
 export class DownloadManageEventFinishMessage extends DownloadManageEventMessage {
     event_type: DownloadManageEvent = DownloadManageEvent.FINISH;
     misc_msg: {taskid: number};
+}
+
+
+export enum StorePasswordType {
+    NewPass = "NEW_PASS",
+    GetPass = "GET_PASS",
+    DeletePass = "DELETE_PASS"
+}
+export class StorePasswordMessage extends MiscMessage {
+    misc_type = MiscMessageType.StorePassword;
+    sp_type: StorePasswordType = StorePasswordType.NewPass;
+}
+
+export class StorePasswordTypeNewPassMessage extends StorePasswordMessage {
+    misc_msg: {token: string, store: StorePassword}
+}
+export class StorePasswordTypeNewPassResponseMessage extends StorePasswordMessage {
+    misc_msg: {passid: number}
+}
+export class StorePasswordTypeDeletePassMessage extends StorePasswordMessage {
+    sp_type = StorePasswordType.DeletePass;
+    misc_msg: {token: string, passid: number}
+}
+export class StorePasswordTypeGetPassMessage extends StorePasswordMessage {
+    sp_type = StorePasswordType.GetPass;
+    misc_msg: {token: string}
+}
+export class StorePasswordTypeGetPassResponseMessage extends StorePasswordMessage {
+    sp_type = StorePasswordType.GetPass;
+    misc_msg: {stores: StorePassword[]}
 }
 
