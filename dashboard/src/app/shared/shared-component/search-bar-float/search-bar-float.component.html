@@ -1,0 +1,29 @@
+
+<div class="outter-wrapper">
+    <div class="wrapper">
+        <div class="search-row">
+            <div class="icon"><mat-icon>search</mat-icon></div>
+            <input class="input" type="text" tabindex='-1'>
+        </div>
+
+        <div class="outline">
+            <div class="search-row">
+                <div class="icon"><mat-icon>search</mat-icon></div>
+                <input class="input" type="text" [(ngModel)]='inputvalue' name='invalue' 
+                                     (input)='oninput()' (keyup)='onkeyup($event)' (blur)='onblur()' #invalue>
+                <div *ngIf='inputvalue.length > 0' class="close" (click)='onclear()'><mat-icon>close</mat-icon></div>
+            </div>
+            <div class="hints" *ngIf='hints.length > 0'>
+                <div class="divider"></div>
+
+                <div class="hint" *ngFor='let hint of hints; let i = index;'>
+                    <div class="hint-wrapper" (mousedown)='onhintclick(i)'>
+                        <div class="query-icon"><mat-icon>query_builder</mat-icon></div>
+                        <div class="message"> {{ hint }} </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
