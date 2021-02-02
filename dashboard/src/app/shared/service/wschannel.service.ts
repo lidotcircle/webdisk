@@ -16,6 +16,10 @@ export class WSChannelService {
     private max_id:          number;
     private retry_base:      number;
     private pendding_list:   [number, BasicMessage, boolean, MSGCallback][];
+    private _connection: Subject<void> = new Subject<void>();
+    private _disconnect: Subject<void> = new Subject<void>();
+    get xconnection(): Observable<void> {return this._connection;}
+    get xdisconnect(): Observable<void> {return this._disconnect;}
 
     constructor(private encoder: MessageEncoderService) //{
     {
@@ -113,11 +117,15 @@ export class WSChannelService {
         }
         this.connection = new WebSocket(CONS.wsurl);
         this.connection.onmessage = (msg) => this.onmessage(msg);
-        this.connection.onclose   = ()    => this.reconnect();
+        this.connection.onclose   = ()    => {
+            this._disconnect.next();
+            this.reconnect();
+        }
         this.connection.onerror   = (err) => console.warn(err);
         this.connection.onopen    = ()    => {
             this.retry_base = CONS.WS_RETRY_BASE;
             this.__call_all_msg();
+            this._connection.next();
         }
     } //}
 

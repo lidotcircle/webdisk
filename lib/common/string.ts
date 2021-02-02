@@ -17,5 +17,6 @@ export module ErrorMSG {
     export const NotImplemented = 'Not Implemented';
     export const UserNotFound = 'User Not Found';
     export const AccountBeSuspended = 'Account be suspended';
+    export const Exists = 'exists';
 }
 

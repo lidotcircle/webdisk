@@ -3,7 +3,7 @@ import { AbsoluteView, BeAbsoluteView } from '../absolute-view/absolute-view';
 import { FileSystemManagerService } from '../../service/file-system-manager.service';
 import { FileStat } from '../../common';
 import { Observable, Subject } from 'rxjs';
-import { FileSystemEntryWrapper, path } from '../../utils';
+import { Convert, FileSystemEntryWrapper, path } from '../../utils';
 import * as crypto from 'crypto-js';
 import { UserSettingService } from '../../service/user-setting.service';
 import { MessageBoxService } from '../../service/message-box.service';
@@ -48,39 +48,19 @@ export class UploadFileViewComponent extends AbsoluteView implements OnInit {
     private finish: boolean;
     private closed: boolean = false;
 
-    private bv2str(s: number) {
-        const MAP = {};
-        MAP['bytes'] = 'kb';
-        MAP['kb'] = 'mb';
-
-        let unit = 'bytes';
-        while(s > 1024 && MAP[unit]) {
-            s /= 1024;
-            unit = MAP[unit];
-        }
-        return s.toFixed(1) + ' ' + unit;
-    }
-
-    private tv2str(t: number) {
-        if(t < 60 * 2) return Math.floor(t) + 's';
-        else if (t < 60 * 60) return Math.floor(t / 60) + 'mins';
-        else if (t < 60 * 60 * 24) return Math.floor(t / (60 * 60)) + 'hours';
-        else return Math.floor(t / (24 * 60 * 60)) + 'days';
-    }
-
     get uploadConfirm(): Observable<number> {return this.uploadSize;}
     get speed(): Observable<number> {return this.speedSub;}
 
-    get SpendTime()     {return this.tv2str(Math.floor(this.spendTime / 1000));}
+    get SpendTime()     {return Convert.tv2str(Math.floor(this.spendTime / 1000));}
     get TimeRemaining() {
         let remain = this.totalSize - this.uploadedSize;
         remain /= (this.uploadSpeed_value + 1);
-        return this.tv2str(remain);
+        return Convert.tv2str(remain);
     }
 
-    get UploadSpeed()   {return this.bv2str(this.uploadSpeed_value) + '/s';}
-    get UploadedSize()  {return this.bv2str(this.uploadedSize);}
-    get TotalSize()     {return this.bv2str(this.totalSize);}
+    get UploadSpeed()   {return Convert.bv2str(this.uploadSpeed_value) + '/s';}
+    get UploadedSize()  {return Convert.bv2str(this.uploadedSize);}
+    get TotalSize()     {return Convert.bv2str(this.totalSize);}
 
     get InProcessFile() {return this.inProcessFile;}
     get Finish()        {return this.finish;}

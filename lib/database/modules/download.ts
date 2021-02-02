@@ -78,7 +78,12 @@ class MixinedDatabase extends Parent implements IDBDownload {
 
     async DeleteTask(token: string, taskid: number): Promise<void> //{
     {
-        await this.run(`DELETE FROM ${KEY_DOWNLOAD} WHERE taskid=${taskid}`);
+        const uid = await this.checkToken(token);
+        const data = await this.get(`SELECT * FROM ${KEY_DOWNLOAD} WHERE uid=${uid} AND taskId=${taskid};`);
+        if(!data) {
+            throw new Error(ErrorMSG.NotFound);
+        }
+        await this.run(`DELETE FROM ${KEY_DOWNLOAD} WHERE uid=${uid} AND taskId=${taskid}`);
     } //}
 
     async QueryTasksByToken(token: string): Promise<DownloadTask[]> //{

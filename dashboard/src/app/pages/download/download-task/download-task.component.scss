@@ -1,25 +1,135 @@
 @import 'src/app/style/utils.scss';
 
 div.download-task {
+    &.task-finish {
+        background: #aaaaaa22;
+    }
+
+    &.task-fail {
+        background: #a0444477;
+    }
+
     display: flex;
     flex-direction: column;
     width: 100%;
-    box-shadow: 0.5em 0.5em 0.1em 0.1em #7799aa;
+    box-sizing: border-box;
+    box-shadow: 0.1em 0.1em 0.3em 0.1em #ccc;
+    border-radius: 0.3em;
+    padding: 0.5em 1em;
+    margin: 0.5em 0em;
 
     div.name-url {
         display: flex;
         flex-direction: row;
+        margin: 0.3em 0em 0em 0em;
+
+        .name, .url {
+            overflow-y: visible;
+            overflow-x: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            position: relative;
+            @include no-select();
+
+            .float {
+                display: none;
+                position: fixed;
+                max-width: 70%;
+                width: min-content;
+                white-space: pre-line;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                background: white;
+                z-index: 2;
+                padding: 0.7em;
+                box-shadow: 0.2em 0.2em 0.8em 0.3em #bbb;
+            }
+        }
+
+        .overflow {
+            &:hover .float {
+                &:hover {
+                    display: none;
+                }
+
+                display: block;
+                animation: floatout 0.7s linear forwards;
+
+                @keyframes floatout {
+                    0% {
+                        opacity: 0;
+                    }
+                    50% {
+                        opacity: 0;
+                    }
+                    100% {
+                        opacity: 1;
+                    }
+                }
+            }
+        }
 
         div.name {
+            box-shadow: border-box;
+            padding: 0em 1em 0em 0em;
         }
+
         div.take-space {
             flex-grow: 1;
         }
+
         div.url {
         }
     }
 
+    div.infos {
+        display: grid;
+        grid-template-columns: auto auto auto auto;
+        grid-gap: 0.3em;
+        padding: 0.5em;
+        margin: 0.5em 0em 0.3em 0em;
+        width: 100%;
+        box-sizing: border-box;
+        background: #d9d9d975;
+        border-radius: 0.8em;
+        box-shadow: 0.1em 0.1em 0.3em 0.3em #aea6a677;
+
+        .key-value {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #b8c4ed91;
+            padding: 0.3em;
+            box-sizing: border-box;
+            border-radius: 0.3em;
+
+            .prop-name {
+                @include no-select();
+                color: #46a4f5;
+            }
+
+            .value {
+                padding: 0.5em 0em 0em 0em;
+                color: #59506ae0;
+            }
+        }
+    }
+
     div.progress {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 0.5em 0em;
+    }
+
+    div.buttons {
+        padding: 0.5em 0em;
+        display: flex;
+        flex-direction: row;
+
+        button {
+            flex-basis: 0em;
+            flex-grow: 1;
+        }
     }
 }
 

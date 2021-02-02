@@ -89,3 +89,62 @@ export async function copyTextToClipboard(text: string) //{
     }
 } //}
 
+export module Convert {
+    export function bv2str(s: number) {
+        const MAP = {};
+        MAP['Bytes'] = 'KB';
+        MAP['KB'] = 'MB';
+
+        let unit = 'Bytes';
+        while(s > 1024 && MAP[unit]) {
+            s /= 1024;
+            unit = MAP[unit];
+        }
+        return s.toFixed(1) + ' ' + unit;
+    }
+
+    export function tv2str(t: number) {
+        if(t < 60 * 2) return Math.floor(t) + 'S';
+        else if (t < 60 * 60) return Math.floor(t / 60) + 'Mins';
+        else if (t < 60 * 60 * 24) return Math.floor(t / (60 * 60)) + 'Hours';
+        else return Math.floor(t / (24 * 60 * 60)) + 'Days';
+    }
+
+    export class TrafficSpeedGenerate //{
+    {
+        private ntpairs: [number, number][] = [];
+        private elapseMs: number = 3000;
+
+        constructor(elapse_ms?: number) {
+            this.elapseMs = this.elapseMs || elapse_ms;
+        }
+
+        get speed(): string {
+            return null;
+            const now = Date.now();
+            let i=0;
+            for(;i<this.ntpairs.length;i++) {
+                const pair = this.ntpairs[i];
+                if(now - pair[0] <= this.elapseMs) {
+                    break;
+                }
+            }
+            if(i > 0) {
+                this.ntpairs.splice(0, i);
+                if(now - this.ntpairs[0][0] > this.elapseMs) {
+                    this.ntpairs = [];
+                }
+            }
+            let n=0;
+            for(const pair of this.ntpairs) {
+                n += pair[1];
+            }
+            return bv2str(n / (this.elapseMs / 1000)) + '/S';
+        }
+
+        push(n_bytes: number): void {
+            this.ntpairs.push([Date.now(), n_bytes]);
+        }
+    } //}
+}
+

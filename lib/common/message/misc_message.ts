@@ -83,6 +83,7 @@ export enum DownloadManageEvent {
     FAIL   = "FAIl"
 }
 export class DownloadManageEventMessage extends MiscMessage {
+    misc_type = MiscMessageType.DownloadManage;
     messageSource = MessageSource.Event;
     event_type: DownloadManageEvent = DownloadManageEvent.UPDATE;
 }

@@ -1,8 +1,9 @@
 @import 'src/app/style/colors.scss';
+@import 'src/app/style/utils.scss';
 
 .outer {
     width: 100%;
-    height: 1em;
+    height: 1.3em;
     position: relative;
     background-color: lighten($color-bg-popwin, 30%);
     border-radius: 1em;
@@ -19,6 +20,7 @@
         width: 100%;
         height: 100%;
         text-align: center;
+        @include no-select();
     }
 }
 

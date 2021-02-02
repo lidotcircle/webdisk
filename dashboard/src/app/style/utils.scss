@@ -32,3 +32,13 @@
     user-select:           none;
 }
 
+@mixin thin-scrollbar() {
+    &::-webkit-scrollbar {
+        width: 0.5em;
+        background: #f3f3f3;
+    }
+    &::-webkit-scrollbar-thumb {
+        background-color: #777;
+    }
+}
+

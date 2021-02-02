@@ -1,10 +1,48 @@
 
-<div class="download-task">
+<div [class]="'download-task' + (task.finish ? ' task-finish' : '') + (task.fail ? ' task-fail' : '')">
     <div class="name-url">
-        <div class="name"> {{ task.name }} </div>
+        <div [class]="'name' + (NameOverflow ? ' overflow' : '')" #nameElem (dblclick)='copyName()'>
+            {{ task.name }}
+
+            <div class="float">
+                {{ task.name }}
+            </div>
+        </div>
         <div class="take-space"></div>
-        <div class="url"> {{ task.url }} </div>
+        <div [class]="'url' + (UrlOverflow ? ' overflow' : '')" #urlElem (dblclick)='copyUrl()'>
+            {{ task.url }} 
+
+            <div class="float">
+                {{ task.url }}
+            </div>
+        </div>
     </div>
 
-    <div class="progress"></div>
+    <div class="infos">
+        <div class="key-value">
+            <div class="prop-name">Size</div>
+            <div class="value"> {{ 'nn' }} </div>
+        </div>
+        <div class="key-value">
+            <div class="prop-name">Downloaded</div>
+            <div class="value"> {{ 'nn' }} </div>
+        </div>
+        <div class="key-value">
+            <div class="prop-name">Partial</div>
+            <div class="value"> {{ PropPartial }} </div>
+        </div>
+        <div class="key-value">
+            <div class="prop-name">Speed</div>
+            <div class="value"> {{ PropSpeed }} </div>
+        </div>
+    </div>
+
+    <div class="progress" *ngIf='task.size > 0'>
+        <app-progress-bar [percent]='percent'></app-progress-bar>
+    </div>
+
+    <div class="buttons">
+        <button mat-raised-button color='primary' class="cancel" (click)='deleteTask()'>Delete</button>
+    </div>
 </div>
+

@@ -1,10 +1,18 @@
-<p>download works!</p>
 
-<button class="button" (click)='newtask()'> new task </button>
+<div class="download-page">
+    <div class="top-panel">
+        <div class="take-space"></div>
+        <div class="buttons">
+            <button (click)='newtask()'>New Task</button>
+        </div>
+    </div>
 
-<div class="tasks">
-    <div class="task" *ngFor='let task of tasks'>
-        <app-download-task [task]='task'></app-download-task>
+    <div class="tasks-wrapper">
+        <div class="tasks">
+            <div class="task" *ngFor='let task of tasks'>
+                <app-download-task [task]='task'></app-download-task>
+            </div>
+        </div>
     </div>
 </div>
 

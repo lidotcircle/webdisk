@@ -9,7 +9,10 @@ import * as download from '../download/download';
 import assert from 'assert';
 import { startTask } from '../download/download';
 import { KEY_DOWNLOAD } from '../database/constants';
+import { ErrorMSG } from '../common/string';
 
+
+const inspectedTask = Symbol('inspected task');
 
 const RPCHandlers: Map<string, Function> = new Map<string, Function>();
 export function registerRPC(funcname: string, func: Function): boolean {
@@ -37,7 +40,7 @@ class MiscManagement extends MessageHandler {
             }
         }
 
-
+        debug('Recieve a MISC Message', msg.misc_type, msg.messageSource);
         let resp = new MiscMessage();
         resp.messageId = this.id++;
         resp.messageSource = MessageSource.Response;
@@ -91,6 +94,7 @@ class MiscManagement extends MessageHandler {
 
     private async downloadManage(dispatcher: MessageGateway, msg: DownloadManageMessage, resp: DownloadManageMessage) //{
     {
+        debug('Misc DownloadManage Message', msg.dlm_type);
         resp.dlm_type = msg.dlm_type;
 
         switch(msg.dlm_type) {
@@ -98,7 +102,6 @@ class MiscManagement extends MessageHandler {
                 const dmsg = msg as DownloadManageNewTaskMessage;
                 const dresp = resp as DownloadManageNewTaskResponseMessage;
                 dresp.misc_msg.task = await startTask(dmsg.misc_msg.token, dmsg.misc_msg.url, dmsg.misc_msg.destination);
-                await this.inspectDownloadTask(dispatcher, dresp.misc_msg.task.taskId);
             } break;
             case DownloadManage.DELETE_TASK: {
                 const dmsg = msg as DownloadManageDeleteTaskMessage;
@@ -124,9 +127,14 @@ class MiscManagement extends MessageHandler {
 
     private async inspectDownloadTask(dispatcher: MessageGateway, taskid: number) //{
     {
+        const lookingTask = dispatcher[inspectedTask] = dispatcher[inspectedTask] || {};
+        if(lookingTask[taskid] !== undefined) {
+            throw new Error(ErrorMSG.Exists);
+        }
+
         const update_listener = (table: string, sql: string) => {
             if(table == KEY_DOWNLOAD) {
-                const m = sql.match(/size=(\d+).*taskId=(\d+)/);
+                const m = sql.match(/downloaded=(\d+).*taskId=(\d+)/);
                 if(m && Number(m[2]) == taskid) {
                     const noti = new DownloadManageEventUpdateMessage();
                     noti.misc_msg.size = Number(m[1]);
@@ -134,7 +142,7 @@ class MiscManagement extends MessageHandler {
                     dispatcher.notify(noti);
                 }
 
-                const u = sql.match(/finish=(\d+).*fail(\d+).*taskId=(\d+)/);
+                const u = sql.match(/finish=(\d+).*fail=(\d+).*taskId=(\d+)/);
                 if(u && Number(u[3]) == taskid) {
                     let noti: DownloadManageEventMessage;
                     if(Number(u[1]) == 1) {
@@ -142,11 +150,12 @@ class MiscManagement extends MessageHandler {
                     } else {
                         noti = new DownloadManageEventFailMessage();
                     }
+                    noti.misc_msg.taskid = taskid;
                     dispatcher.notify(noti);
                 }
             }
         }
-        await service.DB.on('update', update_listener);
+        service.DB.on('update', update_listener);
         dispatcher.once('close', () => {
             service.DB.removeListener('update', update_listener);
         });

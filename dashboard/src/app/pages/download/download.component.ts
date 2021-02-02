@@ -26,12 +26,21 @@ export class DownloadComponent implements OnInit, OnDestroy {
                     this.tasks.push(this.downloadservice.queryByTaskID(tid));
                 }
             } else {
-                for(const task of this.tasks) {
+                const nt = this.downloadservice.queryByTaskID(v);
+
+                for(let i=0;i<this.tasks.length;i++) {
+                    const task = this.tasks[i];
                     if(task.taskId == v) {
-                        const nt = this.downloadservice.queryByTaskID(v);
-                        Object.assign(task, nt);
+                        if(!nt) {
+                            this.tasks.splice(i,1);
+                        } else {
+                            Object.assign(task, nt);
+                        }
+                        return;
                     }
                 }
+
+                this.tasks.push(JSON.parse(JSON.stringify(nt)));
             }
         });
     } //}

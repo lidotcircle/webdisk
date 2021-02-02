@@ -10,8 +10,10 @@ import { URL } from 'url';
 import { default as mktemp } from 'mktemp';
 import { KEY_DOWNLOAD } from '../database/constants';
 import { error, info } from '../logger';
-import { pipelineWithTimeout } from '../utils';
+import { makeid, pipelineWithTimeout } from '../utils';
 import { pipeline, Readable } from 'stream';
+import {default as contentDisposition} from 'content-disposition';
+
 
 const mktempP = util.promisify(mktemp.createFile) as (pattern: string) => Promise<string>;
 
@@ -21,11 +23,19 @@ export async function startTask(usertoken: string, url: string, destination: str
     task.url = url;
     const u = new URL(url);
     task.name = path.basename(u.pathname);
+    if(task.name == '') {
+        task.name = makeid(10);
+    }
 
     const head = await fetch(url, {method: 'HEAD', compress: true, size: 1});
 
     if(head.status >= 400) {
         throw new Error(head.statusText);
+    }
+
+    const cdis = head.headers.get('content-disposition');
+    if(cdis) {
+        task.name = task.name || contentDisposition.parse(cdis)?.parameters?.filename;
     }
 
     if(head.headers.get('content-length')) {
@@ -38,6 +48,9 @@ export async function startTask(usertoken: string, url: string, destination: str
     task.downloaded = 0;
     task.temporaryFile = await mktempP('/tmp/webdisk_download_XXXXXXXXXX.tmp');
     task.destination = destination;
+    if(task.destination.endsWith('/')) {
+        task.destination += task.name;
+    }
 
     return await service.DB.CreateNewTask(usertoken, task);
 } //}
@@ -63,11 +76,14 @@ class DownloadManager {
         });
 
         service.DB.on('delete', (table, sql) => {
-            const taskid = Number(sql.match(/taskId=(\d+)/)[1]);
+            const m = sql.match(/[tT][aA][sS][kK][iI][dD]\s*=\s*'?"?(\d+)/);
+            if(m) {
+                const taskid = Number([1]);
 
-            for(const task of this.m_running_tasks) {
-                if(task.taskId == taskid) {
-                    task.cancel();
+                for(const task of this.m_running_tasks) {
+                    if(task.taskId == taskid) {
+                        task.cancel();
+                    }
                 }
             }
         });
@@ -126,6 +142,7 @@ class DownloadManager {
             const reader = fs.createReadStream(task.temporaryFile);
             try {
                 await service.filesystem.createNewFileWithReadableStream(task.destination, reader);
+                await service.filesystem.remove(task.temporaryFile);
                 await this.taskFinish(task);
             } catch {
                 await this.taskFail(task);
@@ -171,7 +188,7 @@ class DownloadManager {
 
         reader.on('data', (data: Buffer) => {
             task.downloaded += data.byteLength;
-            service.DB.PushContent(task.taskId, task.size);
+            service.DB.PushContent(task.taskId, task.downloaded);
         });
 
         const options = {};
@@ -187,9 +204,9 @@ class DownloadManager {
         const writer = await fs.createWriteStream(task.temporaryFile, {flags: 'a'});
         const reader = (await fetch(task.url, {headers: {'Range': `bytes=${task.downloaded}-`}})).body;
 
-        reader.on('data', data => {
+        reader.on('data', (data: Buffer) => {
             task.downloaded += data.byteLength;
-            service.DB.PushContent(task.taskId, task.size);
+            service.DB.PushContent(task.taskId, task.downloaded);
         });
 
         const options = {};
