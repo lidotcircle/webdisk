@@ -63,7 +63,10 @@ export class NamedLinkComponent implements OnInit {
         hook(ans);
     }
 
-    onsearchenter(input: string) {}
+    onsearchenter(input: string) {
+        this.filter = input;
+        this.run_fileter();
+    }
 
     getdate(n: number): string {
         const date = this.outentries[n].validEnd;

@@ -50,6 +50,7 @@ export class SearchBarComponent implements OnInit {
 
     onclear() {
         this.inputvalue = '';
+        this._enter.next(this.inputvalue);
     }
 
     onhintclick(n: number) {
