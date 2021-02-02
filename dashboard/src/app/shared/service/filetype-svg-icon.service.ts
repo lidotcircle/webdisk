@@ -66,7 +66,7 @@ export class FiletypeSvgIconService {
                     console.assert(svg != null);
                 } else {
                     let msg = new RPCRequestMessage();
-                    msg.misc_type = MiscMessageType.RPC_REQUEST;
+                    msg.misc_type = MiscMessageType.RPC;
                     msg.misc_msg.function_name = 'getSvgIcon';
                     msg.misc_msg.function_argv = [ext, style];
                     let ans = await this.wschannel.send(msg, false) as RPCResponseMessage;

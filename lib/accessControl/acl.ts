@@ -1,6 +1,6 @@
 import * as http from 'http';
 
-import { BasicMessage } from "../common/message";
+import { BasicMessage } from "../common/message/message";
 
 
 export class AccessControl {

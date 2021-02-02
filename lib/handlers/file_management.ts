@@ -1,9 +1,9 @@
 import { DB, service } from '../services';
 import { MessageHandler } from '../message_handler';
 import { MessageGateway } from '../message_gateway';
-import { BasicMessage, MessageType } from '../common/message';
+import { BasicMessage, MessageSource, MessageType } from '../common/message/message';
 import { debug, info, warn, error } from '../logger';
-import { FileMessage, FileMessageType, FileRequestMessage, FileResponseMessage, FileRequest } from '../common/file_message';
+import { FileMessage, FileRequestMessage, FileResponseMessage, FileRequest } from '../common/message/file_message';
 import { changeObject, subStringInObject } from '../utils';
 import path from 'path';
 import * as annautils from 'annautils';
@@ -55,8 +55,8 @@ class FileManagement extends MessageHandler {
         resp.error = null;
         msg.fm_msg = msg.fm_msg || {};
 
-        switch(msg.fm_type) {
-            case FileMessageType.Request: {
+        switch(msg.messageSource) {
+            case MessageSource.Request: {
                 const req = msg as FileRequestMessage;
                 if(req.fm_msg.user_token == null || !(await DB.getUserInfo(req.fm_msg.user_token))) {
                     resp.error = 'bad user token';
@@ -64,8 +64,8 @@ class FileManagement extends MessageHandler {
                     await this.access(req, resp);
                 }
             } break;
-            case FileMessageType.Response:
-            case FileMessageType.Event: {
+            case MessageSource.Response:
+            case MessageSource.Event: {
                 resp.error = 'bad file management type';
             } break;
             default: {

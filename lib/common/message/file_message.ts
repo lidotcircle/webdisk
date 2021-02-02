@@ -1,15 +1,8 @@
-import { MessageType, MessageId, MessageAck, BasicMessage } from './message';
-
-export enum FileMessageType {
-    Request  = "REQUEST",
-    Response = "RESPONSE",
-    Event    = "EVENT",
-    Uninit   = "UNINIT"
-}
+import { MessageType, MessageId, MessageAck, BasicMessage, MessageSource } from './message';
 
 export class FileMessage extends BasicMessage {
     public messageType = MessageType.FileManagement;
-    public fm_type: FileMessageType = FileMessageType.Uninit;
+    public messageSource = MessageSource.Request;
     public fm_msg: any = null;
 }
 
@@ -43,6 +36,7 @@ export class FileRequestMessage extends FileMessage {
 }
 
 export class FileResponseMessage extends FileMessage {
+    messageSource = MessageSource.Response;
     fm_msg = {
         fm_response: null,
     }
@@ -60,6 +54,7 @@ export enum FileEvent
 }
 
 export class FileEventMessage extends FileMessage {
+    messageSource = MessageSource.Event;
     fm_msg = {
         fm_event: FileEvent.INVALID,
         fm_event_argv: [],

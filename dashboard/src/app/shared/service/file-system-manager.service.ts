@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { FileStat, FileRequestMessage, FileRequest, FileResponseMessage, FileMessageType } from '../common';
+import { FileStat, FileRequestMessage, FileRequest, FileResponseMessage, MessageSource} from '../common';
 import { WSChannelService } from './wschannel.service';
 import { AccountManagerService } from './account-manager.service';
 import { assignTargetEnumProp, isArrayBuffer, hasArrayBuffer } from '../utils';
@@ -35,7 +35,7 @@ export class FileSystemManagerService {
 
     private async sendTo(req: {type: FileRequest, timeout?: number}, ...argv): Promise<any> {
         const reqmsg = new FileRequestMessage();
-        reqmsg.fm_type = FileMessageType.Request;
+        reqmsg.messageSource = MessageSource.Request;
         this.authWithToken(reqmsg);
         reqmsg.fm_msg.fm_request = req.type;
         reqmsg.fm_msg.fm_request_argv = argv;

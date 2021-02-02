@@ -10,7 +10,7 @@
         "type": "multi",
         "data": [
             {
-                "srcPrefix": "/home/prack/mydisk/alioss/",
+                "srcPrefix": "/noexists",
                 "dstPrefix": "/",
                 "config": {
                     "type": "alioss",

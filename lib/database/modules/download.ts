@@ -10,7 +10,7 @@ import { assignTargetEnumProp } from "../../utils";
 export interface IDBDownload {
     /** this methold is slightly diffirent with other exported methods, 
      *  it's call by download module instead of USER RPC */
-    CreateNewTask(token: string, task: DownloadTask): Promise<number>;
+    CreateNewTask(token: string, task: DownloadTask): Promise<DownloadTask>;
 
     DeleteTask(token: string, taskid: number): Promise<void>;
     QueryTasksByToken(token: string): Promise<DownloadTask[]>;
@@ -51,7 +51,7 @@ class MixinedDatabase extends Parent implements IDBDownload {
         });
     } //}
 
-    async CreateNewTask(token: string, task: DownloadTask): Promise<number> //{
+    async CreateNewTask(token: string, task: DownloadTask): Promise<DownloadTask> //{
     {
         const uid = await this.checkToken(token);
         task.destination = await this.resolvePathByUid(uid, task.destination);
@@ -72,7 +72,8 @@ class MixinedDatabase extends Parent implements IDBDownload {
             throw new Error(ErrorMSG.BadFormat);
         }
 
-        return Number(ans['last_insert_rowid()']);
+        task.taskId = Number(ans['last_insert_rowid()']);
+        return task;
     } //}
 
     async DeleteTask(token: string, taskid: number): Promise<void> //{
@@ -82,7 +83,8 @@ class MixinedDatabase extends Parent implements IDBDownload {
 
     async QueryTasksByToken(token: string): Promise<DownloadTask[]> //{
     {
-        return await this.all<DBRelations.StreamDownloadTask>(`SELECT * FROM ${KEY_DOWNLOAD} WHERE uid=${token}`);
+        const uid = await this.checkToken(token);
+        return await this.all<DBRelations.StreamDownloadTask>(`SELECT * FROM ${KEY_DOWNLOAD} WHERE uid=${uid}`);
     } //}
 
 

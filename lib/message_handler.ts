@@ -1,4 +1,4 @@
-import { BasicMessage } from './common/message';
+import { BasicMessage } from './common/message/message';
 import { MessageGateway } from './message_gateway';
 
 

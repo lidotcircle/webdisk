@@ -1,6 +1,6 @@
-import { MessageType, MessageId, MessageAck, BasicMessage } from './message';
-import { UserInfo, Token, NameEntry, UserPermission } from './db_types';
-import { UserSettings } from './user_settings';
+import { MessageType, MessageId, MessageAck, BasicMessage, MessageSource } from './message';
+import { UserInfo, Token, NameEntry, UserPermission } from '../db_types';
+import { UserSettings } from '../user_settings';
 
 export enum UserMessageType {
     Login = "LOGIN",
@@ -39,6 +39,7 @@ export enum UserMessageType {
 }
 
 export class UserMessage extends BasicMessage {
+    public messageSource = MessageSource.Request;
     public messageType = MessageType.UserManagement;
     public um_type: UserMessageType = UserMessageType.Uninit;
     public um_msg: any = {};

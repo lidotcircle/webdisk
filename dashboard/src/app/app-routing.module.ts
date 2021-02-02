@@ -23,6 +23,11 @@ const routes: Routes = [
         path: 'settings',
         loadChildren: () => import('./pages/user-settings/user-settings.module').then(m => m.UserSettingsModule),
         canActivate: [ HomeGuard ]
+    },
+    {
+        path: 'download',
+        loadChildren: () => import('./pages/download/download.module').then(m => m.DownloadModule),
+        canActivate: [ HomeGuard ]
     }
 ];
 

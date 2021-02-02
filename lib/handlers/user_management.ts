@@ -1,12 +1,12 @@
 import { DB } from '../services';
 import { MessageHandler } from '../message_handler';
 import { MessageGateway } from '../message_gateway';
-import { BasicMessage, MessageType } from '../common/message';
-import { UserMessage, UserMessageType, UserMessageGetUserInfoRequest, UserMessageSetUserInfoRequest, UserMessageChangePasswordRequest, UserMessageGenInvCodeRequest, UserMessaageGetInvCodeRequest, UserMessaageGetInvCodeResponse, UserMessageAddUserRequest, UserMessageRemoveUserRequest, UserMessageGetUserSettingsRequest, UserMessageGetUserSettingsResponse, UserMessageUpdateUserSettingsRequest, UserMessageShortTermTokenGenerateRequest, UserMessageShortTermTokenGenerateResponse, UserMessageShortTermTokenClearRequest, UserMessageNewNameEntryRequest, UserMessageGetNameEntryRequest, UserMessageGetNameEntryResponse, UserMessageGetAllNameEntryRequest, UserMessageGetAllNameEntryResponse, UserMessageDeleteNameEntryRequest, UserMessageDeleteAllNameEntryRequest, UserMessaageDeleteInvCodeRequest, UserMessageGetPermissionRequest, UserMessageGetPermissionResponse, UserMessageSetPermissionRequest, UserMessageGetUserInfoByInvCodeRequest, UserMessageGetUserInfoByInvCodeResponse } from '../common/user_message';
+import { BasicMessage, MessageSource, MessageType } from '../common/message/message';
+import { UserMessage, UserMessageType, UserMessageGetUserInfoRequest, UserMessageSetUserInfoRequest, UserMessageChangePasswordRequest, UserMessageGenInvCodeRequest, UserMessaageGetInvCodeRequest, UserMessaageGetInvCodeResponse, UserMessageAddUserRequest, UserMessageRemoveUserRequest, UserMessageGetUserSettingsRequest, UserMessageGetUserSettingsResponse, UserMessageUpdateUserSettingsRequest, UserMessageShortTermTokenGenerateRequest, UserMessageShortTermTokenGenerateResponse, UserMessageShortTermTokenClearRequest, UserMessageNewNameEntryRequest, UserMessageGetNameEntryRequest, UserMessageGetNameEntryResponse, UserMessageGetAllNameEntryRequest, UserMessageGetAllNameEntryResponse, UserMessageDeleteNameEntryRequest, UserMessageDeleteAllNameEntryRequest, UserMessaageDeleteInvCodeRequest, UserMessageGetPermissionRequest, UserMessageGetPermissionResponse, UserMessageSetPermissionRequest, UserMessageGetUserInfoByInvCodeRequest, UserMessageGetUserInfoByInvCodeResponse } from '../common/message/user_message';
 import { debug, info, warn, error } from '../logger';
 
 import { UserMessageLoginRequest, UserMessageLoginResponse,
-         UserMessageLogoutRequest } from '../common/user_message';
+         UserMessageLogoutRequest } from '../common/message/user_message';
 
 
 class UserManagement extends MessageHandler {
@@ -22,6 +22,7 @@ class UserManagement extends MessageHandler {
         }
 
         let resp = new UserMessage();
+        resp.messageSource = MessageSource.Response;
         resp.messageId = this.id++;
         resp.messageAck = msg.messageId;
         resp.error = null;

@@ -1,0 +1,10 @@
+<p>download works!</p>
+
+<button class="button" (click)='newtask()'> new task </button>
+
+<div class="tasks">
+    <div class="task" *ngFor='let task of tasks'>
+        <app-download-task [task]='task'></app-download-task>
+    </div>
+</div>
+

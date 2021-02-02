@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { BasicMessage, MessageJSON, MessageBIN, MessageType, CONS } from '../common';
+import { BasicMessage, MessageJSON, MessageBIN, MessageType, CONS, MessageSource, DownloadManageEventMessage, FileEventMessage, MiscMessageType } from '../common';
 import { MessageEncoderService } from './message-encoder.service';
 import { nextTick } from '../utils';
+import { Observable, Subject } from 'rxjs';
 
 type MSGCallback = (response: BasicMessage) => void;
 
@@ -154,14 +155,58 @@ export class WSChannelService {
             return;
         }
 
-        if(!(this.waiter_list.has(msg.messageAck))) {
-            console.warn('recieve a valid message, but the reciever has leaves, ignore');
-            return;
+        switch(msg.messageSource) {
+            case MessageSource.Response: {
+                if(!(this.waiter_list.has(msg.messageAck))) {
+                    console.warn('recieve a valid message, but the reciever has leaves, ignore');
+                    return;
+                }
+
+                let cb = this.waiter_list.get(msg.messageAck);
+                this.waiter_list.delete(msg.messageAck);
+                cb(msg);
+            } break;
+
+            case MessageSource.Event: {
+                this.onevent(msg);
+            } break;
+
+            default: {
+                console.warn('recieve a unrecognized message', msg.messageSource);
+            } break;
+        }
+    } //}
+
+
+    private _fsevent: Subject<FileEventMessage> = new Subject<FileEventMessage>();
+    public get fsEvent(): Observable<FileEventMessage> {return this._fsevent;}
+    private _downloadEvent: Subject<DownloadManageEventMessage> = new Subject<DownloadManageEventMessage>();
+    public get downloadEvent(): Observable<DownloadManageEventMessage> {return this._downloadEvent;}
+
+    private onevent(msg: BasicMessage): void //{
+    {
+        const testList: [(msg: BasicMessage) => boolean, Subject<any>][] = [
+            [msg => {
+                const gmsg = msg as FileEventMessage;
+                return (gmsg.messageType == MessageType.FileManagement &&
+                        gmsg.messageSource == MessageSource.Event);
+            }, this._fsevent],
+            [msg => {
+                const gmsg = msg as DownloadManageEventMessage;
+                return (gmsg.messageType == MessageType.MiscManagement &&
+                        gmsg.messageSource == MessageSource.Event &&
+                        gmsg.misc_type == MiscMessageType.DownloadManage);
+            }, this._downloadEvent]
+        ];
+
+        for(const entry of testList) {
+            if(entry[0](msg)) {
+                entry[1].next(msg);
+                return;
+            }
         }
 
-        let cb = this.waiter_list.get(msg.messageAck);
-        this.waiter_list.delete(msg.messageAck);
-        cb(msg);
+        console.warn('unhandled event', msg);
     } //}
 }
 

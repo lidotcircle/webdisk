@@ -5,7 +5,7 @@ import * as net    from 'net';
 import * as events from 'events';
 
 import { constants } from './constants';
-import { BasicMessage, MessageEncoder, MessageType } from './common/message';
+import { BasicMessage, MessageEncoder, MessageType } from './common/message/message';
 import { debug, info, warn, error } from './logger';
 import { MessageSerializer, MessageHandlers, registerMessageHandler, service } from './services';
 import { UserManager } from './handlers/user_management';

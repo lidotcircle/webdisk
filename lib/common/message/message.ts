@@ -1,5 +1,5 @@
 /** define message for client and server communication */
-import * as utils from './utils';
+import * as utils from '../utils';
 
 
 let hasSharedArrayBuffer = true;
@@ -18,7 +18,14 @@ export enum MessageType {
 export type MessageId  = number;
 export type MessageAck = number;
 
+export enum MessageSource {
+    Event    = "Event",
+    Request  = "Request",
+    Response = "Response"
+}
+
 export class BasicMessage {
+    public messageSource: MessageSource = MessageSource.Request;
     public messageType: MessageType = MessageType.Uninit;
     public messageId:   MessageId   = -1;
     public messageAck:  MessageAck  = -1;

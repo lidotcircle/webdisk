@@ -1,0 +1,25 @@
+@import 'src/app/style/utils.scss';
+
+div.download-task {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    box-shadow: 0.5em 0.5em 0.1em 0.1em #7799aa;
+
+    div.name-url {
+        display: flex;
+        flex-direction: row;
+
+        div.name {
+        }
+        div.take-space {
+            flex-grow: 1;
+        }
+        div.url {
+        }
+    }
+
+    div.progress {
+    }
+}
+

@@ -15,7 +15,7 @@ import { pipeline, Readable } from 'stream';
 
 const mktempP = util.promisify(mktemp.createFile) as (pattern: string) => Promise<string>;
 
-export async function startTask(usertoken: string, url: string, destination: string): Promise<number> //{
+export async function startTask(usertoken: string, url: string, destination: string): Promise<DownloadTask> //{
 {
     const task = new DownloadTask();
     task.url = url;

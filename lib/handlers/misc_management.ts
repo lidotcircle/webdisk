@@ -1,18 +1,15 @@
 import { DB, service } from '../services';
 import { MessageHandler } from '../message_handler';
 import { MessageGateway } from '../message_gateway';
-import { BasicMessage, MessageType } from '../common/message';
+import { BasicMessage, MessageSource, MessageType } from '../common/message/message';
 import { debug, info, warn, error } from '../logger';
-import { DownloadManage, DownloadManageDeleteTaskMessage, DownloadManageEventFailMessage, DownloadManageEventFinishMessage, DownloadManageEventMessage, DownloadManageEventUpdateMessage, DownloadManageGetTasksMessage, DownloadManageGetTasksResponseMessage, DownloadManageInspectTaskMessage, DownloadManageMessage, DownloadManageNewTaskMessage, DownloadManageNewTaskResponseMessage, MiscMessage, MiscMessageType, RPCRequestMessage, RPCResponseMessage } from '../common/misc_message';
+import { DownloadManage, DownloadManageDeleteTaskMessage, DownloadManageEventFailMessage, DownloadManageEventFinishMessage, DownloadManageEventMessage, DownloadManageEventUpdateMessage, DownloadManageGetTasksMessage, DownloadManageGetTasksResponseMessage, DownloadManageInspectTaskMessage, DownloadManageMessage, DownloadManageNewTaskMessage, DownloadManageNewTaskResponseMessage, MiscMessage, MiscMessageType, RPCRequestMessage, RPCResponseMessage } from '../common/message/misc_message';
 import isPromise from 'is-promise';
 import * as download from '../download/download';
 import assert from 'assert';
 import { startTask } from '../download/download';
 import { KEY_DOWNLOAD } from '../database/constants';
 
-setTimeout(() => {
-    startTask('K1TTv9DpwwKTfCvqfY3xxG8FZfKD0buuLNDCcfTyMQByeGOYUg5Y2tzH', 'https://baidu.com', '/baidu.html');
-}, 1000);
 
 const RPCHandlers: Map<string, Function> = new Map<string, Function>();
 export function registerRPC(funcname: string, func: Function): boolean {
@@ -40,15 +37,22 @@ class MiscManagement extends MessageHandler {
             }
         }
 
+
         let resp = new MiscMessage();
         resp.messageId = this.id++;
+        resp.messageSource = MessageSource.Response;
         resp.messageAck = msg.messageId;
+        resp.misc_type = msg.misc_type;
         resp.error = null;
         msg.misc_msg = msg.misc_msg || {};
 
         try {
+            if(msg.messageSource != MessageSource.Request) {
+                throw new Error('bad request');
+            }
+
             switch(msg.misc_type) {
-                case MiscMessageType.RPC_REQUEST: {
+                case MiscMessageType.RPC: {
                     const rpc_req = msg as RPCRequestMessage;
                     const h = RPCHandlers.get(rpc_req.misc_msg.function_name) as Function;
                     let rpc_await_ans = null;
@@ -65,13 +69,6 @@ class MiscManagement extends MessageHandler {
                     } else {
                         throw new Error(`rpc without handler: ${rpc_req.misc_msg.function_name}`);
                     }
-                } break;
-
-                case MiscMessageType.EVENT:
-                case MiscMessageType.DownloadEvent:
-                case MiscMessageType.RPC_RESPONSE: {
-                    warn('bad misc message');
-                    throw new Error('bad misc message type');
                 } break;
 
                 case MiscMessageType.DownloadManage: {
@@ -94,12 +91,14 @@ class MiscManagement extends MessageHandler {
 
     private async downloadManage(dispatcher: MessageGateway, msg: DownloadManageMessage, resp: DownloadManageMessage) //{
     {
+        resp.dlm_type = msg.dlm_type;
+
         switch(msg.dlm_type) {
             case DownloadManage.NEW_TASK: {
                 const dmsg = msg as DownloadManageNewTaskMessage;
                 const dresp = resp as DownloadManageNewTaskResponseMessage;
-                dresp.misc_msg.taskId = await startTask(dmsg.misc_msg.token, dmsg.misc_msg.url, dmsg.misc_msg.destination);
-                await this.inspectDownloadTask(dispatcher, dresp.misc_msg.taskId);
+                dresp.misc_msg.task = await startTask(dmsg.misc_msg.token, dmsg.misc_msg.url, dmsg.misc_msg.destination);
+                await this.inspectDownloadTask(dispatcher, dresp.misc_msg.task.taskId);
             } break;
             case DownloadManage.DELETE_TASK: {
                 const dmsg = msg as DownloadManageDeleteTaskMessage;

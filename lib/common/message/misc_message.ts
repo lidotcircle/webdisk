@@ -1,24 +1,21 @@
-import { DownloadTask } from './db_types';
-import { MessageType, BasicMessage } from './message';
+import { DownloadTask } from '../db_types';
+import { MessageType, BasicMessage, MessageSource } from './message';
 
 export enum MiscMessageType {
-    RPC_REQUEST  = "RPC_REQUEST",
-    RPC_RESPONSE = "RPC_RESPONSE",
-    EVENT = "EVENT",
-
+    RPC            = "RPC",
     DownloadManage = "DOWNLOAD_MANAGE",
-    DownloadEvent = "DOWNLOAD_EVENT",
-
-    Uninit   = "UNINIT"
+    Uninit         = "UNINIT"
 }
 
 export class MiscMessage extends BasicMessage {
     public messageType = MessageType.MiscManagement;
     public misc_type: MiscMessageType = MiscMessageType.Uninit;
-    public misc_msg: any = null;
+    public misc_msg: any = {};
 }
 
 export class RPCRequestMessage extends MiscMessage {
+    messageSource = MessageSource.Request;
+    misc_type = MiscMessageType.RPC;
     misc_msg = {
         function_name: '',
         function_argv: []
@@ -26,6 +23,8 @@ export class RPCRequestMessage extends MiscMessage {
 }
 
 export class RPCResponseMessage extends MiscMessage {
+    messageSource = MessageSource.Response;
+    misc_type = MiscMessageType.RPC;
     misc_msg = {
         function_response: null
     }
@@ -40,6 +39,7 @@ export enum DownloadManage {
 }
 
 export class DownloadManageMessage extends MiscMessage {
+    messageSource = MessageSource.Request;
     misc_type: MiscMessageType = MiscMessageType.DownloadManage;
     dlm_type: DownloadManage = DownloadManage.NEW_TASK;
     misc_msg: {} = {};
@@ -51,7 +51,8 @@ export class DownloadManageNewTaskMessage extends DownloadManageMessage {
 }
 
 export class DownloadManageNewTaskResponseMessage extends DownloadManageMessage {
-    misc_msg: {taskId: number};
+    messageSource = MessageSource.Response;
+    misc_msg: {task: DownloadTask};
 }
 
 export class DownloadManageDeleteTaskMessage extends DownloadManageMessage {
@@ -65,6 +66,7 @@ export class DownloadManageGetTasksMessage extends DownloadManageMessage {
 }
 
 export class DownloadManageGetTasksResponseMessage extends DownloadManageMessage {
+    messageSource = MessageSource.Response;
     dlm_type: DownloadManage = DownloadManage.GET_TASKS;
     misc_msg: {tasks: DownloadTask[]};
 }
@@ -81,16 +83,11 @@ export enum DownloadManageEvent {
     FAIL   = "FAIl"
 }
 export class DownloadManageEventMessage extends MiscMessage {
-    misc_type: MiscMessageType = MiscMessageType.DownloadEvent;
+    messageSource = MessageSource.Event;
     event_type: DownloadManageEvent = DownloadManageEvent.UPDATE;
 }
 
 export class DownloadManageEventUpdateMessage extends DownloadManageEventMessage {
-    event_type: DownloadManageEvent = DownloadManageEvent.UPDATE;
-    misc_msg: {taskid: number, size: number};
-}
-
-export class DownloadManageEventSuccessMessage extends DownloadManageEventMessage {
     event_type: DownloadManageEvent = DownloadManageEvent.UPDATE;
     misc_msg: {taskid: number, size: number};
 }
