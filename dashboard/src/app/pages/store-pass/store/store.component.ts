@@ -50,11 +50,12 @@ export class StoreComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        try {
-            window.atob(this.store.account);
+        const v = this.storepass.eliminatePrefix(this.store.account);
+        if(v) {
+            this.store.account = v;
+            this.trueAccount = v;
+        } else {
             this.encryptedAccount = true;
-        } catch {
-            this.trueAccount = this.store.account;
         }
     }
 

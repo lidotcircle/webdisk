@@ -8,7 +8,7 @@ import { MessageBoxService } from '../message-box.service';
 import { NotifierService } from '../notifier.service';
 import { NotifierType } from '../../shared-component/notifier/notifier.component';
 
-const prefix: string = 'UVWXYZ';
+const prefix: string = 'UVWXYZ@@VV%%&*!()-+=,./\\';
 @Injectable({
     providedIn: 'root'
 })
@@ -33,7 +33,7 @@ export class StorePassService {
         if(encryptAccount) {
             store.account = this.encrypt(account, password);
         } else {
-            store.account = account;
+            store.account = prefix + account;
         }
         store.pass = cipher;
         store.site = where;
@@ -128,6 +128,11 @@ export class StorePassService {
         } else {
             return null;
         }
+    }
+
+    eliminatePrefix(val: string): string | null {
+        if(val.startsWith(prefix)) return val.substr(prefix.length);
+        return null;
     }
 
     async newPassWithUI(): Promise<void> //{
