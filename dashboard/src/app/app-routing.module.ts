@@ -28,6 +28,11 @@ const routes: Routes = [
         path: 'download',
         loadChildren: () => import('./pages/download/download.module').then(m => m.DownloadModule),
         canActivate: [ HomeGuard ]
+    },
+    {
+        path: 'store-pass',
+        loadChildren: () => import('./pages/store-pass/store-pass.module').then(m => m.StorePassModule),
+        canActivate: [ HomeGuard ]
     }
 ];
 

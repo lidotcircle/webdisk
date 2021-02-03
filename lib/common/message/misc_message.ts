@@ -108,7 +108,8 @@ export class DownloadManageEventFinishMessage extends DownloadManageEventMessage
 export enum StorePasswordType {
     NewPass = "NEW_PASS",
     GetPass = "GET_PASS",
-    DeletePass = "DELETE_PASS"
+    DeletePass = "DELETE_PASS",
+    ChangePass = "CHANGE_PASS"
 }
 export class StorePasswordMessage extends MiscMessage {
     misc_type = MiscMessageType.StorePassword;
@@ -120,6 +121,10 @@ export class StorePasswordTypeNewPassMessage extends StorePasswordMessage {
 }
 export class StorePasswordTypeNewPassResponseMessage extends StorePasswordMessage {
     misc_msg: {passid: number}
+}
+export class StorePasswordTypeChangePassMessage extends StorePasswordMessage {
+    sp_type = StorePasswordType.ChangePass;
+    misc_msg: {token: string, passid: number, pass: string}
 }
 export class StorePasswordTypeDeletePassMessage extends StorePasswordMessage {
     sp_type = StorePasswordType.DeletePass;

@@ -1,0 +1,49 @@
+
+<div class="store">
+    <div class="site flex"> 
+        <mat-icon svgIcon='store_internet'></mat-icon>
+        <div class="text" (dblclick)='copyToClipboard(store.site)'>
+            {{ store.site }} 
+        </div>
+    </div>
+
+    <div class="account" *ngIf='!encryptedAccount' (dblclick)='copyToClipboard(store.account)'>
+            {{ store.account }}
+    </div>
+
+    <div class="account flex" *ngIf='encryptedAccount'>
+        <div class="show" *ngIf='showAccount' (dblclick)='copyToClipboard(trueAccount)'>
+            {{ trueAccount }}
+        </div>
+        <div class="hidden" *ngIf='!showAccount'>
+            ••••••••
+        </div>
+
+        <div class="take-space"></div>
+        <mat-icon class='hover-bg' svgIcon='store_show_pass' (click)='toggleAccount()'></mat-icon>
+    </div>
+
+
+    <div class="password flex">
+        <div class="show" *ngIf='showPass' (dblclick)='copyToClipboard(truePass)'>
+            {{ truePass }}
+        </div>
+        <div class="hidden" *ngIf='!showPass'>
+            ••••••••
+        </div>
+
+        <div class="take-space"></div>
+        <mat-icon class='hover-bg' svgIcon='store_show_pass' (click)='togglePass()'></mat-icon>
+    </div>
+
+    <div class="tools flex">
+        <div class="take-space"></div>
+        <mat-icon class='hover-bg' (click)='onToolsClick()' svgIcon='store_menu_dots'></mat-icon>
+
+        <div class="bs" #bsbsbs>
+            <button (click)='onEdit()' mat-flat-button>edit</button>
+            <button (click)='onDelete()' mat-flat-button>delete</button>
+        </div>
+    </div>
+</div>
+

@@ -20,6 +20,7 @@ const in_unfold = require('!raw-loader!src/assets/maticons/in_unfold.svg').defau
 
 const wd_copy = require('!raw-loader!src/assets/maticons/wd_copy.svg').default;
 const download = require('!raw-loader!src/assets/maticons/download.svg').default;
+const password = require('!raw-loader!src/assets/maticons/password-key.svg').default;
 
 const icons = [
     {name: 'sortby', svg: sortbyicon},
@@ -35,6 +36,7 @@ const icons = [
     {name: 'in_unfold', svg: in_unfold},
     {name: 'wd-copy', svg: wd_copy},
     {name: 'wd-download', svg: download},
+    {name: 'wd-password', svg: password},
 ];
 
 @Component({

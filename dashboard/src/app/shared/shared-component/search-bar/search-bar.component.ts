@@ -1,6 +1,8 @@
 import { Component, ElementRef, OnInit, Output, ViewChild } from '@angular/core';
 import { Subject } from 'rxjs';
 
+
+export type SearchInputEvent = [string, (hints: string[]) => void];
 @Component({
     selector: 'app-search-bar',
     templateUrl: './search-bar.component.html',
@@ -8,7 +10,7 @@ import { Subject } from 'rxjs';
 })
 export class SearchBarComponent implements OnInit {
     @Output('searchinput')
-    private _input: Subject<[string, (hints: string[]) => void]> = new Subject();
+    private _input: Subject<SearchInputEvent> = new Subject();
     @Output('searchenter')
     private _enter: Subject<string> = new Subject();
 

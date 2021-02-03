@@ -1,3 +1,4 @@
+@import 'src/app/style/utils.scss';
 
 .outter-wrapper {
     margin-top: 0.3em;
@@ -15,6 +16,7 @@
             color: #777;
 
             mat-icon {
+                @include no-select();
                 font-size: 20px;
                 width: 20px;
                 height: 20px;

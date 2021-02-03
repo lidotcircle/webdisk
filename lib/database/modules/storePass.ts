@@ -10,6 +10,7 @@ export interface IDBStorePass {
     newPass(token: Token, where: string, account: string, pass: string): Promise<number>;
     getAllPass(token: Token): Promise<StorePassword[]>;
     deletePass(token: Token, passId: number): Promise<void>;
+    changePass(token: Token, passId: number, pass: string): Promise<void>;
 }
 const UserSettingsCache: {[key: string]: UserSettings} = {};
 
@@ -28,7 +29,7 @@ class MixinedDatabase extends Parent implements IDBStorePass {
                 CREATE TABLE IF NOT EXISTS ${KEY_STORE_PASS} (
                     passid INTEGER PRIMARY KEY AUTOINCREMENT,
                     uid INTEGER NOT NULL,
-                    where TEXT NOT NULL,
+                    site TEXT NOT NULL,
                     account TEXT NOT NULL,
                     pass TEXT NOT NULL,
                     FOREIGN KEY (uid) references ${KEY_USER}(uid) ON DELETE CASCADE);`);
@@ -40,7 +41,7 @@ class MixinedDatabase extends Parent implements IDBStorePass {
         const uid = await this.checkToken(token);
         const record = new DBRelations.StoredPass();
         record.uid = uid;
-        record.where = where;
+        record.site = where;
         record.account = account;
         record.pass = pass;
         const ins = createSQLInsertion(DBRelations.StoredPass, [record], ['passid']);
@@ -56,11 +57,20 @@ class MixinedDatabase extends Parent implements IDBStorePass {
     async deletePass(token: string, passId: number): Promise<void> //{
     {
         const uid = await this.checkToken(token);
-        const check = await this.get(`SELECT * FROM ${KEY_STORE_PASS} WHERE uid=${uid} passid=${passId};`);
+        const check = await this.get(`SELECT * FROM ${KEY_STORE_PASS} WHERE uid=${uid} AND passid=${passId};`);
         if(!check) {
             throw new Error(ErrorMSG.NotFound);
         }
         await this.run(`DELETE FROM ${KEY_STORE_PASS} WHERE passid=${passId};`);
+    } //}
+    async changePass(token: string, passId: number, pass: string): Promise<void> //{
+    {
+        const uid = await this.checkToken(token);
+        const check = await this.get(`SELECT * FROM ${KEY_STORE_PASS} WHERE uid=${uid} AND passid=${passId};`);
+        if(!check) {
+            throw new Error(ErrorMSG.NotFound);
+        }
+        await this.run(`UPDATE ${KEY_STORE_PASS} SET pass='${pass}' WHERE passid=${passId};`);
     } //}
 }
 

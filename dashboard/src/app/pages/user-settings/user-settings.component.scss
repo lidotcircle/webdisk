@@ -8,28 +8,10 @@
     display: flex;
     flex-direction: column;
 
+    @include horizontal-centeralize('.settings', '.too-big-take-space');
     .settings {
         flex-grow: 1;
         overflow: hidden;
-        width: 100%;
-        display: flex;
-        flex-direction: row;
-
-        .too-big-take-space {
-            background-color: #eee;
-
-            @media (min-width: 600px) {
-                width: 100px;
-            }
-
-            @media (min-width: 800px) {
-                width: 150px;
-            }
-
-            @media (min-width: 1000px) {
-                width: 20%;
-            }
-        }
 
         .settings-nav {
             @include no-select();

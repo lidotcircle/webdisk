@@ -141,7 +141,7 @@ export class DownloadTask {
 
 export class StorePassword {
     passid: number;
-    where: string;
+    site: string;
     account: string;
     pass: string;
 }

@@ -1,18 +1,18 @@
 
-<div class="download-page">
-    <div class="top-panel">
-        <div class="take-space"></div>
-        <div class="buttons">
-            <button mat-raised-button color='primary' (click)='newtask()'>New Task</button>
+    <div class="download-page">
+        <div class="top-panel">
+            <div class="take-space"></div>
+            <div class="buttons">
+                <button mat-raised-button color='primary' (click)='newtask()'>New Task</button>
+            </div>
         </div>
-    </div>
 
-    <div class="tasks-wrapper">
-        <div class="tasks">
-            <div class="task" *ngFor='let task of tasks'>
-                <app-download-task [task]='task'></app-download-task>
+        <div class="tasks-wrapper">
+            <div class="tasks">
+                <div class="task" *ngFor='let task of tasks'>
+                    <app-download-task [task]='task'></app-download-task>
+                </div>
             </div>
         </div>
     </div>
-</div>
 

@@ -42,3 +42,27 @@
     }
 }
 
+@mixin horizontal-centeralize($outter, $leftright) {
+    #{$outter} {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+
+        #{$leftright} {
+            background-color: #eee;
+
+            @media (min-width: 600px) {
+                width: 100px;
+            }
+
+            @media (min-width: 800px) {
+                width: 150px;
+            }
+
+            @media (min-width: 1000px) {
+                width: 20%;
+            }
+        }
+    }
+}
+
