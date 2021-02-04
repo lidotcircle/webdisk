@@ -10,7 +10,7 @@ export class UserSettings {
         const j = JSON.parse(json);
 
         for(const key in ans) {
-            ans[key] = j[key] || ans[key];
+            ans[key] = j[key] === undefined ? ans[key] : j[key];
         }
 
         return ans;

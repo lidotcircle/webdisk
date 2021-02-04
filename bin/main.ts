@@ -7,6 +7,7 @@ import * as process       from 'process';
 import * as timer         from 'timers';
 import * as proc          from 'process';
 import { constants }      from '../lib/constants';
+import { info } from '../lib/logger';
 
 import { GetConfig, conf } from '../lib/config';
 const getopt = require('node-getopt');
@@ -37,7 +38,7 @@ async function main() //{
         throw err;
     });
     server.on("listening", () => {
-        console.log(`listening at ${conf.listenAddress}:${conf.listenPort}`)
+        info(`listening at ${conf.listenAddress}:${conf.listenPort}`)
     });
     server.listen(conf.listenPort, conf.listenAddress);
 } //}

@@ -18,7 +18,7 @@ export module validation {
 
 export function assignTargetEnumProp(src: Object, target: Object) {
     for(const prop in target) {
-        if(src[prop] != null)
+        if(src[prop] !== undefined)
             target[prop] = src[prop];
     }
 }

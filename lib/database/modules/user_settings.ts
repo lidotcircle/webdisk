@@ -38,7 +38,8 @@ class MixinedDatabase extends Parent implements IDBUserSettings {
             delete UserSettingsCache[uid];
         }
         const str = JSON.stringify(settings);
-        if (await this.getUserSettings(token) == null) {
+        const notexists = !(await this.get(`SELECT * FROM ${KEY_USER_SETTINGS} WHERE uid=${uid};`));
+        if (notexists) {
             const setting = new DBRelations.UserSettings();
             setting.uid = uid;
             setting.settings = str;
@@ -54,7 +55,7 @@ class MixinedDatabase extends Parent implements IDBUserSettings {
         if(UserSettingsCache[uid] != null)
             return UserSettingsCache[uid];
         const data = await this.get(`SELECT * FROM ${KEY_USER_SETTINGS} WHERE uid=${uid}`);
-        const ans = UserSettings.fromJSON(data && data["settings"] || '{}');
+        const ans = UserSettings.fromJSON(data?.settings || '{}');
         UserSettingsCache[uid] = ans;
         return ans;
     } //}

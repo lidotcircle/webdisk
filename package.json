@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node ./release/webdisk/bin/main.js -c ./etc/webdisk.json"
+    "test": "node ./release/webdisk/bin/main.js -c ./etc/webdisk.json",
+    "jestlib": "npx jest --detectOpenHandles --forceExit --rootDir lib"
   },
   "bin": {
     "webdisk": "./bin/main.js"
@@ -32,6 +33,7 @@
     "@types/chokidar": "^2.1.3",
     "@types/formidable": "^1.0.31",
     "@types/gulp": "^4.0.6",
+    "@types/jest": "^26.0.20",
     "@types/node": "^13.11.0",
     "@types/node-fetch": "^2.5.8",
     "@types/node-getopt": "^0.2.31",
@@ -46,10 +48,12 @@
     "gulp-sass": "^4.0.2",
     "gulp-sourcemaps": "^2.6.5",
     "gulp-typescript": "^6.0.0-alpha.1",
+    "jest": "^26.6.3",
     "kill-port": "^1.6.1",
     "merge2": "^1.3.0",
     "rimraf": "^3.0.2",
     "sass": "^1.26.3",
+    "ts-jest": "^26.5.0",
     "tsify": "^4.0.1",
     "typescript": "^3.8.3",
     "vinyl-buffer": "^1.0.1",

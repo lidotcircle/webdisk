@@ -12,6 +12,7 @@ import { IMultiFileSystemConfig, MultiFileSystem } from './fileSystem/multiFileS
 
 class Config {
     private __init: boolean = false;
+    private config_path: string = '';
     private listen_addr: string      = '127.0.0.1';
     private listen_port: number      = 5445;
     private static_resources: string = 'resources';
@@ -20,11 +21,12 @@ class Config {
     private filesystem: IFileSystemConfig = {type: FileSystemType.local};
 
     private constructor() {};
-    public static global_config: Config = new Config();
+    public static readonly global_config: Config = new Config();
 
     /** this function call should await immediately */
     public static async GetConfig(conf: string): Promise<void> {
         const _this = Config.global_config;
+        _this.config_path = conf;
         console.assert(_this.__init == false, 'fail: init config twice');
         _this.__init = true;
 
@@ -36,6 +38,8 @@ class Config {
             let dbpath = _this.sqlite3_database;
             if(_this.sqlite3_database.startsWith('~')) {
                 dbpath = proc.env.HOME + dbpath.substring(1);
+            } else if(!_this.sqlite3_database.startsWith('/')) {
+                dbpath = path.join(path.dirname(_this.config_path), _this.sqlite3_database);
             }
             await _this.DB.init(dbpath);
         }

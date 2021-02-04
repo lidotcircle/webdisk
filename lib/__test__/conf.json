@@ -1,0 +1,13 @@
+
+{
+    "listen_addr": "1.2.3.4",
+    "listen_port": 10107,
+    "static_resources": "__resources__",
+    "sqlite3_database": "/tmp/testwd.db",
+    "allow_http_redirect": true,
+
+    "filesystem": {
+        "type": "local"
+    }
+}
+
