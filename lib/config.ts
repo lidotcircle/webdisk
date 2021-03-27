@@ -8,6 +8,7 @@ import { LocalFileSystem } from './fileSystem/localFileSystem';
 import { Database, createDB } from './database/database';
 import { AliOSSFileSystem, IAliOSSFileSystemConfig } from './fileSystem/aliOssFileSystem';
 import { IMultiFileSystemConfig, MultiFileSystem } from './fileSystem/multiFileSystem';
+import * as yaml from 'js-yaml';
 
 
 class Config {
@@ -24,14 +25,24 @@ class Config {
     public static readonly global_config: Config = new Config();
 
     /** this function call should await immediately */
-    public static async GetConfig(conf: string): Promise<void> {
+    public static async GetConfig(conf_file: string): Promise<void> {
         const _this = Config.global_config;
-        _this.config_path = conf;
+        _this.config_path = conf_file;
         console.assert(_this.__init == false, 'fail: init config twice');
         _this.__init = true;
 
-        const data = await fs.promises.readFile(conf);
-        const d = JSON.parse(data.toString());
+        const data = await fs.promises.readFile(conf_file);
+        let d;
+        const extension = path.extname(conf_file);
+        switch(extension) {
+            case '.json': 
+                d = JSON.parse(data.toString());
+                break;
+            case '.yaml':
+            case '.yml':
+                d = yaml.load(data.toString());
+                break;
+        }
         utils.assignTargetEnumProp(d, _this);
 
         { 

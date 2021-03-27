@@ -10,7 +10,7 @@
         "type": "multi",
         "data": [
             {
-                "srcPrefix": "/noexists",
+                "srcPrefix": "/noexists/",
                 "dstPrefix": "/",
                 "config": {
                     "type": "alioss",

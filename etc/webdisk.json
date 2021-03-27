@@ -7,30 +7,9 @@
     "allow_http_redirect": true,
 
     "filesystem": {
-        "type": "multi",
-        "data": [
-            {
-                "srcPrefix": "/noexists",
-                "dstPrefix": "/",
-                "config": {
-                    "type": "alioss",
-                    "data": {
-                        "region": "",
-                        "accessKeyId": "",
-                        "accessKeySecret": "",
-                        "bucket": "",
-                        "secure": true
-                    }
-                }
-            },
-            {
-                "srcPrefix": "/",
-                "dstPrefix": "/",
-                "config": {
-                    "type": "local"
-                }
-            }
-        ]
+        "type": "local",
+        "srcPrefix": "/",
+        "dstPrefix": "/"
     }
 }
 

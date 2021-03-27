@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node ./release/webdisk/bin/main.js -c ./etc/webdisk.json",
+    "test": "node ./release/webdisk/bin/main.js -c ./etc/webdisk.yaml",
     "jestlib": "npx jest --detectOpenHandles --forceExit --rootDir lib"
   },
   "bin": {
@@ -19,6 +19,7 @@
     "content-disposition": "^0.5.3",
     "formidable": "^1.2.2",
     "http-status-codes": "^1.4.0",
+    "js-yaml": "^3.14.1",
     "md5": "^2.3.0",
     "mktemp": "^1.0.0",
     "node-fetch": "^2.6.1",
@@ -34,6 +35,7 @@
     "@types/formidable": "^1.0.31",
     "@types/gulp": "^4.0.6",
     "@types/jest": "^26.0.20",
+    "@types/js-yaml": "^4.0.0",
     "@types/node": "^13.11.0",
     "@types/node-fetch": "^2.5.8",
     "@types/node-getopt": "^0.2.31",

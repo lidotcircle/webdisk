@@ -1,0 +1,33 @@
+
+listen_addr: "0.0.0.0"
+listen_port: 5445
+static_resources: "resources"
+sqlite3_databaase: "/etc/webdisk/wd.db"
+allow_http_redirect: true
+
+LocalFileSystem: &LocalFileSystem
+  type: "local"
+  srcPrefix: "/"
+  dstPrefix: "/"
+
+MultiFileSystem: &MultiFileSystem
+  type: "multi"
+  data:
+    - srcPrefix: "/noexists/"
+      dstPrefix: "/"
+      config:
+        type: "alioss"
+        data:
+          region: ""
+          accessKeyId: ""
+          accessKeySecret: ""
+          bucket: ""
+          secure: true
+    - srcPrefix: "/"
+      dstPrefix: "/"
+      config:
+        type: "local"
+
+filesystem:
+    <<: *LocalFileSystem
+
