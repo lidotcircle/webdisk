@@ -24,6 +24,7 @@
     "mktemp": "^1.0.0",
     "node-fetch": "^2.6.1",
     "node-getopt": "^0.3.2",
+    "reflect-metadata": "^0.1.13",
     "smart-buffer": "^4.1.0",
     "sqlite3": "^5.0.0",
     "websocket": "^1.0.33",
