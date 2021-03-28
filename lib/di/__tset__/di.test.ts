@@ -1,4 +1,4 @@
-import { Injectable, QueryDependency, MockDependency, ProvideDependency, DIGetter, DIProperty } from '../di';
+import { Injectable, QueryDependency, MockDependency, ProvideDependency, DIGetter, DIProperty, DenpendencyInjector } from '../di';
 
 @Injectable()
 class A {
@@ -57,5 +57,15 @@ test('injectable object', () => {
     expect(typeof QueryDependency(D)).toBe('object');
     expect(QueryDependency(D) instanceof D).toBeFalsy();
     expect(QueryDependency(D)).toBe(QueryDependency('goodd'));
+});
+
+
+test('di object', () => {
+    const injector = new DenpendencyInjector();
+    expect(QueryDependency(E)).not.toBeNull();
+    try {
+        injector.QueryDependency(E);
+        throw new UnexpectedError('expect rejecting assignment');
+    } catch (err) {if(err instanceof UnexpectedError) throw err;}
 });
 
