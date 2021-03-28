@@ -9,7 +9,7 @@ const inject2Class: {[key: number]: InjectedClass} = {};
 let injectableCounter = 0;
 
 type Constructor =  {new (...args: any[]): object; };
-type InjectedClass = {
+interface InjectedClass {
     new (...args: any[]): object; 
     [sym_inject]: number; 
     [sym_paramtypes]: InjectedItem[];
@@ -24,11 +24,13 @@ type InjectOptions = {
 };
 
 /** class decrator */
-export function Injectable(options: InjectOptions = {}) //{
+export function Injectable(options?: InjectOptions) //{
 {
     return function<T extends Constructor>(target: T) {
-        target[sym_paramtypes] = Reflect.getMetadata('design:paramtypes', target);
-
+        options = options || {};
+        options.paramtypes = options.paramtypes || 
+            Reflect.getMetadata('design:paramtypes', target) ||
+            [];
         ProvideDependency(target, options);
     }
 } //}
@@ -44,16 +46,16 @@ function assertValidName(name: string) //{
 } //}
 
 /** query dependency */
-export function queryDependency<T extends Constructor | string>(cons: T): T extends Constructor ? InstanceType<T> : any //{
+export function QueryDependency<T extends Constructor | string>(specifier: T): T extends Constructor ? InstanceType<T> : any //{
 {
     let injectPoint;
-    if(typeof cons === 'function') {
-        assertInjectable(cons as any);
-        injectPoint = cons[sym_inject];
+    if(typeof specifier === 'function') {
+        assertInjectable(specifier as any);
+        injectPoint = specifier[sym_inject];
     } else {
-        assert(typeof cons === 'string', `invalid dependency specifier '${cons}'`);
-        assertValidName(cons);
-        injectPoint = name2indexMapping[cons];
+        assert(typeof specifier === 'string', `invalid dependency specifier '${specifier}'`);
+        assertValidName(specifier);
+        injectPoint = name2indexMapping[specifier];
     }
 
     assert(injectPoint > 0, 'dependency not found');
@@ -65,13 +67,15 @@ export function queryDependency<T extends Constructor | string>(cons: T): T exte
 } //}
 
 /** mock dependency */
-export function MockDependency<T extends InjectedClass>(dep: T | string, replacer: T | object, options: {} = {}) //{
+export function MockDependency<T extends Constructor>(dep: T | string, replacer: T | object, options?: {}) //{
 {
+    options = Object.assign({}, options);
+
     if(typeof dep === 'function') {
         assert(dep[sym_inject] != null, "can't mock an class which isn't injectable");
 
         if(typeof replacer === 'function') {
-            assertInjectable(replacer as T);
+            assertInjectable(replacer as T & InjectedClass);
             dep[sym_inject] = replacer[sym_inject];
         } else {
             const inj = dep[sym_inject];
@@ -82,7 +86,7 @@ export function MockDependency<T extends InjectedClass>(dep: T | string, replace
         assertValidName(dep);
 
         if(typeof replacer === 'function') {
-            assertInjectable(replacer as T);
+            assertInjectable(replacer as T & InjectedClass);
             name2indexMapping[dep] = replacer[sym_inject];
         } else {
             objectsMapping[name2indexMapping[dep]] = replacer;
@@ -91,10 +95,12 @@ export function MockDependency<T extends InjectedClass>(dep: T | string, replace
 } //}
 
 /** provide dependency with varying methods */
-export function ProvideDependency<T extends Constructor>(provider: T, options: InjectOptions & {object?: object} = {}) //{
+export function ProvideDependency<T extends Constructor>(provider: T, options?: InjectOptions & {object?: object}) //{
 {
+    options = Object.assign({lazy: true}, options);
+
     if(typeof provider === 'function') {
-        if(provider[sym_paramtypes] == null) {
+        if(options.paramtypes == null) {
             assert(options.object !== undefined, "invalid dependency");
             ProvideDependencyClassWithObject(provider as any, options.object, options);
         } else {
@@ -159,13 +165,14 @@ function HandleOptionsWithInjectCounter(injectPoint: number, options: InjectOpti
 } //}
 
 /** instantiate object with class */
-function instantiateInject(inject: number) //{
+function instantiateInject(injectPoint: number) //{
 {
-    assert(objectsMapping[inject] === undefined, "Instantiating a provider twice is illegal");
-    assert(inject2Class[inject] === undefined, "invalid injectable index");
+    assert(typeof injectPoint === 'number' && injectPoint > 0, "invalid dependency");
+    assert(objectsMapping[injectPoint] === undefined, "Instantiating a provider twice is illegal");
+    assert(typeof inject2Class[injectPoint] === 'function', "invalid injectable index");
 
     const args: any[] = [];
-    const target = inject2Class[inject];
+    const target = inject2Class[injectPoint];
     assert(target != null, "instantiate object fail, not found");
     const args_type = target[sym_paramtypes];
     for(const thet of args_type) {
@@ -185,6 +192,55 @@ function instantiateInject(inject: number) //{
         args.push(objectsMapping[di]);
     }
 
-    objectsMapping[inject] = new target(...args);
+    objectsMapping[injectPoint] = new target(...args);
+} //}
+
+type GetterOptions = {
+    dynamic?: boolean
+};
+
+/** getter decrator */
+export function DIGetter<T extends Constructor | string>(specifier: T, options: GetterOptions = {}) //{
+{
+    return function<U extends Constructor>(target: U | any, propertyKey: string, descriptor: PropertyDescriptor) {
+        getterDescriptor(target, propertyKey, descriptor, specifier, options);
+    }
+} //}
+
+/** getter decrator */
+export function DIProperty<T extends Constructor | string>(specifier: T, options: GetterOptions = {}) //{
+{
+    options = Object.assign({}, options);
+    return function<U extends Constructor>(target: U | any, propertyKey: string) {
+        const cons = target as U;
+
+        const descriptor: PropertyDescriptor = {};
+        getterDescriptor(target, propertyKey, descriptor, specifier, options);
+        Object.defineProperty(target, propertyKey, descriptor);
+    }
+} //}
+
+function getterDescriptor<T extends Constructor | string, U extends Constructor>(
+    target: U | any, propertyKey: string, descriptor: PropertyDescriptor, 
+    specifier: T, options: GetterOptions = {}) //{
+{
+    options = Object.assign({}, options);
+    let dynamic = !!options.dynamic;
+    let staticObj;
+    if(!dynamic) {
+        staticObj = QueryDependency(specifier);
+    }
+
+    descriptor.get = () => {
+        if(dynamic) {
+            return QueryDependency(specifier);
+        } else {
+            return staticObj;
+        }
+    }
+
+    descriptor.set = () => {
+        throw new Error("setter of a DI property is prohibited");
+    }
 } //}
 
