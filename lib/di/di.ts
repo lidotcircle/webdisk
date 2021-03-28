@@ -12,11 +12,13 @@ type InjectOptions = {
     paramtypes?: InjectedItem[];
     name?: string;
     lazy?: boolean;
+    afterInit?: (obj: any) => Promise<void>,
 };
 
 type GetterOptions = {
     dynamic?: boolean
 };
+const sym_promise_finish = Symbol('promise-finish');
 
 export class DenpendencyInjector {
     private readonly sym_inject: symbol;
@@ -24,6 +26,8 @@ export class DenpendencyInjector {
     private readonly objectsMapping: {[key: number]: object};
     private readonly name2indexMapping: {[name: string]: number};
     private readonly inject2Class: {[key: number]: InjectedClass};
+    private readonly initcallbacks: ((obj: any) => Promise<void> | void)[];
+    private readonly promises: (() => Promise<void>)[];
     private injectableCounter: number;
 
     constructor() {
@@ -32,6 +36,8 @@ export class DenpendencyInjector {
         this.objectsMapping = {};
         this.name2indexMapping = {};
         this.inject2Class = {};
+        this.initcallbacks = [];
+        this.promises = [];
         this.injectableCounter = 0;
     }
 
@@ -79,6 +85,14 @@ export class DenpendencyInjector {
         return this.objectsMapping[injectPoint] as any;
     } //}
 
+    /** async query dependency */
+    async AsyncQueryDependency<T extends Constructor | string>(specifier: T): Promise<T extends Constructor ? InstanceType<T> : any> //{
+    {
+        const ans = this.QueryDependency(specifier);
+        await this.ResolveInitPromises();
+        return ans;
+    } //}
+
     /** mock dependency */
     MockDependency<T extends Constructor>(dep: T | string, replacer: T | object, options?: {}) //{
     {
@@ -108,7 +122,7 @@ export class DenpendencyInjector {
     } //}
 
     /** provide dependency with varying methods */
-    ProvideDependency<T extends Constructor>(provider: T, options?: InjectOptions & {object?: object}) //{
+    ProvideDependency<T extends Constructor>(provider: T | any, options?: InjectOptions & {object?: object}) //{
     {
         options = Object.assign({lazy: true}, options);
 
@@ -135,6 +149,10 @@ export class DenpendencyInjector {
         provider[this.sym_inject] = injectPoint;
         provider[this.sym_paramtypes] = options.paramtypes;
         this.inject2Class[injectPoint] = provider;
+
+        if(!!options.afterInit) {
+            this.initcallbacks[injectPoint] = options.afterInit;
+        }
 
         this.HandleOptionsWithInjectCounter(injectPoint, options);
     } //}
@@ -180,7 +198,7 @@ export class DenpendencyInjector {
     /** instantiate object with class */
     private instantiateInject(injectPoint: number) //{
     {
-        assert(typeof injectPoint === 'number' && injectPoint > 0, "invalid dependency");
+        assert(typeof injectPoint === 'number' && injectPoint > 0, `invalid dependency ${injectPoint}`);
         assert(this.objectsMapping[injectPoint] === undefined, "Instantiating a provider twice is illegal");
         assert(typeof this.inject2Class[injectPoint] === 'function', "invalid injectable index");
 
@@ -196,8 +214,9 @@ export class DenpendencyInjector {
                 di = this.name2indexMapping[thet];
             }
 
-            if(di === null) {
-                throw new Error(`Denpendency error, can't find '${thet.toString()}'`);
+            if(di == null) {
+                console.debug(this);
+                throw new Error(`Denpendency error, can't find '${thet.toString()}' when initialize ${target.name}`);
             }
             if(this.objectsMapping[di] === undefined) {
                 this.instantiateInject(di);
@@ -206,8 +225,24 @@ export class DenpendencyInjector {
         }
 
         this.objectsMapping[injectPoint] = new target(...args);
+        if(!!this.initcallbacks[injectPoint]) {
+            const cb = this.initcallbacks[injectPoint];
+            this.promises.push(async () => await cb(this.objectsMapping[injectPoint]));
+        }
     } //}
 
+    async ResolveInitPromises() //{
+    {
+        while(this.promises.length > 0) {
+            const p = this.promises.shift()();
+            try {
+                await p;
+            } catch (err) {
+                console.debug(this);
+                throw err;
+            }
+        }
+    } //}
 
     /** getter decrator */
     DIGetter<T extends Constructor | string>(specifier: T, options: GetterOptions = {}) //{
@@ -258,29 +293,37 @@ export class DenpendencyInjector {
     } //}
 }
 
-const globalInjector = new DenpendencyInjector();
+export const GlobalInjector = new DenpendencyInjector();
 export function Injectable(options?: InjectOptions) //{
 {
-    return globalInjector.Injectable(options);
+    return GlobalInjector.Injectable(options);
 } //}
 export function QueryDependency<T extends Constructor | string>(specifier: T): T extends Constructor ? InstanceType<T> : any //{
 {
-    return globalInjector.QueryDependency(specifier);
+    return GlobalInjector.QueryDependency(specifier);
 } //}
 export function MockDependency<T extends Constructor>(dep: T | string, replacer: T | object, options?: {}) //{
 {
-    return globalInjector.MockDependency(dep, replacer, options);
+    return GlobalInjector.MockDependency(dep, replacer, options);
 } //}
-export function ProvideDependency<T extends Constructor>(provider: T, options?: InjectOptions & {object?: object}) //{
+export function ProvideDependency<T extends Constructor>(provider: T | any, options?: InjectOptions & {object?: object}) //{
 {
-    return globalInjector.ProvideDependency(provider, options);
+    return GlobalInjector.ProvideDependency(provider, options);
 } //}
 export function DIGetter<T extends Constructor | string>(specifier: T, options: GetterOptions = {}) //{
 {
-    return globalInjector.DIGetter(specifier, options);
+    return GlobalInjector.DIGetter(specifier, options);
 } //}
 export function DIProperty<T extends Constructor | string>(specifier: T, options: GetterOptions = {}) //{
 {
-    return globalInjector.DIProperty(specifier, options);
+    return GlobalInjector.DIProperty(specifier, options);
+} //}
+export async function ResolveInitPromises() //{
+{
+    await GlobalInjector.ResolveInitPromises();
+} //}
+export async function AsyncQueryDependency<T extends Constructor | string>(specifier: T): Promise<T extends Constructor ? InstanceType<T> : any> //{
+{
+    return await GlobalInjector.AsyncQueryDependency(specifier);
 } //}
 

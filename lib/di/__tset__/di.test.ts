@@ -23,8 +23,6 @@ class C {
     aa: A;
 }
 
-class UnexpectedError extends Error {}
-
 test('injectable', () => {
     const b = QueryDependency(B);
     expect(b.aa.value).toBe(100);
@@ -37,10 +35,7 @@ test('injectable', () => {
     expect(c.a2.value).toBe(200);
 
     expect(c.aa.value).toBe(100);
-    try {
-        c.aa = null;
-        throw new UnexpectedError('expect rejecting assignment');
-    } catch (err) {if(err instanceof UnexpectedError) throw err;}
+    expect(() => c.aa = null).toThrowError();
 
     const nobb = QueryDependency('nobb') as B;
     expect(nobb.aa.value).toBe(100);
@@ -57,15 +52,35 @@ test('injectable object', () => {
     expect(typeof QueryDependency(D)).toBe('object');
     expect(QueryDependency(D) instanceof D).toBeFalsy();
     expect(QueryDependency(D)).toBe(QueryDependency('goodd'));
+
+    ProvideDependency('hello', {name: 'common'});
+    expect(QueryDependency('common')).toBe('hello');
+
+    @Injectable({
+        paramtypes: ['uvw']
+    })
+    class U {
+        u: string;
+        constructor(u: string) {
+            this.u = u;
+        }
+    }
+    ProvideDependency('nope', {name: 'uvw'});
+    const b = QueryDependency(U);
+    expect(b.u).toBe('nope');
+
+    @Injectable()
+    class P {
+        constructor(private u: U) {}
+    }
+    const p = QueryDependency(P);
+    expect(p instanceof P).toBeTruthy();
 });
 
 
 test('di object', () => {
     const injector = new DenpendencyInjector();
     expect(QueryDependency(E)).not.toBeNull();
-    try {
-        injector.QueryDependency(E);
-        throw new UnexpectedError('expect rejecting assignment');
-    } catch (err) {if(err instanceof UnexpectedError) throw err;}
+    expect(() => injector.QueryDependency(E)).toThrowError();
 });
 
