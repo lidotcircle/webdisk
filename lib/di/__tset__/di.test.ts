@@ -27,7 +27,7 @@ test('injectable', () => {
     const b = QueryDependency(B);
     expect(b.aa.value).toBe(100);
 
-    MockDependency(A, {value: 200});
+    MockDependency(A, null, {object: {value: 200}});
     expect(QueryDependency(A).value).toBe(200);
 
     const c = new C();
@@ -53,7 +53,7 @@ test('injectable object', () => {
     expect(QueryDependency(D) instanceof D).toBeFalsy();
     expect(QueryDependency(D)).toBe(QueryDependency('goodd'));
 
-    ProvideDependency('hello', {name: 'common'});
+    ProvideDependency(null, {name: 'common', object: 'hello'});
     expect(QueryDependency('common')).toBe('hello');
 
     @Injectable({
@@ -65,7 +65,7 @@ test('injectable object', () => {
             this.u = u;
         }
     }
-    ProvideDependency('nope', {name: 'uvw'});
+    ProvideDependency(null, {name: 'uvw', object: 'nope'});
     const b = QueryDependency(U);
     expect(b.u).toBe('nope');
 

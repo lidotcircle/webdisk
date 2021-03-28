@@ -6,14 +6,39 @@ interface InjectedClass {
     new (...args: any[]): object; 
 };
 
-type InjectedItem = InjectedClass | string;
+type InjectedSpecifier = InjectedClass | string;
+type ObjectFactory = (...args: any[]) => object;
 
 type InjectOptions = {
-    paramtypes?: InjectedItem[];
+    factory?: ObjectFactory;
+    object?: any;
+
+    paramtypes?: InjectedSpecifier[];
     name?: string;
+
     lazy?: boolean;
     afterInit?: (obj: any) => Promise<void>,
 };
+
+function validInjectOptions(options: InjectOptions) //{
+{
+    if(!!options.factory && !!options.object) {
+        throw new Error(`invlaid dependency injection options: at most one of option in 'factory', 'object' be provided`);
+    }
+
+    if(!options.object && !options.paramtypes) {
+        throw new Error(`dependency with factory and constructor must specify 'paramtypes'`);
+    }
+} //}
+function makeid(length: number): string //{
+{
+    let result           = '';
+    let characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghipqrstuvwxyz0123456789';
+    let charactersLength = characters.length;
+    for ( let i = 0; i < length; i++ )
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    return result;
+} //}
 
 type GetterOptions = {
     dynamic?: boolean
@@ -22,21 +47,25 @@ const sym_promise_finish = Symbol('promise-finish');
 
 export class DenpendencyInjector {
     private readonly sym_inject: symbol;
-    private readonly sym_paramtypes: symbol;
-    private readonly objectsMapping: {[key: number]: object};
-    private readonly name2indexMapping: {[name: string]: number};
-    private readonly inject2Class: {[key: number]: InjectedClass};
-    private readonly initcallbacks: ((obj: any) => Promise<void> | void)[];
+    private readonly idx2paramtypes: {[key: number]: InjectedSpecifier[]};
+    private readonly idx2object: {[key: number]: object};
+    private readonly idx2factory: {[key: number]: ObjectFactory};
+    private readonly idx2initcallback: {[key: number]: (obj: any) => Promise<void>};
+    private readonly idx2dependencyname: {[key: number]: string};
+
+    private readonly name2idx: {[name: string]: number};
     private readonly promises: (() => Promise<void>)[];
     private injectableCounter: number;
 
     constructor() {
         this.sym_inject = Symbol('inject');
-        this.sym_paramtypes = Symbol('paramtypes');
-        this.objectsMapping = {};
-        this.name2indexMapping = {};
-        this.inject2Class = {};
-        this.initcallbacks = [];
+        this.idx2paramtypes = {};
+        this.idx2object = {};
+        this.idx2factory = {};
+        this.idx2initcallback = {};
+        this.idx2dependencyname = {};
+
+        this.name2idx = {};
         this.promises = [];
         this.injectableCounter = 0;
     }
@@ -61,7 +90,18 @@ export class DenpendencyInjector {
 
     private assertValidName(name: string) //{
     {
-        assert(this.name2indexMapping[name] > 0, "require a valid dependency name");
+        assert(this.name2idx[name] >= 0, "require a valid dependency name");
+    } //}
+    
+    private isValidSpecifier<T extends Constructor | string>(specifier: T): boolean //{
+    {
+        if(typeof specifier === 'function') {
+            return typeof specifier[this.sym_inject] === 'number';
+        } else if(typeof specifier === 'string') {
+            return typeof this.name2idx[specifier] === 'number';
+        } else {
+            return false;
+        }
     } //}
 
     /** query dependency */
@@ -74,15 +114,15 @@ export class DenpendencyInjector {
         } else {
             assert(typeof specifier === 'string', `invalid dependency specifier '${specifier}'`);
             this.assertValidName(specifier);
-            injectPoint = this.name2indexMapping[specifier];
+            injectPoint = this.name2idx[specifier];
         }
 
-        assert(injectPoint > 0, 'dependency not found');
+        assert(injectPoint >= 0, 'dependency not found');
 
-        if(this.objectsMapping[injectPoint] === undefined) {
+        if(this.idx2object[injectPoint] === undefined) {
             this.instantiateInject(injectPoint);
         }
-        return this.objectsMapping[injectPoint] as any;
+        return this.idx2object[injectPoint] as any;
     } //}
 
     /** async query dependency */
@@ -93,91 +133,90 @@ export class DenpendencyInjector {
         return ans;
     } //}
 
-    /** mock dependency */
-    MockDependency<T extends Constructor>(dep: T | string, replacer: T | object, options?: {}) //{
+    /** get valid injection index from injection specifier */
+    private idxFrom<T extends Constructor | string>(specifier: T): number //{
     {
-        options = Object.assign({}, options);
+        let ans: number;
+
+        if(typeof specifier === 'function') {
+            this.assertInjectable(specifier as T & InjectedClass);
+            ans = specifier[this.sym_inject];
+        } else {
+            console.log(specifier);
+            assert(typeof specifier === 'string', "dependency specifier should be a class or identifier");
+            ans = this.name2idx[specifier];
+        }
+
+        if(ans == null || ans < 0) {
+            throw new Error('bad injection index');
+        }
+
+        return ans;
+    } //}
+
+    /** mock dependency */
+    MockDependency<T extends Constructor | string>(dep: T, replacer: T, injectOptions?: InjectOptions) //{
+    {
+        const options = Object.assign({}, injectOptions);
+
+        if(!this.isValidSpecifier(replacer)) {
+            if(!options.name && !replacer) {
+                options.name = makeid(48);
+            }
+            this.ProvideDependency(replacer as any, options);
+        }
+
+        const dep_idx = this.idxFrom(dep);
+        const rep_idx = this.idxFrom(replacer || options.name);
 
         if(typeof dep === 'function') {
-            assert(dep[this.sym_inject] != null, "can't mock an class which isn't injectable");
-
-            if(typeof replacer === 'function') {
-                this.assertInjectable(replacer as T & InjectedClass);
-                dep[this.sym_inject] = replacer[this.sym_inject];
-            } else {
-                const inj = dep[this.sym_inject];
-                this.objectsMapping[inj] = replacer;
-            }
+            dep[this.sym_inject] = rep_idx;
         } else {
-            assert(typeof dep === 'string', "dependency specifier should be a class or identifier");
-            this.assertValidName(dep);
-
-            if(typeof replacer === 'function') {
-                this.assertInjectable(replacer as T & InjectedClass);
-                this.name2indexMapping[dep] = replacer[this.sym_inject];
-            } else {
-                this.objectsMapping[this.name2indexMapping[dep]] = replacer;
-            }
+            this.name2idx[dep as string] = rep_idx;
         }
     } //}
 
     /** provide dependency with varying methods */
-    ProvideDependency<T extends Constructor>(provider: T | any, options?: InjectOptions & {object?: object}) //{
+    ProvideDependency<T extends Constructor>(provider: T | null, options?: InjectOptions) //{
     {
         options = Object.assign({lazy: true}, options);
+        validInjectOptions(options);
+        assert(provider || options.name, "dependency should provide at least one specifier");
 
-        if(typeof provider === 'function') {
-            if(options.paramtypes == null) {
-                assert(options.object !== undefined, "invalid dependency");
-                this.ProvideDependencyClassWithObject(provider as any, options.object, options);
-            } else {
-                this.ProvideDependencyClass(provider as any, options);
-            }
+        let factory: ObjectFactory;
+        if(options.factory != null) {
+            factory = options.factory;
+        } else if (options.object !== undefined) {
+            const obj = options.object;
+            factory = () => obj;
+            options.paramtypes = [];
+            options.lazy = false;
         } else {
-            assert(options.name != null, "invalid dependency");
-            this.ProvideDependencyObject(provider, options);
+            assert(options.paramtypes !== undefined, "invalid dependency");
+            assert(typeof provider === 'function', "invalid dependency injection specifier, expect a class");
+            factory = (...args: any[]) => new provider(...args);
         }
+
+        this.ProvideDependencyWithFactory(provider, factory, options);
     } //}
 
-    /** provide class dependency */
-    private ProvideDependencyClass<T extends InjectedClass>(provider: T, options: InjectOptions) //{
+    /** provide dependency with object factory */
+    private ProvideDependencyWithFactory<T extends InjectedClass>(provider: T, factory: ObjectFactory, options: InjectOptions) //{
     {
-        assert(provider[this.sym_inject] === undefined, "A class can't be provided twice");
-        assert(typeof options.paramtypes === 'object', "A class provider should provide constructor types");
+        assert(provider == null || provider[this.sym_inject] === undefined, "A class can't be provided twice");
+        assert(typeof options.paramtypes === 'object', "provider should provide paramtypes");
 
-        const injectPoint = ++this.injectableCounter;
-        provider[this.sym_inject] = injectPoint;
-        provider[this.sym_paramtypes] = options.paramtypes;
-        this.inject2Class[injectPoint] = provider;
+        const injectPoint = this.injectableCounter++;
+        if(!!provider) {
+            provider[this.sym_inject] = injectPoint;
+            this.idx2dependencyname[injectPoint] = `Class ${provider.name}`;
+        }
+        this.idx2factory[injectPoint] = factory;
+        this.idx2paramtypes[injectPoint] = options.paramtypes;
 
         if(!!options.afterInit) {
-            this.initcallbacks[injectPoint] = options.afterInit;
+            this.idx2initcallback[injectPoint] = options.afterInit;
         }
-
-        this.HandleOptionsWithInjectCounter(injectPoint, options);
-    } //}
-
-    /** provide class dependency with an instance */
-    private ProvideDependencyClassWithObject<T extends InjectedClass>(provider: T, obj: object, options: InjectOptions) //{
-    {
-        assert(provider[this.sym_inject] === undefined, "A class can't be provided twice");
-
-        const injectPoint = ++this.injectableCounter;
-        provider[this.sym_inject] = injectPoint;
-        this.inject2Class[injectPoint] = provider;
-        this.objectsMapping[injectPoint] = obj;
-
-        this.HandleOptionsWithInjectCounter(injectPoint, options);
-    } //}
-
-    /** provide object dependency */
-    private ProvideDependencyObject(provider: object, options: InjectOptions) //{
-    {
-        assert(typeof options.name === 'string', "A object provider should provide name");
-        assert(typeof provider !== 'function', "Providing a private dependency by name is prohibited");
-
-        const injectPoint = ++this.injectableCounter;
-        this.objectsMapping[injectPoint] = provider;
 
         this.HandleOptionsWithInjectCounter(injectPoint, options);
     } //}
@@ -186,11 +225,17 @@ export class DenpendencyInjector {
     private HandleOptionsWithInjectCounter(injectPoint: number, options: InjectOptions) //{
     {
         if(options.name) {
-            assert(this.name2indexMapping[options.name] === undefined, "Defining a named dependency twice is invalid");
-            this.name2indexMapping[options.name] = injectPoint;
+            assert(this.name2idx[options.name] === undefined, "Defining a named dependency twice is invalid");
+            this.name2idx[options.name] = injectPoint;
+
+            if(this.idx2dependencyname[injectPoint]) {
+                this.idx2dependencyname[injectPoint] += ` and ${options.name}`;
+            } else {
+                this.idx2dependencyname[injectPoint] += `${options.name}`;
+            }
         }
 
-        if(!options.lazy && this.objectsMapping[injectPoint] === undefined) {
+        if(!options.lazy && this.idx2object[injectPoint] === undefined) {
             this.instantiateInject(injectPoint);
         }
     } //}
@@ -198,36 +243,36 @@ export class DenpendencyInjector {
     /** instantiate object with class */
     private instantiateInject(injectPoint: number) //{
     {
-        assert(typeof injectPoint === 'number' && injectPoint > 0, `invalid dependency ${injectPoint}`);
-        assert(this.objectsMapping[injectPoint] === undefined, "Instantiating a provider twice is illegal");
-        assert(typeof this.inject2Class[injectPoint] === 'function', "invalid injectable index");
+        assert(typeof injectPoint === 'number' && injectPoint >= 0, `invalid dependency ${injectPoint}`);
+        assert(this.idx2object[injectPoint] === undefined, "Instantiating a provider twice is illegal");
+        assert(typeof this.idx2factory[injectPoint] === 'function', "invalid injectable index");
 
+        const factory = this.idx2factory[injectPoint];
         const args: any[] = [];
-        const target = this.inject2Class[injectPoint];
-        assert(target != null, "instantiate object fail, not found");
-        const args_type = target[this.sym_paramtypes];
+        const args_type = this.idx2paramtypes[injectPoint];
         for(const thet of args_type) {
             let di;
             if(typeof thet === 'function') {       // constructor
                 di = thet[this.sym_inject];
             } else if (typeof thet === 'string') { // object
-                di = this.name2indexMapping[thet];
+                di = this.name2idx[thet];
             }
 
             if(di == null) {
                 console.debug(this);
-                throw new Error(`Denpendency error, can't find '${thet.toString()}' when initialize ${target.name}`);
+                const dep_name = this.idx2dependencyname[injectPoint];
+                throw new Error(`Denpendency error, can't find '${thet.toString()}' when initialize ${dep_name}`);
             }
-            if(this.objectsMapping[di] === undefined) {
+            if(this.idx2object[di] === undefined) {
                 this.instantiateInject(di);
             }
-            args.push(this.objectsMapping[di]);
+            args.push(this.idx2object[di]);
         }
 
-        this.objectsMapping[injectPoint] = new target(...args);
-        if(!!this.initcallbacks[injectPoint]) {
-            const cb = this.initcallbacks[injectPoint];
-            this.promises.push(async () => await cb(this.objectsMapping[injectPoint]));
+        this.idx2object[injectPoint] = factory(...args);
+        if(!!this.idx2initcallback[injectPoint]) {
+            const cb = this.idx2initcallback[injectPoint];
+            this.promises.push(async () => await cb(this.idx2object[injectPoint]));
         }
     } //}
 
@@ -302,11 +347,11 @@ export function QueryDependency<T extends Constructor | string>(specifier: T): T
 {
     return GlobalInjector.QueryDependency(specifier);
 } //}
-export function MockDependency<T extends Constructor>(dep: T | string, replacer: T | object, options?: {}) //{
+export function MockDependency<T extends Constructor>(dep: T | string, replacer: T | string, options?: {}) //{
 {
     return GlobalInjector.MockDependency(dep, replacer, options);
 } //}
-export function ProvideDependency<T extends Constructor>(provider: T | any, options?: InjectOptions & {object?: object}) //{
+export function ProvideDependency<T extends Constructor>(provider: T | null, options?: InjectOptions) //{
 {
     return GlobalInjector.ProvideDependency(provider, options);
 } //}
