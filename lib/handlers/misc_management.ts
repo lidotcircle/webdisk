@@ -1,4 +1,3 @@
-import { DB, service } from '../services';
 import { MessageHandler } from '../message_handler';
 import { MessageGateway } from '../message_gateway';
 import { BasicMessage, MessageSource, MessageType } from '../common/message/message';
@@ -10,6 +9,9 @@ import assert from 'assert';
 import { startTask } from '../download/download';
 import { KEY_DOWNLOAD } from '../database/constants';
 import { ErrorMSG } from '../common/string';
+import { DIProperty } from '../di';
+import { WDDatabase } from '../database/database';
+import { IDBDownload, IDBStorePass } from '../database';
 
 
 const inspectedTask = Symbol('inspected task');
@@ -30,6 +32,9 @@ export function registerRPC(funcname: string, func: Function): boolean {
 class MiscManagement extends MessageHandler {
     private static GMSG = new MiscMessage();
     private id: number = 0;
+
+    @DIProperty(WDDatabase)
+    private DB: WDDatabase & IDBDownload & IDBStorePass;
 
     async handleRequest(dispatcher: MessageGateway, msg: MiscMessage) //{
     {
@@ -111,19 +116,19 @@ class MiscManagement extends MessageHandler {
             } break;
             case DownloadManage.DELETE_TASK: {
                 const dmsg = msg as DownloadManageDeleteTaskMessage;
-                await service.DB.DeleteTask(dmsg.misc_msg.token, dmsg.misc_msg.taskId);
+                await this.DB.DeleteTask(dmsg.misc_msg.token, dmsg.misc_msg.taskId);
             } break;
             case DownloadManage.GET_TASKS: {
                 const dmsg = msg as DownloadManageGetTasksMessage;
                 const dresp = resp as DownloadManageGetTasksResponseMessage;
-                dresp.misc_msg.tasks = await service.DB.QueryTasksByToken(dmsg.misc_msg.token);
+                dresp.misc_msg.tasks = await this.DB.QueryTasksByToken(dmsg.misc_msg.token);
             } break;
             case DownloadManage.INSEPECT_TASK: {
                 const dmsg = msg as DownloadManageInspectTaskMessage;
                 const token = dmsg.misc_msg.token;
                 const taskid = dmsg.misc_msg.taskId;
 
-                await service.DB.AssertTaskExists(token, taskid);
+                await this.DB.AssertTaskExists(token, taskid);
                 await this.inspectDownloadTask(dispatcher, taskid);
             } break;
 
@@ -161,9 +166,9 @@ class MiscManagement extends MessageHandler {
                 }
             }
         }
-        service.DB.on('update', update_listener);
+        this.DB.on('update', update_listener);
         dispatcher.once('close', () => {
-            service.DB.removeListener('update', update_listener);
+            this.DB.removeListener('update', update_listener);
         });
     } //}
 
@@ -176,23 +181,23 @@ class MiscManagement extends MessageHandler {
             case StorePasswordType.GetPass: {
                 const gmsg = msg as StorePasswordTypeGetPassMessage;
                 const gresp = resp as StorePasswordTypeGetPassResponseMessage;
-                gresp.misc_msg.stores = await service.DB.getAllPass(gmsg.misc_msg.token);
+                gresp.misc_msg.stores = await this.DB.getAllPass(gmsg.misc_msg.token);
             } break;
             case StorePasswordType.NewPass: {
                 const gmsg = msg as StorePasswordTypeNewPassMessage;
                 const gresp = resp as StorePasswordTypeNewPassResponseMessage;
-                gresp.misc_msg.passid = await service.DB.newPass(gmsg.misc_msg.token, 
+                gresp.misc_msg.passid = await this.DB.newPass(gmsg.misc_msg.token, 
                     gmsg.misc_msg.store.site,
                     gmsg.misc_msg.store.account,
                     gmsg.misc_msg.store.pass);
             } break;
             case StorePasswordType.DeletePass: {
                 const gmsg = msg as StorePasswordTypeDeletePassMessage;
-                await service.DB.deletePass(gmsg.misc_msg.token, gmsg.misc_msg.passid);
+                await this.DB.deletePass(gmsg.misc_msg.token, gmsg.misc_msg.passid);
             } break;
             case StorePasswordType.ChangePass: {
                 const gmsg = msg as StorePasswordTypeChangePassMessage;
-                await service.DB.changePass(gmsg.misc_msg.token, gmsg.misc_msg.passid, gmsg.misc_msg.pass);
+                await this.DB.changePass(gmsg.misc_msg.token, gmsg.misc_msg.passid, gmsg.misc_msg.pass);
             } break;
         }
     } //}

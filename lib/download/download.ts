@@ -5,7 +5,6 @@ import util from 'util';
 
 import { DownloadTask } from '../common/db_types';
 import { default as fetch, Response } from 'node-fetch';
-import { service } from '../services';
 import { URL } from 'url';
 import { default as mktemp } from 'mktemp';
 import { KEY_DOWNLOAD } from '../database/constants';
@@ -13,6 +12,10 @@ import { error, info } from '../logger';
 import { makeid, pipelineWithTimeout } from '../utils';
 import { pipeline, Readable, Writable } from 'stream';
 import {default as contentDisposition} from 'content-disposition';
+import { AsyncQueryDependency, DIProperty, Injectable } from '../di';
+import { Database, WDDatabase } from '../database/database';
+import { IDBDownload } from '../database';
+import { FileSystem } from '../fileSystem';
 
 
 const mktempP = util.promisify(mktemp.createFile) as (pattern: string) => Promise<string>;
@@ -53,14 +56,22 @@ export async function startTask(usertoken: string, url: string, destination: str
         task.destination += task.name;
     }
 
-    return await service.DB.CreateNewTask(usertoken, task);
+    const DB = await AsyncQueryDependency(WDDatabase) as Database;
+    return await DB.CreateNewTask(usertoken, task);
 } //}
 
 type Cancelable = {cancel(): void; canceled: boolean;}
 
+@Injectable()
 class DownloadManager {
     private max_running_tasks: number = 5;
     private m_running_tasks: (DownloadTask & Cancelable)[] = [];
+
+    @DIProperty(WDDatabase)
+    private DB: WDDatabase & IDBDownload;
+
+    @DIProperty(FileSystem)
+    private filesystem: FileSystem;
 
     constructor() {
         this.init();
@@ -70,13 +81,13 @@ class DownloadManager {
     {
         await this.queueNewTasks();
 
-        service.DB.on('insert', (table, sql) => {
+        this.DB.on('insert', (table, sql) => {
             if(table == KEY_DOWNLOAD) {
                 this.queueNewTasks();
             }
         });
 
-        service.DB.on('delete', (table, sql) => {
+        this.DB.on('delete', (table, sql) => {
             const m = sql.match(/[tT][aA][sS][kK][iI][dD]\s*=\s*'?"?(\d+)/);
             if(m) {
                 const taskid = Number([1]);
@@ -96,7 +107,7 @@ class DownloadManager {
             return;
         }
 
-        const newtasks = await service.DB.QueryUnfinishTasks(this.max_running_tasks - this.m_running_tasks.length)
+        const newtasks = await this.DB.QueryUnfinishTasks(this.max_running_tasks - this.m_running_tasks.length)
 
         if(this.m_running_tasks.length >= this.max_running_tasks) {
             return;
@@ -119,7 +130,7 @@ class DownloadManager {
         }
 
         const t = this.m_running_tasks.splice(n, 1)[0];
-        await service.DB.TaskOver(t.taskId, false);
+        await this.DB.TaskOver(t.taskId, false);
         await this.queueNewTasks();
     } //}
 
@@ -132,7 +143,7 @@ class DownloadManager {
         }
 
         const t = this.m_running_tasks.splice(n, 1)[0];
-        await service.DB.TaskOver(t.taskId, true);
+        await this.DB.TaskOver(t.taskId, true);
         await this.queueNewTasks();
     } //}
 
@@ -142,8 +153,8 @@ class DownloadManager {
         if(task.finish) {
             const reader = fs.createReadStream(task.temporaryFile);
             try {
-                await service.filesystem.createNewFileWithReadableStream(task.destination, reader);
-                await service.filesystem.remove(task.temporaryFile);
+                await this.filesystem.createNewFileWithReadableStream(task.destination, reader);
+                await this.filesystem.remove(task.temporaryFile);
                 await this.taskFinish(task);
             } catch {
                 await this.taskFail(task);
@@ -206,7 +217,7 @@ class DownloadManager {
 
             if(task.downloaded - prev > 1024 * 1024 || task.downloaded == task.size) {
                 prev = task.downloaded;
-                service.DB.PushContent(task.taskId, task.downloaded);
+                this.DB.PushContent(task.taskId, task.downloaded);
             }
         });
 
@@ -217,13 +228,5 @@ class DownloadManager {
         }
         await pipelineWithTimeout(reader, writer, options);
     } //}
-}
-
-if(service.DB.initialized) {
-    const dmanager = new DownloadManager();
-} else {
-    service.DB.on('init', () => {
-        const dmanager = new DownloadManager();
-    });
 }
 

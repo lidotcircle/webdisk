@@ -7,7 +7,7 @@ import * as events from 'events';
 import { constants } from './constants';
 import { BasicMessage, MessageEncoder, MessageType } from './common/message/message';
 import { debug, info, warn, error } from './logger';
-import { MessageSerializer, MessageHandlers, registerMessageHandler, service } from './services';
+import { MessageSerializer, MessageHandlers, registerMessageHandler } from './services';
 import { UserManager } from './handlers/user_management';
 import * as utls from './utils';
 
@@ -16,6 +16,8 @@ import { MiscManager } from './handlers/misc_management';
 import { FileManager } from './handlers/file_management';
 import { cons } from './utils';
 import { request as wsrequest, connection as wsconnection, IMessage, IServerConfig } from 'websocket';
+import { AccessControl } from './accessControl/acl';
+import { DIProperty } from './di';
 
 export function upgradeHandler(inc: http.IncomingMessage, socket: net.Socket, buf: Buffer) //{
 {
@@ -41,6 +43,9 @@ export interface MessageGateway {
 export class MessageGateway extends events.EventEmitter {
     private websocket: wsconnection;
     private invalid:   boolean;
+
+    @DIProperty(AccessControl)
+    private acl: AccessControl;
 
     constructor(ws: wsconnection) //{
     {
@@ -98,7 +103,7 @@ export class MessageGateway extends events.EventEmitter {
             warn('get a message without handler, ignore it');
         } else {
             try {
-                await service.acl.CheckMessage(message);
+                await this.acl.CheckMessage(message);
             } catch (err) {
                 console.error('Access Denied:', err);
                 const msg = new BasicMessage();

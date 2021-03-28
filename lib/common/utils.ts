@@ -1,4 +1,6 @@
 import * as util from 'util';
+export * from './copy_object';
+import { assignTargetEnumProp, CopySourceEnumProp } from './copy_object';
 
 export function assert(val: boolean) {
     if(!val) throw new Error("assert fail");
@@ -15,18 +17,6 @@ export module validation {
     }
 }
 
-
-export function assignTargetEnumProp(src: Object, target: Object) {
-    for(const prop in target) {
-        if(src[prop] !== undefined)
-            target[prop] = src[prop];
-    }
-}
-
-export function CopySourceEnumProp(src: Object, target: Object) {
-    for(const prop in src)
-        target[prop] = src[prop];
-}
 
 export function makeid(length: number): string
 {

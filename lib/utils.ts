@@ -220,3 +220,14 @@ export async function extractReadableStream(stream: stream.Readable, max: number
     return ans;
 } //}
 
+export function ResolvePathInConfig(origin_path: string, config_path: string): string //{
+{
+    let ans: string = origin_path;
+    if(origin_path.startsWith('~')) {
+        ans = proc.env.HOME + origin_path.substring(1);
+    } else if(!origin_path.startsWith('/')) {
+        ans = path.join(path.dirname(config_path), origin_path);
+    }
+    return ans;
+} //}
+

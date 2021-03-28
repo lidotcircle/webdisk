@@ -17,7 +17,7 @@ type InjectOptions = {
     name?: string;
 
     lazy?: boolean;
-    afterInit?: (obj: any) => Promise<void>,
+    afterInit?: (obj: any) => Promise<void>;
 };
 
 function validInjectOptions(options: InjectOptions) //{
@@ -41,9 +41,9 @@ function makeid(length: number): string //{
 } //}
 
 type GetterOptions = {
-    dynamic?: boolean
+    dynamic?: boolean,
+    immediate?: boolean,
 };
-const sym_promise_finish = Symbol('promise-finish');
 
 export class DenpendencyInjector {
     private readonly sym_inject: symbol;
@@ -52,6 +52,7 @@ export class DenpendencyInjector {
     private readonly idx2factory: {[key: number]: ObjectFactory};
     private readonly idx2initcallback: {[key: number]: (obj: any) => Promise<void>};
     private readonly idx2dependencyname: {[key: number]: string};
+    private readonly idx2options: {[key: number]: InjectOptions};
 
     private readonly name2idx: {[name: string]: number};
     private readonly promises: (() => Promise<void>)[];
@@ -64,6 +65,7 @@ export class DenpendencyInjector {
         this.idx2factory = {};
         this.idx2initcallback = {};
         this.idx2dependencyname = {};
+        this.idx2options = {};
 
         this.name2idx = {};
         this.promises = [];
@@ -79,6 +81,20 @@ export class DenpendencyInjector {
                 Reflect.getMetadata('design:paramtypes', target) ||
                 [];
             this.ProvideDependency(target, options);
+        }
+        return ans.bind(this);
+    } //}
+
+    /** method decrator */
+    InjectableFactory<T extends Constructor>(specifier: T, options?: InjectOptions) //{
+    {
+        const ans = function(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+            options = options || {};
+            options.paramtypes = options.paramtypes || 
+                Reflect.getMetadata('design:paramtypes', target, propertyKey) ||
+                [];
+            options.factory = descriptor.value;
+            this.ProvideDependency(specifier, options);
         }
         return ans.bind(this);
     } //}
@@ -142,7 +158,6 @@ export class DenpendencyInjector {
             this.assertInjectable(specifier as T & InjectedClass);
             ans = specifier[this.sym_inject];
         } else {
-            console.log(specifier);
             assert(typeof specifier === 'string', "dependency specifier should be a class or identifier");
             ans = this.name2idx[specifier];
         }
@@ -213,6 +228,7 @@ export class DenpendencyInjector {
         }
         this.idx2factory[injectPoint] = factory;
         this.idx2paramtypes[injectPoint] = options.paramtypes;
+        this.idx2options[injectPoint] = options;
 
         if(!!options.afterInit) {
             this.idx2initcallback[injectPoint] = options.afterInit;
@@ -273,19 +289,35 @@ export class DenpendencyInjector {
         if(!!this.idx2initcallback[injectPoint]) {
             const cb = this.idx2initcallback[injectPoint];
             this.promises.push(async () => await cb(this.idx2object[injectPoint]));
+            this.runInitCalls().catch(err => { throw err; });
         }
     } //}
 
+    private async runInitCalls() //{
+    {
+        if(this.initrunning) return;
+        this.initrunning = true;
+
+        while(this.promises.length > 0) {
+            const cb = this.promises.shift();
+            await cb();
+        }
+
+        this.initrunning = false;
+        if(!!this.waiting_resolve) {
+            this.waiting_resolve();
+            this.waiting_resolve = null;
+        }
+    } //}
+
+    private initrunning: boolean = false;
+    private waiting_resolve: () => void;
     async ResolveInitPromises() //{
     {
-        while(this.promises.length > 0) {
-            const p = this.promises.shift()();
-            try {
-                await p;
-            } catch (err) {
-                console.debug(this);
-                throw err;
-            }
+        if(this.initrunning) {
+            return await new Promise((resolve) => {
+                this.waiting_resolve = resolve;
+            });
         }
     } //}
 
@@ -301,6 +333,7 @@ export class DenpendencyInjector {
     /** getter decrator */
     DIProperty<T extends Constructor | string>(specifier: T, options: GetterOptions = {}) //{
     {
+        assert(this.isValidSpecifier(specifier), `unexpected specifier ${specifier}`);
         options = Object.assign({}, options);
         const ans = function<U extends Constructor>(target: U | any, propertyKey: string) {
             const cons = target as U;
@@ -319,17 +352,23 @@ export class DenpendencyInjector {
     {
         options = Object.assign({}, options);
         let dynamic = !!options.dynamic;
+        let getted = false;
         let staticObj;
-        if(!dynamic) {
-            staticObj = this.QueryDependency(specifier);
-        }
 
         descriptor.get = () => {
             if(dynamic) {
                 return this.QueryDependency(specifier);
             } else {
+                if(!getted) {
+                    getted = true;
+                    staticObj = this.QueryDependency(specifier);
+                }
                 return staticObj;
             }
+        }
+
+        if(options.immediate) {
+            descriptor.get();
         }
 
         descriptor.set = () => {
@@ -342,6 +381,10 @@ export const GlobalInjector = new DenpendencyInjector();
 export function Injectable(options?: InjectOptions) //{
 {
     return GlobalInjector.Injectable(options);
+} //}
+export function InjectableFactory<T extends Constructor>(specifier: T, options?: InjectOptions) //{
+{
+    return GlobalInjector.InjectableFactory(specifier, options);
 } //}
 export function QueryDependency<T extends Constructor | string>(specifier: T): T extends Constructor ? InstanceType<T> : any //{
 {

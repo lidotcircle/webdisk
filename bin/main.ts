@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 
 import * as http_server   from '../lib/http_server';
-import * as services      from '../lib/services';
 import * as child_process from 'child_process';
 import * as process       from 'process';
 import * as timer         from 'timers';
 import * as proc          from 'process';
 import { constants }      from '../lib/constants';
 import { info } from '../lib/logger';
+import { Config, ConfigPathProviderName } from '../lib/config';
+import { AsyncQueryDependency, ProvideDependency, ResolveInitPromises } from '../lib/di';
 
-import { GetConfig, conf } from '../lib/config';
 const getopt = require('node-getopt');
 
 let __opt = getopt.create([
@@ -26,21 +26,23 @@ if (options["h"] == true) {
     proc.exit(0);
 }
 
-let config_file = options["c"];
-let daemonized  = options["d"];
+let config_file: string  = options["c"];
+let daemonized:  boolean = options["d"];
 
 async function main() //{
 {
-    await GetConfig(config_file);
+    ProvideDependency(null, {name: ConfigPathProviderName, object: config_file});
+    const config = await AsyncQueryDependency(Config);
 
     let server = new http_server.HttpServer();
     server.on("error", (err) => {
         throw err;
     });
     server.on("listening", () => {
-        info(`listening at ${conf.listenAddress}:${conf.listenPort}`)
+        info(`listening at ${config.listen_addr}:${config.listen_port}`)
     });
-    server.listen(conf.listenPort, conf.listenAddress);
+    await ResolveInitPromises();
+    server.listen(config.listen_port, config.listen_addr);
 } //}
 
 if (daemonized) {

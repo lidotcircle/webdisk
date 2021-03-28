@@ -7,25 +7,27 @@ import { makeid, validation, assignTargetEnumProp, cons } from '../common/utils'
 import { NameEntry, Token, UserInfo, UserPermission } from '../common/db_types';
 import { debug, info, warn, error } from '../logger';
 import { ErrorMSG } from '../common/string';
-import { conf } from '../config';
+import { Config } from '../config';
 import { DBRelations } from './relations';
 import { createSQLInsertion } from './utils';
 const MD5 = require('md5');
 
 import { INVITAION_CODE_LENGTH, KEY_INVITATION, KEY_USER, RootInvitation, RootUserInfo } from './constants';
-import { DB_Download, IDBDownload } from './modules/download';
 
-import { DB_UserSettings,   IDBUserSettings } from './modules/user_settings';
-import { DB_NamedEntry,     IDBNamedEntry } from './modules/named_entry';
-import { DB_ShortTermToken, IDBShortTermToken } from './modules/short_term_token';
-import { DB_Token,          IDBToken } from './modules/token';
+import { DB_Download,       IDBDownload }       from './modules';
+import { DB_UserSettings,   IDBUserSettings }   from './modules';
+import { DB_NamedEntry,     IDBNamedEntry }     from './modules';
+import { DB_ShortTermToken, IDBShortTermToken } from './modules';
+import { DB_Token,          IDBToken }          from './modules';
+import { DB_Utils,          IDBUtils }          from './modules';
+import { DB_StorePass,      IDBStorePass }      from './modules';
+
 import { EventEmitter } from 'events';
-import { DB_Utils } from './modules/utils';
-import { DB_StorePass, IDBStorePass } from './modules/storePass';
+import { Injectable, ProvideDependency, ResolveInitPromises } from '../di';
+import { ResolvePathInConfig } from '../utils';
 
 
 export type Database = WDDatabase & IDBToken & IDBUserSettings & IDBNamedEntry & IDBShortTermToken & IDBDownload & IDBStorePass;
-export function createDB(): Database {return WDDatabase.createDB();}
 type precond = () => Promise<void>;
 
 export interface WDDatabase {
@@ -37,6 +39,10 @@ export interface WDDatabase {
     on(event: 'init', listener: () => void): this;
 }
 
+@Injectable({
+    afterInit: async (obj: WDDatabase) => await obj.init(),
+//    lazy: false,
+})
 @DB_Utils
 @DB_StorePass
 @DB_Download
@@ -47,16 +53,10 @@ export interface WDDatabase {
 export class WDDatabase extends EventEmitter {
     private m_database: sqlite.Database;
     protected preconditions: precond[] = [];
-    private constructor() {
+
+    constructor(private config: Config) {
         super();
     }
-
-    static createDB(): Database //{
-    {
-        const ans = new WDDatabase();
-        return ans as Database;
-    } //}
-
 
     protected async run(sql: string): Promise<void> //{
     {
@@ -87,7 +87,6 @@ export class WDDatabase extends EventEmitter {
             });
         });
     } //}
-
 
     private async init_user_and_inv(): Promise<void> //{
     {
@@ -125,16 +124,17 @@ export class WDDatabase extends EventEmitter {
     } //}
 
     private _init_: boolean = false;
-    async init(db: string): Promise<void> //{
+    async init(): Promise<void> //{
     {
         assert.equal(this._init_, false, 'double init');
         this._init_ = true;
+        const db_path = ResolvePathInConfig(this.config.sqlite3_database, this.config.ConfigPath);
 
-        if(!path.isAbsolute(db)) {
-            throw new Error(`require absolute path: '${db}'`);
+        if(!path.isAbsolute(db_path)) {
+            throw new Error(`require absolute path: '${db_path}'`);
         }
-        fs.mkdirSync(path.dirname(db), {recursive: true});
-        this.m_database = new sqlite.Database(db);
+        fs.mkdirSync(path.dirname(db_path), {recursive: true});
+        this.m_database = new sqlite.Database(db_path);
 
         await this.init_user_and_inv();
 
@@ -486,7 +486,7 @@ export class WDDatabase extends EventEmitter {
 
     protected async allowRedirectByUID(uid: number): Promise<boolean> //{
     {
-        if(!conf.AllowHttpRedirection) return false;
+        if(!this.config.allow_http_redirect) return false;
 
         const permission = await this.getPermisstionByUid(uid);
         const settings = await (this as any).getUserSettingsByUid(uid); // TODO

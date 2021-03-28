@@ -14,13 +14,15 @@ import { constants } from './constants';
 import { upgradeHandler } from './message_gateway';
 
 import { debug, info, warn, error } from './logger';
-import { DB, service } from './services';
 
 import { cons } from './utils';
 import { UserInfo } from './common/db_types';
 import { SimpleHttpServer, simpleURL } from './simple_http_server';
 import { Writable } from 'stream';
 import { FileType } from './common/file_types';
+import { AsyncQueryDependency, DIProperty } from './di';
+import { Database, WDDatabase } from './database/database';
+import { FileSystem } from './fileSystem';
 
 function Etag(str: string) {
     const md5 = crypto.createHash('md5');
@@ -46,13 +48,16 @@ async function write_file_response(filename: string,         //{
                                        allowRedirect?: boolean
                                    })
 {
+    const DB = await AsyncQueryDependency(WDDatabase);
+    const filesystem = await AsyncQueryDependency(FileSystem);
+
     if (filename == null) {
         throw new BadRequest();
     }
     let success: number = 200;
     if (range) success = 206;
 
-    let filestat = await service.filesystem.stat(filename);
+    let filestat = await filesystem.stat(filename);
     if (filestat.filetype != FileType.reg)
         throw new NotFound();
     if (range != null && filestat.size <= range[1]) 
@@ -113,12 +118,12 @@ async function write_file_response(filename: string,         //{
         return;
     }
 
-    if(options.allowRedirect && await service.filesystem.canRedirect(filename)) {
-        const redirectUrls = await service.filesystem.redirect(filename);
+    if(options.allowRedirect && await filesystem.canRedirect(filename)) {
+        const redirectUrls = await filesystem.redirect(filename);
         throw new TemporaryRedirect(redirectUrls);
     } else {
         res.writeHead(success);
-        await service.filesystem.writeFileToWritable(filename, res, startposition, content_length);
+        await filesystem.writeFileToWritable(filename, res, startposition, content_length);
     }
     res.end();
 } //}
@@ -131,6 +136,11 @@ function write_empty_response(res: http.ServerResponse, sc: number = 405) //{
 
 export class HttpServer extends SimpleHttpServer
 {
+    @DIProperty(WDDatabase)
+    private DB: Database;
+    @DIProperty(FileSystem)
+    private filesystem: FileSystem;
+
     private clipcontent: string | Buffer = null;
     constructor () //{
     {
@@ -155,13 +165,13 @@ export class HttpServer extends SimpleHttpServer
             }
             const filename = path.resolve(uinfo.rootPath, decodeURI(url.pathname.substring(cons.DiskPrefix.length + 1)));
             const range: [number, number] = util.parseRangeField(request.headers.range);
-            const allowRedirect = await DB.allowRedirectByUsername(uinfo.username);
+            const allowRedirect = await this.DB.allowRedirectByUsername(uinfo.username);
             await write_file_response(filename, request.headers, response, range, {head: head, allowRedirect: allowRedirect});
         };
         if (!!token) {
-            await download(await DB.getUserInfo(token));
+            await download(await this.DB.getUserInfo(token));
         } else {
-            await download(await DB.UserInfoByShortTermToken(stoken));
+            await download(await this.DB.UserInfoByShortTermToken(stoken));
         }
     } //}
 
@@ -176,7 +186,7 @@ export class HttpServer extends SimpleHttpServer
             throw new NotFound();
         }
 
-        const user = await DB.queryValidNameEntry(namedlink);
+        const user = await this.DB.queryValidNameEntry(namedlink);
         const filename = path.resolve(user.userinfo.rootPath, user.destination.substr(1));
         await write_file_response(filename, request.headers, response, range, {
             head: head, 
@@ -240,7 +250,7 @@ export class HttpServer extends SimpleHttpServer
     {
         let ansfile = filename;
         try {
-            const stat = await service.filesystem.stat(filename);
+            const stat = await this.filesystem.stat(filename);
             if (stat.filetype != FileType.reg && stat.filetype != FileType.symbol) {
                 ansfile = indexfile;
             }

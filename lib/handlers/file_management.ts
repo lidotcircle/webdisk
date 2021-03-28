@@ -1,17 +1,17 @@
-import { DB, service } from '../services';
+import path from 'path';
+import util from 'util';
 import { MessageHandler } from '../message_handler';
 import { MessageGateway } from '../message_gateway';
 import { BasicMessage, MessageSource, MessageType } from '../common/message/message';
 import { debug, info, warn, error } from '../logger';
 import { FileMessage, FileRequestMessage, FileResponseMessage, FileRequest } from '../common/message/file_message';
 import { changeObject, subStringInObject } from '../utils';
-import path from 'path';
-import * as annautils from 'annautils';
 import * as utils from '../utils';
-import * as util from 'util';
 import { FileStat, FileType } from '../common/file_types';
 import { UserInfo } from '../common/db_types';
-import { FileSystem } from 'lib/fileSystem/fileSystem';
+import { FileSystem } from '../fileSystem/fileSystem';
+import { DIProperty } from '../di';
+import { WDDatabase } from '../database/database';
 
 function checkArgv(pat: string, argv: any[]) {
     if (!utils.checkArgv(pat, argv)) {
@@ -37,6 +37,12 @@ class FileManagement extends MessageHandler {
     private static GMSG = new FileMessage();
     private id: number = 0;
 
+    @DIProperty(FileSystem)
+    private filesystem: FileSystem;
+
+    @DIProperty(WDDatabase)
+    private DB: WDDatabase;
+
     constructor() {
         super();
     }
@@ -58,7 +64,7 @@ class FileManagement extends MessageHandler {
         switch(msg.messageSource) {
             case MessageSource.Request: {
                 const req = msg as FileRequestMessage;
-                if(req.fm_msg.user_token == null || !(await DB.getUserInfo(req.fm_msg.user_token))) {
+                if(req.fm_msg.user_token == null || !(await this.DB.getUserInfo(req.fm_msg.user_token))) {
                     resp.error = 'bad user token';
                 } else {
                     await this.access(req, resp);
@@ -89,77 +95,77 @@ class FileManagement extends MessageHandler {
     }
 
     private async append(file: string, buffer: ArrayBuffer) {
-        await service.filesystem.append(file, buffer);
+        await this.filesystem.append(file, buffer);
     }
 
     private async chmod(file: string, mode: number) {
-        await service.filesystem.chmod(file, mode);
+        await this.filesystem.chmod(file, mode);
     }
 
     private async copy(src: string, dst: string) {
-        await service.filesystem.copy(src, dst);
+        await this.filesystem.copy(src, dst);
     }
 
     private async copyr(src: string, dst: string) {
-        await service.filesystem.copyr(src, dst);
+        await this.filesystem.copyr(src, dst);
     }
 
     private async execFile(file: string, argv: string[]): Promise<string> {
-        return await service.filesystem.execFile(file, argv);
+        return await this.filesystem.execFile(file, argv);
     }
 
     private async getdir(dir: string): Promise<FileStat[]> {
-        return await service.filesystem.getdir(dir);
+        return await this.filesystem.getdir(dir);
     }
     
     private async fileMD5(file: string): Promise<string> {
-        return await service.filesystem.fileMD5(file);
+        return await this.filesystem.fileMD5(file);
     }
 
     private async fileSliceMD5(file: string, position: number, len: number): Promise<string> {
-        return await service.filesystem.fileSliceMD5(file, position, len);
+        return await this.filesystem.fileSliceMD5(file, position, len);
     }
 
     private async mkdir(dir: string) {
-        await service.filesystem.mkdir(dir);
+        await this.filesystem.mkdir(dir);
     }
 
     private async move(src: string, dst: string) {
-        await service.filesystem.move(src, dst);
+        await this.filesystem.move(src, dst);
     }
 
     private async read(file: string, position: number, length: number): Promise<Buffer> {
-        return await service.filesystem.read(file, position, length);
+        return await this.filesystem.read(file, position, length);
     }
 
     private async remove(path: string) {
-        await service.filesystem.remove(path);
+        await this.filesystem.remove(path);
     }
 
     private async remover(path: string) {
-        await service.filesystem.remover(path);
+        await this.filesystem.remover(path);
     }
 
     private async stat(file: string): Promise<FileStat> {
-        return await service.filesystem.stat(file);
+        return await this.filesystem.stat(file);
     }
 
     private async touch(path: string) {
-        await service.filesystem.touch(path);
+        await this.filesystem.touch(path);
     }
 
     private async truncate(file: string, len: number) {
-        await service.filesystem.truncate(file, len);
+        await this.filesystem.truncate(file, len);
     }
 
     private async write(file: string, position: number, buf: ArrayBuffer): Promise<number> {
-        return await service.filesystem.write(file, position, buf);
+        return await this.filesystem.write(file, position, buf);
     }
 
     async access(req_msg: FileRequestMessage, resp: FileResponseMessage) {
         const req = req_msg.fm_msg;
         const argv = req.fm_request_argv;
-        const user = await DB.getUserInfo(req.user_token);
+        const user = await this.DB.getUserInfo(req.user_token);
         if(!user) {
             resp.error = 'invalid token access file service';
             return;

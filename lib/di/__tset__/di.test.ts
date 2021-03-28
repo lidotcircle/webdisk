@@ -1,4 +1,4 @@
-import { Injectable, QueryDependency, MockDependency, ProvideDependency, DIGetter, DIProperty, DenpendencyInjector } from '../di';
+import { Injectable, QueryDependency, MockDependency, ProvideDependency, DIGetter, DIProperty, DenpendencyInjector, InjectableFactory } from '../di';
 
 @Injectable()
 class A {
@@ -82,5 +82,21 @@ test('di object', () => {
     const injector = new DenpendencyInjector();
     expect(QueryDependency(E)).not.toBeNull();
     expect(() => injector.QueryDependency(E)).toThrowError();
+});
+
+
+test('method decrator', () => {
+    @Injectable()
+    class AA {}
+
+    class A {
+        @InjectableFactory(null, {name: 'uv'})
+        factory(a: AA) {
+            return new AA();
+        }
+    }
+
+    const uv = QueryDependency('uv') as AA;
+    expect(uv instanceof AA).toBeTruthy();
 });
 
