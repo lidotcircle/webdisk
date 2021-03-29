@@ -14,9 +14,15 @@ class ConfigMap {
     static_resources: string = 'resources';
     sqlite3_database: string = '~/.webdisk/wd.db';
 
-    allow_http_redirect: boolean = true;
+    allow_http_redirect?: boolean = true;
 
     filesystem: IFileSystemConfig = {type: FileSystemType.local};
+
+    logger?: {
+        level?: string,
+        console?: boolean,
+        file?: string,
+    } = {console: true};
 };
 
 

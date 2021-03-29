@@ -62,8 +62,10 @@ export async function startTask(usertoken: string, url: string, destination: str
 
 type Cancelable = {cancel(): void; canceled: boolean;}
 
-@Injectable()
-class DownloadManager {
+@Injectable({
+    afterInit: async(mg: DownloadManager) => await mg.init(),
+})
+export class DownloadManager {
     private max_running_tasks: number = 5;
     private m_running_tasks: (DownloadTask & Cancelable)[] = [];
 

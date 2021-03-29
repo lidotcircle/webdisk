@@ -41,7 +41,7 @@ export interface WDDatabase {
 
 @Injectable({
     afterInit: async (obj: WDDatabase) => await obj.init(),
-//    lazy: false,
+    initOnDepsInited: [ Config ],
 })
 @DB_Utils
 @DB_StorePass

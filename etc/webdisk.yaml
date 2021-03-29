@@ -31,3 +31,8 @@ MultiFileSystem: &MultiFileSystem
 filesystem:
     <<: *LocalFileSystem
 
+logger:
+  level: 'debug'
+  console: true
+  file: 'webdisk.log'
+  

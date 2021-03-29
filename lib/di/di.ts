@@ -1,12 +1,10 @@
 import 'reflect-metadata';
 import assert from 'assert';
+import { EventEmitter } from 'events';
 
 type Constructor =  {new (...args: any[]): object; };
-interface InjectedClass {
-    new (...args: any[]): object; 
-};
 
-type InjectedSpecifier = InjectedClass | string;
+type InjectedSpecifier = Constructor | string;
 type ObjectFactory = (...args: any[]) => object;
 
 type InjectOptions = {
@@ -16,9 +14,25 @@ type InjectOptions = {
     paramtypes?: InjectedSpecifier[];
     name?: string;
 
-    lazy?: boolean;
     afterInit?: (obj: any) => Promise<void>;
+    lazy?: boolean;
+    initOnDeps?: InjectedSpecifier[];
+    initOnDepsInited?: InjectedSpecifier[];
 };
+
+export interface DependencyInjector {
+    on(event: 'dependency', listener: (dependency: Constructor | null, options: InjectOptions) => void): this;
+    on(event: 'initialized', listener: (dependency: Constructor | null, options: InjectOptions) => void): this;
+    on(event: 'mock',       listener: (depSpecifier: InjectedSpecifier, replace: InjectedSpecifier) => void): this;
+
+    once(event: 'dependency', listener: (dependency: Constructor | null, options: InjectOptions) => void): this;
+    once(event: 'initialized', listener: (dependency: Constructor | null, options: InjectOptions) => void): this;
+    once(event: 'mock',       listener: (depSpecifier: InjectedSpecifier, replace: InjectedSpecifier) => void): this;
+
+    emit(event: 'dependency', dependency: Constructor | null, options: InjectOptions);
+    emit(event: 'initialized', dependency: Constructor | null, options: InjectOptions);
+    emit(event: 'mock',       depSpecifier: InjectedSpecifier, replace: InjectedSpecifier);
+}
 
 function validInjectOptions(options: InjectOptions) //{
 {
@@ -28,6 +42,14 @@ function validInjectOptions(options: InjectOptions) //{
 
     if(!options.object && !options.paramtypes) {
         throw new Error(`dependency with factory and constructor must specify 'paramtypes'`);
+    }
+
+    let u = 0;
+    if(!options.lazy) u++;
+    if(options.initOnDeps) u++;
+    if(options.initOnDepsInited) u++;
+    if(u > 1) {
+        throw new Error(`options conflict, at most one of options in 'lazy: false', 'initOnDeps', 'initOnDepsInited' can be specified`);
     }
 } //}
 function makeid(length: number): string //{
@@ -45,7 +67,7 @@ type GetterOptions = {
     immediate?: boolean,
 };
 
-export class DenpendencyInjector {
+export class DependencyInjector extends EventEmitter {
     private readonly sym_inject: symbol;
     private readonly idx2paramtypes: {[key: number]: InjectedSpecifier[]};
     private readonly idx2object: {[key: number]: object};
@@ -53,12 +75,14 @@ export class DenpendencyInjector {
     private readonly idx2initcallback: {[key: number]: (obj: any) => Promise<void>};
     private readonly idx2dependencyname: {[key: number]: string};
     private readonly idx2options: {[key: number]: InjectOptions};
+    private readonly idx2constructor: {[key: number]: Constructor};
 
     private readonly name2idx: {[name: string]: number};
     private readonly promises: (() => Promise<void>)[];
     private injectableCounter: number;
 
     constructor() {
+        super();
         this.sym_inject = Symbol('inject');
         this.idx2paramtypes = {};
         this.idx2object = {};
@@ -66,6 +90,7 @@ export class DenpendencyInjector {
         this.idx2initcallback = {};
         this.idx2dependencyname = {};
         this.idx2options = {};
+        this.idx2constructor = {};
 
         this.name2idx = {};
         this.promises = [];
@@ -99,7 +124,7 @@ export class DenpendencyInjector {
         return ans.bind(this);
     } //}
 
-    private assertInjectable<T extends InjectedClass>(target: T) //{
+    private assertInjectable<T extends Constructor>(target: T) //{
     {
         assert(target[this.sym_inject] != null, "require an injectable class");
     } //}
@@ -155,7 +180,7 @@ export class DenpendencyInjector {
         let ans: number;
 
         if(typeof specifier === 'function') {
-            this.assertInjectable(specifier as T & InjectedClass);
+            this.assertInjectable(specifier as T & Constructor);
             ans = specifier[this.sym_inject];
         } else {
             assert(typeof specifier === 'string', "dependency specifier should be a class or identifier");
@@ -189,6 +214,7 @@ export class DenpendencyInjector {
         } else {
             this.name2idx[dep as string] = rep_idx;
         }
+        this.emit("mock", dep, replacer || options.name);
     } //}
 
     /** provide dependency with varying methods */
@@ -216,7 +242,7 @@ export class DenpendencyInjector {
     } //}
 
     /** provide dependency with object factory */
-    private ProvideDependencyWithFactory<T extends InjectedClass>(provider: T, factory: ObjectFactory, options: InjectOptions) //{
+    private ProvideDependencyWithFactory<T extends Constructor>(provider: T, factory: ObjectFactory, options: InjectOptions) //{
     {
         assert(provider == null || provider[this.sym_inject] === undefined, "A class can't be provided twice");
         assert(typeof options.paramtypes === 'object', "provider should provide paramtypes");
@@ -229,11 +255,13 @@ export class DenpendencyInjector {
         this.idx2factory[injectPoint] = factory;
         this.idx2paramtypes[injectPoint] = options.paramtypes;
         this.idx2options[injectPoint] = options;
+        this.idx2constructor[injectPoint] = provider;
 
         if(!!options.afterInit) {
             this.idx2initcallback[injectPoint] = options.afterInit;
         }
 
+        this.emit("dependency", provider, options);
         this.HandleOptionsWithInjectCounter(injectPoint, options);
     } //}
 
@@ -251,7 +279,50 @@ export class DenpendencyInjector {
             }
         }
 
-        if(!options.lazy && this.idx2object[injectPoint] === undefined) {
+        let justInit = false;
+        const cons = this.idx2constructor[injectPoint];
+        if(options.initOnDeps && options.initOnDeps.length > 0) {
+            const deps = options.initOnDeps;
+            for(const dep of deps) {
+                if(this.isValidSpecifier(dep)) {
+                    justInit = true;
+                    break;
+                }
+            }
+
+            if(!justInit) {
+                const initializer = (dep: Constructor, options: InjectOptions) => {
+                    if(deps.indexOf(dep) >= 0 || deps.indexOf(options.name) >= 0) {
+                        this.removeListener("dependency", initializer);
+                        this.QueryDependency(cons || options.name);
+                    }
+                }
+                this.on("dependency", initializer);
+            }
+        }
+
+        if(options.initOnDepsInited && options.initOnDepsInited.length > 0) {
+            const deps = options.initOnDepsInited;
+            for(const dep of deps) {
+                const idx = this.idxFrom(dep);
+                if(this.idx2object[idx] !== undefined) {
+                    justInit = true;
+                    break;
+                }
+            }
+
+            if(!justInit) {
+                const initializer = (dep: Constructor, options: InjectOptions) => {
+                    if(deps.indexOf(dep) >= 0 || deps.indexOf(options.name) >= 0) {
+                        this.removeListener("initialized", initializer);
+                        this.QueryDependency(cons || options.name);
+                    }
+                }
+                this.on("initialized", initializer);
+            }
+        }
+
+        if(justInit || (!options.lazy && this.idx2object[injectPoint] === undefined)) {
             this.instantiateInject(injectPoint);
         }
     } //}
@@ -291,6 +362,9 @@ export class DenpendencyInjector {
             this.promises.push(async () => await cb(this.idx2object[injectPoint]));
             this.runInitCalls().catch(err => { throw err; });
         }
+        const cons    = this.idx2constructor[injectPoint];
+        const options = this.idx2options[injectPoint];
+        this.emit("initialized", cons, options);
     } //}
 
     private async runInitCalls() //{
@@ -377,7 +451,7 @@ export class DenpendencyInjector {
     } //}
 }
 
-export const GlobalInjector = new DenpendencyInjector();
+export const GlobalInjector = new DependencyInjector();
 export function Injectable(options?: InjectOptions) //{
 {
     return GlobalInjector.Injectable(options);
