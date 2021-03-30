@@ -1,0 +1,24 @@
+version: '3.0'
+
+volumes:
+  wdisk:
+
+services:
+  backend.webdisk.com:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile      
+    volumes:
+      - wdisk:/usr/webdisk/disk
+      #- ./etc/webdisk:/etc/webdisk
+      #- ./release/webdisk/lib:/usr/webdisk/lib
+      #- ./release/webdisk/bin:/usr/webdisk/bin
+      #- ./release/webdisk/dashboard:/usr/webdisk/dashboard
+
+  nginx.webdisk.com:
+    image: nginx:latest
+    volumes:
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+    ports:
+      - 5080:80
+
