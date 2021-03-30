@@ -1,4 +1,4 @@
-import { Injectable, QueryDependency, MockDependency, ProvideDependency, DIGetter, DIProperty, DenpendencyInjector, InjectableFactory } from '../di';
+import { Injectable, QueryDependency, MockDependency, ProvideDependency, DIGetter, DIProperty, DependencyInjector, InjectableFactory } from '../di';
 
 @Injectable()
 class A {
@@ -79,7 +79,7 @@ test('injectable object', () => {
 
 
 test('di object', () => {
-    const injector = new DenpendencyInjector();
+    const injector = new DependencyInjector();
     expect(QueryDependency(E)).not.toBeNull();
     expect(() => injector.QueryDependency(E)).toThrowError();
 });

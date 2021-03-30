@@ -17,19 +17,23 @@ type InjectOptions = {
     afterInit?: (obj: any) => Promise<void>;
     lazy?: boolean;
     initOnDeps?: InjectedSpecifier[];
+    initOnDepsInstantiated?: InjectedSpecifier[];
     initOnDepsInited?: InjectedSpecifier[];
 };
 
 export interface DependencyInjector {
     on(event: 'dependency', listener: (dependency: Constructor | null, options: InjectOptions) => void): this;
+    on(event: 'instantiated', listener: (dependency: Constructor | null, options: InjectOptions) => void): this;
     on(event: 'initialized', listener: (dependency: Constructor | null, options: InjectOptions) => void): this;
     on(event: 'mock',       listener: (depSpecifier: InjectedSpecifier, replace: InjectedSpecifier) => void): this;
 
     once(event: 'dependency', listener: (dependency: Constructor | null, options: InjectOptions) => void): this;
+    once(event: 'instantiated', listener: (dependency: Constructor | null, options: InjectOptions) => void): this;
     once(event: 'initialized', listener: (dependency: Constructor | null, options: InjectOptions) => void): this;
     once(event: 'mock',       listener: (depSpecifier: InjectedSpecifier, replace: InjectedSpecifier) => void): this;
 
     emit(event: 'dependency', dependency: Constructor | null, options: InjectOptions);
+    emit(event: 'instantiated', dependency: Constructor | null, options: InjectOptions);
     emit(event: 'initialized', dependency: Constructor | null, options: InjectOptions);
     emit(event: 'mock',       depSpecifier: InjectedSpecifier, replace: InjectedSpecifier);
 }
@@ -47,9 +51,10 @@ function validInjectOptions(options: InjectOptions) //{
     let u = 0;
     if(!options.lazy) u++;
     if(options.initOnDeps) u++;
+    if(options.initOnDepsInstantiated) u++;
     if(options.initOnDepsInited) u++;
     if(u > 1) {
-        throw new Error(`options conflict, at most one of options in 'lazy: false', 'initOnDeps', 'initOnDepsInited' can be specified`);
+        throw new Error(`options conflict, at most one of options in 'lazy: false', 'initOnDeps', 'initOnDepsInstantiated', 'initOnDepsInited' can be specified`);
     }
 } //}
 function makeid(length: number): string //{
@@ -69,6 +74,7 @@ type GetterOptions = {
 
 export class DependencyInjector extends EventEmitter {
     private readonly sym_inject: symbol;
+    private readonly sym_initcallback_ref: symbol;
     private readonly idx2paramtypes: {[key: number]: InjectedSpecifier[]};
     private readonly idx2object: {[key: number]: object};
     private readonly idx2factory: {[key: number]: ObjectFactory};
@@ -76,6 +82,7 @@ export class DependencyInjector extends EventEmitter {
     private readonly idx2dependencyname: {[key: number]: string};
     private readonly idx2options: {[key: number]: InjectOptions};
     private readonly idx2constructor: {[key: number]: Constructor};
+    private readonly idx2isinited: {[key: number]: boolean};
 
     private readonly name2idx: {[name: string]: number};
     private readonly promises: (() => Promise<void>)[];
@@ -84,6 +91,7 @@ export class DependencyInjector extends EventEmitter {
     constructor() {
         super();
         this.sym_inject = Symbol('inject');
+        this.sym_initcallback_ref = Symbol('init-ref');
         this.idx2paramtypes = {};
         this.idx2object = {};
         this.idx2factory = {};
@@ -91,6 +99,7 @@ export class DependencyInjector extends EventEmitter {
         this.idx2dependencyname = {};
         this.idx2options = {};
         this.idx2constructor = {};
+        this.idx2isinited = {};
 
         this.name2idx = {};
         this.promises = [];
@@ -301,6 +310,27 @@ export class DependencyInjector extends EventEmitter {
             }
         }
 
+        if(options.initOnDepsInstantiated && options.initOnDepsInstantiated.length > 0) {
+            const deps = options.initOnDepsInstantiated;
+            for(const dep of deps) {
+                const idx = this.idxFrom(dep);
+                if(this.idx2object[idx] !== undefined) {
+                    justInit = true;
+                    break;
+                }
+            }
+
+            if(!justInit) {
+                const initializer = (dep: Constructor, options: InjectOptions) => {
+                    if(deps.indexOf(dep) >= 0 || deps.indexOf(options.name) >= 0) {
+                        this.removeListener("instantiated", initializer);
+                        this.QueryDependency(cons || options.name);
+                    }
+                }
+                this.on("instantiated", initializer);
+            }
+        }
+
         if(options.initOnDepsInited && options.initOnDepsInited.length > 0) {
             const deps = options.initOnDepsInited;
             for(const dep of deps) {
@@ -359,12 +389,16 @@ export class DependencyInjector extends EventEmitter {
         this.idx2object[injectPoint] = factory(...args);
         if(!!this.idx2initcallback[injectPoint]) {
             const cb = this.idx2initcallback[injectPoint];
-            this.promises.push(async () => await cb(this.idx2object[injectPoint]));
+            const cbb = async () => await cb(this.idx2object[injectPoint]);
+            cbb[this.sym_initcallback_ref] = injectPoint;
+            this.promises.push(cbb);
             this.runInitCalls().catch(err => { throw err; });
+        } else {
+            this.idx2isinited[injectPoint] = true;
         }
         const cons    = this.idx2constructor[injectPoint];
         const options = this.idx2options[injectPoint];
-        this.emit("initialized", cons, options);
+        this.emit("instantiated", cons, options);
     } //}
 
     private async runInitCalls() //{
@@ -375,6 +409,13 @@ export class DependencyInjector extends EventEmitter {
         while(this.promises.length > 0) {
             const cb = this.promises.shift();
             await cb();
+            const idx = cb[this.sym_initcallback_ref];
+            assert(idx != null);
+
+            this.idx2isinited[idx] = true;
+            const cons = this.idx2constructor[idx];
+            const opts = this.idx2options[idx];
+            this.emit("initialized", cons, opts);
         }
 
         this.initrunning = false;
