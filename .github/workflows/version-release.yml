@@ -8,7 +8,7 @@ on:
       - v[0-9]+.[0-9]
 
 jobs:
-  build_static_files:
+  BuildDockerImage:
     if: "contains(github.event.head_commit.message, '*CI*') || startsWith(github.ref, 'refs/tags')"
     runs-on: ubuntu-20.04
     outputs:
@@ -16,6 +16,8 @@ jobs:
       release: ${{ steps.release.outputs.release }}
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: recursive
 
       - name: get application version
         id: version

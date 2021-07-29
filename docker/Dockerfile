@@ -1,8 +1,11 @@
 FROM node:12 as builder
 
 WORKDIR /opt/webdisk
+COPY . .
 RUN npm -g install @angular/cli@10.2.0
-RUN npm install && npx gulp release
+RUN npm install
+RUN cd dashboard && npm install
+RUN npm run build
 
 
 FROM node:12
@@ -13,5 +16,5 @@ RUN npm install --only=production
 COPY ./etc/webdisk /etc/webdisk/
 
 EXPOSE 5445
-CMD ["node", "/usr/webdisk/bin/main.js", "-c", "/etc/webdisk/config.yaml"]
+CMD ["node", "/opt/webdisk/bin/main.js", "-c", "/etc/webdisk/config.yaml"]
 

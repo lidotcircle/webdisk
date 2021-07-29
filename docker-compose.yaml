@@ -2,18 +2,17 @@ version: '3.0'
 
 volumes:
   wdisk:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: './webdiskdata'
 
 services:
   backend.webdisk.com:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile      
+    image: whatyoudo/webdisk:1.0.0
     volumes:
-      - wdisk:/usr/webdisk/disk
-      #- ./etc/webdisk:/etc/webdisk
-      #- ./release/webdisk/lib:/usr/webdisk/lib
-      #- ./release/webdisk/bin:/usr/webdisk/bin
-      #- ./release/webdisk/dashboard:/usr/webdisk/dashboard
+      - wdisk:/disk
 
   nginx.webdisk.com:
     image: nginx:latest

@@ -1,9 +1,10 @@
 {
   "name": "webdisk",
-  "version": "1.0",
+  "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "node ./node_modules/gulp/bin/gulp.js release",
     "test": "node ./release/webdisk/bin/main.js -c ./etc/webdisk.yaml",
     "jestlib": "npx jest --detectOpenHandles --forceExit --rootDir lib"
   },

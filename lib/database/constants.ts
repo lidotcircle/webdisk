@@ -20,7 +20,7 @@ export const RootUserInfo: DBRelations.User = new DBRelations.User();
 RootUserInfo.uid            = 1;
 RootUserInfo.username       = 'administrator';
 RootUserInfo.password       = 'e10adc3949ba59abbe56e057f20f883e'; // MD5 of 123456
-RootUserInfo.rootPath       = proc.env["HOME"];
+RootUserInfo.rootPath       = '/';
 RootUserInfo.invitationCode = 'ROOT_DOESNT_NEED_INVITATION_CODE';
 RootUserInfo.createTime     = Date.now();
 
