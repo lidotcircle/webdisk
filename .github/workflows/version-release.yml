@@ -1,0 +1,45 @@
+
+name: Webdisk Release
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - v[0-9]+.[0-9]
+
+jobs:
+  build_static_files:
+    if: "contains(github.event.head_commit.message, '*CI*') || startsWith(github.ref, 'refs/tags')"
+    runs-on: ubuntu-20.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      release: ${{ steps.release.outputs.release }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: get application version
+        id: version
+        run: printf "::set-output name=version::%s\n" "$(cat package.json | grep -se 'version' | grep -soe '[[:digit:]\.]*')"
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          context: ./
+          file: ./docker/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/webdisk:${{ steps.version.outputs.version }}
+
+      - name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
+
