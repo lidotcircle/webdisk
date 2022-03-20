@@ -5,17 +5,18 @@ import * as child_process from 'child_process';
 import * as process       from 'process';
 import * as timer         from 'timers';
 import * as proc          from 'process';
-import { constants }      from '../lib/constants';
 import { info } from '../lib/logger';
 import { Config, ConfigPathProviderName } from '../lib/config';
 import { AsyncQueryDependency, ProvideDependency, ResolveInitPromises } from '../lib/di';
 
 const getopt = require('node-getopt');
 
+
 let __opt = getopt.create([
-    ["c", "config=<config file>",  "config file", constants.CONFIG_PATH],
-    ["d", "daemon",                "daemonize"],
-    ["h", "help",                  "show this help"]
+    ["c", "config=<config file>", "config file"],
+    ["r", "webroot=<web root>",   "html root"],
+    ["d", "daemon",               "daemonize"],
+    ["h", "help",                 "show this help"]
 ]);
 
 let opt = __opt.bindHelp().parseSystem();
@@ -28,13 +29,14 @@ if (options["h"] == true) {
 
 let config_file: string  = options["c"];
 let daemonized:  boolean = options["d"];
+let webroot: string      = options["r"];
 
 async function main() //{
 {
     ProvideDependency(null, {name: ConfigPathProviderName, object: config_file});
     const config = await AsyncQueryDependency(Config);
 
-    let server = new http_server.HttpServer();
+    let server = new http_server.HttpServer(webroot);
     server.on("error", (err) => {
         throw err;
     });

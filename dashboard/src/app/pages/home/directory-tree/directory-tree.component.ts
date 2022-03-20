@@ -2,7 +2,7 @@ import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
 import { CurrentDirectoryService } from 'src/app/shared/service/current-directory.service';
 import { FileSystemManagerService } from 'src/app/shared/service/file-system-manager.service';
 import { path } from 'src/app/shared/utils';
-import { FileType } from '../../../../../../lib/common/file_types';
+import { FileType } from 'src/app/shared/common';
 import { LeftPanelService } from '../left-panel.service';
 
 @Component({

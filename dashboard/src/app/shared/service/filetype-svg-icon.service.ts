@@ -4,8 +4,8 @@ import { RPCRequestMessage, MiscMessageType, RPCResponseMessage } from '../commo
 import { UserDBService } from './user-db.service';
 
 declare const require: any;
-const foldericon = require('!raw-loader!../../../../../resources/SVG/filetype/dist/icons/square-o/folder.svg').default;
-const blankicon  = require('!raw-loader!../../../../../resources/SVG/filetype/dist/icons/square-o/blank.svg').default;
+const foldericon = require('!raw-loader!../../../../../backend/resources/SVG/filetype/dist/icons/square-o/folder.svg').default;
+const blankicon  = require('!raw-loader!../../../../../backend/resources/SVG/filetype/dist/icons/square-o/blank.svg').default;
 
 function keypair(icon: string, style: string): string {
     return icon + '/' + style;

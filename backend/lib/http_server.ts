@@ -140,12 +140,14 @@ export class HttpServer extends SimpleHttpServer
     private DB: Database;
     @DIProperty(FileSystem)
     private filesystem: FileSystem;
+    private webroot: string;
 
     private clipcontent: string | Buffer = null;
-    constructor () //{
+    constructor (webroot: string) //{
     {
         super();
 
+        this.webroot = webroot;
         this.on("upgrade", this.onupgrade);
     } //}
 
@@ -199,8 +201,9 @@ export class HttpServer extends SimpleHttpServer
     private async defaultURL(request: http.IncomingMessage, url: URL, response: http.ServerResponse) //{
     {
         if(url.pathname == '/') url.pathname = '/index.html';
-        const filename  = path.resolve(constants.WebResourceRoot, url.pathname.substring(1));
-        const indexfile = path.resolve(constants.WebResourceRoot, 'index.html');
+        console.log("root: ", this.webroot);
+        const filename  = path.resolve(this.webroot, url.pathname.substring(1));
+        const indexfile = path.resolve(this.webroot, 'index.html');
         const head: boolean = request.method.toLowerCase() == "head";
         const range: [number, number] = util.parseRangeField(request.headers.range);
 

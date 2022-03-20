@@ -1,5 +1,4 @@
-
-export * from '../../../../lib/common/utils';
+export * from './common';
 export * from './FileSystemEntry';
 export * from './life';
 

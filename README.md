@@ -9,16 +9,13 @@
 
 ### Build
 
-Install Angular
-```bash
-$ npm -g install @angular/cli@10.2.0
-```
-
 Install NPM Dependencies
 ```bash
 $ npm install && \
         pushd dashboard && \
         npm install && \
+        pushd ../backend &&
+        npm install &&
         popd
 ```
 

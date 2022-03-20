@@ -1,9 +1,8 @@
 import * as path from 'path';
 
 export module constants {
-    export const rootdir = path.dirname(path.dirname(__filename));
+    export const rootdir = path.dirname(path.dirname(path.dirname(__filename)));
     export const WebResourceRoot = path.join(rootdir, "dashboard");
-    export const CONFIG_PATH = path.join(rootdir, 'etc', 'webdisk.json');
 
     export const FILE_TYPE_MAP = new Map<string, string>([
         [".aac",    "audio/aac"],
