@@ -12,7 +12,17 @@ class ConfigMap {
     listen_addr: string      = '127.0.0.1';
     listen_port: number      = 5445;
     static_resources: string = 'resources';
+    password_salt: string    = 'salt';
     sqlite3_database: string = '~/.webdisk/wd.db';
+    sqlite3_database2: string = '~/.webdisk/wd2.db';
+
+    jwt: {
+        secret: string,
+        expiresIn_s: number,
+    } = {
+        secret: 'secret',
+        expiresIn_s: 60 * 10,
+    };
 
     allow_http_redirect?: boolean = true;
 
@@ -47,18 +57,17 @@ export class Config extends ConfigMap {
         this.__init = true;
 
         const data = await fs.promises.readFile(this.config_path);
-        let d;
+        let d: ConfigMap;
         const extension = path.extname(this.config_path);
         switch(extension) {
-            case '.json': 
-                d = JSON.parse(data.toString());
-                break;
             case '.yaml':
             case '.yml':
-                d = yaml.load(data.toString());
+                d = yaml.load(data.toString()) as ConfigMap;
                 break;
         }
         CopySourcePropertiesAsGetter(d, this);
     } //}
+    
+    initialized(): boolean {return this.__init;}
 };
 

@@ -2,11 +2,11 @@ const gulp   = require('gulp');
 const ts     = require('gulp-typescript');
 const merge  = require('merge2');
 
-const path        = require('path');
-const proc        = require('process');
-const child_proc  = require('child_process');
+const path       = require('path');
+const proc       = require('process');
+const child_proc = require('child_process');
+const fs         = require('fs');
 
-const annautils = require('annautils');
 const killport  = require('kill-port');
 
 
@@ -77,20 +77,21 @@ function compile_ts_dir(glob, destination, declaration = false, decl_dest = null
 } //}
 
 const ts_compile_stuff= [
-    [ "lib/**/*.ts", "lib" ],
-    [ "bin/*.ts",    "bin" ],
-    [ "index.ts",    "." ],
+    [ "bin/*.ts",           "bin" ],
+    [ "lib/**/*.ts",        "lib" ],
+    [ "entity/**/*.ts",     "entity" ],
+    [ "repository/**/*.ts", "repository" ],
+    [ "routes/**/*.ts",     "routes" ],
+    [ "service/**/*.ts",    "service" ],
+    [ "index.ts",           "." ],
 ]
 function ts_compile_task() {
     return Promise.all(ts_compile_stuff.map(
         srctrg => compile_ts_dir(srctrg[0], path.join("release/", srctrg[1]))()));
 }
 function chmod_bin_js() {
-    return annautils.fs.promisify.chmodRecursive("release/bin", "777", 1, /.*/).then((num) => {
-        console.log(`change ${num} files to permission '777'`);
-    }, (err) => {
-        console.log(err);
-    });
+    fs.chmodSync(path.join("release/bin/main.js"), 0o755);
+    return Promise.resolve();
 }
 
 gulp.task("release", gulp.series(copy_stuff_task, ts_compile_task, chmod_bin_js));
@@ -104,7 +105,7 @@ function stream2promise(stream) {
 }
 function try_watch(restart) //{
 {
-    let watcher = gulp.watch(["lib/**/*.ts", "./*.ts", "bin/*.ts", "resources/**"]);
+    let watcher = gulp.watch(["**/*.ts", "resources/**"]);
     let handle = async (fp, _) => {
         console.log(`----- file [${fp}]`);
         if (fp.endsWith(".ts")) {

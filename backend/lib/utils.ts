@@ -189,7 +189,7 @@ export async function extractReadableStream(stream: stream.Readable, max: number
         }
         const closeListener = () => {
             removeAllListener();
-            resolve();
+            resolve(null);
         }
 
         const dataListener = (chunk: Buffer) => {

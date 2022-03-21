@@ -4,9 +4,9 @@
   "description": "simple network disk service",
   "main": "gulpfile.js",
   "scripts": {
-    "build": "node ./node_modules/gulp/bin/gulp.js release",
-    "serve": "node ./node_modules/gulp/bin/gulp.js serve",
-    "test":  "node ./node_modules/gulp/bin/gulp.js test"
+    "build": "npx gulp release",
+    "serve": "npx gulp serve",
+    "test": "npx gulp test"
   },
   "repository": {
     "type": "git",

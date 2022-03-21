@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { initializeDataSource, App } from '../index';
 import * as http_server   from '../lib/http_server';
 import * as child_process from 'child_process';
 import * as process       from 'process';
@@ -8,22 +9,27 @@ import * as proc          from 'process';
 import { info } from '../lib/logger';
 import { Config, ConfigPathProviderName } from '../lib/config';
 import { AsyncQueryDependency, ProvideDependency, ResolveInitPromises } from '../lib/di';
+import getopts from 'getopts';
 
-const getopt = require('node-getopt');
 
-
-let __opt = getopt.create([
-    ["c", "config=<config file>", "config file"],
-    ["r", "webroot=<web root>",   "html root"],
-    ["d", "daemon",               "daemonize"],
-    ["h", "help",                 "show this help"]
-]);
-
-let opt = __opt.bindHelp().parseSystem();
-let options = opt.options;
+const options = getopts(process.argv.slice(2), {
+    alias: {
+        d: "daemon",
+        w: "webroot",
+        c: "config",
+        h: "help"
+    },
+    boolean: ["help"]
+});
 
 if (options["h"] == true) {
-    __opt.showHelp();
+    console.log(`
+    Usage:
+        -d, --daemon
+        -w, --webroot <webroot>
+        -c, --config <config>
+        -h, --help
+    `);
     proc.exit(0);
 }
 
@@ -35,6 +41,7 @@ async function main() //{
 {
     ProvideDependency(null, {name: ConfigPathProviderName, object: config_file});
     const config = await AsyncQueryDependency(Config);
+    await initializeDataSource();
 
     let server = new http_server.HttpServer(webroot);
     server.on("error", (err) => {
@@ -45,6 +52,9 @@ async function main() //{
     });
     await ResolveInitPromises();
     server.listen(config.listen_port, config.listen_addr);
+    App.listen(4300, () => {
+        info("express listening on port 4300");
+    });
 } //}
 
 if (daemonized) {

@@ -27,14 +27,17 @@ test('injectable', () => {
     const b = QueryDependency(B);
     expect(b.aa.value).toBe(100);
 
+    const c = new C();
+    expect(c.a1.value).toBe(100);
+    expect(c.a2.value).toBe(100);
+
     MockDependency(A, null, {object: {value: 200}});
     expect(QueryDependency(A).value).toBe(200);
 
-    const c = new C();
     expect(c.a1.value).toBe(100);
     expect(c.a2.value).toBe(200);
 
-    expect(c.aa.value).toBe(100);
+    expect(c.aa.value).toBe(200);
     expect(() => c.aa = null).toThrowError();
 
     const nobb = QueryDependency('nobb') as B;
@@ -91,7 +94,7 @@ test('method decrator', () => {
 
     class A {
         @InjectableFactory(null, {name: 'uv'})
-        factory(a: AA) {
+        factory() {
             return new AA();
         }
     }

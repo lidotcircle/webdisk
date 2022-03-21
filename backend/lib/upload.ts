@@ -1,7 +1,6 @@
 import * as fs from 'fs';
 import * as proc from 'process';
 import * as timer from 'timers';
-import * as annautils from 'annautils';
 
 import { debug } from './logger';
 
@@ -90,6 +89,7 @@ export class UploadEntry //{
         });
         if(this.fdState == FdState.InClose) return cb(new Error("fd is closing"));
         this.fdState = FdState.InOpen;
+        /* TODO
         annautils.fs.touch(this.FilePath, (err) => {
             if(err) {
                     this.error = err;
@@ -107,6 +107,7 @@ export class UploadEntry //{
                 cb(null);
             });
         });
+        */
     } //}
     
     private reset_timeout() //{

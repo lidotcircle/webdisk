@@ -24,8 +24,13 @@
         "sourceMap": true
     },
     "include": [
+        "bin/**/*",
         "lib/**/*",
-        "test/**/*"
+        "entity/**/*",
+        "repository/**/*",
+        "routes/**/*",
+        "service/**/*",
+        "index.ts"
     ],
     "exclude": [
         "node_modules"

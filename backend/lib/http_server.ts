@@ -201,7 +201,6 @@ export class HttpServer extends SimpleHttpServer
     private async defaultURL(request: http.IncomingMessage, url: URL, response: http.ServerResponse) //{
     {
         if(url.pathname == '/') url.pathname = '/index.html';
-        console.log("root: ", this.webroot);
         const filename  = path.resolve(this.webroot, url.pathname.substring(1));
         const indexfile = path.resolve(this.webroot, 'index.html');
         const head: boolean = request.method.toLowerCase() == "head";

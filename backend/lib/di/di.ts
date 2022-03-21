@@ -420,13 +420,13 @@ export class DependencyInjector extends EventEmitter {
 
         this.initrunning = false;
         if(!!this.waiting_resolve) {
-            this.waiting_resolve();
+            this.waiting_resolve(null);
             this.waiting_resolve = null;
         }
     } //}
 
     private initrunning: boolean = false;
-    private waiting_resolve: () => void;
+    private waiting_resolve: (what: unknown) => void;
     async ResolveInitPromises() //{
     {
         if(this.initrunning) {
