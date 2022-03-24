@@ -1,5 +1,5 @@
 import express from 'express';
-import { body, validationResult } from 'express-validator';
+import { query, body, validationResult } from 'express-validator';
 import { UserService } from '../../service';
 import { QueryDependency } from '../../lib/di';
 
@@ -23,5 +23,15 @@ router.post('/',
         res.status(200).json({
             token: refreshtoken
         });
+    }
+);
+
+router.delete('/',
+    query('token').isString().withMessage(""),
+    async (req, res) => {
+        const { token } = req.query;
+        const userService = QueryDependency(UserService);
+        await userService.logout(token);
+        res.status(200).send();
     }
 );

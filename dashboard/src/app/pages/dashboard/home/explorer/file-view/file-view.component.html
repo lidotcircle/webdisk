@@ -1,0 +1,34 @@
+
+<div class="file-view" (contextmenu)="onFileViewContextMenu()" #fileview>
+    <div class="sticky-top">
+        <app-tools></app-tools>
+        <app-detail-view-header class="detail-view-header"
+                                [view-style]='viewStyle' [view-config]='detailFileView'>
+        </app-detail-view-header>
+    </div>
+
+    <div class="files">
+        <app-file *ngFor="let file of fileslice; let i = index;" [file]="file"
+         (select)="onSelect(i)" [class]='select[i] ? "select" : ""'
+         (doubleClick)="onDoubleClick(i)"
+         (menu)="onMenu(i)"
+         [view-style]='viewStyle'
+         [name-order]='detailFileView.nameOrder' [name-width]='detailFileView.nameWidth'
+         [date-order]='detailFileView.dateOrder' [date-width]='detailFileView.dateWidth'
+         [type-order]='detailFileView.typeOrder' [type-width]='detailFileView.typeWidth'
+         [size-order]='detailFileView.sizeOrder' [size-width]='detailFileView.sizeWidth'
+         [mode-order]='detailFileView.modeOrder' [mode-width]='detailFileView.modeWidth'
+         >
+        </app-file>
+    </div>
+
+    <mat-paginator
+        *ngIf="fileEntryLength > pageSize"
+        (page)="handlePageEvent($event)"
+        [length]="fileEntryLength"
+        [pageSize]="pageSize"
+        [pageIndex]="pageIdx"
+        [pageSizeOptions]="[50, 100, 200]"
+        aria-label="Select page">
+    </mat-paginator>
+</div>

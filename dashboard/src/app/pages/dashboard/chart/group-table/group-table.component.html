@@ -1,0 +1,14 @@
+<nb-card accent='info'>
+    <nb-card-header>Data Record Groups</nb-card-header>
+    <nb-card-body [class]='source.count() == 0 ? "record-length-equal-zero" : ""'>
+        <ng2-smart-table [settings]="settings" [source]="source"
+            (deleteConfirm)="onDeleteConfirm($event)" 
+            #datatable>
+        </ng2-smart-table>
+
+        <div class="empty-state">
+            <nb-icon icon='archive-outline'></nb-icon>
+            <div class="warning">NODATA</div>
+        </div>
+    </nb-card-body>
+</nb-card>

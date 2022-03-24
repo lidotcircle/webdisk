@@ -1,17 +1,12 @@
 import { MessageHandler } from '../message_handler';
 import { MessageGateway } from '../message_gateway';
-import { BasicMessage, MessageSource, MessageType } from '../common/message/message';
-import { debug, info, warn, error } from '../logger';
+import { MessageSource } from '../common/message/message';
+import { debug, info, warn, error } from '../../service';
 import { DownloadManage, DownloadManageDeleteTaskMessage, DownloadManageEventFailMessage, DownloadManageEventFinishMessage, DownloadManageEventMessage, DownloadManageEventUpdateMessage, DownloadManageGetTasksMessage, DownloadManageGetTasksResponseMessage, DownloadManageInspectTaskMessage, DownloadManageMessage, DownloadManageNewTaskMessage, DownloadManageNewTaskResponseMessage, MiscMessage, MiscMessageType, RPCRequestMessage, RPCResponseMessage, StorePasswordMessage, StorePasswordType, StorePasswordTypeChangePassMessage, StorePasswordTypeDeletePassMessage, StorePasswordTypeGetPassMessage, StorePasswordTypeGetPassResponseMessage, StorePasswordTypeNewPassMessage, StorePasswordTypeNewPassResponseMessage } from '../common/message/misc_message';
 import isPromise from 'is-promise';
-import * as download from '../download/download';
-import assert from 'assert';
 import { startTask } from '../download/download';
 import { KEY_DOWNLOAD } from '../database/constants';
 import { ErrorMSG } from '../common/string';
-import { DIProperty } from '../di';
-import { WDDatabase } from '../database/database';
-import { IDBDownload, IDBStorePass } from '../database';
 
 
 const inspectedTask = Symbol('inspected task');
@@ -32,9 +27,6 @@ export function registerRPC(funcname: string, func: Function): boolean {
 class MiscManagement extends MessageHandler {
     private static GMSG = new MiscMessage();
     private id: number = 0;
-
-    @DIProperty(WDDatabase)
-    private DB: WDDatabase & IDBDownload & IDBStorePass;
 
     async handleRequest(dispatcher: MessageGateway, msg: MiscMessage) //{
     {
@@ -79,6 +71,7 @@ class MiscManagement extends MessageHandler {
                     }
                 } break;
 
+                    /*
                 case MiscMessageType.DownloadManage: {
                     assert.notEqual((msg as DownloadManageMessage).dlm_type, null);
                     resp = Object.assign(new DownloadManageMessage(), resp);
@@ -89,6 +82,7 @@ class MiscManagement extends MessageHandler {
                     resp = Object.assign(new StorePasswordMessage(), resp);
                     await this.passManage(dispatcher, msg as StorePasswordMessage, resp as StorePasswordMessage);
                 } break;
+                */
 
                 default: {
                     warn('unkonw misc message type, ignore it');
@@ -105,6 +99,7 @@ class MiscManagement extends MessageHandler {
 
     private async downloadManage(dispatcher: MessageGateway, msg: DownloadManageMessage, resp: DownloadManageMessage) //{
     {
+        /*
         debug('Misc DownloadManage Message', msg.dlm_type);
         resp.dlm_type = msg.dlm_type;
 
@@ -134,6 +129,7 @@ class MiscManagement extends MessageHandler {
 
             default: throw new Error('unknown download message');
         }
+        */
     } //}
 
     private async inspectDownloadTask(dispatcher: MessageGateway, taskid: number) //{
@@ -166,14 +162,11 @@ class MiscManagement extends MessageHandler {
                 }
             }
         }
-        this.DB.on('update', update_listener);
-        dispatcher.once('close', () => {
-            this.DB.removeListener('update', update_listener);
-        });
     } //}
 
     private async passManage(dispatcher: MessageGateway, msg: StorePasswordMessage, resp: StorePasswordMessage) //{
     {
+        /*
         debug('Recieve StorePass Message: ', msg.sp_type);
         resp.sp_type = msg.sp_type;
 
@@ -200,6 +193,7 @@ class MiscManagement extends MessageHandler {
                 await this.DB.changePass(gmsg.misc_msg.token, gmsg.misc_msg.passid, gmsg.misc_msg.pass);
             } break;
         }
+        */
     } //}
 }
  

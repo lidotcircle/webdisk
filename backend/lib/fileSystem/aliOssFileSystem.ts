@@ -1,15 +1,11 @@
 import { FileStat, FileType } from '../common/file_types';
-import { pipeline, Readable, Writable } from 'stream';
+import { Readable } from 'stream';
 import { FileSystem, FileSystemType, IFileSystemConfig } from './fileSystem';
-import { prototype as ossprototype, ListBucketsQueryType, Bucket, HTTPMethods, ObjectMeta} from 'ali-oss';
-import { default as fetch } from 'node-fetch';
-import { pipelineWithTimeout } from '../utils';
+import { prototype as ossprototype, HTTPMethods, ObjectMeta} from 'ali-oss';
+import { constants } from '../constants';
 import assert from 'assert';
 import path from 'path';
-import { TemporaryRedirect } from '../errors';
-import { constants } from '../constants';
-
-const alioss = require('ali-oss');
+import alioss from 'ali-oss';
 type OSS = typeof ossprototype;
 class AliOSSFileSystemNotImplemented extends Error {}
 

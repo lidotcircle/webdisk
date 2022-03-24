@@ -49,7 +49,7 @@ export class NotifierComponent extends AbsoluteView implements OnInit, AfterView
             setTimeout(() => {
                 this.resolved = true;
                 if(!!this.resolve) {
-                    this.resolve();
+                    this.resolve(null);
                     this.resolve = null;
                 }
             }, 300);
@@ -68,7 +68,7 @@ export class NotifierComponent extends AbsoluteView implements OnInit, AfterView
 
     waitDecay: boolean = false;
     resolved: boolean = false;
-    private resolve: () => void;
+    private resolve: (value: any) => void;
     async waitTimeout() {
         if(this.resolved) return;
         console.assert(this.resolve == null);

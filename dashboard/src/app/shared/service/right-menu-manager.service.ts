@@ -110,13 +110,14 @@ export class RightMenuManagerService {
         this.menuView = this.injector.inject(ContextMenuComponent, {
                 positionX: x, 
                 positionY: y, 
-                rootMenuEntry: this.createRootMenuEntry()
+                entry: this.createRootMenuEntry()
             });
         this.clickMenu.clear();
     }
 
     public registerMenuEntry(menutype: MenuEntryType, entries: MenuEntry[]) {
         console.assert(!this.clickMenu.has(menutype));
+        entries.forEach(entry => console.assert(entry != null));
         this.clickMenu.set(menutype, entries.slice(0));
     }
 }

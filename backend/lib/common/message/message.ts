@@ -25,6 +25,7 @@ export enum MessageSource {
 }
 
 export class BasicMessage {
+    public accessToken: string;
     public messageSource: MessageSource = MessageSource.Request;
     public messageType: MessageType = MessageType.Uninit;
     public messageId:   MessageId   = -1;

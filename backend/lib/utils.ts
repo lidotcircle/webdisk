@@ -2,18 +2,14 @@
 export * from './common/utils';
 export * from './utils/stream';
 
-import * as fs   from 'fs';
 import * as path from 'path';
 import * as util from 'util';
-import * as http from 'http';
 import { createHash } from 'crypto';
 import * as stream from 'stream';
 
 import * as proc from 'process';
-
-import { Writable } from 'stream';
-
 import { getStatusText } from 'http-status-codes';
+
 
 function getCaller () //{
 {

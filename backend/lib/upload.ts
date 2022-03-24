@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as proc from 'process';
 import * as timer from 'timers';
 
-import { debug } from './logger';
+import { debug } from './../service';
 
 
 /**

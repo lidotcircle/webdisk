@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BasicMessage, MessageJSON, MessageBIN, MessageType, CONS, MessageSource, DownloadManageEventMessage, FileEventMessage, MiscMessageType } from '../common';
+import { BasicMessage, MessageType, CONS, MessageSource, DownloadManageEventMessage, FileEventMessage, MiscMessageType } from '../common';
 import { MessageEncoderService } from './message-encoder.service';
 import { nextTick } from '../utils';
 import { Observable, Subject } from 'rxjs';
@@ -77,7 +77,7 @@ export class WSChannelService {
         }
     } //}
 
-    private send_ws(msg: BasicMessage, json: boolean, timeout): Promise<BasicMessage> //{
+    private send_ws(msg: BasicMessage, json: boolean, timeout: number): Promise<BasicMessage> //{
     {
         let id = msg.messageId;
         return new Promise((resolve, reject) => {
@@ -93,7 +93,7 @@ export class WSChannelService {
         });
     } //}
 
-    public send(msg: BasicMessage, json: boolean = true, maxTimeout?: number): Promise<BasicMessage> //{
+    public async send(msg: BasicMessage, json: boolean = true, maxTimeout?: number): Promise<BasicMessage> //{
     {
         return new Promise((resolve, reject) => this.__send(msg, json, (msg) => {
             if(!!msg.error) {
@@ -121,7 +121,11 @@ export class WSChannelService {
             this._disconnect.next();
             this.reconnect();
         }
-        this.connection.onerror   = (err) => console.warn(err);
+        this.connection.onerror   = (err) => {
+            console.warn(err);
+            this._disconnect.next();
+            this.reconnect();
+        }
         this.connection.onopen    = ()    => {
             this.retry_base = CONS.WS_RETRY_BASE;
             this.__call_all_msg();
@@ -150,7 +154,9 @@ export class WSChannelService {
                           timeout);
     } //}
 
-    private ready(): boolean {return this.connection && (this.connection.readyState == WebSocket.OPEN);}
+    private ready(): boolean {
+        return this.connection != null && this. connection.readyState == 1;
+    }
 
     private onmessage(msge: MessageEvent): void //{
     {

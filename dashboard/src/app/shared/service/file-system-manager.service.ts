@@ -3,6 +3,7 @@ import { FileStat, FileRequestMessage, FileRequest, FileResponseMessage, Message
 import { WSChannelService } from './wschannel.service';
 import { AccountManagerService } from './account-manager.service';
 import { assignTargetEnumProp, isArrayBuffer, hasArrayBuffer } from '../utils';
+import { AuthService } from 'src/app/service/auth';
 
 export enum FileSystemEvent {
     CHDIR  = 'CHDIR',
@@ -16,15 +17,15 @@ const LongLongTimeout = 60 * 1000;
 })
 export class FileSystemManagerService {
     constructor(private wschannel: WSChannelService,
-                private accountManager: AccountManagerService) {
+                private userService: AuthService) {
         window['man'] = this;
     }
 
     private authWithToken(req: FileRequestMessage){
-        if(this.accountManager.LoginToken == null) {
+        if(this.userService.jwtToken == null)
             throw new Error('authorization fail');
-        }
-        req.fm_msg.user_token = this.accountManager.LoginToken;
+
+        req.accessToken = this.userService.jwtToken;
     }
 
     private absolutePath(dst: string) {
@@ -33,7 +34,7 @@ export class FileSystemManagerService {
         }
     }
 
-    private async sendTo(req: {type: FileRequest, timeout?: number}, ...argv): Promise<any> {
+    private async sendTo(req: {type: FileRequest, timeout?: number}, ...argv: any[]): Promise<any> {
         const reqmsg = new FileRequestMessage();
         reqmsg.messageSource = MessageSource.Request;
         this.authWithToken(reqmsg);

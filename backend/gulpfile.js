@@ -83,6 +83,7 @@ const ts_compile_stuff= [
     [ "repository/**/*.ts", "repository" ],
     [ "routes/**/*.ts",     "routes" ],
     [ "service/**/*.ts",    "service" ],
+    [ "middleware/**/*.ts", "middleware" ],
     [ "index.ts",           "." ],
 ]
 function ts_compile_task() {
@@ -124,7 +125,6 @@ function try_watch(restart) //{
     }
     watcher.on("change", handle);
     watcher.on("add", handle);
-    watcher.on("unlink", handle);
     watcher.on("error", onerror);
 } //}
 
@@ -136,7 +136,7 @@ async function restart_backend_server() //{
         console.info('start backend server');
         return await new Promise((resolve, _) => {
             const child = child_proc.spawn('node', 
-                ['./release/bin/main.js', '-c', './etc/webdisk.yaml', '-r', '../dashboard/dist/dashboard'], {
+                ['./release/bin/main.js', '-c', './etc/webdisk.yaml', '-r', 'http://localhost:4200'], {
                     stdio: ['ignore', 'inherit', 'inherit'],
                     shell: true
                 });

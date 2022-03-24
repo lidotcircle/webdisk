@@ -8,7 +8,7 @@ import { default as fetch, Response } from 'node-fetch';
 import { URL } from 'url';
 import { default as mktemp } from 'mktemp';
 import { KEY_DOWNLOAD } from '../database/constants';
-import { error, info } from '../logger';
+import { error, info } from '../../service';
 import { makeid, pipelineWithTimeout } from '../utils';
 import { pipeline, Readable, Writable } from 'stream';
 import {default as contentDisposition} from 'content-disposition';

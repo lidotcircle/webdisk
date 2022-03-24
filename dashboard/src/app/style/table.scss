@@ -1,0 +1,76 @@
+@import '~@nebular/theme/styles/global/breakpoints';
+@import '~bootstrap/scss/mixins/breakpoints';
+@import 'src/app/@theme/styles/themes';
+
+
+@mixin Ng2SmartTableClickCell($nth) {
+    ng2-smart-table table {
+        tr[ng2-st-thead-titles-row] th:nth-child(#{$nth}) {
+            visibility: hidden;
+            border: none;
+        }
+
+        tr[ng2-st-thead-filters-row] th:nth-child(#{$nth}) {
+            visibility: hidden;
+            border: none;
+        }
+
+        tr[ng2-st-thead-form-row] td:nth-child(#{$nth}) {
+            visibility: hidden;
+            border: none;
+        }
+
+        thead th {
+            text-align: center;
+        }
+
+        tbody tr {
+            height: 3.5em;
+        }
+
+        th:last-child {
+            width: 8em;
+            text-align: center;
+        }
+
+        tbody tr td:nth-child(#{$nth}) {
+            background: nb-theme(background-basic-color-1);
+            border: none;
+
+            table-cell-edit-mode {
+                visibility: hidden;
+            }
+        }
+    }
+}
+
+@mixin TableIsEmpty() {
+    .record-length-equal-zero tbody {
+        display: none;
+    }
+
+    .empty-state {
+        width: 100%;
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 10em;
+        color: gray;
+
+        nb-icon {
+            width: 2em;
+            height: 2em;
+        }
+
+        .warning {
+            padding: 0.8em 0em;
+            user-select: none;
+        }
+    }
+
+    .record-length-equal-zero .empty-state {
+        display: flex;
+    }
+}
+

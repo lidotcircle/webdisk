@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as fs from "fs";
 import { AsyncQueryDependency } from "../../di";
-import { Config } from "../../config";
+import { Config } from "../../../service";
 
 
 export default async(icon: string, style: string = 'classic'): Promise<string> => {

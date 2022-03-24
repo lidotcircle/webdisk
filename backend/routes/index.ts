@@ -1,26 +1,38 @@
 import express from 'express';
-import { JWTService } from '../service';
+import assert from 'assert';
 import { QueryDependency } from '../lib/di';
+import { createProxyMiddleware } from 'http-proxy-middleware';
+import { createWebSocketMiddleware, defaultJWTAuthMiddleware } from '../middleware';
+import { MessageGateway } from '../lib/message_gateway';
+import { Server } from 'http';
 
 const router = express.Router();
 export default router;
-export const UserSymbol = Symbol('User');
+const jwt_validator = defaultJWTAuthMiddleware;
 
-function jwt_validator(req: express.Request, res: express.Response, next: ()=>void)
-{
-    const token = req.headers['x-access-token'] as string;
-    if (!token) {
-        return res.status(401).send({ auth: false, message: 'No token provided.' });
-    }
-    const jwts = QueryDependency(JWTService);
-    if (!jwts.verify(token)) {
-        return res.status(401).send({ auth: false, message: 'Failed to authenticate token.' });
-    }
-    const dtoken = jwts.decode(token);
-    req[UserSymbol] = dtoken.username;
-    next();
+// Because it's impossible to get httpserver before app.listen,
+// we have to use below queue to register listen callback for.
+// subscribing upgrade event of httpserver.
+const callback_list = QueryDependency("listen-callback") as any[];
+
+router.use('/apis/auth',  require('./auth').default);
+router.use('/apis/user',  jwt_validator, require('./user').default);
+router.use('/apis/sdata', require('./sdata').default);
+router.use('/disk',       jwt_validator, require('./disk').default);
+router.use('/link', require('./namedlink').default);
+const ws_router = createWebSocketMiddleware(/\/ws/, conn => new MessageGateway(conn));
+callback_list.push((server: Server) => server.on("upgrade", ws_router["upgrade"]));
+router.use('/ws',   ws_router);
+
+const webroot = QueryDependency("webroot") as string;
+assert(webroot, "require webroot to serve static files");
+if (webroot.startsWith("http")) {
+    const proxy = createProxyMiddleware(
+        url => !url.startsWith("/ws"), 
+        { target: webroot, changeOrigin: true, ws: true });
+    callback_list.push((server: Server) => server.on("upgrade", proxy["upgrade"]));
+    router.use("/", proxy);
+} else {
+    router.use("/",  express.static(webroot))
+    router.use("/*", express.static(webroot))
 }
-
-
-router.use('/auth', require('./auth').default);
-router.use('/user', jwt_validator, require('./user').default);

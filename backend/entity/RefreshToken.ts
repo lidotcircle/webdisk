@@ -10,7 +10,7 @@ export class RefreshToken {
     @Column({unique: true})
     token: string
 
-    @ManyToOne(() => User)
+    @ManyToOne(() => User, {eager: true})
     user: User
 
     @Column()

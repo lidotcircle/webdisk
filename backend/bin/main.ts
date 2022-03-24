@@ -1,13 +1,11 @@
 #!/usr/bin/env node
 
-import { initializeDataSource, App } from '../index';
-import * as http_server   from '../lib/http_server';
 import * as child_process from 'child_process';
 import * as process       from 'process';
 import * as timer         from 'timers';
 import * as proc          from 'process';
-import { info } from '../lib/logger';
-import { Config, ConfigPathProviderName } from '../lib/config';
+import { Config } from '../service/config-service';
+import { info } from '../service/logger-service';
 import { AsyncQueryDependency, ProvideDependency, ResolveInitPromises } from '../lib/di';
 import getopts from 'getopts';
 
@@ -39,21 +37,18 @@ let webroot: string      = options["r"];
 
 async function main() //{
 {
-    ProvideDependency(null, {name: ConfigPathProviderName, object: config_file});
+    ProvideDependency(null, {name: "config-path", object: config_file});
+    ProvideDependency(null, {name: "webroot", object: webroot});
     const config = await AsyncQueryDependency(Config);
-    await initializeDataSource();
-
-    let server = new http_server.HttpServer(webroot);
-    server.on("error", (err) => {
-        throw err;
-    });
-    server.on("listening", () => {
-        info(`listening at ${config.listen_addr}:${config.listen_port}`)
-    });
     await ResolveInitPromises();
-    server.listen(config.listen_port, config.listen_addr);
-    App.listen(4300, () => {
-        info("express listening on port 4300");
+    if (!config) {
+        console.log("Failed to load config");
+        proc.exit(1);
+    }
+    await require('../index').ExpressAppListen(
+        config.listen_port, 
+        config.listen_addr, 100, () => {
+        info(`listening on ${config.listen_addr}:${config.listen_port}`);
     });
 } //}
 

@@ -1,5 +1,5 @@
 import { Injectable, QueryDependency } from '../lib/di';
-import { Config } from '../lib/config';
+import { Config } from './config-service';
 import { pbkdf2Sync } from 'crypto';
 import assert from 'assert';
 

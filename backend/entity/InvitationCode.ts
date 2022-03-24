@@ -10,6 +10,9 @@ export class InvitationCode {
     @Column({unique: true})
     code: string
 
-    @ManyToOne(() => User, user => user.invitationCodes)
+    @Column()
+    relativepath: string
+
+    @ManyToOne(() => User, user => user.invitationCodes, {eager: true})
     user: User
 }

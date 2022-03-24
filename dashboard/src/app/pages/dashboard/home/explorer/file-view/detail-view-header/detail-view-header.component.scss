@@ -1,0 +1,71 @@
+@import 'src/app/style/colors.scss';
+
+
+.detail-view-style {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    background: #eee;
+
+    .take-space {
+        width: 2em;
+        height: 1pt;
+        visibility: hidden;
+        padding: 0.4em;
+        flex-shrink: 0;
+    }
+
+    .detail-view-prop {
+        color: #777;
+        display: flex;
+        flex-direction: row;
+        flex-shrink: 1;
+        flex-grow: 1;
+        position: relative;
+        overflow-y: hidden;
+
+        .field {
+            flex-grow: 1;
+            padding: 0.5em;
+            font-size: xx-small;
+            color: black;
+            background: rgb(200,200,200);
+        }
+
+        .tool {
+            display: none;
+            flex-direction: row;
+            position: absolute;
+            right: 0.1pt;
+
+            .maticon {
+                flex-grow: 1;
+                text-align: center;
+            }
+
+            .vertical {
+                width: 0.1pt;
+                height: 100%;
+                background-color: rgba(100, 100, 100, 0.4);
+            }
+        }
+        
+        .vertical-drag {
+            position: absolute;
+            right: 0em;
+            width: 1pt;
+            height: 100%;
+            outline: solid rgba(100, 100, 100, 0.4) 0.1pt;
+            cursor: e-resize;
+        }
+
+        &:hover {
+            background: $color-file-hover;
+
+            .tool {
+                display: flex;
+            }
+        }
+    }
+}
+

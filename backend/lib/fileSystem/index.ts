@@ -3,12 +3,12 @@ import { LocalFileSystem } from './localFileSystem';
 import { IMultiFileSystemConfig, MultiFileSystem } from './multiFileSystem';
 import { FileSystem, FileSystemType } from './fileSystem';
 import { InjectableFactory } from '../di';
-import { Config } from '../config';
+import { Config } from '../../service';
 
 export { FileSystem } from './fileSystem';
 
 class Dummy {
-    @InjectableFactory(FileSystem)
+    @InjectableFactory(FileSystem, { lazy: true })
     filesystem(config: Config) {
         let fs: FileSystem;
         switch(config.filesystem.type) {

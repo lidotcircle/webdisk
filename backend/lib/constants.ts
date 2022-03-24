@@ -1,9 +1,4 @@
-import * as path from 'path';
-
 export module constants {
-    export const rootdir = path.dirname(path.dirname(path.dirname(__filename)));
-    export const WebResourceRoot = path.join(rootdir, "dashboard");
-
     export const FILE_TYPE_MAP = new Map<string, string>([
         [".aac",    "audio/aac"],
         [".abw",    "application/x-abiword"],
@@ -81,7 +76,4 @@ export module constants {
         [".7z",     "application/x-7z-compressed"],
         ["unknown", "application/octet-stream"]
     ]);
-
-    export const SHORT_TERM_TOKEN_QUERY_PARAM = 'token';
 }
-

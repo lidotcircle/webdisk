@@ -140,7 +140,7 @@ export class DependencyInjector extends EventEmitter {
 
     private assertValidName(name: string) //{
     {
-        assert(this.name2idx[name] >= 0, "require a valid dependency name");
+        assert(this.name2idx[name] >= 0, `require a valid dependency name, get '${name}'`);
     } //}
     
     private isValidSpecifier<T extends Constructor | string>(specifier: T): boolean //{
@@ -192,7 +192,7 @@ export class DependencyInjector extends EventEmitter {
             this.assertInjectable(specifier as T & Constructor);
             ans = specifier[this.sym_inject];
         } else {
-            assert(typeof specifier === 'string', "dependency specifier should be a class or identifier");
+            assert(typeof specifier === 'string', `dependency specifier should be a class or identifier, get '${specifier}'`);
             ans = this.name2idx[specifier];
         }
 
@@ -278,7 +278,7 @@ export class DependencyInjector extends EventEmitter {
     private HandleOptionsWithInjectCounter(injectPoint: number, options: InjectOptions) //{
     {
         if(options.name) {
-            assert(this.name2idx[options.name] === undefined, "Defining a named dependency twice is invalid");
+            assert(this.name2idx[options.name] === undefined, `Defining a named dependency twice is invalid ${options.name}`);
             this.name2idx[options.name] = injectPoint;
 
             if(this.idx2dependencyname[injectPoint]) {

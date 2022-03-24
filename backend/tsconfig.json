@@ -30,6 +30,7 @@
         "repository/**/*",
         "routes/**/*",
         "service/**/*",
+        "middleware/**/*",
         "index.ts"
     ],
     "exclude": [

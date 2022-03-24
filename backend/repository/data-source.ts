@@ -1,24 +1,26 @@
 import "reflect-metadata"
 import assert from "assert";
 import { DataSource } from "typeorm"
-import { User } from "../entity/User"
-import { RefreshToken } from "../entity/RefreshToken"
-import { InvitationCode } from "../entity/InvitationCode"
+import { User, RefreshToken, InvitationCode, NamedLink, DataRecord } from '../entity';
 import { QueryDependency, ProvideDependency } from "../lib/di";
 import { PasswordEncoder } from "../service/password-encoder";
-import { Config } from "../lib/config";
+import { Config, debug } from "../service";
+import path from 'path';
 
 ProvideDependency(DataSource, {
     lazy: true,
     factory: () => {
         const config = QueryDependency(Config);
+        assert(config.initialized());
+        const dbpath = path.resolve(config.sqlite3_database);
+        debug(`using sqlite3 database '${dbpath}'`);
 
         return new DataSource({
             type: "sqlite",
-            database: config.sqlite3_database2,
+            database: dbpath,
             synchronize: true,
             logging: true,
-            entities: [ User, RefreshToken, InvitationCode ],
+            entities: [ User, RefreshToken, InvitationCode, NamedLink, DataRecord ],
             migrations: [],
             subscribers: [],
         });
@@ -33,6 +35,7 @@ async function init_datastore() {
     const admin = new User();
     admin.username = "admin";
     admin.password = encoder.encode("123456");
+    admin.rootpath = "/";
     userRepo.save(admin);
 }
 

@@ -1,5 +1,5 @@
-import { Component, ElementRef, Input, OnDestroy, OnInit } from '@angular/core';
-import { MenuEntry, MenuEntryDivide } from '../../service/right-menu-manager.service';
+import { Component, ElementRef, Input, OnInit } from '@angular/core';
+import { MenuEntry } from '../../service/right-menu-manager.service';
 import { AbsoluteView, BeAbsoluteView } from '../absolute-view/absolute-view';
 import { DontOverflow } from '../absolute-view/trait/dont-overflow';
 
@@ -15,13 +15,13 @@ export class ContextMenuComponent extends AbsoluteView implements OnInit {
     @Input()
     private positionY: number;
     @Input()
-    private rootMenuEntry: MenuEntry;
+    entry: MenuEntry;
 
-    constructor(private _h: ElementRef) {
+    constructor(_h: ElementRef) {
         super(_h, new DontOverflow());
     }
     get element() {return this.elem;}
-    get entries() {return this.rootMenuEntry.subMenus as MenuEntry[];}
+    get entries() {return this.entry.subMenus as MenuEntry[];}
 
     ngOnInit(): void {
         this.elem.style.left = this.positionX + 'px';

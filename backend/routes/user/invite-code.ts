@@ -1,8 +1,8 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
 import { UserService } from '../../service';
-import { UserSymbol } from '..';
 import { QueryDependency } from '../../lib/di';
+import { getJWTAuthUser } from '../../middleware';
 
 const router = express.Router();
 export default router;
@@ -10,7 +10,7 @@ export default router;
 
 router.post('/invite-code', 
     async (req, res) => {
-        const username = req[UserSymbol];
+        const username = getJWTAuthUser(req);
         if (!username) {
             return res.status(401).json({ errors: [{ msg: "Unauthorized" }] });
         }
@@ -28,7 +28,7 @@ router.delete('/invite-code',
         if (!errors.isEmpty()) {
             return res.status(422).json({ errors: errors.array() });
         }
-        const username = req[UserSymbol];
+        const username = getJWTAuthUser(req);
         if (!username) {
             return res.status(401).json({ errors: [{ msg: "Unauthorized" }] });
         }

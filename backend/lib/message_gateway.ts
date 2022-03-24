@@ -1,46 +1,32 @@
 /** Gataway to dispatch message base on message type */
 
-import * as http   from 'http';
-import * as net    from 'net';
-import * as events from 'events';
+import { EventEmitter } from 'events';
 
-import { constants } from './constants';
-import { BasicMessage, MessageEncoder, MessageType } from './common/message/message';
-import { debug, info, warn, error } from './logger';
-import { MessageSerializer, MessageHandlers, registerMessageHandler } from './services';
+import { BasicMessage, MessageType } from './common/message/message';
+import { debug, warn } from './../service';
+import { MessageSerializer } from './services';
 import { UserManager } from './handlers/user_management';
 import * as utls from './utils';
 
-import { URL } from 'url';
 import { MiscManager } from './handlers/misc_management';
-import { FileManager } from './handlers/file_management';
-import { cons } from './utils';
-import { request as wsrequest, connection as wsconnection, IMessage, IServerConfig } from 'websocket';
+import { connection as wsconnection, IMessage } from 'websocket';
 import { AccessControl } from './accessControl/acl';
 import { DIProperty } from './di';
-
-export function upgradeHandler(inc: http.IncomingMessage, socket: net.Socket, buf: Buffer) //{
-{
-    const wsreq = new wsrequest(socket, inc, {
-        httpServer: null, 
-        assembleFragments: true, 
-        keepalive: true,
-        keepaliveInterval: 3000
-    });
-    try {
-        wsreq.readHandshake();
-    } catch {
-        return wsreq.reject(400);
-    }
-    const connection = wsreq.accept();
-    new MessageGateway(connection);
-} //}
+import { MessageHandler } from './message_handler';
 
 export interface MessageGateway {
     on(event: 'close', listener: () => void): this;
 }
 
-export class MessageGateway extends events.EventEmitter {
+const MessageHandlers: Map<MessageType, MessageHandler> = new Map<MessageType, MessageHandler>();
+function registerMessageHandler(msg_type: MessageType, handler: MessageHandler) {
+    if(MessageHandlers.has(msg_type)) {
+        throw new Error("double handler to a message type is prohibit");
+    }
+    MessageHandlers.set(msg_type, handler);
+}
+
+export class MessageGateway extends EventEmitter {
     private websocket: wsconnection;
     private invalid:   boolean;
 
@@ -58,14 +44,14 @@ export class MessageGateway extends events.EventEmitter {
             this.invalid = true;
             debug(`websocket throw error: ${err}`);
         });
-        this.websocket.on("close", (code: number, desc: string) => {
+        this.websocket.on("close", (_: number, __: string) => {
             this.invalid = true;
             debug(`websocket closed`);
             this.emit('close');
         });
     } //}
 
-    private send(msg, cb?: (err: Error) => void) //{
+    private send(msg: Buffer | string, cb?: (err: Error) => void) //{
     {
         if(this.invalid) return;
         this.websocket.send(msg, cb);
@@ -133,7 +119,7 @@ export class MessageGateway extends events.EventEmitter {
     } //}
 }
 
-registerMessageHandler(MessageType.UserManagement, UserManager);
-registerMessageHandler(MessageType.MiscManagement, MiscManager);
-registerMessageHandler(MessageType.FileManagement, FileManager);
+// registerMessageHandler(MessageType.UserManagement, UserManager);
+// registerMessageHandler(MessageType.MiscManagement, MiscManager);
+registerMessageHandler(MessageType.FileManagement, require('./handlers/file_management').default);
 

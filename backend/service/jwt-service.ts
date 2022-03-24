@@ -1,7 +1,12 @@
 import { sign, verify, decode  } from 'jsonwebtoken';
-import { Config } from '../lib/config';
+import { Config } from './config-service';
 import { Injectable } from '../lib/di';
 
+
+export interface JWTPayload {
+    username: string;
+    rootpath: string;
+};
 
 @Injectable({
     lazy: true
@@ -15,11 +20,23 @@ export class JWTService {
         this.expiresIn_s = config.jwt.expiresIn_s;
     }
     
-    public sign(payload: any, username: string): string {
+    public sign(payload: JWTPayload, username: string): string {
         return sign(payload, this.secret, {
             expiresIn: this.expiresIn_s,
+            subject: username,
+        });
+    }
+
+    public signG(payload: any, username: string, expireAfte_s: number) 
+    {
+        return sign(payload, this.secret, {
+            expiresIn: expireAfte_s,
             subject: username
         });
+    }
+
+    public decodeAs<T>(token: string): T {
+        return <T>decode(token);
     }
 
     public verify(token: string): boolean {
@@ -31,7 +48,7 @@ export class JWTService {
         }
     }
     
-    public decode(token: string): any {
-        return decode(token);
+    public decode(token: string): JWTPayload {
+        return decode(token) as JWTPayload;
     }
 }

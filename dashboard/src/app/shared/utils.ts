@@ -2,7 +2,19 @@ export * from './common';
 export * from './FileSystemEntry';
 export * from './life';
 
-export function nextTick(func) {
+
+function getCaller() {
+    var caller = null;
+    try {
+        throw new Error();
+    } catch (e) {
+        caller = e.stack.split('\n')[3];
+    }
+    return caller;
+}
+
+export function nextTick(func: () => void) {
+    console.debug("nextTick ", getCaller());
     setTimeout(func, 0);
 }
 

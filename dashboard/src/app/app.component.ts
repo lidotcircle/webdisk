@@ -23,30 +23,27 @@ const download = require('!raw-loader!src/assets/maticons/download.svg').default
 const password = require('!raw-loader!src/assets/maticons/password-key.svg').default;
 
 const icons = [
-    {name: 'sortby', svg: sortbyicon},
-    {name: 'hide_folder', svg: hide_foldericon},
+    {name: 'sortby',        svg: sortbyicon},
+    {name: 'hide_folder',   svg: hide_foldericon},
     {name: 'user-settings', svg: usersettings},
-    {name: 'user-account', svg: useraccount},
-    {name: 'logo', svg: logo},
-    {name: 'nav-back', svg: nav_back},
-    {name: 'info', svg: info},
-    {name: 'warn', svg: warn},
-    {name: 'error', svg: error},
-    {name: 'in_fold', svg: in_fold},
-    {name: 'in_unfold', svg: in_unfold},
-    {name: 'wd-copy', svg: wd_copy},
-    {name: 'wd-download', svg: download},
-    {name: 'wd-password', svg: password},
+    {name: 'user-account',  svg: useraccount},
+    {name: 'logo',          svg: logo},
+    {name: 'nav-back',      svg: nav_back},
+    {name: 'info',          svg: info},
+    {name: 'warn',          svg: warn},
+    {name: 'error',         svg: error},
+    {name: 'in_fold',       svg: in_fold},
+    {name: 'in_unfold',     svg: in_unfold},
+    {name: 'wd-copy',       svg: wd_copy},
+    {name: 'wd-download',   svg: download},
+    {name: 'wd-password',   svg: password},
 ];
 
 @Component({
-    selector: 'app-root',
-    templateUrl: './app.component.html',
-    styleUrls: ['./app.component.scss']
+    selector: 'ngx-app',
+    template: '<router-outlet></router-outlet>',
 })
 export class AppComponent {
-    title = 'webdisk-dashboard';
-
     constructor(private bodyContainer: ViewContainerRef,
                 private matIconRegistry: MatIconRegistry,
                 private domSanitizer: DomSanitizer) {
@@ -55,4 +52,3 @@ export class AppComponent {
         icons.forEach(v => this.matIconRegistry.addSvgIconLiteral(v.name, this.domSanitizer.bypassSecurityTrustHtml(v.svg)));
     }
 }
-

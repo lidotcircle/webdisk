@@ -3,7 +3,7 @@ import { User, RefreshToken, InvitationCode } from "../entity";
 import { Repository } from "typeorm";
 import createError from "http-errors";
 import { PasswordEncoder } from "./password-encoder";
-import { Injectable, DIProperty, DIGetter } from "../lib/di";
+import { Injectable, DIProperty } from "../lib/di";
 import { v4 as uuidv4 } from "uuid";
 import { JWTService } from "./jwt-service";
 
@@ -41,6 +41,7 @@ export class UserService {
         const inv = new InvitationCode();
         inv.code = code;
         inv.user = user;
+        inv.relativepath = ".";
         await this.invRepo.save(inv);
         return code;
     }
@@ -107,6 +108,26 @@ export class UserService {
         return token;
     }
 
+    public async verifyUsernamePassword(username: string, password: string): Promise<boolean> {
+        const user = await this.getUser(username);
+        if (!user || !this.encoder.validate(password, user.password)) {
+            return false;
+        }
+        return true;
+    }
+
+    public async logout(token: string) {
+        const refreshToken = await this.refRepo.findOne({
+            where: {
+                token: token
+            }
+        });
+        if (!refreshToken) {
+            throw createError(401, "Invalid token");
+        }
+        await this.refRepo.remove(refreshToken);
+    }
+
     @DIProperty(JWTService)
     private jwtService: JWTService;
     /**
@@ -126,8 +147,9 @@ export class UserService {
         if (Date.now() - prevDate.getTime() > 1000 * 60 * 60 * 24) {
             throw createError(401, "Token expired");
         }
-        await this.refRepo.update(refreshToken, { updateCount: refreshToken.updateCount+1 });
+        await this.refRepo.update({ id: refreshToken.id }, { updateCount: refreshToken.updateCount+1 });
         const username = refreshToken.user.username;
-        return this.jwtService.sign({username: username}, username);
+        const rootpath = refreshToken.user.rootpath;
+        return this.jwtService.sign({username: username, rootpath: rootpath}, username);
     }
 }

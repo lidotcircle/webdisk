@@ -29,7 +29,6 @@ export enum FileRequest {
 
 export class FileRequestMessage extends FileMessage {
     fm_msg = {
-        user_token: null,
         fm_request: FileRequest.INVALID,
         fm_request_argv: [],
     }

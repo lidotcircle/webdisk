@@ -2,21 +2,23 @@ import { MessageHandler } from '../message_handler';
 import { MessageGateway } from '../message_gateway';
 import { BasicMessage, MessageSource, MessageType } from '../common/message/message';
 import { UserMessage, UserMessageType, UserMessageGetUserInfoRequest, UserMessageSetUserInfoRequest, UserMessageChangePasswordRequest, UserMessageGenInvCodeRequest, UserMessaageGetInvCodeRequest, UserMessaageGetInvCodeResponse, UserMessageAddUserRequest, UserMessageRemoveUserRequest, UserMessageGetUserSettingsRequest, UserMessageGetUserSettingsResponse, UserMessageUpdateUserSettingsRequest, UserMessageShortTermTokenGenerateRequest, UserMessageShortTermTokenGenerateResponse, UserMessageShortTermTokenClearRequest, UserMessageNewNameEntryRequest, UserMessageGetNameEntryRequest, UserMessageGetNameEntryResponse, UserMessageGetAllNameEntryRequest, UserMessageGetAllNameEntryResponse, UserMessageDeleteNameEntryRequest, UserMessageDeleteAllNameEntryRequest, UserMessaageDeleteInvCodeRequest, UserMessageGetPermissionRequest, UserMessageGetPermissionResponse, UserMessageSetPermissionRequest, UserMessageGetUserInfoByInvCodeRequest, UserMessageGetUserInfoByInvCodeResponse } from '../common/message/user_message';
-import { debug, info, warn, error } from '../logger';
+import { debug, info, warn, error, UserService } from '../../service';
 
 import { UserMessageLoginRequest, UserMessageLoginResponse,
          UserMessageLogoutRequest } from '../common/message/user_message';
 import { WDDatabase, Database } from '../database/database';
-import { DIProperty, Injectable } from '../di';
+import { DIGetter, Injectable } from '../di';
 
 
-@Injectable()
+@Injectable({
+    lazy: true
+})
 class UserManagement extends MessageHandler {
     private static GMSG = new UserMessage();
     private id: number = 0;
 
-    @DIProperty(WDDatabase)
-    private DB: Database;
+    @DIGetter(UserService, { dynamic: true })
+    private get userService(): UserService {return null;}
 
     async handleRequest(dispatcher: MessageGateway, msg: UserMessage) {
         for(let prop in UserManagement.GMSG) {
@@ -42,18 +44,19 @@ class UserManagement extends MessageHandler {
                 case UserMessageType.Login: {
                     const lmsg: UserMessageLoginRequest = msg;
                     info(`user: ${lmsg.um_msg.username} try to login`);
-                    const token = await this.DB.login(lmsg.um_msg.username, lmsg.um_msg.password);
+                    const token = await this.userService.login(lmsg.um_msg.username, lmsg.um_msg.password);
                     info(`${lmsg.um_msg.username} login success`);
                     (resp as UserMessageLoginResponse).um_msg.token = token;
                 } break;
 
                 case UserMessageType.Logout: {
-                    await this.DB.logout((msg as UserMessageLogoutRequest).um_msg.token);
+                    await this.userService.logout((msg as UserMessageLogoutRequest).um_msg.token);
                 } break;
 
+                /*
                 case UserMessageType.GetBasicUserInfo: {
                     const gmsg: UserMessageGetUserInfoRequest = msg;
-                    resp.um_msg = await this.DB.getUserInfo(gmsg.um_msg.token);
+                    resp.um_msg = await this.userService.getUser(gmsg.um_msg.token);
                 } break;
 
                 case UserMessageType.SetBasicUserInfo: {
@@ -165,6 +168,7 @@ class UserManagement extends MessageHandler {
                 default:
                     warn('unknown user message type, ignore it');
                     return;
+                */
             }
         } catch (err) {
             if(err instanceof Error) {

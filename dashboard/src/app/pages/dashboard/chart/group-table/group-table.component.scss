@@ -1,0 +1,16 @@
+@import 'src/app/style/table.scss';
+
+
+app-group-table {
+    @include Ng2SmartTableClickCell(1);
+    @include TableIsEmpty();
+
+    thead [ng-reflect-create-confirm] {
+        td:nth-child(3), td:nth-child(4) {
+            input {
+                visibility: hidden;
+            }
+        }
+    }
+}
+

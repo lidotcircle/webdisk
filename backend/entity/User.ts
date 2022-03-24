@@ -18,4 +18,7 @@ export class User {
 
     @OneToMany(() => InvitationCode, invitationCode => invitationCode.user)
     invitationCodes: InvitationCode[];
+
+    @Column()
+    rootpath: string
 }

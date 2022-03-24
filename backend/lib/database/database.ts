@@ -5,9 +5,9 @@ import path   from 'path';
 import assert from 'assert';
 import { makeid, validation, assignTargetEnumProp, cons } from '../common/utils';
 import { NameEntry, Token, UserInfo, UserPermission } from '../common/db_types';
-import { debug, info, warn, error } from '../logger';
+import { debug, info, warn, error } from '../../service';
 import { ErrorMSG } from '../common/string';
-import { Config } from '../config';
+import { Config } from '../../service';
 import { DBRelations } from './relations';
 import { createSQLInsertion } from './utils';
 const MD5 = require('md5');
@@ -23,7 +23,7 @@ import { DB_Utils,          IDBUtils }          from './modules';
 import { DB_StorePass,      IDBStorePass }      from './modules';
 
 import { EventEmitter } from 'events';
-import { Injectable, ProvideDependency, ResolveInitPromises } from '../di';
+import { Injectable } from '../di';
 import { ResolvePathInConfig } from '../utils';
 
 
@@ -39,10 +39,6 @@ export interface WDDatabase {
     on(event: 'init', listener: () => void): this;
 }
 
-@Injectable({
-    afterInit: async (obj: WDDatabase) => await obj.init(),
-    initOnDepsInited: [ Config ],
-})
 @DB_Utils
 @DB_StorePass
 @DB_Download
