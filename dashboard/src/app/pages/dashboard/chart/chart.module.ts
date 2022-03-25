@@ -34,7 +34,7 @@ import { MonacoEditorModule } from 'ngx-monaco-editor';
         NbButtonModule,
         NbInputModule,
         MatFormFieldModule,
-        MonacoEditorModule,
+        MonacoEditorModule.forRoot(),
         MatCheckboxModule,
         MatInputModule,
         MatSliderModule,
