@@ -106,7 +106,11 @@ function stream2promise(stream) {
 }
 function try_watch(restart) //{
 {
-    let watcher = gulp.watch(["**/*.ts", "resources/**"]);
+    let watcher = gulp.watch([
+        "bin/**/*.ts", "entity/**/*.ts", "lib/**/*.ts", 
+        "middleware/**/*.ts", "repository/**/*.ts", "routes/**/*.ts", 
+        "service/**/*.ts", "index.ts", "resources/**"
+    ]);
     let handle = async (fp, _) => {
         console.log(`----- file [${fp}]`);
         if (fp.endsWith(".ts")) {

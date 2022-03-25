@@ -15,6 +15,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormsModule } from '@angular/forms';
 import { AddDataComponent } from './add-data/add-data.component';
 import { MonacoEditorModule } from 'ngx-monaco-editor';
+import { SharedModule } from 'src/app/shared/shared.module';
 
 
 @NgModule({
@@ -28,6 +29,7 @@ import { MonacoEditorModule } from 'ngx-monaco-editor';
     imports: [
         CommonModule,
         ChartRoutingModule,
+        SharedModule,
         FormsModule,
         NbIconModule,
         NbCardModule,

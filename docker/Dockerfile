@@ -1,4 +1,4 @@
-FROM node:14 as builder
+FROM node:16 as builder
 
 WORKDIR /opt/webdisk
 COPY . .
@@ -6,7 +6,7 @@ RUN npm install && cd backend && npm install && cd ../dashboard && npm install
 RUN npx gulp release
 
 
-FROM node:14
+FROM node:16
 
 WORKDIR /opt/webdisk
 COPY --from=builder /opt/webdisk/release .

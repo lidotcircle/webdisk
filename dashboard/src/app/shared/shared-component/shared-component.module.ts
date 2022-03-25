@@ -27,6 +27,8 @@ import { SoleAudioPlayerComponent } from './sole-window/sole-audio-player/sole-a
 import { SoleImageViewerComponent } from './sole-window/sole-image-viewer/sole-image-viewer.component';
 import { SolePdfViewerComponent } from './sole-window/sole-pdf-viewer/sole-pdf-viewer.component';
 import { SearchBarFloatComponent } from './search-bar-float/search-bar-float.component';
+import { ConfirmWindowComponent } from './confirm-window.component';
+import { NbButtonModule } from '@nebular/theme';
 
 
 @NgModule({
@@ -34,7 +36,9 @@ import { SearchBarFloatComponent } from './search-bar-float/search-bar-float.com
         LoginBGComponent, MessageBoxComponent, ProgressBarComponent,
         UploadFileViewComponent, ContextMenuComponent,
         FilePropertiesComponent, NotifierComponent, MessageProgressBarComponent, 
-        ProgressCircleComponent, FileIconComponent, SearchBarComponent, WindowComponent, PageTopComponent, SoleWindowComponent, SoleVideoPlayerComponent, SoleAudioPlayerComponent, SoleImageViewerComponent, SolePdfViewerComponent, SearchBarFloatComponent
+        ProgressCircleComponent, FileIconComponent, SearchBarComponent, WindowComponent, PageTopComponent, 
+        SoleWindowComponent, SoleVideoPlayerComponent, SoleAudioPlayerComponent, SoleImageViewerComponent, 
+        SolePdfViewerComponent, SearchBarFloatComponent, ConfirmWindowComponent,
     ],
     imports: [
         CommonModule,
@@ -43,6 +47,7 @@ import { SearchBarFloatComponent } from './search-bar-float/search-bar-float.com
         MatIconModule,
         FormsModule,
         HttpClientModule,
+        NbButtonModule,
 
         MediaModule
     ],
