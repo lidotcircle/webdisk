@@ -1,6 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { NbThemeService } from '@nebular/theme';
 import { EChartsOption } from 'echarts';
 import { DataRecordService } from 'src/app/service/data-record.service';
 
@@ -11,6 +10,24 @@ import { DataRecordService } from 'src/app/service/data-record.service';
     <nb-card [nbSpinner]="loading" nbSpinnerStatus="info" accent="info">
       <nb-card-header>
         {{ group }}
+        <div class="control-components">
+            <mat-checkbox (change)='options_change($event)' [(ngModel)]='cb_zoomSlider'>Zoom Slider</mat-checkbox>
+            <mat-checkbox (change)='options_change($event)' [(ngModel)]='cb_smooth'>Smooth Line</mat-checkbox>
+        </div>
+        <div class="control-components">
+            <mat-form-field>
+                <mat-label>X-Axis</mat-label>
+                <input (change)='options_change($event)' matInput type="text" [(ngModel)]='in_xaxis_name'>
+            </mat-form-field>
+            <mat-form-field>
+                <mat-label>Y-Axis</mat-label>
+                <input (change)='options_change($event)' matInput type="text" [(ngModel)]='in_yaxis_name'>
+            </mat-form-field>
+            <div>
+                <label style='margin: 0em; width: 100%; text-align: center;'>Refresh Frequency {{refresh_sec}}s</label>
+                <mat-slider style='width: 100%;' min='1' max='100' step='1' [(ngModel)]='refresh_sec'></mat-slider>
+            </div>
+        </div>
       </nb-card-header>
       <nb-card-body>
         <div *ngIf='!errorMsg && datasize > 0' echarts [options]="options" [merge]="dynamic_options" class="echart"></div>
@@ -34,6 +51,16 @@ import { DataRecordService } from 'src/app/service/data-record.service';
            text-align: center;
            margin: 0em;
        }
+
+       .control-components {
+           display: flex;
+           flex-direction: row;
+           align-items: center;
+           flex-wrap: wrap;
+           justify-content: space-around;
+           box-sizing: border-box;
+           padding: 0.3em 0.5em;
+       }
     `],
 })
 export class GroupGraphComponent implements OnInit, OnDestroy {
@@ -49,6 +76,10 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
     private u_series: any[];
     private u_properties: string[];
     private u_xaxis_data: number[];
+    cb_zoomSlider: boolean = true;
+    cb_smooth: boolean = true;
+    in_xaxis_name: string;
+    in_yaxis_name: string;
 
     constructor(private activatedRouter: ActivatedRoute,
                 private dataRecordService: DataRecordService)
@@ -58,6 +89,79 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
         this.errorMsg = null;
         this.datasize = 0;
         this.refresh_sec = 5;
+    }
+
+    options_change(_event: any)
+    {
+        this.options = this.generate_options();
+        this.dynamic_options = this.options;
+    }
+
+    private generate_options(): EChartsOption {
+        const dataZoom: any[]  = [
+            {
+                type: 'inside',
+                xAxisIndex: 0,
+                filterMode: 'empty',
+            },
+            {
+                type: 'inside',
+                yAxisIndex: 0,
+                filterMode: 'empty',
+            }
+        ];
+        if (this.cb_zoomSlider) {
+            dataZoom.push({
+                type: 'slider',
+                xAxisIndex: 0,
+                filterMode: 'empty',
+            });
+            dataZoom.push(
+            {
+                type: 'slider',
+                yAxisIndex: 0,
+                filterMode: 'empty',
+            });
+        }
+        const options: EChartsOption = {
+            title: {
+                text: this.group,
+            },
+            tooltip: {
+                trigger: 'axis',
+            },
+            legend: {
+                data: this.u_properties,
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true,
+            },
+            toolbox: {
+                feature: {
+                    saveAsImage: {},
+                },
+            },
+            dataZoom: dataZoom,
+            xAxis: {
+                type: 'category',
+                name: this.in_xaxis_name,
+                data: this.u_xaxis_data,
+            },
+            yAxis: {
+                type: 'value',
+                name: this.in_yaxis_name,
+            },
+            series: this.u_series,
+        };
+        if (this.u_series != null) {
+            for (const one of this.u_series) {
+                one.smooth = this.cb_smooth;
+            }
+        }
+        return options;
     }
 
     private SetTimerFetchData() {
@@ -157,63 +261,9 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
                 });
             }
             this.u_series = series;
-
             this.u_xaxis_data = this.range(1, jsonlist.length + 1);
-            const options: EChartsOption = {
-                title: {
-                    text: this.group,
-                },
-                tooltip: {
-                    trigger: 'axis',
-                },
-                legend: {
-                    data: properties,
-                },
-                grid: {
-                    left: '3%',
-                    right: '4%',
-                    bottom: '3%',
-                    containLabel: true,
-                },
-                toolbox: {
-                    feature: {
-                        saveAsImage: {},
-                    },
-                },
-                dataZoom: [
-                    {
-                        type: 'slider',
-                        xAxisIndex: 0,
-                        filterMode: 'empty',
-                    },
-                    {
-                        type: 'slider',
-                        yAxisIndex: 0,
-                        filterMode: 'empty',
-                    },
-                    {
-                        type: 'inside',
-                        xAxisIndex: 0,
-                        filterMode: 'empty',
-                    },
-                    {
-                        type: 'inside',
-                        yAxisIndex: 0,
-                        filterMode: 'empty',
-                    }
-                ],
-                xAxis: {
-                    type: 'category',
-                    data: this.u_xaxis_data,
-                },
-                yAxis: {
-                    type: 'value',
-                },
-                series: series,
-            };
-
-            this.options = options;
-            this.dynamic_options = options;
+            this.options = this.generate_options();
+            this.dynamic_options = this.options;
             this.SetTimerFetchData();
         });
     }

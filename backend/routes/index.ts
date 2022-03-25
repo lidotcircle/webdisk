@@ -33,6 +33,6 @@ if (webroot.startsWith("http")) {
     callback_list.push((server: Server) => server.on("upgrade", proxy["upgrade"]));
     router.use("/", proxy);
 } else {
-    router.use("/",  express.static(webroot))
-    router.use("/*", express.static(webroot))
+    router.get("/",  express.static(webroot))
+    router.get("/*", express.static(webroot))
 }

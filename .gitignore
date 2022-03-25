@@ -2,6 +2,7 @@
 **/dist
 **/release
 **.log
+**/__pycache__
 etc/webdisk.json
 webdiskdata/*
 **~

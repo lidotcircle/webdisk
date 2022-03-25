@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule} from '@angular/router';
+import { AddDataComponent } from './add-data/add-data.component';
 import { ChartComponent } from './chart.component';
 import { GroupGraphComponent } from './group-graph/group-graph.component';
 import { GroupTableComponent } from './group-table/group-table.component';
@@ -22,6 +23,10 @@ const routes: Routes = [
             {
                 path: 'graph',
                 component: GroupGraphComponent
+            },
+            {
+                path: 'add-data',
+                component: AddDataComponent
             }
         ]
     }
