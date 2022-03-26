@@ -13,7 +13,7 @@ export class NamedLink {
     @Column()
     target: string
 
-    @ManyToOne(() => User)
+    @ManyToOne(() => User, {eager: true})
     user: User
 
     @CreateDateColumn()

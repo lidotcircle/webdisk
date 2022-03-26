@@ -23,6 +23,8 @@ export module API {
         export const frontendSetting = API_ADDRESS + '/apis/user/setting/frontend';
     }
 
+    export const NamedLink = API_ADDRESS + '/apis/named-link';
+
     export module DataRecord {
         export const groups = API_ADDRESS + '/apis/sdata/groups';
         export const groupData = API_ADDRESS + '/apis/sdata/data';

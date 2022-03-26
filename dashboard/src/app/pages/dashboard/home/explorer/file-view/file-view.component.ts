@@ -15,6 +15,7 @@ import { FileViewerService } from './plugins/file-viewer.service';
 import { NbToastrService } from '@nebular/theme';
 import { CurrentDirectoryService } from 'src/app/shared/service/current-directory.service';
 import { PageEvent } from '@angular/material/paginator';
+import { NamedLinkService } from 'src/app/service/user/named-link-service';
 
 
 /** sortByName */
@@ -139,6 +140,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
 
     private life: Life;
     constructor(private fileManager: FileSystemManagerService,
+                private namedLinkService: NamedLinkService,
                 private toaster: NbToastrService,
                 private toolbar: ToolbarService,
                 private KeyboardPress: KeyboardPressService,
@@ -542,8 +544,19 @@ export class FileViewComponent implements OnInit, OnDestroy {
             }).wait();
 
             if(ans.buttonValue == 0) {
-                const period = duration2ms(ans.inputs['period']);
-                this.fileoperation.shareFileWithNamedLink(filename, ans.inputs['link'], period);
+                const period = duration2ms(ans.inputs['period']) 
+                const name = ans.inputs['link'];
+                if (!name) {
+                    this.toaster.warning("invalid link name", "named link");
+                    return;
+                }
+
+                try {
+                    await this.namedLinkService.createNamedLink(name, filename, period);
+                    this.toaster.info(`create named link success, from ${name} to ${filename}`, "named link");
+                } catch (e) {
+                    this.toaster.danger(e || "create named link failed", "named link");
+                }
             }
         }
         const shareEntry = new MenuEntry('Share with', 'link');

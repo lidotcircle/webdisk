@@ -85,7 +85,6 @@ export class UserService {
         if (!setting) {
             throw new createError.NotFound("User setting not found");
         }
-        console.log(setting);
         return setting.profilePicture;
     }
 
