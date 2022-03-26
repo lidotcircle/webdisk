@@ -22,9 +22,9 @@ export class UserSettingsComponent implements OnInit {
     ngOnInit(): void {
     }
 
-    onSlideInit() {
-        this.settings.swiperRef.allowTouchMove = false;
-        this.onSlideChange(this.settings.swiperRef);
+    onSlideInit(swiper: Swiper) {
+        swiper.allowTouchMove = false;
+        this.onSlideChange(swiper);
     }
 
     onSlideChange(swiper: Swiper) {

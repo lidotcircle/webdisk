@@ -2,16 +2,23 @@
 @import 'src/app/style/utils.scss';
 
 
-.content {
+nb-card {
     width: 100%;
     height: 100%;
-    display: flex;
-    flex-direction: column;
+    margin: 0em;
 
-    @include horizontal-centeralize('.settings', '.too-big-take-space');
-    .settings {
+    nb-card-header {
+        text-align: center;
+        font-family: 'Roboto', sans-serif;
+        font-size: large;
+    }
+
+    nb-card-body {
+        width: 100%;
         flex-grow: 1;
         overflow: hidden;
+        display: flex;
+        flex-direction: row;
 
         .settings-nav {
             @include no-select();

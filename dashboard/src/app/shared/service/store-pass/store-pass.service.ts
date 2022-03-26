@@ -1,68 +1,99 @@
 import { Injectable } from '@angular/core';
-import { AccountManagerService } from '../account-manager.service';
-import { WSChannelService } from '../wschannel.service';
-import { mode, AES, enc } from 'crypto-js';
-import { StorePassword, StorePasswordTypeChangePassMessage, StorePasswordTypeDeletePassMessage, StorePasswordTypeGetPassMessage, StorePasswordTypeGetPassResponseMessage, StorePasswordTypeNewPassMessage, StorePasswordTypeNewPassResponseMessage } from '../../common';
-import { Observable, Subject } from 'rxjs';
+import { AES, enc } from 'crypto-js';
+import { StorePassword } from '../../common';
+import { Observable, Subject, Subscription } from 'rxjs';
 import { MessageBoxService } from '../message-box.service';
 import { NotifierService } from '../notifier.service';
 import { NotifierType } from '../../shared-component/notifier/notifier.component';
+import { RESTfulAPI } from 'src/app/restful';
+import { HttpClient } from '@angular/common/http';
+import { AuthService } from 'src/app/service/auth';
 
 const prefix: string = 'UVWXYZ@@VV%%&*!()-+=,./\\';
 @Injectable({
     providedIn: 'root'
 })
 export class StorePassService {
-    private _update: Subject<number | null> = new Subject<number | null>();
-    get update(): Observable<number | null> {return this._update;}
-    private _stores: StorePassword[] = [];
-    get Stores(): StorePassword[] {return JSON.parse(JSON.stringify(this._stores));}
+    private _stores: StorePassword[];
+    private _update: Subject<StorePassword[]>;
+    private _subscription_count: number = 0;
 
-    constructor(private accountmanager: AccountManagerService,
-                private wschannel: WSChannelService,
+    get store(): Observable<StorePassword[]> {
+        return new Observable(observer => {
+            if (this._stores) {
+                observer.next(this._stores);
+            } else if (this._subscription_count == 0) {
+                this.refreshAllPass();
+            }
+
+            const sub = this._update.subscribe(observer);
+            this._subscription_count++;
+            return new Subscription(() => {
+                this._subscription_count--;
+                sub.unsubscribe()
+            });
+        });
+    }
+
+    constructor(private http: HttpClient,
+                private authService: AuthService,
                 private notifier: NotifierService,
-                private messagebox: MessageBoxService) {
-        this.refreshAllPass();
+                private messagebox: MessageBoxService) 
+    {
+        this._update = new Subject<StorePassword[]>();
+        this.authService.getJwtClaim().subscribe(claim => {
+            if (claim) {
+                if (this._subscription_count > 0) {
+                    this.refreshAllPass();
+                }
+            } else {
+                this._stores = [];
+                this._update.next(this._stores);
+            }
+        });
     }
 
     async newPass(where: string, account: string, pass: string, password: string, encryptAccount: boolean = false): Promise<void> //{
     {
         const cipher = this.encrypt(pass, password);
-        const req = new StorePasswordTypeNewPassMessage();
-        const store = new StorePassword();
         if(encryptAccount) {
-            store.account = this.encrypt(account, password);
+            account = this.encrypt(account, password);
         } else {
-            store.account = prefix + account;
+            account = prefix + account;
         }
-        store.pass = cipher;
-        store.site = where;
-        req.misc_msg.token = this.accountmanager.LoginToken;
-        req.misc_msg.store = store;
-        const resp = await this.wschannel.send(req) as StorePasswordTypeNewPassResponseMessage;
 
-        store.passid = resp.misc_msg.passid;
-        this._stores.push(store);
-        this._update.next(store.passid);
-        this.saveTo();
+        const { id } = await this.http.post(RESTfulAPI.PassStore, {
+            site: where,
+            account: account,
+            password: cipher
+        }).toPromise() as { id: number };
+
+        this.notifier.create({ message: 'New password added' });
+        const newpass = new StorePassword();
+        newpass.passid = id;
+        newpass.site = where;
+        newpass.account = account;
+        newpass.pass = cipher;
+        this._stores.push(newpass);
+        this._update.next(this._stores);
     } //}
 
     async deletePass(passid: number): Promise<void> //{
     {
-        const req = new StorePasswordTypeDeletePassMessage();
-        req.misc_msg.token = this.accountmanager.LoginToken;
-        req.misc_msg.passid = passid;
-        await this.wschannel.send(req);
+        await this.http.delete(RESTfulAPI.PassStore, {
+            params: {
+                id: passid
+            }
+        }).toPromise();
 
         for(let i=0;i<this._stores.length;i++) {
             const store = this._stores[i];
             if(store.passid == passid) {
                 this._stores.splice(i, 1);
-                this._update.next(passid);
                 break;
             }
         }
-        this.saveTo();
+        this._update.next(this._stores);
     } //}
 
     async changePassword(passid: number, newpass: string, password: string = ''): Promise<void> //{
@@ -74,46 +105,51 @@ export class StorePassService {
                     throw new Error('wrong password');
                 }
                 s = store;
+                s.pass = this.encrypt(newpass, password);
             }
         }
+        if (!s) {
+            throw new Error('not found');
+        }
 
-        const req = new StorePasswordTypeChangePassMessage();
-        req.misc_msg.token = this.accountmanager.LoginToken;
-        req.misc_msg.passid = passid;
-        req.misc_msg.pass = this.encrypt(newpass, password);
-        await this.wschannel.send(req);
-        s.pass = req.misc_msg.pass;
-        this._update.next(passid);
-        this.saveTo();
+        await this.http.put(RESTfulAPI.PassStore, {
+            id: passid,
+            site: s.site,
+            account: s.account,
+            password: s.pass
+        }).toPromise();
+
+        this._update.next(this._stores);
     } //}
 
     private async refreshAllPass() //{
     {
-        const req = new StorePasswordTypeGetPassMessage();
-        req.misc_msg.token = this.accountmanager.LoginToken;
-        const resp = await this.wschannel.send(req) as StorePasswordTypeGetPassResponseMessage;
-        this._stores = resp.misc_msg.stores;
-        this._update.next(null);
-        this.saveTo();
+        let list: any[];
+        try {
+            list = await this.http.get(RESTfulAPI.PassStore).toPromise() as any[];
+        } catch {}
+        if (!list)
+            return;
+
+        this._stores = list.map(item => {
+            const store = new StorePassword();
+            store.passid = item.id;
+            store.site = item.site;
+            store.account = item.account;
+            store.pass = item.password;
+            return store;
+        });
+        this._update.next(this._stores);
     } //}
 
     getPassStoreByID(passid: number): StorePassword | null //{
     {
-        let ans;
         for(const store of this._stores) {
             if(store.passid == passid) {
-                ans = store;
-                break;
+                return store;
             }
         }
-        return ans;
-    } //}
-
-    private async saveTo(): Promise<void> //{
-    {
-        try {
-            await this.accountmanager.accountStorage.set('__StorePass__', this._stores);
-        } catch {}
+        return null;
     } //}
 
     private encrypt(text: string, password: string): string {

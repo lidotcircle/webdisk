@@ -4,9 +4,9 @@ import { NbMediaBreakpointsService, NbMenuService, NbSidebarService, NbThemeServ
 import { LayoutService } from '../../../@core/utils';
 import { filter, map, takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
-// import { UserService } from 'src/app/service/user/user.service';
-import { User } from 'src/app/entity/User';
+import { UserService, UserBasicInfo } from 'src/app/service/user';
 import { AuthService } from 'src/app/service/auth';
+import { Router } from '@angular/router';
 
 
 @Component({
@@ -15,9 +15,10 @@ import { AuthService } from 'src/app/service/auth';
     templateUrl: './header.component.html',
 })
 export class HeaderComponent implements OnInit, OnDestroy {
-
     private destroy$: Subject<void> = new Subject<void>();
     userPictureOnly: boolean = false;
+    user: UserBasicInfo;
+    avatar: string;
 
     themes = [
         {
@@ -39,36 +40,30 @@ export class HeaderComponent implements OnInit, OnDestroy {
     ];
 
     currentTheme = 'default';
-
-    userMenu = [ { title: '设置' }, { title: '退出' } ];
+    userMenu = [ { title: 'setting' }, { title: 'exit' } ];
 
     constructor(private sidebarService: NbSidebarService,
         private menuService: NbMenuService,
         private themeService: NbThemeService,
-        /*
-              private userService: UserService,
-         */
+        private userService: UserService,
         private authService: AuthService,
         private layoutService: LayoutService,
-        private breakpointService: NbMediaBreakpointsService) {
+        private breakpointService: NbMediaBreakpointsService,
+        private router: Router) {
     }
 
     ngOnInit() {
         this.currentTheme = this.themeService.currentTheme;
 
-        /*
-    this.userService.getUser()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(user => this.user = user);
-         */
-
         this.menuService.onItemClick()
             .pipe(takeUntil(this.destroy$))
             .pipe(filter(({ tag }) => tag == 'user-click'))
             .subscribe(async ({ item: {title} }) => {
-                if(title == '退出') {
+                if(title == 'exit') {
                     await this.authService.logout();
                     window.location.reload();
+                } else if (title == 'setting') {
+                    this.router.navigate(['/wd/dashboard/settings']);
                 }
             });
 
@@ -86,6 +81,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
                 takeUntil(this.destroy$),
             )
             .subscribe(themeName => this.currentTheme = themeName);
+
+        this.userService.basicInfo.pipe(takeUntil(this.destroy$)).subscribe(user => {
+            this.user = user;
+        });
+        this.userService.avatar.pipe(takeUntil(this.destroy$)).subscribe(avatar => {
+            this.avatar = avatar;
+        });
     }
 
     ngOnDestroy() {

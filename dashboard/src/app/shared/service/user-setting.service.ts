@@ -1,16 +1,15 @@
 import { Injectable } from '@angular/core';
-import * as dexie from 'dexie';
 import { Observable, Subject } from 'rxjs';
+import { LocalStorageService } from 'src/app/service/storage';
+import { UserService } from 'src/app/service/user';
 import { UserSettings } from '../common';
 import { assignTargetEnumProp, CopySourceEnumProp, nextTick } from '../utils';
-import { AccountManagerService } from './account-manager.service';
-import { AsyncLocalStorageService } from './async-local-storage.service';
-import { UserDBService } from './user-db.service';
+
 
 function AutoUpdateInChange(sm: string, gm?: string) {
     return function<T extends { new (...args: any[]): {}}>(constructor: T) {
         return class extends constructor {
-            constructor(...args) {
+            constructor(...args: any[]) {
                 super(...args);
                 let keys = [];
                 for(let key in this) keys.push(key);
@@ -49,59 +48,5 @@ class Setting extends UserSettings {}
     providedIn: 'root'
 })
 export class UserSettingService extends Setting {
-    private _saveFail: Subject<Error> = new Subject<Error>();
-    private stopAutomateSaving: boolean;
-    get saveFail(): Observable<Error> {return this._saveFail;}
-
-    constructor(private localstorage: AsyncLocalStorageService, 
-                private accountManager: AccountManagerService) {
-        super();
-        this.accountManager.onLogin.subscribe(async () => {
-            const settings = await this.accountManager.getUserSettings();
-            this.stopAutomateSaving = true;
-            CopySourceEnumProp(settings, this);
-            this.stopAutomateSaving = false;
-            await this.localstorage.set(SETTING_KEY, settings);
-        });
-        this.accountManager.onLogout.subscribe(async () => {
-            let o = new UserSettings();
-            this.stopAutomateSaving = true;
-            CopySourceEnumProp(o, this);
-            this.stopAutomateSaving = false;
-            await this.localstorage.remove(SETTING_KEY);
-        });
-
-        this.localstorage.get(SETTING_KEY, new UserSettings()).then(settings => {
-            this.stopAutomateSaving = true;
-            CopySourceEnumProp(settings, this);
-            this.stopAutomateSaving = false;
-        });
-    }
-
-    private inSaving = false;
-    private doubleSave = false;
-    async saveSettings() {
-        if (this.stopAutomateSaving) return;
-        if (this.inSaving) {
-            this.doubleSave = true;
-            return;
-        }
-        this.inSaving = true;
-        let settings = new UserSettings();
-        assignTargetEnumProp(this, settings);
-        try {
-            await this.localstorage.set(SETTING_KEY, settings);
-            await this.accountManager.updateUserSettings(settings);
-        } catch (err) {
-            console.warn("save user settings fail", err);
-            this._saveFail.next(err);
-        }
-        this.inSaving = false;
-
-        if(this.doubleSave) {
-            this.doubleSave = false;
-            nextTick(() => this.saveSettings())
-        }
-    }
 }
 

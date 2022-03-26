@@ -25,40 +25,18 @@ export class StorePassComponent implements OnInit, OnDestroy {
     {
         this.refresh();
 
-        this.subscription = this.storepass.update.subscribe(v => {
+        this.subscription = this.storepass.store.subscribe(v => {
             if(v == null) {
+                this.stores = [];
                 this.refresh();
             } else {
-                const store = this.storepass.getPassStoreByID(v);
-
-                if(store == null) {
-                    for(let i=0;i<this.stores.length;i++) {
-                        const s = this.stores[i];
-                        if(s.passid == v) {
-                            this.stores.splice(i, 1);
-                            break;
-                        }
-                    }
-                } else {
-                    let n: number;
-                    for(let i=0;i<this.stores.length;i++) {
-                        if(store.passid == this.stores[i].passid) {
-                            n=i;
-                        }
-                    }
-                    
-                    if(n!=null) {
-                        this.stores[n] = store;
-                    } else {
-                        this.stores.push(store);
-                    }
-                }
+                this.stores = JSON.parse(JSON.stringify(v));
+                this.refresh();
             }
         });
     } //}
 
     private refresh() {
-        this.stores = this.storepass.Stores;
         this.runFileter();
     }
 

@@ -1,47 +1,48 @@
 @import 'src/app/style/utils.scss';
 
-div.content {
-    @include horizontal-centeralize('&', '.too-large-take-space');
+nb-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 
-    div.store-pass {
+    nb-card-body {
         flex-grow: 1;
-        height: 100%;
+    }
+    margin: 0em;
+}
+
+.top-tools {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+
+    div.buttons {
+        padding: 0.5em 0.8em;
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
+        justify-content: space-between;
         align-items: center;
 
-        div.top-tools {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-
-            div.buttons {
-                padding: 0.5em 0.8em;
-                display: grid;
-                grid-template-columns: auto auto;
-                grid-gap: 0.5em;
-            }
-        }
-
-        div.stores {
-            width: 100%;
-            padding: 1em 0.5em;
-            box-sizing: border-box;
-            overflow-y: scroll;
-            overflow-x: hidden;
-            display: grid;
-            grid-template-columns: auto;
-            @include thin-scrollbar();
-
-            div.store {
-                overflow: hidden;
-                width: 100%;
-                border-top: solid 1px #aaaaaa55;
-                &:first-child {
-                    border-top: none;
-                }
-            }
+        button {
+            margin: 0em 0.5em;
+            flex-grow: 1;
+            width: 0%;
         }
     }
 }
 
+.stores {
+    width: 100%;
+    padding: 1em 0.5em;
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: auto;
+
+    .store {
+        width: 100%;
+        border-top: solid 1px #aaaaaa55;
+        &:first-child {
+            border-top: none;
+        }
+    }
+}

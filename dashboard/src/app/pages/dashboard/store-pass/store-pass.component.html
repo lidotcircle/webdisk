@@ -1,23 +1,19 @@
-
-<div class="content">
-    <div class="too-large-take-space"></div>
-
-    <div class="store-pass">
-        <div class="top-tools">
-            <div class="buttons">
-                <button mat-raised-button color='primary' (click)='newpass()'>New Password</button>
-                <button mat-raised-button color='primary' (click)='onrefresh()'>Refresh </button>
-            </div>
-            <app-search-bar-float (searchinput)='onSearchInput($event)' (searchenter)='onSearchEnter($event)'></app-search-bar-float>
-        </div>
-
-        <div class="stores">
-            <div class="store" *ngFor='let store of showstores'>
-                <app-store [store]='store'></app-store>
-            </div>
-        </div>
+<nb-card status='info'>
+  <nb-card-header>
+    <div class="top-tools">
+      <div class="buttons">
+        <button mat-raised-button color='primary' (click)='newpass()'>New Password</button>
+        <button mat-raised-button color='primary' (click)='onrefresh()'>Refresh </button>
+      </div>
+      <app-search-bar-float (searchinput)='onSearchInput($event)' (searchenter)='onSearchEnter($event)'></app-search-bar-float>
     </div>
+  </nb-card-header>
 
-    <div class="too-large-take-space"></div>
-</div>
-
+  <nb-card-body>
+    <div class="stores">
+      <div class="store" *ngFor='let store of showstores'>
+        <app-store [store]='store'></app-store>
+      </div>
+    </div>
+  </nb-card-body>
+</nb-card>

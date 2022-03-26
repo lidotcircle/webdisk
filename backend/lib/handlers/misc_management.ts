@@ -2,9 +2,8 @@ import { MessageHandler } from '../message_handler';
 import { MessageGateway } from '../message_gateway';
 import { MessageSource } from '../common/message/message';
 import { debug, info, warn, error } from '../../service';
-import { DownloadManage, DownloadManageDeleteTaskMessage, DownloadManageEventFailMessage, DownloadManageEventFinishMessage, DownloadManageEventMessage, DownloadManageEventUpdateMessage, DownloadManageGetTasksMessage, DownloadManageGetTasksResponseMessage, DownloadManageInspectTaskMessage, DownloadManageMessage, DownloadManageNewTaskMessage, DownloadManageNewTaskResponseMessage, MiscMessage, MiscMessageType, RPCRequestMessage, RPCResponseMessage, StorePasswordMessage, StorePasswordType, StorePasswordTypeChangePassMessage, StorePasswordTypeDeletePassMessage, StorePasswordTypeGetPassMessage, StorePasswordTypeGetPassResponseMessage, StorePasswordTypeNewPassMessage, StorePasswordTypeNewPassResponseMessage } from '../common/message/misc_message';
+import {  DownloadManageEventFailMessage, DownloadManageEventFinishMessage, DownloadManageEventMessage, DownloadManageEventUpdateMessage, DownloadManageMessage, MiscMessage, MiscMessageType, RPCRequestMessage, RPCResponseMessage, StorePasswordMessage } from '../common/message/misc_message';
 import isPromise from 'is-promise';
-import { startTask } from '../download/download';
 import { KEY_DOWNLOAD } from '../database/constants';
 import { ErrorMSG } from '../common/string';
 
@@ -76,11 +75,6 @@ class MiscManagement extends MessageHandler {
                     assert.notEqual((msg as DownloadManageMessage).dlm_type, null);
                     resp = Object.assign(new DownloadManageMessage(), resp);
                     await this.downloadManage(dispatcher, msg as DownloadManageMessage, resp as DownloadManageMessage);
-                } break;
-
-                case MiscMessageType.StorePassword: {
-                    resp = Object.assign(new StorePasswordMessage(), resp);
-                    await this.passManage(dispatcher, msg as StorePasswordMessage, resp as StorePasswordMessage);
                 } break;
                 */
 
@@ -163,41 +157,10 @@ class MiscManagement extends MessageHandler {
             }
         }
     } //}
-
-    private async passManage(dispatcher: MessageGateway, msg: StorePasswordMessage, resp: StorePasswordMessage) //{
-    {
-        /*
-        debug('Recieve StorePass Message: ', msg.sp_type);
-        resp.sp_type = msg.sp_type;
-
-        switch(msg.sp_type) {
-            case StorePasswordType.GetPass: {
-                const gmsg = msg as StorePasswordTypeGetPassMessage;
-                const gresp = resp as StorePasswordTypeGetPassResponseMessage;
-                gresp.misc_msg.stores = await this.DB.getAllPass(gmsg.misc_msg.token);
-            } break;
-            case StorePasswordType.NewPass: {
-                const gmsg = msg as StorePasswordTypeNewPassMessage;
-                const gresp = resp as StorePasswordTypeNewPassResponseMessage;
-                gresp.misc_msg.passid = await this.DB.newPass(gmsg.misc_msg.token, 
-                    gmsg.misc_msg.store.site,
-                    gmsg.misc_msg.store.account,
-                    gmsg.misc_msg.store.pass);
-            } break;
-            case StorePasswordType.DeletePass: {
-                const gmsg = msg as StorePasswordTypeDeletePassMessage;
-                await this.DB.deletePass(gmsg.misc_msg.token, gmsg.misc_msg.passid);
-            } break;
-            case StorePasswordType.ChangePass: {
-                const gmsg = msg as StorePasswordTypeChangePassMessage;
-                await this.DB.changePass(gmsg.misc_msg.token, gmsg.misc_msg.passid, gmsg.misc_msg.pass);
-            } break;
-        }
-        */
-    } //}
 }
  
 export const MiscManager = new MiscManagement();
+export default MiscManager;
 
 registerRPC('getSvgIcon', require('./misc_rpc/getSvgIcon').default);
 

@@ -1,28 +1,24 @@
+<nb-card status='info'>
+  <nb-card-header>
+    settings
+  </nb-card-header>
 
-<div class="content">
-    <app-page-top title="settings"></app-page-top>
-
-    <div class="settings">
-        <div class="too-big-take-space"></div>
-
-        <div class="settings-nav" #settingsnav>
-            <div class="nav-button" (click)='gotoPanel($event)'> User Account </div>
-            <div class="nav-button" (click)='gotoPanel($event)'> Sub Accounts </div>
-            <div class="nav-button" (click)='gotoPanel($event)'> File Operations </div>
-            <div class="nav-button" (click)='gotoPanel($event)'> Display </div>
-            <div class="nav-button" (click)='gotoPanel($event)'> About </div>
-        </div>
-
-        <swiper class="settings-panel" direction='vertical' [slidesPerView]="1" [spaceBetween]="0" 
-                (slideChange)="onSlideChange($event)" (init)="onSlideInit()" #swiper>
-        <ng-template swiperSlide><div class="slide"><app-user-account></app-user-account></div></ng-template>
-        <ng-template swiperSlide><div class="slide"><app-sub-accounts></app-sub-accounts></div></ng-template>
-        <ng-template swiperSlide><div class="slide"><app-file-operations></app-file-operations></div></ng-template>
-        <ng-template swiperSlide><div class="slide"><app-display></app-display></div></ng-template>
-        <ng-template swiperSlide><div class="slide"><app-about>  </app-about>  </div></ng-template>
-        </swiper>
-
-        <div class="too-big-take-space"></div>
+  <nb-card-body>
+    <div class="settings-nav" #settingsnav>
+      <div class="nav-button" (click)='gotoPanel($event)'> User Account </div>
+      <div class="nav-button" (click)='gotoPanel($event)'> Sub Accounts </div>
+      <div class="nav-button" (click)='gotoPanel($event)'> File Operations </div>
+      <div class="nav-button" (click)='gotoPanel($event)'> Display </div>
+      <div class="nav-button" (click)='gotoPanel($event)'> About </div>
     </div>
-</div>
 
+    <swiper class="settings-panel" direction='vertical' [slidesPerView]="1" [spaceBetween]="0" 
+            (slideChange)="onSlideChange($event)" (init)="onSlideInit($event)" #swiper>
+      <ng-template swiperSlide><div class="slide"><app-user-account></app-user-account></div></ng-template>
+      <ng-template swiperSlide><div class="slide"><app-sub-accounts></app-sub-accounts></div></ng-template>
+      <ng-template swiperSlide><div class="slide"><app-file-operations></app-file-operations></div></ng-template>
+      <ng-template swiperSlide><div class="slide"><app-display></app-display></div></ng-template>
+      <ng-template swiperSlide><div class="slide"><app-about>  </app-about>  </div></ng-template>
+    </swiper>
+  </nb-card-body>
+</nb-card>

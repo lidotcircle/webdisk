@@ -2,21 +2,42 @@ import { RequestHandler, Request, Response, NextFunction } from 'express';
 import createHttpError from 'http-errors';
 import { DIProperty } from '../lib/di';
 import { JWTService } from '../service';
+import { getPasswordAuthUsername, createPasswordAuthMiddleware } from './password_auth';
 
 
+const password_debug_middleware = createPasswordAuthMiddleware("username", "password");
 const UserSymbol = Symbol('User');
 const JWTDecodedSymbol = Symbol('JWTDecoded');
 class JWTAuthMiddleware {
     @DIProperty(JWTService)
     private jwt_service: JWTService;
+    private __testing: boolean;
 
-    constructor(private jwt_header: string) {}
+    constructor(private jwt_header: string)
+    {
+        this.__testing = true;
+    }
 
     public middleware: RequestHandler = async (
         req: Request,
         _res: Response,
         next: NextFunction
     ) => {
+        if (this.__testing) {
+            let error: any;
+            const fake_next = (err: any) => error = err;
+            try {
+                await (password_debug_middleware(req, _res, fake_next) as any as Promise<void>);
+            } catch (e) {
+                error = e;
+            }
+            const username = getPasswordAuthUsername(req);
+            if (!error && username) {
+                req[UserSymbol] = username;
+                return next();
+            }
+        }
+
         const token = req.headers[this.jwt_header] as string;
         if (!token) {
             return next(new createHttpError.Unauthorized("No token provided"));

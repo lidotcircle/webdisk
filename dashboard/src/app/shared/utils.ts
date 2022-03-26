@@ -57,6 +57,12 @@ export function downloadURI(uri: string, name: string = null)
     link.click();
 }
 
+export function saveDataAsFile(data: any, filename: string, type: string = '') {
+    const blob = new Blob([data], {type: type});
+    const url = URL.createObjectURL(blob);
+    downloadURI(url, filename);
+}
+
 export function createNodeFromHtmlString(htmlText: string): HTMLElement
 {
     let div = document.createElement("div");

@@ -1,7 +1,9 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { NbToastrService } from '@nebular/theme';
 import { EChartsOption } from 'echarts';
 import { DataRecordService } from 'src/app/service/data-record.service';
+import { utils, writeFile } from 'xlsx';
 
 
 @Component({
@@ -13,6 +15,7 @@ import { DataRecordService } from 'src/app/service/data-record.service';
         <div class="control-components">
             <mat-checkbox (change)='options_change($event)' [(ngModel)]='cb_zoomSlider'>Zoom Slider</mat-checkbox>
             <mat-checkbox (change)='options_change($event)' [(ngModel)]='cb_smooth'>Smooth Line</mat-checkbox>
+            <button (click)="saveAsXLSX()" class="xlsx-download"><nb-icon icon="download-outline"></nb-icon></button>
         </div>
         <div class="control-components">
             <mat-form-field>
@@ -61,6 +64,17 @@ import { DataRecordService } from 'src/app/service/data-record.service';
            box-sizing: border-box;
            padding: 0.3em 0.5em;
        }
+
+       .xlsx-download {
+           border: none;
+           background: transparent;
+       }
+       .xlsx-download:hover::after {
+           position: absolute;
+           content: 'save as xlsx';
+           transform: translate(0.5em, 0.8em);
+           color: #17b;
+       }
     `],
 })
 export class GroupGraphComponent implements OnInit, OnDestroy {
@@ -82,7 +96,8 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
     in_yaxis_name: string;
 
     constructor(private activatedRouter: ActivatedRoute,
-                private dataRecordService: DataRecordService)
+                private dataRecordService: DataRecordService,
+                private toastrService: NbToastrService)
     {
         this.loading = true;
         this.options = {};
@@ -274,6 +289,29 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
             result.push(i);
         }
         return result;
+    }
+
+    saveAsXLSX() {
+        if (this.u_series == null) {
+            this.toastrService.danger("No data to export");
+            return;
+        }
+
+        const data = [];
+        for (const s of this.u_series) {
+            let i = 1;
+            data[0] = data[0] || [];
+            data[0].push(s.name);
+            for (const d of s.data) {
+                data[i] = data[i] || [];
+                data[i].push(d);
+                i++;
+            }
+        }
+        const book = utils.book_new();
+        const worksheet = utils.aoa_to_sheet(data);
+        utils.book_append_sheet(book, worksheet, this.group);
+        writeFile(book, this.group + '.xlsx');
     }
 
     ngOnDestroy() {

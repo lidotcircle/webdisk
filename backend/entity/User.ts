@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToOne, OneToMany } from "typeorm"
+import { Entity, CreateDateColumn, UpdateDateColumn, PrimaryGeneratedColumn, Column, OneToOne, OneToMany, JoinColumn } from "typeorm"
 import { InvitationCode } from "./InvitationCode"
 
 
@@ -14,10 +14,17 @@ export class User {
     password: string
 
     @OneToOne(() => InvitationCode, {nullable: true})
+    @JoinColumn()
     selfInvitationCode: InvitationCode;
 
     @OneToMany(() => InvitationCode, invitationCode => invitationCode.user)
     invitationCodes: InvitationCode[];
+
+    @CreateDateColumn()
+    createdAt: Date
+
+    @UpdateDateColumn()
+    updatedAt: Date
 
     @Column()
     rootpath: string

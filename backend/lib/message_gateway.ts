@@ -119,7 +119,6 @@ export class MessageGateway extends EventEmitter {
     } //}
 }
 
-// registerMessageHandler(MessageType.UserManagement, UserManager);
-// registerMessageHandler(MessageType.MiscManagement, MiscManager);
+registerMessageHandler(MessageType.MiscManagement, require('./handlers/misc_management').default);
 registerMessageHandler(MessageType.FileManagement, require('./handlers/file_management').default);
 

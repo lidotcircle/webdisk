@@ -13,6 +13,7 @@ import { WrapperComponent } from './wrapper/wrapper.component';
 import { SettingItemComponent } from './setting-item/setting-item.component';
 import { CheckboxComponent } from './setting-item/checkbox/checkbox.component';
 import { InputComponent } from './setting-item/input/input.component';
+import { NbCardModule } from '@nebular/theme';
 
 
 @NgModule({
@@ -31,6 +32,7 @@ import { InputComponent } from './setting-item/input/input.component';
     imports: [
         CommonModule,
         SharedModule,
+        NbCardModule,
         UserSettingsRoutingModule
     ]
 })

@@ -15,9 +15,10 @@ const jwt_validator = defaultJWTAuthMiddleware;
 // subscribing upgrade event of httpserver.
 const callback_list = QueryDependency("listen-callback") as any[];
 
-router.use('/apis/auth',  require('./auth').default);
-router.use('/apis/user',  jwt_validator, require('./user').default);
-router.use('/apis/sdata', require('./sdata').default);
+router.use('/apis/auth',      require('./auth').default);
+router.use('/apis/user',      jwt_validator, require('./user').default);
+router.use('/apis/passstore', jwt_validator, require('./passstore').default);
+router.use('/apis/sdata',     require('./sdata').default);
 router.use('/disk',       jwt_validator, require('./disk').default);
 router.use('/link', require('./namedlink').default);
 const ws_router = createWebSocketMiddleware(/\/ws/, conn => new MessageGateway(conn));
