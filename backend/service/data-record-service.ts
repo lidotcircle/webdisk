@@ -26,7 +26,7 @@ export class DataRecordService {
         const dr = new DataRecord();
         dr.data = data;
         dr.dgroup = group;
-        dr.user = user;
+        dr.user = Promise.resolve(user);
         this.drRepo.save(dr);
     }
     
@@ -56,7 +56,7 @@ export class DataRecordService {
         const skip = (pageno ? pageno - 1 : 0) * pagesize;
 		const [result, total] = await this.drRepo.findAndCount(
 			{
-				where: { dgroup: group, user: user }, order: { id: "ASC" },
+				where: { dgroup: group, userId: user.id }, order: { id: "ASC" },
 				take: pagesize,
 				skip: skip
 			}
@@ -76,7 +76,7 @@ export class DataRecordService {
 
         const result = await this.drRepo.find(
             {
-                where: { dgroup: group, user: user },
+                where: { dgroup: group, userId: user.id },
                 order: { id: "ASC" },
                 skip: skip
             });

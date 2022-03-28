@@ -14,5 +14,8 @@ export class DataRecord {
     data: string
 
     @ManyToOne(() => User)
-    user: User
+    user: Promise<User>
+
+    @Column({type: 'int', nullable: true})
+    userId: number | null;
 }
