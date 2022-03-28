@@ -81,22 +81,16 @@ class HttpLogger:
         self.__queue = []
         self.__end = False
 
-    async def connect_stdin(self):
-        loop = asyncio.get_event_loop()
-        reader = asyncio.StreamReader()
-        protocol = asyncio.StreamReaderProtocol(reader)
-        await loop.connect_read_pipe(lambda: protocol, sys.stdin)
-        return reader
+    async def readline(self):
+        return await asyncio.get_running_loop().run_in_executor(None, sys.stdin.readline)
 
     async def __run_fetch(self):
-        reader = await self.connect_stdin()
         while True:
-            msg = await reader.readline();
-            self.__msg_event.set()
-            msg = msg.decode().strip()
-            if (reader.at_eof()):
-                self.__end = True
+            msg = await self.readline()
+            if msg is None or len(msg) == 0:
                 break
+            self.__msg_event.set()
+            msg = msg.strip()
             self.__queue.append(msg)
 
     async def __run_send(self):
