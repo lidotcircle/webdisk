@@ -4,7 +4,7 @@
 .message-box {
     display: flex;
     flex-direction: column;
-    width: max-content;
+    width: 100%;
     @include no-select();
 
     .message-box-content {
@@ -31,6 +31,11 @@
             width: 100%;
             padding: 0em 0.3em 0.5em 0.3em;
             box-sizing: border-box;
+
+            mat-form-field {
+                width: 100%;
+                margin: 0.3em 0em;
+            }
 
             .input-pair {
                 width: 100%;

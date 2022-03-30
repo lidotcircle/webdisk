@@ -1,8 +1,11 @@
 import { Observable, Subject } from 'rxjs';
-import { hasTouchScreen, nextTick } from 'src/app/shared/utils';
+import { hasTouchScreen } from 'src/app/shared/utils';
 import { DontOverflow } from './dont-overflow';
+declare var require: any;
+export const transparent1pixel = require('!url-loader!./transparent-1pixel.png').default;
 
-function always_return_true(...args) {return true;}
+
+function always_return_true(..._args: any[]) {return true;}
 
 export enum Orientation {
     left = 'left',
@@ -67,7 +70,7 @@ export class ViewDraggable extends DontOverflow {
         if (!this.filter(ev.target as HTMLElement)) return;
 
         const img = new Image();
-        img.src = "assets/img/transparent-1pixel.png";
+        img.src = transparent1pixel;
         ev.dataTransfer.setDragImage(img, 0, 0);
         this.prev = [ev.screenX, ev.screenY];
         this.toggle_move_cursor();
