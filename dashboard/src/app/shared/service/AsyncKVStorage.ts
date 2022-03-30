@@ -69,21 +69,12 @@ class AsyncKVStorageInner {
     }
 
     public async get<T>(key: string, defaultValue: T=null): Promise<T> {
-        let value;
         const result = await this.table.where({key: key}).toArray();
         if (result.length > 0) {
             console.assert(result.length == 1);
-            value = result[0].value;
+            return result[0].value;
         }
-        try {
-            value = JSON.parse(value);
-        } catch {
-            value = null;
-        }
-        if (value === null && defaultValue) {
-            value = defaultValue;
-        }
-        return value;
+        return defaultValue;
     }
 
     public async set<T>(key: string, value: T): Promise<void> {

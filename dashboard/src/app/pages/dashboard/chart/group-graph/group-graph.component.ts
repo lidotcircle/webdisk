@@ -3,6 +3,7 @@ import { ActivatedRoute } from '@angular/router';
 import { NbToastrService } from '@nebular/theme';
 import { EChartsOption } from 'echarts';
 import { DataRecordService } from 'src/app/service/data-record.service';
+import { AsyncLocalStorageService } from 'src/app/shared/service/async-local-storage.service';
 import { utils, writeFile } from 'xlsx';
 
 
@@ -111,7 +112,8 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
 
     constructor(private activatedRouter: ActivatedRoute,
                 private dataRecordService: DataRecordService,
-                private toastrService: NbToastrService)
+                private toastrService: NbToastrService,
+                private localstorage: AsyncLocalStorageService)
     {
         this.loading = true;
         this.options = {};
@@ -122,9 +124,32 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
         this.data_skipn = 0;
     }
 
-    options_change(_event: any)
+    async options_change(_event: any)
     {
         this.refresh_chart();
+        const page_config = {
+            refresh_sec: this.refresh_sec,
+            data_average: this.data_average,
+            data_skipn: this.data_skipn,
+            smooth: this.cb_smooth,
+            zoomSlider: this.cb_zoomSlider,
+            xaxis_name: this.in_xaxis_name,
+            yaxis_name: this.in_yaxis_name,
+        };
+        await this.localstorage.set("grouppage_conf_" + this.group, page_config);
+    }
+
+    private async restore_config() {
+        const config = await this.localstorage.get("grouppage_conf_" + this.group) as any;
+        if (!config) return;
+
+        this.refresh_sec = config.refresh_sec;
+        this.data_average = config.data_average;
+        this.data_skipn = config.data_skipn;
+        this.cb_smooth = config.cb_smooth;
+        this.cb_zoomSlider = config.zoomSlider;
+        this.in_xaxis_name = config.xaxis_name;
+        this.in_yaxis_name = config.yaxis_name;
     }
 
     private apply_skip_average(before: Map<string | symbol,number[]>, init_apply: boolean):
@@ -368,6 +393,7 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
         this.activatedRouter.queryParamMap.subscribe(async (params) => {
             this.group = params.get("group");
+            await this.restore_config();
             const jsonlist = [];
             this.datasize = 0;
             try { 
