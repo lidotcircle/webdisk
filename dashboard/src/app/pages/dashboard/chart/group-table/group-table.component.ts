@@ -1,9 +1,56 @@
-import { Component, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, Input, ViewEncapsulation } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { NbToastrService, NbWindowService } from '@nebular/theme';
 import { LocalDataSource } from 'ng2-smart-table';
 import { DataRecordService } from 'src/app/service/data-record.service';
 import { ConfirmWindowComponent } from 'src/app/shared/shared-component/confirm-window.component';
-import { ButtonsCellComponent } from './buttons-cell.component';
+import { ViewCell } from 'ng2-smart-table';
+
+
+@Component({
+    template: `
+      <div class="buttons">
+        <button nbButton status='info' size='tiny' (click)='nav_graph()' outline>Graph</button>
+        <button nbButton status='info' size='tiny' (click)='nav_table()' outline>Table</button>
+      </div>
+    `,
+    styles: [
+    `
+    .buttons {
+        display: grid;
+        grid-template-columns: auto auto;
+        column-gap: 0.3em;
+    }
+    `
+    ]
+})
+export class ButtonsCellComponent implements ViewCell, OnInit {
+    constructor(private router: Router, private activatedRouter: ActivatedRoute) {}
+
+    @Input() value: string | number;
+    @Input() rowData: { group: string };
+
+    ngOnInit() {
+    }
+
+    async nav_graph() {
+        await this.router.navigate(['../graph'], {
+            relativeTo: this.activatedRouter,
+            queryParams: {
+                group: this.rowData.group,
+            }
+        });
+    }
+
+    async nav_table() {
+        await this.router.navigate(['../table-view'], {
+            relativeTo: this.activatedRouter,
+            queryParams: {
+                group: this.rowData.group,
+            }
+        });
+    }
+}
 
 
 type DataType = { group: string };
@@ -31,7 +78,7 @@ export class GroupTableComponent implements OnInit {
         rowClassFunction: () => 'data-row',
         columns: {
             buttons: {
-                title: 'view',
+                title: 'Buttons',
                 width: '4em',
                 editable: false,
                 type: 'custom',

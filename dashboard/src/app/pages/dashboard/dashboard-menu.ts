@@ -58,6 +58,12 @@ export const WebdiskMenu: NbMenuItem[] = [
                 icon: 'layout',
                 link: '/wd/dashboard/chart/graph',
                 hidden: true,
+            },
+            {
+                title: 'table-view',
+                icon: 'layout',
+                link: '/wd/dashboard/chart/table-view',
+                hidden: true,
             }
         ]
     },

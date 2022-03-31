@@ -3,10 +3,9 @@ import { CommonModule } from '@angular/common';
 import { NgxEchartsModule } from 'ngx-echarts';
 import { ChartComponent } from './chart.component';
 import { ChartRoutingModule } from './chart-routing.module';
-import { GroupTableComponent } from './group-table/group-table.component';
+import { GroupTableComponent, ButtonsCellComponent } from './group-table/group-table.component';
 import { GroupGraphComponent } from './group-graph/group-graph.component';
-import { ButtonsCellComponent } from './group-table/buttons-cell.component';
-import { NbAlertModule, NbButtonModule, NbCardModule, NbCheckboxModule, NbIconModule, NbInputModule, NbSpinnerModule } from '@nebular/theme';
+import { NbAlertModule, NbButtonModule, NbCardModule, NbCheckboxModule, NbIconModule, NbInputModule, NbSelectModule, NbSpinnerModule } from '@nebular/theme';
 import { Ng2SmartTableModule } from 'ng2-smart-table';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatInputModule } from '@angular/material/input';
@@ -16,6 +15,7 @@ import { FormsModule } from '@angular/forms';
 import { AddDataComponent } from './add-data/add-data.component';
 import { MonacoEditorModule } from 'ngx-monaco-editor';
 import { SharedModule } from 'src/app/shared/shared.module';
+import { RecordViewComponent, TableViewComponent } from './table-view/table-view.component';
 
 
 @NgModule({
@@ -23,6 +23,8 @@ import { SharedModule } from 'src/app/shared/shared.module';
         ChartComponent,
         GroupTableComponent,
         GroupGraphComponent,
+        TableViewComponent,
+        RecordViewComponent,
         ButtonsCellComponent,
         AddDataComponent,
     ],
@@ -40,6 +42,7 @@ import { SharedModule } from 'src/app/shared/shared.module';
         MatCheckboxModule,
         MatInputModule,
         MatSliderModule,
+        NbSelectModule,
         NbCheckboxModule,
         Ng2SmartTableModule,
         NbSpinnerModule,

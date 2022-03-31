@@ -5,6 +5,7 @@ import { LocalStorageService, SessionStorageService, StorageKeys } from '../stor
 import { JwtHelperService } from '@auth0/angular-jwt';
 import { JwtClaim } from './jwtClaim';
 import { RESTfulAPI } from '../../restful';
+import { AsyncLocalStorageService } from 'src/app/shared/service/async-local-storage.service';
 
 
 @Injectable({
@@ -28,6 +29,7 @@ export class AuthService {
 
     constructor(private localstorage: LocalStorageService,
                 private sessionStorage: SessionStorageService,
+                private asynclocalstorage: AsyncLocalStorageService,
                 private http: HttpClient) {
         this.refresh_token = this.localstorage.get<string>(StorageKeys.REFRESH_TOKEN, null);
         this.refresh_token = this.refresh_token || this.sessionStorage.get<string>(StorageKeys.REFRESH_TOKEN, null);
@@ -86,6 +88,7 @@ export class AuthService {
         } finally {
             this.localstorage.remove(StorageKeys.REFRESH_TOKEN);
             this.sessionStorage.remove(StorageKeys.JWT_TOKEN);
+            await this.asynclocalstorage.clear();
             this.refresh_token = null;
             this.jwt_token = null;
             this.jwtSubject.next(null);

@@ -10,7 +10,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
 import { SharedComponentModule } from './shared-component/shared-component.module';
 import { SharedDirectiveModule } from './shared-directive/shared-directive.module';
-import { HttpClientModule } from '@angular/common/http';
 import { SwiperModule } from 'swiper/angular';
 
 
@@ -28,7 +27,6 @@ import { SwiperModule } from 'swiper/angular';
         SharedDirectiveModule,
         SharedComponentModule,
         FormsModule,
-        HttpClientModule,
         ThemeModule,
         NbDatepickerModule,
         NbTimepickerModule,

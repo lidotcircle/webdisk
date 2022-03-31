@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { NbToastrService } from '@nebular/theme';
-import { EChartsOption } from 'echarts';
+import { ECharts, EChartsOption } from 'echarts';
 import { DataRecordService } from 'src/app/service/data-record.service';
 import { AsyncLocalStorageService } from 'src/app/shared/service/async-local-storage.service';
 import { utils, writeFile } from 'xlsx';
@@ -18,6 +18,7 @@ const createdAt_symbol = Symbol("createat")
         <div class="control-components">
             <mat-checkbox (change)='options_change($event)' [(ngModel)]='cb_zoomSlider'>Zoom Slider</mat-checkbox>
             <mat-checkbox (change)='options_change($event)' [(ngModel)]='cb_smooth'>Smooth Line</mat-checkbox>
+            <mat-checkbox (change)='options_change($event)' [(ngModel)]='cb_area'>Area</mat-checkbox>
             <mat-form-field>
                 <mat-label>naverage</mat-label>
                 <input (change)='options_change($event)' matInput type="number" min='1' step='1' [(ngModel)]='data_average'>
@@ -41,10 +42,14 @@ const createdAt_symbol = Symbol("createat")
                 <label style='margin: 0em; width: 100%; text-align: center;'>Refresh Frequency {{refresh_sec}}s</label>
                 <mat-slider style='width: 100%;' min='1' max='100' step='1' [(ngModel)]='refresh_sec'></mat-slider>
             </div>
+            <button nbButton size='tiny' status="primary" (click)='select_all_legend()'>select all</button>
+            <button nbButton size='tiny' status="primary" (click)='deselect_all_legend()'>deselect all</button>
+            <button nbButton size='tiny' status="primary" (click)='inverse_legend()'>inverse</button>
         </div>
       </nb-card-header>
       <nb-card-body>
-        <div *ngIf='!errorMsg && datasize > 0' echarts [options]="options" [merge]="dynamic_options" class="echart"></div>
+        <div *ngIf='!errorMsg && datasize > 0' echarts 
+             (chartInit)="onChartInit($event)" [options]="options" [merge]="dynamic_options" class="echart"></div>
         <nb-alert *ngIf='errorMsg' status="danger"><div>{{errorMsg}}</div></nb-alert>
         <nb-alert *ngIf='!errorMsg && datasize == 0' status="info"><div>Nothing In This Group</div></nb-alert>
       </nb-card-body>
@@ -67,6 +72,7 @@ const createdAt_symbol = Symbol("createat")
        }
 
        .control-components {
+           font-size: small;
            display: flex;
            flex-direction: row;
            align-items: center;
@@ -89,6 +95,7 @@ const createdAt_symbol = Symbol("createat")
     `],
 })
 export class GroupGraphComponent implements OnInit, OnDestroy {
+    private echartsInstance: ECharts;
     loading: boolean
     options: EChartsOption;
     dynamic_options: EChartsOption;
@@ -105,6 +112,7 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
     private u_keyvaldatas_after_skip_avg: Map<string | symbol,number[]>;
     cb_zoomSlider: boolean = true;
     cb_smooth: boolean = true;
+    cb_area: boolean = false;
     in_xaxis_name: string;
     in_yaxis_name: string;
     data_average: number;
@@ -122,6 +130,39 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
         this.refresh_sec = 5;
         this.data_average = 1;
         this.data_skipn = 0;
+    }
+
+    onChartInit(ins: ECharts) {
+        this.echartsInstance = ins;
+    }
+
+    deselect_all_legend() {
+        if (this.echartsInstance) {
+            const nseries = this.u_series.length;
+            this.echartsInstance.dispatchAction({
+                type: "legendUnSelect",
+                batch: this.range(0, nseries, 1).map(i => { return { name: this.u_series[i].name }; }),
+            });
+            this.echartsInstance.setOption({
+                darkMode: true
+            });
+        }
+    }
+
+    select_all_legend() {
+        if (this.echartsInstance) {
+            this.echartsInstance.dispatchAction({
+                type: "legendAllSelect",
+            });
+        }
+    }
+
+    inverse_legend() {
+        if (this.echartsInstance) {
+            this.echartsInstance.dispatchAction({
+                type: "legendInverseSelect",
+            });
+        }
     }
 
     async options_change(_event: any)
@@ -287,6 +328,7 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
         if (this.u_series != null) {
             for (const one of this.u_series) {
                 one.smooth = this.cb_smooth;
+                one.areaStyle = this.cb_area ? {} : null;
             }
         }
         return options;

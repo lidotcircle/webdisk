@@ -4,6 +4,7 @@ import { AddDataComponent } from './add-data/add-data.component';
 import { ChartComponent } from './chart.component';
 import { GroupGraphComponent } from './group-graph/group-graph.component';
 import { GroupTableComponent } from './group-table/group-table.component';
+import { TableViewComponent } from './table-view/table-view.component';
 
 
 const routes: Routes = [
@@ -23,6 +24,10 @@ const routes: Routes = [
             {
                 path: 'graph',
                 component: GroupGraphComponent
+            },
+            {
+                path: 'table-view',
+                component: TableViewComponent
             },
             {
                 path: 'add-data',

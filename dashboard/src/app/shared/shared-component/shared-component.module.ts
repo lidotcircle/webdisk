@@ -11,7 +11,6 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { FormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http';
 import { FilePropertiesComponent } from './file-properties/file-properties.component';
 import { NotifierComponent } from './notifier/notifier.component';
 import { MessageProgressBarComponent } from './message-progress-bar/message-progress-bar.component';
@@ -29,6 +28,7 @@ import { SolePdfViewerComponent } from './sole-window/sole-pdf-viewer/sole-pdf-v
 import { SearchBarFloatComponent } from './search-bar-float/search-bar-float.component';
 import { ConfirmWindowComponent } from './confirm-window.component';
 import { NbButtonModule } from '@nebular/theme';
+import { PrismJSComponent } from './ngx-prismjs/ngx-prismjs.component';
 
 
 @NgModule({
@@ -39,6 +39,7 @@ import { NbButtonModule } from '@nebular/theme';
         ProgressCircleComponent, FileIconComponent, SearchBarComponent, WindowComponent, PageTopComponent, 
         SoleWindowComponent, SoleVideoPlayerComponent, SoleAudioPlayerComponent, SoleImageViewerComponent, 
         SolePdfViewerComponent, SearchBarFloatComponent, ConfirmWindowComponent,
+        PrismJSComponent,
     ],
     imports: [
         CommonModule,
@@ -46,7 +47,6 @@ import { NbButtonModule } from '@nebular/theme';
         MatButtonModule,
         MatIconModule,
         FormsModule,
-        HttpClientModule,
         NbButtonModule,
 
         MediaModule
@@ -61,6 +61,7 @@ import { NbButtonModule } from '@nebular/theme';
         SearchBarFloatComponent,
         WindowComponent,
         PageTopComponent,
+        PrismJSComponent,
 
         MediaModule
     ]

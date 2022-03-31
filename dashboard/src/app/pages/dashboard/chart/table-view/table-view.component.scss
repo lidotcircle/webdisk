@@ -1,0 +1,12 @@
+@import 'src/app/style/table.scss';
+
+app-table-view {
+    @include TableIsEmpty();
+
+    .header-top {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+    }
+}
+
