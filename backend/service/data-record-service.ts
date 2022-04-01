@@ -47,7 +47,7 @@ export class DataRecordService {
     }
 
     public async getData(username: string, group: string, pageno: number, pagesize: number):
-        Promise<{ count: number; data: string[]}>
+        Promise<{ count: number; data: {date: string, data: string}[]}>
     {
         const user = await this.userService.getUser(username);
         if (!user)
@@ -63,12 +63,12 @@ export class DataRecordService {
 		);
 
 		return {
-			data: result.map(d => d.data),
+            data: result.map(d  => { return { data: d.data, date: d.createdAt.toISOString() }; }),
 			count: total
 		}
     }
 
-    public async getAllData(username: string, group: string, skip: number): Promise<string[]>
+    public async getAllData(username: string, group: string, skip: number): Promise<{ date: string, data: string }[]>
     {
         const user = await this.userService.getUser(username);
         if (!user)
@@ -80,7 +80,7 @@ export class DataRecordService {
                 order: { id: "ASC" },
                 skip: skip
             });
-        return result.map(d => d.data);
+        return result.map(d => { return { data: d.data, date: d.createdAt.toISOString() }; });
     }
 
     public async deleteGroup(username: string, group: string)

@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm"
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn } from "typeorm"
 import { User } from "./User"
 
 
@@ -18,4 +18,7 @@ export class DataRecord {
 
     @Column({type: 'int', nullable: true})
     userId: number | null;
+
+    @CreateDateColumn()
+    createdAt: Date
 }

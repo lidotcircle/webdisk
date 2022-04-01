@@ -7,6 +7,7 @@ import { Subject } from 'rxjs';
 import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { RESTfulAPI } from 'src/app/restful';
 import { map, takeUntil } from 'rxjs/operators';
+import { AsyncLocalStorageService } from 'src/app/shared/service/async-local-storage.service';
 
 
 let numberoftableview = 0;
@@ -76,6 +77,9 @@ export class TableViewComponent implements OnInit, OnDestroy {
                 datatype: this.datatype,
             });
         }
+        this.localstorage.set(`table-view-config?group=${this.group}`, {
+            datatype: this.datatype,
+        });
     }
 
     page_options_change(_event: any) {
@@ -97,6 +101,7 @@ export class TableViewComponent implements OnInit, OnDestroy {
     constructor(private toastrService: NbToastrService,
                 private router: Router,
                 private activatedRoute: ActivatedRoute,
+                private localstorage: AsyncLocalStorageService,
                 private http: HttpClient)
     {
         this.viewid = numberoftableview++;
@@ -139,19 +144,25 @@ export class TableViewComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.activatedRoute.queryParamMap.subscribe(async (params) => {
+            const group = params.get("group");
             const pageno = params.get("pageno");
+            const pagesize = params.get("pagesize")
+            const config = await this.localstorage.get(`table-view-config?group=${group}`) as any;
+            if (config) {
+                this.datatype = config.datatype || this.datatype;
+            }
+
             if (pageno) {
                 const pno = Number(pageno) || 1;
                 this.settings.pager.page = pno;
             }
+
             this.pageno = this.settings.pager.page;
-            const pagesize = params.get("pagesize")
             if (pagesize) {
                 this.settings.pager.perPage = pagesize;
             }
             this.pagesize = this.settings.pager.perPage;
 
-            const group = params.get("group");
             if(group == null) {
                 this.toastrService.danger("page error", "error");
             } else {
@@ -184,6 +195,9 @@ export class TableViewComponent implements OnInit, OnDestroy {
                                     }
                                     if (data['date'] == null) {
                                         data['date'] = 'NoPresented';
+                                    } else {
+                                        const d = new Date(data['date']);
+                                        data['date'] = d.toLocaleString();
                                     }
                                     data["datatype"] = _this.datatype;
                                     data["viewid"] = _this.viewid;
