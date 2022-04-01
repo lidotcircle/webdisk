@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, ViewEncapsulation, OnDestroy } from '@angular/core';
+import { Component, OnInit, Input, ViewEncapsulation, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { ServerDataSource } from 'ng2-smart-table';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NbToastrService } from '@nebular/theme';
@@ -13,31 +13,32 @@ let numberoftableview = 0;
 const tableviews: TableViewComponent[] = [];
 @Component({
     template: `
-    <ngx-prismjs [code]='data' language='json5'></ngx-prismjs>
+    <ngx-prismjs [code]='data' [language]='datatype'></ngx-prismjs>
     `,
-    styles: [``]
+    styles: [``],
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RecordViewComponent implements ViewCell, OnInit {
-    constructor() {}
+    constructor(private ref: ChangeDetectorRef) {}
 
-    editorOptions = {theme: 'vs-dark', language: 'json'};
     data: string;
     datatype: string;
     @Input() value: string | number;
     @Input() rowData: { data: string; datatype: string; };
 
     ngOnInit() {
-        this.data = JSON.stringify(JSON.parse(this.rowData.data), null, 2);
-        this.datatype = this.rowData.datatype;
+        this.update_options(this.rowData);
         const viewer = tableviews[this.rowData['viewid']];
         viewer.viewer_init(this);
-        setTimeout(() => this.datatype = "", 1000);
     }
 
     update_options(options: any) {
-        this.data = options['data'] || this.data;
-        this.datatype = options['datatype'] || this.datatype;
-        console.log(this.datatype);
+        this. data = options['data'] || this.data || '';
+        try {
+            this.data = JSON.stringify(JSON.parse(this.data), null, 2);
+        } catch {}
+        this.datatype = options['datatype'] || this.datatype || '';
+        this.ref.markForCheck();
     }
 }
 
@@ -101,7 +102,7 @@ export class TableViewComponent implements OnInit, OnDestroy {
         this.viewid = numberoftableview++;
         tableviews.push(this);
         this.destroy$ = new Subject();
-        this.datatype = "JSON";
+        this.datatype = "text";
         this.pagesize = 10;
         this.pageno = 1;
         this.settings  = {

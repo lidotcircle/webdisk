@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, Input, ElementRef, ViewChild, OnChanges, SimpleChanges } from '@angular/core';
 import { highlight, languages } from 'prismjs';
 
 declare var require: any;
@@ -16,7 +16,7 @@ function createCodeHTMLFromString(text: string) {
 @Component({
     selector: 'ngx-prismjs',
     template: `
-    <pre class='code-viewer-{{language}} language-{{language}}' #codeviewer></pre>
+    <pre class='code-viewer-{{languageCLS}} language-{{languageCLS}}' #codeviewer></pre>
     `,
     styles: [`
     pre {
@@ -31,27 +31,29 @@ function createCodeHTMLFromString(text: string) {
         width: 100%;
     }`],
 })
-export class PrismJSComponent implements OnInit {
+export class PrismJSComponent implements OnInit, OnChanges {
     constructor() {}
 
     @Input()
     code: string;
     @Input()
     language: string;
-    @Input()
-    inlined: boolean;
+    languageCLS: string;
     @ViewChild('codeviewer', {static: true}) codeviewer: ElementRef;
 
-    ngOnInit() {
-        if (this.inlined === undefined)
-            this.inlined = true;
+    ngOnInit() {}
 
-        this.update(this.code, this.language);
+    ngOnChanges(changes: SimpleChanges): void {
+        if (changes.code || changes.language) {
+            this.update(this.code, this.language);
+        }
     }
 
     update(code: string, language: string) {
         code = this.code || '';
+        language = language.toLowerCase();
         language = languages[language] ? language : 'plain';
+        this.languageCLS = language;
 
         const html = highlight(code, languages[language], language);
         const element = createCodeHTMLFromString(html);

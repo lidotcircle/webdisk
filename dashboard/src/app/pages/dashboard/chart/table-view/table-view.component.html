@@ -4,8 +4,12 @@
       <div>Number Of Records: {{ source?.count() }}</div>
       <nb-select size='small' (selectedChange)='select_options_change($event)' 
                  status='primary' filled placeholder="DataViewer" [(selected)]='datatype'>
-        <nb-option value="Text">Text</nb-option>
-        <nb-option value="JSON">JSON</nb-option>
+        <nb-option value="text">Text</nb-option>
+        <nb-option value="json">JSON</nb-option>
+        <nb-option value="c">C</nb-option>
+        <nb-option value="cpp">C++</nb-option>
+        <nb-option value="javascript">Javascript</nb-option>
+        <nb-option value="typescript">Typescript</nb-option>
       </nb-select>
     </div>
     <div class='header-top'>
