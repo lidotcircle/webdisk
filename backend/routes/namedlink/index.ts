@@ -1,14 +1,14 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { NamedLinkService } from '../../service';
 import { QueryDependency } from '../../lib/di';
 import path from 'path';
+import { write_file_response } from '../../lib/utils';
 
 const router = express.Router();
 export default router;
 
 
-router.get('/:link', 
-    async (req, res) => {
+const handler =  async (req: Request, res: Response) => {
         const link = req.params['link'];
         const service = QueryDependency(NamedLinkService);
         const entry = await service.getLink(link);
@@ -21,8 +21,13 @@ router.get('/:link',
             return;
         }
 
-        // TODO: redirect to the actual link in different filesystem
-        const p = path.join(entry.user.rootpath, entry.target.substring(1));
-        res.download(p, link);
+        const filename = path.join(entry.user.rootpath, entry.target.substring(1));
+        await write_file_response(filename, req.headers, res, {
+            attachment: true,
+            method_head: req.method.toLowerCase() == 'head',
+            attachmentFilename: link,
+        });
     }
-)
+
+router.head('/:link', handler)
+router.get ('/:link', handler)

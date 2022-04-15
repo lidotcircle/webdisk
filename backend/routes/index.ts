@@ -19,6 +19,7 @@ router.use('/apis/auth',       require('./auth').default);
 router.use('/apis/user',       jwt_validator, require('./user').default);
 router.use('/apis/passstore',  jwt_validator, require('./passstore').default);
 router.use('/apis/named-link', jwt_validator, require('./namedlinks').default);
+router.use('/apis/flink',     require('./filelink').default);
 router.use('/apis/sdata',     require('./sdata').default);
 router.use('/disk',           jwt_validator, require('./disk').default);
 router.use('/link',           require('./namedlink').default);

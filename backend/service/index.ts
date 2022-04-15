@@ -8,3 +8,4 @@ export * from './data-record-service';
 export * from './password-store-service';
 export * from './user-token-service';
 export * from './simple-expired-store-service';
+export * from './user-upload-file-service';

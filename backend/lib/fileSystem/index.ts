@@ -7,7 +7,7 @@ import { Config } from '../../service';
 
 export { FileSystem } from './fileSystem';
 
-class Dummy {
+export class __dummy {
     @InjectableFactory(FileSystem, { lazy: true })
     filesystem(config: Config) {
         let fs: FileSystem;

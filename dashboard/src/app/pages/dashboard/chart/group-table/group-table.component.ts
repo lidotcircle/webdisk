@@ -112,6 +112,8 @@ export class GroupTableComponent implements OnInit {
         }
     }
 
+    async refresh_data() { await this.refresh(); }
+
     async onDeleteConfirm(event: {
         data: { group: string }, 
         source: LocalDataSource,

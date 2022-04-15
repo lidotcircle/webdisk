@@ -12,5 +12,16 @@ app-group-table {
             }
         }
     }
+
+    .control-components {
+        font-size: small;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        box-sizing: border-box;
+        padding: 0.3em 0.5em;
+    }
 }
 

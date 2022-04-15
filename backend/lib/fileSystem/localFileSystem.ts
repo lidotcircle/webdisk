@@ -196,7 +196,6 @@ export class LocalFileSystem extends FileSystem {
     {
         const ws = fs.createWriteStream(filename, {flags: 'w'});
         const ans = await utils.pipelineWithTimeout(reader, ws);
-        ws.end();
         return ans;
     } //}
 }

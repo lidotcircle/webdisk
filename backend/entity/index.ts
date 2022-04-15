@@ -6,3 +6,4 @@ export * from './DataRecord';
 export * from './UserToken';
 export * from './UserSetting';
 export * from './PasswordStore';
+export * from './UploadedFile';

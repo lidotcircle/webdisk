@@ -14,7 +14,11 @@ let numberoftableview = 0;
 const tableviews: TableViewComponent[] = [];
 @Component({
     template: `
-    <ngx-prismjs [code]='data' [language]='datatype'></ngx-prismjs>
+    <ngx-prismjs *ngIf='datatype!="log"' [code]='data' [language]='datatype'></ngx-prismjs>
+    <div *ngIf='datatype=="log"' [status]='logStatus'>
+       <span [style]='logStyle'>{{ logLevel }}</span>
+       {{ logText }}
+    </div>
     `,
     styles: [``],
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -24,6 +28,9 @@ export class RecordViewComponent implements ViewCell, OnInit {
 
     data: string;
     datatype: string;
+    logLevel: string;
+    logText: string;
+    logStyle: string;
     @Input() value: string | number;
     @Input() rowData: { data: string; datatype: string; };
 
@@ -40,6 +47,22 @@ export class RecordViewComponent implements ViewCell, OnInit {
         } catch {}
         this.datatype = options['datatype'] || this.datatype || '';
         this.ref.markForCheck();
+
+        if (this.datatype == 'log') {
+            try {
+                const obj = JSON.parse(this.data);
+                this.logLevel = obj.level || 'info';
+                this.logText = obj.message || '';
+            } catch {}
+            switch (this.logLevel) {
+                case 'debug': this.logStyle = 'text-align:center;color:#3db744;font-weight:bold;padding-right:1em;'; break;
+                case 'info':  this.logStyle = 'text-align:center;color:#0095ff;font-weight:bold;padding-right:1em;'; break;
+                case 'warning':
+                case 'warn':  this.logStyle = 'text-align:center;color:#ffaa00;font-weight:bold;padding-right:1em;'; break;
+                case 'error':
+                default:      this.logStyle = 'text-align:center;color:#edf1f7;font-weight:bold;padding-right:1em;'; break;
+            }
+        }
     }
 }
 
