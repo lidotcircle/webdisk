@@ -2,12 +2,11 @@ import * as fs from 'fs';
 import * as child_proc from 'child_process';
 import * as util from 'util';
 import * as utils from '../utils';
-import * as crypto from 'crypto';
 import * as path from 'path';
 
 import { FileSystem, FileSystemType, IFileSystemConfig } from "./fileSystem";
 import { FileStat, FileType } from '../common/file_types';
-import { pipeline, Readable, Writable } from 'stream';
+import { Readable } from 'stream';
 
 
 function statToStat(fstat: fs.Stats, file: string): FileStat //{
@@ -35,26 +34,53 @@ function statToStat(fstat: fs.Stats, file: string): FileStat //{
     return ans;
 } //}
 
+export interface ILocalFileSystemConfig extends IFileSystemConfig {
+    srcPrefix?: string;
+    dstPrefix?: string;
+}
 
 export class LocalFileSystem extends FileSystem {
-    constructor(config: IFileSystemConfig) {
+    private srcPrefix: string;
+    private dstPrefix: string;
+
+    private resolvePath(p: string) {
+        if (!p.startsWith(this.srcPrefix)) {
+            throw new Error('bad path');
+        }
+        return path.join(this.dstPrefix, p.substring(this.srcPrefix.length));
+    }
+
+    private reverseResolve(p: string) {
+        if (!p.startsWith(this.dstPrefix)) {
+            throw new Error('bad path, unexpected');
+        }
+        return path.join(this.srcPrefix, p.substring(this.dstPrefix.length));
+    }
+
+    constructor(config: ILocalFileSystemConfig) {
         super();
         if(config.type != this.FSType) {
             throw new Error(`Bad filesystem constructor for ${config.type}`);
         }
+        this.srcPrefix = config.srcPrefix || '/';
+        this.dstPrefix = config.dstPrefix || '/';
     }
 
     get FSType(): FileSystemType {return FileSystemType.local;}
 
     async chmod(file: string, mode: number) {
+        file = this.resolvePath(file);
         await fs.promises.chmod(file, mode.toString(8));
     }
 
     async copy(src: string, dst: string) {
+        src = this.resolvePath(src);
+        dst = this.resolvePath(dst);
         await fs.promises.copyFile(src, dst);
     }
 
     async execFile(file: string, argv: string[]): Promise<string> {
+        file = this.resolvePath(file);
         return await new Promise((resolve, reject) => {
             child_proc.execFile(file, argv, (err, stdout, stderr) => {
                 if(err) return reject(err);
@@ -65,13 +91,16 @@ export class LocalFileSystem extends FileSystem {
     }
 
     async getdir(dir: string): Promise<FileStat[]> {
+        dir = this.resolvePath(dir);
         const files = await fs.promises.readdir(dir);
         const ans = [];
         let haserror = false;
         for(let f of files) {
             const g = path.join(dir, f);
             try {
-                ans.push(statToStat(await fs.promises.stat(g), g));
+                const stat = statToStat(await fs.promises.stat(g), g);
+                stat.filename = this.reverseResolve(stat.filename);
+                ans.push(stat);
             } catch (err) {
                 haserror = true;
             }
@@ -113,15 +142,19 @@ export class LocalFileSystem extends FileSystem {
     */
 
     async mkdir(dir: string) {
+        dir = this.resolvePath(dir);
         await fs.promises.mkdir(dir, {recursive: true});
     }
 
     async move(src: string, dst: string) {
+        src = this.resolvePath(src);
+        dst = this.resolvePath(dst);
         await fs.promises.rename(src, dst);
     }
 
     static asyncRead = util.promisify(fs.read);
     async read(file: string, position: number, length: number): Promise<Buffer> {
+        file = this.resolvePath(file);
         const fd = await fs.promises.open(file, "r");
         let buf = Buffer.alloc(length);
         const nb = (await LocalFileSystem.asyncRead(fd.fd, buf, 0, length, position)).bytesRead;
@@ -130,23 +163,30 @@ export class LocalFileSystem extends FileSystem {
     }
 
     async remove(path: string) {
+        path = this.resolvePath(path);
         await fs.promises.unlink(path);
     }
 
     async rmdir(path: string) {
+        path = this.resolvePath(path);
         await fs.promises.rmdir(path);
     }
 
     async remover(path: string) {
+        path = this.resolvePath(path);
         await fs.promises.rmdir(path, {recursive: true});
     }
 
     async stat(file: string): Promise<FileStat> {
+        file = this.resolvePath(file);
         const fstat = await fs.promises.stat(file)
-        return statToStat(fstat, file);
+        const stat = statToStat(fstat, file);
+        stat.filename = this.reverseResolve(stat.filename);
+        return stat;
     }
 
     async touch(path: string) {
+        path = this.resolvePath(path);
         let cur = new Date();
         let f = null;
         try {
@@ -160,15 +200,18 @@ export class LocalFileSystem extends FileSystem {
     }
 
     async truncate(file: string, len: number) {
+        file = this.resolvePath(file);
         await fs.promises.truncate(file, len);
     }
 
     async append(file: string, buf: ArrayBuffer): Promise<void> {
+        file = this.resolvePath(file);
         await fs.promises.appendFile(file, Buffer.from(buf));
     }
 
     static asyncWrite = util.promisify(fs.write);
     async write(file: string, position: number, buf: ArrayBuffer): Promise<number> {
+        file = this.resolvePath(file);
         try {
         const fd = await fs.promises.open(file, "r+");
         const rs = await LocalFileSystem.asyncWrite(fd.fd, new Uint8Array(buf), 0, buf.byteLength, position);
@@ -182,6 +225,7 @@ export class LocalFileSystem extends FileSystem {
 
     async createReadableStream(filename: string, position: number, length: number): Promise<Readable> //{
     {
+        filename = this.resolvePath(filename);
         const options = {
             flags: 'r',
             start: position
@@ -194,6 +238,7 @@ export class LocalFileSystem extends FileSystem {
 
     async createNewFileWithReadableStream(filename: string, reader: Readable): Promise<number> //{
     {
+        filename = this.resolvePath(filename);
         const ws = fs.createWriteStream(filename, {flags: 'w'});
         const ans = await utils.pipelineWithTimeout(reader, ws);
         return ans;

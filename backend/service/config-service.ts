@@ -4,6 +4,7 @@ import { FileSystemType, IFileSystemConfig } from '../lib/fileSystem/fileSystem'
 import * as yaml from 'js-yaml';
 import { Injectable } from '../lib/di/di';
 import { CopySourcePropertiesAsGetter } from '../lib/utils';
+import assert from 'assert';
 
 
 class ConfigMap {
@@ -66,6 +67,22 @@ export class Config extends ConfigMap {
                 d = yaml.load(data.toString()) as ConfigMap;
                 break;
         }
+
+        const fsconfig = d.filesystem as object;
+        const resolveDstHome = (obj: object) => {
+            assert(typeof obj === 'object');
+            const keys = Object.getOwnPropertyNames(obj);
+            for (const key of keys) {
+                const val = obj[key];
+                if (key === 'dstPrefix' && typeof val === 'string') {
+                    obj[key] = resolveHome(val);
+                } else if (typeof val === 'object') {
+                    resolveDstHome(val);
+                }
+            }
+        }
+        resolveDstHome(fsconfig);
+
         d.sqlite3_database = resolveHome(d.sqlite3_database);
         CopySourcePropertiesAsGetter(d, this);
     } //}
