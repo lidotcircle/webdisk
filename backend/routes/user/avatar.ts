@@ -2,7 +2,7 @@ import express from 'express';
 import { body, validationResult } from 'express-validator';
 import { UserService } from '../../service';
 import { QueryDependency } from '../../lib/di';
-import { getJWTAuthUser } from '../../middleware';
+import { getAuthUsername } from '../../middleware';
 import createError from 'http-errors';
 
 const router = express.Router();
@@ -17,7 +17,7 @@ router.post('/',
             return res.status(422).json({ errors: errors.array() });
         }
 
-        const username = getJWTAuthUser(req);
+        const username = getAuthUsername(req);
         if (!username)
             return new createError.Unauthorized();
 
@@ -29,7 +29,7 @@ router.post('/',
 
 router.get('/', 
     async (req, res) => {
-        const username = getJWTAuthUser(req);
+        const username = getAuthUsername(req);
         if (!username) {
             return res.status(401).json({ errors: [{ msg: "Unauthorized" }] });
         }

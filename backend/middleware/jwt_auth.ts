@@ -3,6 +3,7 @@ import createHttpError from 'http-errors';
 import { DIProperty } from '../lib/di';
 import { JWTService } from '../service';
 import { getPasswordAuthUsername, createPasswordAuthMiddleware } from './password_auth';
+import { setAuthUsername } from './userinfo';
 
 
 const password_debug_middleware = createPasswordAuthMiddleware("username", "password");
@@ -34,6 +35,7 @@ class JWTAuthMiddleware {
             const username = getPasswordAuthUsername(req);
             if (!error && username) {
                 req[UserSymbol] = username;
+                setAuthUsername(req, username);
                 return next();
             }
         }
@@ -47,6 +49,7 @@ class JWTAuthMiddleware {
         }
         const dtoken = this.jwt_service.decode(token);
         req[UserSymbol] = dtoken.username;
+        setAuthUsername(req, dtoken.username);
         req[JWTDecodedSymbol] = dtoken;
         next();
     }

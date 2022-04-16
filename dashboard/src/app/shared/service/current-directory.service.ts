@@ -24,8 +24,7 @@ export class CurrentDirectoryService {
     }
 
     public justRefresh() {
-        if (this._cwd)
-            this._cwdSubject.next(this._cwd);
+        this._cwdSubject.next(this._cwd || '/');
     }
 
     public get now(): string {return this._cwd;}

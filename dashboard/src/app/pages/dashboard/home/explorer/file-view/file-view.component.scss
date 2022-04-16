@@ -1,4 +1,7 @@
+@import 'src/app/@theme/styles/themes';
 
+
+@include nb-install-component {
 .file-view {
     display: flex;
     flex-direction: column;
@@ -23,5 +26,20 @@
             background-color: #777;
         }
     }
-}
 
+    .nav {
+        width: 100%;
+        flex-grow: 1;
+        flex-direction: column;
+
+        .skip {
+            flex-grow: 1;
+        }
+
+        mat-paginator {
+            width: 100%;
+            border-top: 1pt solid darken(nb-theme(background-basic-color-1), 20%);
+        }
+    }
+}
+}

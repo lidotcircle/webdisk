@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 import { NamedLinkService } from '../../service';
 import { QueryDependency } from '../../lib/di';
 import path from 'path';
-import { write_file_response } from '../../lib/utils';
+import { syserr2httperr, write_file_response } from '../../lib/utils';
 
 const router = express.Router();
 export default router;
@@ -22,11 +22,16 @@ const handler =  async (req: Request, res: Response) => {
         }
 
         const filename = path.join(entry.user.rootpath, entry.target.substring(1));
-        await write_file_response(filename, req.headers, res, {
-            attachment: true,
-            method_head: req.method.toLowerCase() == 'head',
-            attachmentFilename: link,
-        });
+        try {
+            await write_file_response(filename, req.headers, res, {
+                attachment: true,
+                method_head: req.method.toLowerCase() == 'head',
+                attachmentFilename: link,
+            });
+        } catch (e: any) {
+            e = syserr2httperr(e);
+            throw e;
+        }
     }
 
 router.head('/:link', handler)

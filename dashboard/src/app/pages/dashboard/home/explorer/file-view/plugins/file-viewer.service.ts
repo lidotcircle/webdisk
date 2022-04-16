@@ -1,9 +1,7 @@
 import { Injectable } from '@angular/core';
 import { FileStat } from 'src/app/shared/common';
-import { AccountManagerService } from 'src/app/shared/service/account-manager.service';
 import { InjectViewService } from 'src/app/shared/service/inject-view.service';
 import { OpenFileService } from 'src/app/shared/service/open-file/open-file.service';
-import { cons } from 'src/app/shared/utils';
 
 type FOpenFileView = (fileviewservice: FileViewerService, file: FileStat, files: FileStat[], activeIndex: number) => Promise<void>;
 
@@ -11,7 +9,7 @@ import {default as reg_video} from './video';
 import {default as reg_audio} from './audio';
 import {default as reg_image} from './image';
 import {default as reg_pdf  } from './pdf';
-import { UserSettingService } from 'src/app/shared/service/user-setting.service';
+import { DiskDownloadService } from 'src/app/service/disk-download.service';
 
 
 @Injectable({
@@ -24,8 +22,7 @@ export class FileViewerService {
     private handlerMap: Map<string, FOpenFileView> = new Map();
     constructor(private _injector: InjectViewService,
                 private _openfile: OpenFileService,
-                private accountManager: AccountManagerService,
-                private usersetting: UserSettingService) {
+                private downloadService: DiskDownloadService) {
         reg_video(this);
         reg_audio(this);
         reg_image(this);
@@ -51,22 +48,15 @@ export class FileViewerService {
         }
     }
 
-    async ShortTermToken(): Promise<string> {
-        return await this.accountManager.getShortTermToken();
+    async ValidHttpResourceURLs(filenames: string[]): Promise<string[]> {
+        return await this.downloadService.getDownloadUrls(filenames);
     }
 
-    async Token(): Promise<string> {
-        return this.accountManager.LoginToken;
-    }
 
     async ValidHttpResourceURL(filename: string): Promise<string> {
-        if(this.usersetting.UsingLoginTokenInPlayer) {
-            const token = this.accountManager.LoginToken;
-            return `${cons.DiskPrefix}${filename}?${cons.DownloadTokenName}=${token}`;
-        } else {
-            const token = await this.accountManager.getShortTermToken();
-            return `${cons.DiskPrefix}${filename}?${cons.DownloadShortTermTokenName}=${token}`;
-        }
+        const urls = await this.ValidHttpResourceURLs([filename]);
+        if (!urls) return null;
+        return urls[0];
     }
 }
 

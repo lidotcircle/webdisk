@@ -2,7 +2,7 @@ import express from 'express';
 import { query, body, validationResult } from 'express-validator';
 import { PasswordStoreService } from '../../service';
 import { QueryDependency } from '../../lib/di';
-import { getJWTAuthUser } from '../../middleware';
+import { getAuthUsername } from '../../middleware';
 
 const router = express.Router();
 export default router;
@@ -18,7 +18,7 @@ router.post('/',
         }
 
         const { site, account, password } = req.body;
-        const username = getJWTAuthUser(req);
+        const username = getAuthUsername(req);
 
         const psservice = QueryDependency(PasswordStoreService);
         const newid = await psservice.createPass(username, site, account, password);
@@ -38,7 +38,7 @@ router.put('/',
         }
 
         const { id, site, account, password } = req.body;
-        const username = getJWTAuthUser(req);
+        const username = getAuthUsername(req);
 
         const psservice = QueryDependency(PasswordStoreService);
         await psservice.updatePass(id, username, site, account, password);
@@ -55,7 +55,7 @@ router.delete('/',
         }
 
         const { id } = req.query;
-        const username = getJWTAuthUser(req);
+        const username = getAuthUsername(req);
 
         const psservice = QueryDependency(PasswordStoreService);
         await psservice.deletePass(id, username);
@@ -65,7 +65,7 @@ router.delete('/',
 
 router.get('/',
     async (req, res) => {
-        const username = getJWTAuthUser(req);
+        const username = getAuthUsername(req);
         const psservice = QueryDependency(PasswordStoreService);
         const result = await psservice.getPasswords(username);
         res.status(200).json(result);

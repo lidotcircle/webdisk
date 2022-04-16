@@ -49,23 +49,25 @@ app-wrapper {
             }
 
             .key-value-table {
-                width: 100%;
+                display: grid;
+                grid-row-gap: 1em;
+                grid-template-columns: 40% 60%;
+                align-items: center;
+                justify-content: center;
 
-                tr {
-                    td {
-                        padding: 0.3em 0.5em;
-                        width: min-content;;
-                        box-sizing: border-box;
-                        white-space: nowrap;
+                & > div {
+                    padding: 0.3em 0.5em;
+                    width: min-content;;
+                    box-sizing: border-box;
+                    white-space: nowrap;
 
-                        &:nth-child(2n+1) {
-                            @include no-select();
-                        }
+                    &:nth-child(2n+1) {
+                        @include no-select();
+                        font-weight: bold;
+                    }
 
-                        &:nth-child(2n+0) {
-                            background: #c2c2c277;
-                            color: #777377de;
-                        }
+                    &:nth-child(2n+0) {
+                        font-weight: normal;
                     }
                 }
             }

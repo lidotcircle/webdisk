@@ -1,6 +1,6 @@
 
 <div class="dir-tree" #tree>
-    <div class="row">
+    <div class="dir-row">
         <div [class]="((geted && children.length == 0) ? 'over' : '') + ' get'" (click)='onGet()'>
             <mat-icon *ngIf="!expanded">chevron_right</mat-icon>
             <mat-icon *ngIf=" expanded">expand_more</mat-icon>

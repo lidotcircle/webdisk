@@ -2,6 +2,7 @@
 export * from './common/utils';
 export * from './utils/stream';
 export * from './utils/get_file';
+export * from './utils/translate_error';
 
 import * as path from 'path';
 import * as util from 'util';

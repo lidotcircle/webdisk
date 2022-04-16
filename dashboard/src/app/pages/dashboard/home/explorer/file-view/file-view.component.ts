@@ -1,4 +1,4 @@
-import { Component, OnInit, ElementRef, OnDestroy, ViewEncapsulation, ViewChild } from '@angular/core';
+import { Component, OnInit, ElementRef, OnDestroy, ViewChild } from '@angular/core';
 import { FileStat, FileType } from 'src/app/shared/common';
 import { FileSystemManagerService } from 'src/app/shared/service/file-system-manager.service';
 import { KeyboardPressService, Keycode } from 'src/app/shared/service/keyboard-press.service';
@@ -16,6 +16,7 @@ import { NbToastrService } from '@nebular/theme';
 import { CurrentDirectoryService } from 'src/app/shared/service/current-directory.service';
 import { PageEvent } from '@angular/material/paginator';
 import { NamedLinkService } from 'src/app/service/user/named-link-service';
+import { DiskDownloadService } from 'src/app/service/disk-download.service';
 
 
 /** sortByName */
@@ -104,7 +105,6 @@ class ViewConfig {
     selector: 'app-file-view',
     templateUrl: './file-view.component.html',
     styleUrls: ['./file-view.component.scss'],
-    encapsulation: ViewEncapsulation.None
 })
 export class FileViewComponent implements OnInit, OnDestroy {
     get fileslice(): FileStat[] {return this.files.slice(this.fileidx_beg, this.fileidx_end);}
@@ -118,6 +118,8 @@ export class FileViewComponent implements OnInit, OnDestroy {
         this.pageSize = event.pageSize;
         this.fileidx_beg = this.pageIdx * this.pageSize;
         this.fileidx_end = this.fileidx_beg + this.pageSize;
+        this.select = [];
+        this.cuts = [];
     }
 
     private set_files(_files: FileStat[]) {
@@ -128,7 +130,9 @@ export class FileViewComponent implements OnInit, OnDestroy {
         this.fileidx_end = this.fileidx_beg + this.pageSize;
         this.refresh();
     }
+
     files: FileStat[] = [];
+    cuts: boolean[] = [];
     select: boolean[] = [];
     // TODO save to account storage
     config: ViewConfig = new ViewConfig();
@@ -140,6 +144,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
 
     private life: Life;
     constructor(private fileManager: FileSystemManagerService,
+                private downloadService: DiskDownloadService,
                 private namedLinkService: NamedLinkService,
                 private toaster: NbToastrService,
                 private toolbar: ToolbarService,
@@ -163,19 +168,19 @@ export class FileViewComponent implements OnInit, OnDestroy {
                     this.select = [];
                     break;
                 case Keycode.DOWN:
-                    for(let i=0;i<this.files.length;i++) {
+                    for(let i=0;i<this.fileslice.length;i++) {
                         if(this.select[i] == true) {
                             this.select = [];
-                            this.select[(i + 1) % this.files.length] = true;
+                            this.select[(i + 1) % this.fileslice.length] = true;
                             break;
                         }
                     }
                     break;
                 case Keycode.UP:
-                    for(let i=this.files.length-1;i>=0;i--) {
+                    for(let i=this.fileslice.length-1;i>=0;i--) {
                         if(this.select[i] == true) {
                             this.select = [];
-                            this.select[(i + this.files.length - 1) % this.files.length] = true;
+                            this.select[(i + this.fileslice.length - 1) % this.fileslice.length] = true;
                             break;
                         }
                     }
@@ -195,8 +200,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
     {
         const tool_home = new Tool('Home', 'home', false, () => this.currentDirectory.cd('/'));
         const tool_refresh = new Tool('Refresh', 'refresh', false, 
-                                      () => this.currentDirectory.justRefresh(), 
-                                      () => this.currentDirectory.now != null); 
+                                      () => this.currentDirectory.justRefresh()); 
         const tool_back = new Tool('Back', 'arrow_back', false, 
                                    () => this.currentDirectory.cd(dirname(this.currentDirectory.now)),
                                    () => this.currentDirectory.now && dirname(this.currentDirectory.now).length > 0);
@@ -228,7 +232,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
             this.select = [];
         }, () => this.selectedFiles().length > 0);
         const tool_reverseSelection = new Tool('Revert', 'tab', false, () => {
-            for(let i=0;i<this.files.length;i++) {
+            for(let i=0;i<this.fileslice.length;i++) {
                 this.select[i] = !this.select[i];
             }
         }, () => this.selectedFiles().length > 0);
@@ -329,7 +333,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
 
     private has_select() //{
     {
-        for(let i=0;i<this.files.length;i++) {
+        for(let i=0;i<this.fileslice.length;i++) {
             if(this.select[i]) {
                 return true;
             }
@@ -457,16 +461,12 @@ export class FileViewComponent implements OnInit, OnDestroy {
      */
     async onDoubleClick(n: number) //{
     {
-        const stat = this.files[n];
+        const stat = this.fileslice[n];
         if(stat.filetype == FileType.dir) {
             this.currentDirectory.cd(stat.filename);
         } else if (stat.filetype == FileType.reg) {
-            if(!await this.fileviewer.view(this.files, n)) {
-                /*
-                const token = await this.accountManager.getShortTermToken();
-                const uri = `${cons.DiskPrefix}${stat.filename}?${cons.DownloadShortTermTokenName}=${token}`;
-                downloadURI(uri, stat.basename);
-                */
+            if(!await this.fileviewer.view(this.fileslice, n)) {
+                await this.downloadService.download([[stat.filename, stat.basename]]);
             }
         }
     } //}
@@ -558,22 +558,47 @@ export class FileViewComponent implements OnInit, OnDestroy {
                     this.toaster.danger(e || "create named link failed", "named link");
                 }
             }
-        }
+        };
+
+        const downloadLink = new MenuEntry('Download Link', 'cloud_download');
+        downloadLink.clickCallback = async () => {
+            const op: string[] = [];
+            for(const i in this.select) {
+                if(this.select[i]) {
+                    const stat = this.fileslice[i];
+                    if (stat.filetype == FileType.reg)
+                        op.push(stat.filename);
+                }
+            }
+
+            const urls = await this.downloadService.getDownloadUrls(op)
+            if (!urls || urls.length == 0) {
+                this.toaster.danger("generate download url failed", "Sharing");
+                return;
+            }
+
+            const ans = await this.clipboard.copy(ClipboardContentType.text, urls.join('\n'));
+            if (ans) {
+                this.toaster.info('Copied the link to clipboard', "Sharing");
+            } else {
+                this.toaster.danger("can paste link into clipboard", "Sharing");
+            }
+        };
+
         const shareEntry = new MenuEntry('Share with', 'link');
-        shareEntry.subMenus = [namedlinkEntry];
+        shareEntry.subMenus = [namedlinkEntry, downloadLink];
         return shareEntry;
     } //}
 
     private selectedFiles(): FileStat[] //{
     {
         let selectFiles = [];
-        for(let i=0;i<this.files.length;i++) {
-            if(this.select[i]) selectFiles.push(this.files[i]);
+        for(let i=0;i<this.fileslice.length;i++) {
+            if(this.select[i]) selectFiles.push(this.fileslice[i]);
         }
         return selectFiles;
     } //}
 
-    cuts = [];
     /**
      * callback of contextmenu in file item
      * @param {number} n index of file item in #files
@@ -589,35 +614,36 @@ export class FileViewComponent implements OnInit, OnDestroy {
         const selectCopy = JSON.parse(JSON.stringify(this.select));
 
         let menuType = MenuEntryType.FileMenuClick;
-        if (this.files[n].filetype == FileType.dir) {
+        if (this.fileslice[n].filetype == FileType.dir) {
             menuType = MenuEntryType.DirMenuClick;
             const chdir = new MenuEntry();
             chdir.clickCallback = () => this.onDoubleClick(n);
             chdir.entryName = "Open Folder";
             chdir.icon = "folder_open";
             entries.push(chdir);
-            entries.push(this.createMenuEntry_Upload(this.files[n].filename));
+            entries.push(this.createMenuEntry_Upload(this.fileslice[n].filename));
             this.menuItemSet.upload = true;
         } else {
             const download = new MenuEntry();
-            download.clickCallback = () => {
-                /* TODO
-                this.accountManager.getShortTermToken().then(token => {
-                    for(const i in this.select) {
-                        if(this.select[i]) {
-                            const stat = this.files[i];
-                            const uri = `${cons.DiskPrefix}${stat.filename}?${cons.DownloadShortTermTokenName}=${token}`;
-                            downloadURI(uri, stat.basename);
-                        }
+            download.clickCallback = async () => {
+                const op: [string,string][] = [];
+                for(const i in this.select) {
+                    if(this.select[i]) {
+                        const stat = this.fileslice[i];
+                        if (stat.filetype == FileType.reg)
+                            op.push([stat.filename, stat.basename]);
                     }
-                });
-                */
+                }
+
+                if (!await this.downloadService.download(op)) {
+                    this.toaster.danger("download failed", "Download");
+                }
             }
             download.entryName = "Download File";
             download.icon = "cloud_download";
             entries.push(download);
 
-            const share = this.createMenuEntry_Share(this.files[n].filename);
+            const share = this.createMenuEntry_Share(this.fileslice[n].filename);
             entries.push(share);
         }
 

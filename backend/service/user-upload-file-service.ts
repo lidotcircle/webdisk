@@ -9,7 +9,7 @@ import { Readable } from "stream";
 import { v4 as uuidv4 } from "uuid";
 import path from "path";
 import { Request, Response } from "express";
-import { write_file_response } from "../lib/utils";
+import { syserr2httperr, write_file_response } from "../lib/utils";
 
 
 @Injectable({
@@ -70,10 +70,10 @@ export class UserUploadFileService {
         try {
             await this.filesystem.createNewFileWithReadableStream(abs_filepath, stream);
         } catch (e) {
+            e = syserr2httperr(e);
             if (e instanceof createError.HttpError) {
                 throw e;
             } else {
-                // TODO translate errors
                 throw new createError.InternalServerError(e?.message || "unknow error");
             }
         }

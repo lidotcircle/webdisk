@@ -1,6 +1,14 @@
 @import 'src/app/style/layout.scss';
 @import 'src/app/style/utils.scss';
 @import 'src/app/style/devices.scss';
+@import 'src/app/@theme/styles/themes';
+
+
+@include nb-install-component {
+    .container {
+        background: nb-theme(background-basic-color-1);
+    }
+}
 
 @include container-content();
 
@@ -10,6 +18,8 @@ body {
 
 .container {
     overflow: hidden;
+    padding: 0.5em;
+    border-radius: 0.5em;
 
     .content {
         display: flex;
@@ -35,15 +45,8 @@ body {
 
             @media (min-width: 1200px) {
                 & {
-                    padding: 0% 4%;
-                    width: 94%;
-                }
-            }
-
-            @media (min-width: 1500px) {
-                & {
-                    padding: 0% 7%;
-                    width: 86%;
+                    padding: 0% 2%;
+                    width: 96%;
                 }
             }
 
@@ -138,4 +141,3 @@ body {
         }
     }
 }
-

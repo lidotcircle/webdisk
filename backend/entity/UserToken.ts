@@ -8,7 +8,10 @@ export class UserToken {
     id: number
 
     @ManyToOne(() => User)
-    user: User
+    user: Promise<User>
+
+    @Column()
+    userId: number
 
     @Column()
     tokenid: string

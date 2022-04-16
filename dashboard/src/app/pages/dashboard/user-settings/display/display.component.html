@@ -1,1 +1,12 @@
-<p>display works!</p>
+<app-wrapper>
+  <div class="global-settings">
+    <div class="key-value-table">
+      <div>Theme</div>
+      <div>
+        <nb-select [selected]="currentTheme" (selectedChange)="changeTheme($event)" status="primary">
+          <nb-option *ngFor="let theme of themes" [value]="theme.value"> {{ theme.name }}</nb-option>
+        </nb-select>
+      </div>
+    </div>
+  </div>
+</app-wrapper>

@@ -1,15 +1,14 @@
-import express, { Request } from 'express';
+import express from 'express';
 import { query, body, validationResult } from 'express-validator';
 import { DataRecordService } from '../../service';
 import { QueryDependency } from '../../lib/di';
-import { createPasswordAuthMiddleware, getPasswordAuthUsername, defaultJWTAuthMiddleware, getJWTAuthUser, AnyOfNoError } from '../../middleware';
+import { createPasswordAuthMiddleware, getAuthUsername, defaultJWTAuthMiddleware, AnyOfNoError } from '../../middleware';
 
 const router = express.Router();
 export default router;
 
 const passwordAuthMiddleware = createPasswordAuthMiddleware("username", "password");
 const defaultAuth = AnyOfNoError(passwordAuthMiddleware, defaultJWTAuthMiddleware);
-const getAuthUsername = (req: Request) => getPasswordAuthUsername(req) || getJWTAuthUser(req);
 router.post('/', defaultAuth,
     body('group').isLength({min:2}).withMessage("group is too short"),
     body('data').isLength({min:1}).withMessage("empty data"),

@@ -1,11 +1,15 @@
 @import 'src/app/style/colors.scss';
+@import 'src/app/@theme/styles/themes';
 
 
+@include nb-install-component {
 .detail-view-style {
     display: flex;
     flex-direction: row;
     align-items: center;
-    background: #eee;
+    $basecolor: nb-theme(background-basic-color-1);
+    $fcolor: nb-theme(basic-color-1);
+    background: $basecolor;
 
     .take-space {
         width: 2em;
@@ -16,7 +20,7 @@
     }
 
     .detail-view-prop {
-        color: #777;
+        color: $fcolor;
         display: flex;
         flex-direction: row;
         flex-shrink: 1;
@@ -28,8 +32,7 @@
             flex-grow: 1;
             padding: 0.5em;
             font-size: xx-small;
-            color: black;
-            background: rgb(200,200,200);
+            background: darken($basecolor, 5%);
         }
 
         .tool {
@@ -46,7 +49,7 @@
             .vertical {
                 width: 0.1pt;
                 height: 100%;
-                background-color: rgba(100, 100, 100, 0.4);
+                background-color: darken($basecolor, 10%);
             }
         }
         
@@ -55,17 +58,18 @@
             right: 0em;
             width: 1pt;
             height: 100%;
-            outline: solid rgba(100, 100, 100, 0.4) 0.1pt;
+            outline: solid darken($basecolor, 10%) 0.1pt;
             cursor: e-resize;
         }
 
         &:hover {
-            background: $color-file-hover;
+            background: darken($basecolor, 15%);
 
             .tool {
                 display: flex;
             }
         }
     }
+}
 }
 

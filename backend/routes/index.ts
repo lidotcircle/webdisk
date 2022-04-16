@@ -2,7 +2,7 @@ import express from 'express';
 import assert from 'assert';
 import { QueryDependency } from '../lib/di';
 import { createProxyMiddleware } from 'http-proxy-middleware';
-import { createWebSocketMiddleware, defaultJWTAuthMiddleware } from '../middleware';
+import { createWebSocketMiddleware, createPasswordAuthMiddleware, defaultJWTAuthMiddleware, AnyOfNoError } from '../middleware';
 import { MessageGateway } from '../lib/message_gateway';
 import { Server } from 'http';
 
@@ -19,9 +19,14 @@ router.use('/apis/auth',       require('./auth').default);
 router.use('/apis/user',       jwt_validator, require('./user').default);
 router.use('/apis/passstore',  jwt_validator, require('./passstore').default);
 router.use('/apis/named-link', jwt_validator, require('./namedlinks').default);
+router.use('/apis/stoken',     
+           AnyOfNoError(
+               createPasswordAuthMiddleware("username", "password"), 
+               defaultJWTAuthMiddleware
+           ), require('./stoken').default);
 router.use('/apis/flink',     require('./filelink').default);
 router.use('/apis/sdata',     require('./sdata').default);
-router.use('/disk',           jwt_validator, require('./disk').default);
+router.use('/disk',           require('./disk').default);
 router.use('/link',           require('./namedlink').default);
 const ws_router = createWebSocketMiddleware(/\/ws/, conn => new MessageGateway(conn));
 callback_list.push((server: Server) => server.on("upgrade", ws_router["upgrade"]));

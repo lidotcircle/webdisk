@@ -173,8 +173,13 @@ export class LocalFileSystem extends FileSystem {
     }
 
     async remover(path: string) {
-        path = this.resolvePath(path);
-        await fs.promises.rmdir(path, {recursive: true});
+        const stat = await this.stat(path);
+        if (stat.filetype == FileType.dir) {
+            path = this.resolvePath(path);
+            await fs.promises.rmdir(path, {recursive: true});
+        } else {
+            await this.remove(path);
+        }
     }
 
     async stat(file: string): Promise<FileStat> {

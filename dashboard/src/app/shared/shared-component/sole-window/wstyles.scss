@@ -3,6 +3,7 @@
     app-sole-window {
         width: 100%;
         height: 100%;
+        z-index: 10000;
 
         .player {
             box-sizing: border-box;

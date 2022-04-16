@@ -1,6 +1,9 @@
 import { Component, ViewContainerRef } from '@angular/core';
 import { MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
+import { NbThemeService } from '@nebular/theme';
+import { map } from 'rxjs/operators';
+import { AsyncLocalStorageService } from './shared/service/async-local-storage.service';
 import { rootViewContainerRefSymbol } from './shared/utils';
 
 declare const require: any;
@@ -46,9 +49,27 @@ const icons = [
 export class AppComponent {
     constructor(private bodyContainer: ViewContainerRef,
                 private matIconRegistry: MatIconRegistry,
+                private themeService: NbThemeService,
+                private localstorage: AsyncLocalStorageService,
                 private domSanitizer: DomSanitizer) {
         window[rootViewContainerRefSymbol] = this.bodyContainer;
 
         icons.forEach(v => this.matIconRegistry.addSvgIconLiteral(v.name, this.domSanitizer.bypassSecurityTrustHtml(v.svg)));
+        this.themeStoreRecovery();
+    }
+
+    private async themeStoreRecovery()
+    {
+        const theme = await this.localstorage.get<string>("theme");
+        if (theme != null && theme != 'default')
+            this.themeService.changeTheme(theme);
+
+        this.themeService.onThemeChange()
+            .pipe(
+                map(({ name }) => name),
+            )
+            .subscribe(async (themeName) =>
+                await this.localstorage.set("theme", themeName)
+            );
     }
 }

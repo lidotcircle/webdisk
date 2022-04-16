@@ -1,7 +1,7 @@
-import express, { Request } from 'express';
+import express from 'express';
 import { UserUploadFileService } from '../../service';
 import { QueryDependency } from '../../lib/di';
-import { createPasswordAuthMiddleware, getPasswordAuthUsername, defaultJWTAuthMiddleware, getJWTAuthUser, AnyOfNoError } from '../../middleware';
+import { createPasswordAuthMiddleware, getAuthUsername, defaultJWTAuthMiddleware, AnyOfNoError } from '../../middleware';
 import { query } from 'express-validator';
 import path from 'path';
 import createHttpError from 'http-errors';
@@ -12,7 +12,6 @@ export default router;
 
 const passwordAuthMiddleware = createPasswordAuthMiddleware("username", "password");
 const defaultAuth = AnyOfNoError(passwordAuthMiddleware, defaultJWTAuthMiddleware);
-const getAuthUsername = (req: Request) => getPasswordAuthUsername(req) || getJWTAuthUser(req);
 router.get('/:fileid',
     async (req, res) => {
         const fileid = req.params['fileid'];

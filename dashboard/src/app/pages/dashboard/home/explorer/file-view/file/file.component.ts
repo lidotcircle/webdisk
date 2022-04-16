@@ -1,6 +1,5 @@
-import { Component, Input, OnInit, ViewChild, ElementRef, ViewEncapsulation, EventEmitter, Output } from '@angular/core';
+import { Component, Input, OnInit, ViewChild, ElementRef, EventEmitter, Output } from '@angular/core';
 import { FileStat, FileType } from 'src/app/shared/common';
-import { nextTick } from 'src/app/shared/utils';
 import { FiletypeSvgIconService } from 'src/app/shared/service/filetype-svg-icon.service';
 import { FileViewStyle } from '../file-view.component';
 import { FileSystemManagerService } from 'src/app/shared/service/file-system-manager.service';
@@ -15,7 +14,6 @@ import { FileOperationService } from 'src/app/shared/service/file-operation.serv
     selector: 'app-file',
     templateUrl: './file.component.html',
     styleUrls: ['./file.component.scss'],
-    encapsulation: ViewEncapsulation.None
 })
 export class FileComponent implements OnInit {
     @Input('file')

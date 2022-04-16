@@ -2,7 +2,7 @@ import express from 'express';
 import { NamedLinkService } from '../../service';
 import { QueryDependency } from '../../lib/di';
 import { body, query } from 'express-validator';
-import { getJWTAuthUser } from '../../middleware';
+import { getAuthUsername } from '../../middleware';
 import assert from 'assert';
 
 const router = express.Router();
@@ -11,7 +11,7 @@ export default router;
 
 router.get('/', 
     async (req, res) => {
-        const username = getJWTAuthUser(req);
+        const username = getAuthUsername(req);
         assert(username, 'username is not found');
 
         const service = QueryDependency(NamedLinkService);
@@ -23,7 +23,7 @@ router.get('/',
 router.delete('/',
     query('name').isString().withMessage('name is not string'),
     async (req, res) => {
-        const username = getJWTAuthUser(req);
+        const username = getAuthUsername(req);
         assert(username, 'username is not found');
 
         const service = QueryDependency(NamedLinkService);
@@ -38,7 +38,7 @@ router.post('/',
     body('target').isString().matches(/\/.*/).withMessage('target should be a absolute file path'),
     body('duration_ms').optional().isInt().withMessage('duration should be a integer'),
     async (req, res) => {
-        const username = getJWTAuthUser(req);
+        const username = getAuthUsername(req);
         assert(username, 'username is not found');
 
         const service = QueryDependency(NamedLinkService);

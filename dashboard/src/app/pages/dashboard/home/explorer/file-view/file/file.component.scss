@@ -1,6 +1,8 @@
 @import 'src/app/style/colors.scss';
+@import 'src/app/@theme/styles/themes';
 
-app-file {
+
+:host {
     .file-item {
         &:hover {
             background: $color-file-hover;
@@ -21,6 +23,10 @@ app-file {
         .file-item {
             background-color:  $color-file-active;
         }
+    }
+
+    &:nth-child(n+10) .file-item.detail > .file-props > .hidden-panel {
+        top: -200%;
     }
 
     .file-item.detail {
@@ -61,6 +67,7 @@ app-file {
             }
 
             .file-name {
+                padding: 0em;
             }
 
             .hidden-panel {
@@ -68,7 +75,6 @@ app-file {
                 position: absolute;
                 top: 100%;
                 flex-direction: column;
-                background-color: white;
                 box-shadow: 0.1em 0.1em 0.3em 0.1em #CCC;
                 padding: 0.5em 0.7em;
                 border-radius: 0.3em;
@@ -101,3 +107,8 @@ app-file {
     }
 }
 
+@include nb-install-component {
+    .hidden-panel {
+        background-color: lighten(nb-theme(background-basic-color-1),10%);
+    }
+}

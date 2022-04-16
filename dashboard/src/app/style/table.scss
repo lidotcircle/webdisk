@@ -4,6 +4,7 @@
 
 
 @mixin Ng2SmartTableClickCell($nth) {
+    @include nb-install-component {
     ng2-smart-table table {
         tr[ng2-st-thead-titles-row] th:nth-child(#{$nth}) {
             visibility: hidden;
@@ -41,6 +42,7 @@
                 visibility: hidden;
             }
         }
+    }
     }
 }
 

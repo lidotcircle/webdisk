@@ -2,7 +2,7 @@ import express from 'express';
 import { query, validationResult } from 'express-validator';
 import { QueryDependency } from '../../lib/di';
 import { UserService } from '../../service';
-import { getJWTAuthUser } from '../../middleware';
+import { getAuthUsername } from '../../middleware';
 import assert from 'assert';
 
 
@@ -18,7 +18,7 @@ router.delete('/',
         }
 
         const { password } = req.query;
-        const username = getJWTAuthUser(req);
+        const username = getAuthUsername(req);
         assert(username, 'username must be set');
         const userService = QueryDependency(UserService);
         if (!await userService.verifyUsernamePassword(username, password)) {

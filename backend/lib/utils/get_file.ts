@@ -41,8 +41,8 @@ export async function write_file_response(
 {
     const filesystem = QueryDependency(FileSystem);
     assert(filename != null)
-    const range = options.range || parseRangeField(headers['range']);
     options = options || {};
+    const range = options.range || parseRangeField(headers['range']);
 
     let success: number = 200;
     if (range) success = 206;

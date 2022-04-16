@@ -2,6 +2,7 @@ import { RequestHandler, Request, Response, NextFunction } from 'express';
 import createHttpError from 'http-errors';
 import { DIProperty } from '../lib/di';
 import { UserService } from '../service';
+import { setAuthUsername, setAuthUser } from './userinfo';
 
 
 const UserSymbol = Symbol('user');
@@ -29,12 +30,14 @@ class PasswordAuthMiddleware {
         if (!this.userService.verifyUsernamePassword(username, password)) {
             return next(new createHttpError.Unauthorized('failed to authenticate' ));
         }
-        const user = this.userService.getUser(username);
+        const user = await this.userService.getUser(username);
         if (!user) {
             return next(new createHttpError.InternalServerError("unexpected error"));
         }
         req[UserSymbol] = user;
         req[UsernameSymbol] = username;
+        setAuthUser(req, user);
+        setAuthUsername(req, username);
         next();
     }
 }

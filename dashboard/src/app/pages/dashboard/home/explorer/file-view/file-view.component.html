@@ -1,6 +1,6 @@
 
 <div class="file-view" (contextmenu)="onFileViewContextMenu()" #fileview>
-    <div class="sticky-top">
+    <div class="tool-at-top">
         <app-tools></app-tools>
         <app-detail-view-header class="detail-view-header"
                                 [view-style]='viewStyle' [view-config]='detailFileView'>
@@ -22,13 +22,15 @@
         </app-file>
     </div>
 
-    <mat-paginator
-        *ngIf="fileEntryLength > pageSize"
-        (page)="handlePageEvent($event)"
-        [length]="fileEntryLength"
-        [pageSize]="pageSize"
-        [pageIndex]="pageIdx"
-        [pageSizeOptions]="[50, 100, 200]"
-        aria-label="Select page">
-    </mat-paginator>
+    <div class='nav' *ngIf="fileEntryLength > pageSize">
+        <div class='skip'></div>
+        <mat-paginator
+            (page)="handlePageEvent($event)"
+            [length]="fileEntryLength"
+            [pageSize]="pageSize"
+            [pageIndex]="pageIdx"
+            [pageSizeOptions]="[50, 100, 200]"
+            aria-label="Select page">
+        </mat-paginator>
+    </div>
 </div>

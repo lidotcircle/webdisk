@@ -5,7 +5,7 @@ import { assert } from 'console';
 import { ProvideDependency } from './lib/di';
 import bodyparser from 'body-parser';
 import { HttpError } from 'http-errors';
-import { info } from './service';
+import { warn } from './service';
 
 const listen_callbacks = [];
 ProvideDependency(null, {
@@ -27,7 +27,7 @@ export async function ExpressAppListen(port: number, host: string, backlog: numb
     app.use('/', require('./routes').default);
 
     app.use((err: HttpError, _req: Request, res: Response, _next: NextFunction) => {
-        info(err);
+        warn(err);
 
         if (err instanceof HttpError) {
             res.status(err.statusCode || 500).send(err.message);

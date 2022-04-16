@@ -1,7 +1,7 @@
 import express from 'express';
 import { UserService } from '../../service';
 import { QueryDependency } from '../../lib/di';
-import { getJWTAuthUser } from '../../middleware';
+import { getAuthUsername } from '../../middleware';
 import { body, validationResult } from 'express-validator';
 
 const router = express.Router();
@@ -10,7 +10,7 @@ export default router;
 
 router.get('/', 
     async (req, res) => {
-        const username = getJWTAuthUser(req);
+        const username = getAuthUsername(req);
         if (!username) {
             return res.status(401).json({ errors: [{ msg: "Unauthorized" }] });
         }
@@ -30,7 +30,7 @@ router.post('/password',
             return res.status(422).json({ errors: errors.array() });
         }
 
-        const username = getJWTAuthUser(req);
+        const username = getAuthUsername(req);
         if (!username) {
             return res.status(401).json({ errors: [{ msg: "Unauthorized" }] });
         }

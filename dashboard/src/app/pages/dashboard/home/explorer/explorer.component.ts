@@ -1,4 +1,4 @@
-import { Component, OnInit, ElementRef, OnDestroy, ViewChild, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, ElementRef, OnDestroy, ViewChild } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { Life } from 'src/app/shared/utils';
 import { RightMenuManagerService } from 'src/app/shared/service/right-menu-manager.service';
@@ -13,7 +13,6 @@ import { FileViewComponent } from './file-view/file-view.component';
     selector: 'app-explorer',
     templateUrl: './explorer.component.html',
     styleUrls: ['./explorer.component.scss'],
-    encapsulation: ViewEncapsulation.None
 })
 export class ExplorerComponent implements OnInit, OnDestroy {
     private paramsSub: Subscription;

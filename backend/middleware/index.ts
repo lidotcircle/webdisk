@@ -2,6 +2,8 @@ export * from './websocket';
 export * from './jwt_auth';
 export * from './websocket';
 export * from './password_auth';
+export * from './stoken_auth';
+export { getAuthUser, getAuthUsername } from './userinfo';
 import { Request, Response, NextFunction } from 'express';
 
 
