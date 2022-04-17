@@ -1,7 +1,7 @@
 import { FileStat } from 'src/app/shared/common';
 import { FileViewerService } from './file-viewer.service';
 
-const support_extension = ['jpeg', 'jpg', 'png'];
+const support_extension = ['jpeg', 'jpg', 'png', 'svg', 'ico', 'gif', 'webp'];
 
 async function handler(fileviewservice: FileViewerService, file: FileStat, files: FileStat[], findex: number): Promise<void> {
     console.assert(files[findex] == file && support_extension.indexOf(file.extension) > 0);

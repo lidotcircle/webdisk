@@ -5,10 +5,11 @@
         height: 100%;
         z-index: 10000;
 
-        .player {
+        .player, .viewer {
             box-sizing: border-box;
             width: 100%;
-            max-width: 700px;
+            min-height: 30%;
+            max-height: 100%;
         }
     }
 }

@@ -158,12 +158,12 @@ export class WSChannelService {
         return this.connection != null && this. connection.readyState == 1;
     }
 
-    private onmessage(msge: MessageEvent): void //{
+    private async onmessage(msge: MessageEvent): Promise<void> //{
     {
         let data = msge.data;
         let msg: BasicMessage;
         try {
-            msg = this.encoder.decode(data);
+            msg = await this.encoder.decode(data);
         } catch (err) {
             console.warn('recieve a bad message, ignore it');
             return;

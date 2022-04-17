@@ -122,17 +122,25 @@ export function parseCookie(cookie: string): Map<string, string>
     return ret;
 }
 
-let hasSharedArrayBuffer = true;;
+let hasSharedArrayBuffer = true;
 try {
     SharedArrayBuffer;
 } catch {
     hasSharedArrayBuffer = false;
+}
+declare const Buffer: any;
+let hasBuffer = true;
+try {
+    Buffer;
+} catch {
+    hasBuffer = false;
 }
 
 export function isArrayBuffer(buf: any) {
     return (
         buf instanceof ArrayBuffer       ||
         (hasSharedArrayBuffer && buf instanceof SharedArrayBuffer) ||
+        (hasBuffer && buf instanceof Buffer) ||
         buf instanceof Int8Array         ||
         buf instanceof Int16Array        ||
         buf instanceof Int32Array        ||

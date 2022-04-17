@@ -1,0 +1,31 @@
+@import '../wstyles.scss';
+@import 'src/app/@theme/styles/themes';
+
+
+@include incenter();
+
+@include nb-install-component {
+    .viewer {
+        background: darken(nb-theme(background-basic-color-1), 10%);
+        padding: 0.5em;
+        display: flex;
+        flex-direction: column;
+
+        .tool-bar {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: space-between; 
+            align-items: center;
+            margin-bottom: 0.5em;
+        }
+
+        .main-viewer {
+            overflow: scroll;
+
+            &::-webkit-scrollbar {
+                display: none;
+            }
+        }
+    }
+}

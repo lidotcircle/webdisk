@@ -25,9 +25,10 @@ import { SoleVideoPlayerComponent } from './sole-window/sole-video-player/sole-v
 import { SoleAudioPlayerComponent } from './sole-window/sole-audio-player/sole-audio-player.component';
 import { SoleImageViewerComponent } from './sole-window/sole-image-viewer/sole-image-viewer.component';
 import { SolePdfViewerComponent } from './sole-window/sole-pdf-viewer/sole-pdf-viewer.component';
+import { SoleTextViewerComponent } from './sole-window/sole-text-viewer/sole-text-viewer.component';
 import { SearchBarFloatComponent } from './search-bar-float/search-bar-float.component';
 import { ConfirmWindowComponent } from './confirm-window.component';
-import { NbButtonModule } from '@nebular/theme';
+import { NbButtonModule, NbSelectModule } from '@nebular/theme';
 import { PrismJSComponent } from './ngx-prismjs/ngx-prismjs.component';
 
 
@@ -38,17 +39,18 @@ import { PrismJSComponent } from './ngx-prismjs/ngx-prismjs.component';
         FilePropertiesComponent, NotifierComponent, MessageProgressBarComponent, 
         ProgressCircleComponent, FileIconComponent, SearchBarComponent, WindowComponent, PageTopComponent, 
         SoleWindowComponent, SoleVideoPlayerComponent, SoleAudioPlayerComponent, SoleImageViewerComponent, 
-        SolePdfViewerComponent, SearchBarFloatComponent, ConfirmWindowComponent,
+        SolePdfViewerComponent, SoleTextViewerComponent, SearchBarFloatComponent, ConfirmWindowComponent,
         PrismJSComponent,
     ],
     imports: [
         CommonModule,
         MatInputModule,
         MatButtonModule,
+        MatCheckboxModule,
         MatIconModule,
         FormsModule,
         NbButtonModule,
-
+        NbSelectModule,
         MediaModule
     ],
     exports: [

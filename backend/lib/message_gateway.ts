@@ -5,14 +5,13 @@ import { EventEmitter } from 'events';
 import { BasicMessage, MessageType } from './common/message/message';
 import { debug, warn } from './../service';
 import { MessageSerializer } from './services';
-import { UserManager } from './handlers/user_management';
 import * as utls from './utils';
 
-import { MiscManager } from './handlers/misc_management';
 import { connection as wsconnection, IMessage } from 'websocket';
 import { AccessControl } from './accessControl/acl';
 import { DIProperty } from './di';
 import { MessageHandler } from './message_handler';
+import { hasArrayBuffer } from './utils';
 
 export interface MessageGateway {
     on(event: 'close', listener: () => void): this;
@@ -104,8 +103,9 @@ export class MessageGateway extends EventEmitter {
         }
     } //}
 
-    public response(msg: BasicMessage, binary: boolean = false): void //{
+    public response(msg: BasicMessage, binary?: boolean): void //{
     {
+        binary = binary != null ? binary : hasArrayBuffer(msg);
         if(binary) {
             this.send(utls.ArrayBuffertoBuffer(MessageSerializer.BINSerializer.encode(msg)));
         } else {

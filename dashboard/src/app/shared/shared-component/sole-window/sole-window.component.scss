@@ -1,30 +1,29 @@
 
-.container {
+.sv-container {
     width: 100%;
+    height: 100%;
 
-    .content {
+    .sv-content {
         display: flex;
-        display: column;
-        overflow: hidden;
+        overflow: visible;
         width: 100%;
+        height: 100%;
 
         .take-space {
             width: 100%;
-            max-width: 20pt;
+            max-width: 15%;
+            min-width: 8%;
             flex-grow: 1;
         }
 
         .wrapper {
-            width: 100%;
+            min-width: 70%;
             display: flex;
-            flex-direction: row;
+            flex-direction: column; 
 
             .row-take-space {
                 flex-grow: 1;
-            }
-
-            ng-content {
-                width: 100%;
+                min-height: 2.5em;
             }
         }
     }

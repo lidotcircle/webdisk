@@ -647,6 +647,29 @@ export class FileViewComponent implements OnInit, OnDestroy {
             entries.push(share);
         }
 
+        const renameEntry = new MenuEntry('Rename', 'create');
+        renameEntry.clickCallback = async () => {
+            if (selectFiles.length != 1) return;
+            const filestat = selectFiles[0];
+
+            const ans = await this.messagebox.create({
+                title: `rename '${filestat.basename}' to`, 
+                message: '', 
+                inputs: [
+                    {label: `new filename`, name: 'name', type: 'text'}
+                ], 
+                buttons: [
+                    {name: 'confirm'},
+                    {name: 'cancel'}
+                ]}).wait();;
+            if(ans.closed || ans.buttonValue == 1 || !ans.inputs['name'] || ans.inputs['name'].length == 0) {
+                return;
+            } else {
+                await this.fileoperation.rename(filestat, ans.inputs['name']);
+                this.currentDirectory.justRefresh();
+            }
+        }
+
         const deleteEntry = new MenuEntry('Delete', 'delete');
         deleteEntry.clickCallback = () => {
             this.fileoperation.delete(selectFiles);
@@ -667,7 +690,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
 
         const newEntry = this.createMenuEntry_New(this.currentDirectory.now);
 
-        for(const entry of [newEntry, deleteEntry, copyEntry, cutEntry, pasteEntry]) {
+        for(const entry of [newEntry, renameEntry, deleteEntry, copyEntry, cutEntry, pasteEntry]) {
             entries.push(entry);
         }
 

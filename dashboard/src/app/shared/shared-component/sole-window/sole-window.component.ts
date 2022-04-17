@@ -1,7 +1,7 @@
 import { Component, ElementRef, OnDestroy, OnInit, Output } from '@angular/core';
 import { Subject, Subscription } from 'rxjs';
 import { KeyboardPressService, Keycode } from '../../service/keyboard-press.service';
-import { AbsoluteView, BeAbsoluteView } from '../absolute-view/absolute-view';
+import { BeAbsoluteView } from '../absolute-view/absolute-view';
 import { FullScreenViewShadow } from '../absolute-view/full-screen-view-shadow';
 
 @Component({

@@ -18,10 +18,12 @@ export class MessageEncoderService {
         }
     }
 
-    public decode(raw: string | ArrayBuffer): BasicMessage {
+    public async decode(raw: string | ArrayBuffer | Blob): Promise<BasicMessage> {
         if((typeof raw) == 'string') {
             return this.m_json_encoder.decode(raw as string);
         } else {
+            if (raw instanceof Blob)
+                raw = await raw.arrayBuffer();
             return this.m_bin_encoder.decode(raw as ArrayBuffer);
         }
     }

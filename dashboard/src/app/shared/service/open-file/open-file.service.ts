@@ -2,9 +2,10 @@ import { Injectable } from '@angular/core';
 import { SoleAudioPlayerComponent } from '../../shared-component/sole-window/sole-audio-player/sole-audio-player.component';
 import { SoleImageViewerComponent } from '../../shared-component/sole-window/sole-image-viewer/sole-image-viewer.component';
 import { SolePdfViewerComponent } from '../../shared-component/sole-window/sole-pdf-viewer/sole-pdf-viewer.component';
+import { SoleTextViewerComponent } from '../../shared-component/sole-window/sole-text-viewer/sole-text-viewer.component';
 import { SoleVideoPlayerComponent } from '../../shared-component/sole-window/sole-video-player/sole-video-player.component';
 import { AccountManagerService } from '../account-manager.service';
-import { InjectedComponentHandler, InjectViewService } from '../inject-view.service';
+import { InjectViewService } from '../inject-view.service';
 import { OpenFileHandler } from './open-file-handler';
 
 const PDFIndexPrefix = 'PDF_PAGE_SAVE';
@@ -37,6 +38,15 @@ export class OpenFileService {
         index: number
     }): OpenFileHandler<SoleImageViewerComponent> {
         const injecthandler = this.injector.inject(SoleImageViewerComponent, data);
+        return new OpenFileHandler(injecthandler);
+    }
+
+    createTextViewer(data: {
+        code: string,
+        language: string,
+        filename: string,
+    }): OpenFileHandler<SoleTextViewerComponent> {
+        const injecthandler = this.injector.inject(SoleTextViewerComponent, data);
         return new OpenFileHandler(injecthandler);
     }
 

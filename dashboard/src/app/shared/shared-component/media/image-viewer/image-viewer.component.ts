@@ -1,6 +1,4 @@
-import { Component, ElementRef, EventEmitter, HostListener, Input, OnInit, Output, ViewChild } from '@angular/core';
-import { MatIconRegistry } from '@angular/material/icon';
-import { DomSanitizer } from '@angular/platform-browser';
+import { Component, ElementRef, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { AddMatIconService } from './add-mat-icon.service';
 
 class TransformMatrix {
@@ -92,16 +90,28 @@ export class ImageViewerComponent implements OnInit {
     @ViewChild('navbutton', {static: true})
     private navs: ElementRef;
 
-    constructor(private addMatIcon: AddMatIconService) {}
+    constructor(private addMatIcon: AddMatIconService,
+                private elementref: ElementRef) {}
 
-    ngOnInit(): void {}
+    ngOnInit(): void {
+        const elem = this.elementref.nativeElement as HTMLElement;
+        elem.onwheel = (event) => {
+            if (event.deltaY < 0) {
+                this.onScaleUp();
+            } else {
+                this.onScaleDown();
+            }
+        };
+        this.closed = true;
+    }
 
-    private closed;
+    private closed: boolean;
     toggleTools() {
         const elem = this.tools.nativeElement as HTMLElement;
         const elem2 = this.navs.nativeElement as HTMLElement;
         if(this.closed) {
             elem.style.transform = '';
+            elem.style.display = 'flex';
             elem2.style.display = 'flex';
         } else {
             elem.style.transform = `translate(0, ${elem.clientHeight}px)`;

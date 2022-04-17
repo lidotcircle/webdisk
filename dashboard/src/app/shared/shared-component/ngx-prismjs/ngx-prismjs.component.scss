@@ -1,0 +1,81 @@
+@import 'node_modules/prismjs/plugins/line-numbers/prism-line-numbers.min';
+
+
+ngx-prismjs[class="theme-default"] {
+    @import 'node_modules/prismjs/themes/prism.min';
+}
+
+ngx-prismjs[class="theme-coy"] {
+    @import 'node_modules/prismjs/themes/prism-coy.min';
+}
+
+ngx-prismjs[class="theme-dark"] {
+    @import 'node_modules/prismjs/themes/prism-dark.min';
+}
+
+ngx-prismjs[class="theme-funky"] {
+    @import 'node_modules/prismjs/themes/prism-funky.min';
+}
+
+ngx-prismjs[class="theme-okaidia"] {
+    @import 'node_modules/prismjs/themes/prism-okaidia.min';
+}
+
+ngx-prismjs[class="theme-solarizedlight"] {
+    @import 'node_modules/prismjs/themes/prism-solarizedlight.min';
+}
+
+ngx-prismjs[class="theme-tomorrow"] {
+    @import 'node_modules/prismjs/themes/prism-tomorrow.min';
+}
+
+ngx-prismjs[class="theme-twilight"] {
+    @import 'node_modules/prismjs/themes/prism-twilight.min';
+}
+
+ngx-prismjs {
+    pre {
+        background: transparent;
+        padding: 0em;
+        height: 100%;
+        width: 100%;
+        overflow: scroll !IMPORTANT;
+
+        padding-top: 0.2em;
+        padding-bottom: 0.2em;
+        padding-right: 0.2em;
+    }
+
+    &:not(.theme-coy) pre.line-numbers {
+        position: relative;
+        padding-left: 3.8em !IMPORTANT;
+
+        code {
+            padding: 0em !IMPORTANT;
+        }
+
+        .line-numbers-rows {
+            position: absolute !IMPORTANT;
+            left: -3.8em !IMPORTANT;
+        }
+    }
+
+    .ngx-prismjs-ttxx {
+        display: none !IMPORTANT;
+    }
+
+    pre::-webkit-scrollbar {
+        width: 0.3em;
+        height: 0.3em;
+        background-color: transparent;
+    }
+    pre::-webkit-scrollbar-thumb {
+        background-color: rgba(180, 180, 180, 0.7);
+        border-radius: 0.2em;
+    }
+
+    code {
+        height: max-content !IMPORTANT;
+        width: max-content !IMPORTANT;
+    }
+}

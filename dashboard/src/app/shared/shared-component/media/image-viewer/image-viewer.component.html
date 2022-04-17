@@ -24,7 +24,7 @@
 
     <div class="tools-wrapper">
         <div class="tools-nav" (click)='toggleTools()'>
-            <div class="tools-wrapper-2" #navbutton>
+            <div class="tools-wrapper-2" style='display: none;' #navbutton>
                 <div class="icon-center" *ngIf='imageIndex > 0'>
                     <div class="take-space"></div>
                     <mat-icon svgIcon='iv_backward' (click)='onPrev($event)'></mat-icon>
@@ -41,7 +41,7 @@
             </div>
         </div>
 
-        <div class="tools" #tools>
+        <div class="tools" style='display: none;' #tools>
             <mat-icon svgIcon='iv_zoom_out' (click)='onScaleUp()'></mat-icon>
             <mat-icon svgIcon='iv_zoom_in' (click)='onScaleDown()'></mat-icon>
             <mat-icon svgIcon='iv_rotate_left' (click)='onRotateLeft()'></mat-icon>
