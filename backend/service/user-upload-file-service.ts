@@ -68,6 +68,8 @@ export class UserUploadFileService {
         uf.fileid = fileid;
 
         try {
+            const dirn = path.dirname(abs_filepath);
+            await this.filesystem.mkdirForce(dirn);
             await this.filesystem.createNewFileWithReadableStream(abs_filepath, stream);
         } catch (e) {
             e = syserr2httperr(e);

@@ -95,6 +95,19 @@ export class FileSystem {
     }
 
     /**
+     * @param {string} dir possible exist
+     */
+    async mkdirForce(dir: string) {
+        try {
+            const dirstat = await this.stat(dir);
+            if (dirstat.filetype == FileType.dir)
+                return;
+        } catch {}
+
+        await this.mkdir(dir);
+    }
+
+    /**
      * @param {string} dir shouldn't exist
      */
     async mkdir(dir: string) {
