@@ -51,8 +51,7 @@ export class PrismJSComponent implements OnInit, OnChanges {
 
     ngOnInit() {
         if (this.theme == null) {
-            const host = this.elementRef.nativeElement as HTMLElement;
-            host.classList.add('theme-default');
+            this.set_theme("default");
         }
     }
 
@@ -64,10 +63,13 @@ export class PrismJSComponent implements OnInit, OnChanges {
         }
 
         if (changes.theme) {
-            const host = this.elementRef.nativeElement as HTMLElement;
-            this.clear_class_startsWith('theme-', host);
-            host.classList.add('theme-' + this.theme);
+            this.set_theme(this.theme);
         }
+    }
+
+    private set_theme(theme: string) {
+        const host = this.elementRef.nativeElement as HTMLElement;
+        host.setAttribute('pjtheme', theme);
     }
 
     private clear_class_startsWith(sw: string, elem: HTMLElement) {

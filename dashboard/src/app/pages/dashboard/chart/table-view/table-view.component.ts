@@ -14,7 +14,7 @@ let numberoftableview = 0;
 const tableviews: TableViewComponent[] = [];
 @Component({
     template: `
-    <ngx-prismjs *ngIf='datatype!="log"' [code]='data' [language]='datatype'></ngx-prismjs>
+    <ngx-prismjs *ngIf='datatype!="log"' theme='default-transparent' [code]='data' [language]='datatype'></ngx-prismjs>
     <div *ngIf='datatype=="log"' [status]='logStatus'>
        <span [style]='logStyle'>{{ logLevel }}</span>
        {{ logText }}

@@ -3,7 +3,11 @@ import { FileStat } from 'src/app/shared/common';
 import { InjectViewService } from 'src/app/shared/service/inject-view.service';
 import { OpenFileService } from 'src/app/shared/service/open-file/open-file.service';
 
-type FOpenFileView = (fileviewservice: FileViewerService, file: FileStat, files: FileStat[], activeIndex: number) => Promise<void>;
+
+export interface OpenFileOption {
+    extension?: string;
+}
+type FOpenFileView = (fileviewservice: FileViewerService, file: FileStat, files: FileStat[], activeIndex: number, options: OpenFileOption) => Promise<void>;
 
 import {default as reg_video} from './video';
 import {default as reg_audio} from './audio';
@@ -46,10 +50,17 @@ export class FileViewerService {
         }
     }
 
-    async view(files: FileStat[], activeIndex: number): Promise<boolean> {
-        const handler = this.handlerMap.get(files[activeIndex].extension);
+    hasHandler(extension: string): boolean {
+        return this.handlerMap.has(extension);
+    }
+
+    async view(files: FileStat[], activeIndex: number, asExtension?: string): Promise<boolean> {
+        asExtension = asExtension || files[activeIndex].extension;
+        const handler = this.handlerMap.get(asExtension);
         if(handler != null) {
-            await handler(this, files[activeIndex], files, activeIndex);
+            await handler(this, files[activeIndex], files, activeIndex, {
+                extension: asExtension,
+            });
             return true;
         } else {
             return false;

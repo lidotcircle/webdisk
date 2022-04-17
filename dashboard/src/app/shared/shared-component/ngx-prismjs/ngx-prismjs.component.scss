@@ -1,35 +1,42 @@
 @import 'node_modules/prismjs/plugins/line-numbers/prism-line-numbers.min';
 
+ngx-prismjs:not([pjtheme]), ngx-prismjs[pjtheme="default-transparent"] {
+    @import 'node_modules/prismjs/themes/prism.min';
 
-ngx-prismjs[class="theme-default"] {
+    pre {
+        background: transparent !IMPORTANT;
+    }
+}
+
+ngx-prismjs[pjtheme="default"] {
     @import 'node_modules/prismjs/themes/prism.min';
 }
 
-ngx-prismjs[class="theme-coy"] {
+ngx-prismjs[pjtheme="coy"] {
     @import 'node_modules/prismjs/themes/prism-coy.min';
 }
 
-ngx-prismjs[class="theme-dark"] {
+ngx-prismjs[pjtheme="dark"] {
     @import 'node_modules/prismjs/themes/prism-dark.min';
 }
 
-ngx-prismjs[class="theme-funky"] {
+ngx-prismjs[pjtheme="funky"] {
     @import 'node_modules/prismjs/themes/prism-funky.min';
 }
 
-ngx-prismjs[class="theme-okaidia"] {
+ngx-prismjs[pjtheme="okaidia"] {
     @import 'node_modules/prismjs/themes/prism-okaidia.min';
 }
 
-ngx-prismjs[class="theme-solarizedlight"] {
+ngx-prismjs[pjtheme="solarizedlight"] {
     @import 'node_modules/prismjs/themes/prism-solarizedlight.min';
 }
 
-ngx-prismjs[class="theme-tomorrow"] {
+ngx-prismjs[pjtheme="tomorrow"] {
     @import 'node_modules/prismjs/themes/prism-tomorrow.min';
 }
 
-ngx-prismjs[class="theme-twilight"] {
+ngx-prismjs[pjtheme="twilight"] {
     @import 'node_modules/prismjs/themes/prism-twilight.min';
 }
 
@@ -46,7 +53,7 @@ ngx-prismjs {
         padding-right: 0.2em;
     }
 
-    &:not(.theme-coy) pre.line-numbers {
+    &:not([pjtheme='coy']) pre.line-numbers {
         position: relative;
         padding-left: 3.8em !IMPORTANT;
 

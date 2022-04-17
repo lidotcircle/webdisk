@@ -589,6 +589,45 @@ export class FileViewComponent implements OnInit, OnDestroy {
         shareEntry.subMenus = [namedlinkEntry, downloadLink];
         return shareEntry;
     } //}
+    private createMenuEntry_Open(filename: string) //{
+    {
+        const idx = this.fileslice.findIndex(v => filename == v.filename);
+        const sl = [ this.fileslice[idx] ];
+
+        const openAsWithEntry = new MenuEntry('As', 'open_with');
+        openAsWithEntry.clickCallback = async () => {
+            const ans = await this.messagebox.create({
+                title: 'open file as',
+                message: path.basename(filename),
+                inputs: [
+                    {label: 'Filetype', name: 'ft', type: 'text', initValue: 'txt'},
+                ],
+                buttons: [
+                    {name: 'Confirm'},
+                    {name: 'Cancel'}
+                ]
+            }).wait();
+
+            if(ans.buttonValue == 0) {
+                const ft = ans.inputs['ft'];
+                if (!this.fileviewer.hasHandler(ft)) {
+                    this.toaster.warning("unknown type", "OpenAs");
+                    return;
+                }
+
+                await this.fileviewer.view(sl, 0, ft);
+            }
+        };
+
+        const openAsTxtWithEntry = new MenuEntry('As Txt', 'text_fields');
+        openAsTxtWithEntry.clickCallback = async () => {
+            await this.fileviewer.view(sl, 0, "txt")
+        };
+
+        const openEntry = new MenuEntry('Open', 'open_in_new');
+        openEntry.subMenus = [openAsTxtWithEntry, openAsWithEntry];
+        return openEntry;
+    } //}
 
     private selectedFiles(): FileStat[] //{
     {
@@ -645,6 +684,8 @@ export class FileViewComponent implements OnInit, OnDestroy {
 
             const share = this.createMenuEntry_Share(this.fileslice[n].filename);
             entries.push(share);
+            const open  = this.createMenuEntry_Open(this.fileslice[n].filename);
+            entries.push(open);
         }
 
         const renameEntry = new MenuEntry('Rename', 'create');
