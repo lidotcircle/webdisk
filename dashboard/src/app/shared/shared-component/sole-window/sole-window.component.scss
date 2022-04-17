@@ -16,6 +16,13 @@
             flex-grow: 1;
         }
 
+        @media (max-width: 600px) {
+            .take-space {
+                width: 1em;
+                min-width: 1em;
+            }
+        }
+
         .wrapper {
             min-width: 70%;
             display: flex;

@@ -8,29 +8,65 @@ import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { RESTfulAPI } from 'src/app/restful';
 import { map, takeUntil } from 'rxjs/operators';
 import { AsyncLocalStorageService } from 'src/app/shared/service/async-local-storage.service';
+import { OpenFileService } from 'src/app/shared/service/open-file/open-file.service';
 
 
 let numberoftableview = 0;
 const tableviews: TableViewComponent[] = [];
 @Component({
     template: `
-    <ngx-prismjs *ngIf='datatype!="log"' theme='default-transparent' [code]='data' [language]='datatype'></ngx-prismjs>
-    <div *ngIf='datatype=="log"' [status]='logStatus'>
+    <ngx-prismjs *ngIf='data_as_code' theme='default-transparent' [code]='data' [language]='datatype'></ngx-prismjs>
+    <div         *ngIf='data_as_log' [status]='logStatus'>
        <span [style]='logStyle'>{{ logLevel }}</span>
        {{ logText }}
     </div>
+    <div         *ngIf='data_as_image' class='col-view'>
+        <div *ngIf='!image_loaded' class='row-view'>
+            <button nbButton size='tiny' status="primary" (click)='loadImage()'>Load</button>
+            <div class='image-name'> {{ imageName }} </div>
+        </div>
+
+        <div *ngIf='image_loaded' class='col-view'>
+            <img [src]='imageUrl'/>
+            <div class='row-view'>
+                <button nbButton size='tiny' status="primary" (click)='viewImage()'>View</button>
+                <div class='image-name'> {{ imageName }} </div>
+            </div>
+        </div>
+    </div>
     `,
-    styles: [``],
+    styles: [`
+    .col-view {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .row-view {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .image-name {
+        font-weight: bold;
+        padding: 0em 0.5em;
+    }
+
+    img {
+        max-width: 250px;
+        max-height: 200px;
+        margin-bottom: 0.5em;
+    }
+    `],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RecordViewComponent implements ViewCell, OnInit {
-    constructor(private ref: ChangeDetectorRef) {}
+    constructor(private ref: ChangeDetectorRef,
+                private openfileservice: OpenFileService) {}
 
     data: string;
     datatype: string;
-    logLevel: string;
-    logText: string;
-    logStyle: string;
     @Input() value: string | number;
     @Input() rowData: { data: string; datatype: string; };
 
@@ -38,6 +74,37 @@ export class RecordViewComponent implements ViewCell, OnInit {
         this.update_options(this.rowData);
         const viewer = tableviews[this.rowData['viewid']];
         viewer.viewer_init(this);
+    }
+
+    // code
+    data_as_code: boolean;
+
+    // log
+    data_as_log: boolean;
+    logLevel: string;
+    logText: string;
+    logStyle: string;
+
+
+    // image url
+    data_as_image: boolean;
+    imageName: string;
+    imageUrl: string;
+    image_loaded: boolean = false;
+    loadImage() {
+        this.image_loaded = true;
+    }
+    async viewImage() {
+        await this.openfileservice.createImage({
+            images: [ this.imageUrl ],
+            index: 0,
+        }).wait();
+    }
+
+    private clear_components() {
+        this.data_as_code = false;
+        this.data_as_log = false;
+        this.data_as_image = false;
     }
 
     update_options(options: any) {
@@ -48,20 +115,34 @@ export class RecordViewComponent implements ViewCell, OnInit {
         this.datatype = options['datatype'] || this.datatype || '';
         this.ref.markForCheck();
 
-        if (this.datatype == 'log') {
-            try {
-                const obj = JSON.parse(this.data);
-                this.logLevel = obj.level || 'info';
-                this.logText = obj.message || '';
-            } catch {}
-            switch (this.logLevel) {
-                case 'debug': this.logStyle = 'text-align:center;color:#3db744;font-weight:bold;padding-right:1em;'; break;
-                case 'info':  this.logStyle = 'text-align:center;color:#0095ff;font-weight:bold;padding-right:1em;'; break;
-                case 'warning':
-                case 'warn':  this.logStyle = 'text-align:center;color:#ffaa00;font-weight:bold;padding-right:1em;'; break;
-                case 'error':
-                default:      this.logStyle = 'text-align:center;color:#edf1f7;font-weight:bold;padding-right:1em;'; break;
-            }
+        this.clear_components();
+        switch (this.datatype) {
+            case 'log': {
+                this.data_as_log = true;
+                try {
+                    const obj = JSON.parse(this.data);
+                    this.logLevel = obj.level || 'info';
+                    this.logText = obj.message || '';
+                } catch {}
+                switch (this.logLevel) {
+                    case 'debug': this.logStyle = 'text-align:center;color:#3db744;font-weight:bold;padding-right:1em;'; break;
+                    case 'info':  this.logStyle = 'text-align:center;color:#0095ff;font-weight:bold;padding-right:1em;'; break;
+                    case 'warning':
+                    case 'warn':  this.logStyle = 'text-align:center;color:#ffaa00;font-weight:bold;padding-right:1em;'; break;
+                    case 'error':
+                    default:      this.logStyle = 'text-align:center;color:#edf1f7;font-weight:bold;padding-right:1em;'; break;
+                }
+            } break;
+            case 'image': {
+                this.data_as_image = true;
+                try {
+                    const obj = JSON.parse(this.data);
+                    this.imageUrl = obj.url || '';
+                    this.imageName = obj.name || '';
+                } catch {}
+            } break;
+            default:
+                this.data_as_code = true;
         }
     }
 }

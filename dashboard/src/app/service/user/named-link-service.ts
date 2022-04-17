@@ -74,7 +74,6 @@ export class NamedLinkService {
     }
 
     async createNamedLink(name: string, target: string, duration_ms: number) {
-        debugger;
         duration_ms = duration_ms || 1000 * 60 * 60 * 24 * 365 * 100;
 
         await this.http.post(RESTfulAPI.NamedLink, {
