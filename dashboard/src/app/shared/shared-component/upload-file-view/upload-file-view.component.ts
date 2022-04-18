@@ -263,13 +263,6 @@ export class UploadFileViewComponent extends AbsoluteView implements OnInit {
                 }
 
                 if(override) {
-                    crypto.algo.MD5.create();
-                    const rmd5 = await this.fileManager.md5(filename);
-                    const filemd5 = await this.fileMD5(fileData);
-                    if(rmd5 == filemd5) {
-                        this.uploadSize.next(fileData.size);
-                        return;
-                    }
                     await this.fileManager.remove(filename);
                 } else {
                     this.uploadSize.next(fileData.size);

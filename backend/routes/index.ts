@@ -1,10 +1,12 @@
-import express from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import assert from 'assert';
 import { QueryDependency } from '../lib/di';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { createWebSocketMiddleware, createPasswordAuthMiddleware, defaultJWTAuthMiddleware, AnyOfNoError } from '../middleware';
 import { MessageGateway } from '../lib/message_gateway';
 import { Server } from 'http';
+import path from 'path';
+import fs from 'fs';
 
 const router = express.Router();
 export default router;
@@ -41,6 +43,17 @@ if (webroot.startsWith("http")) {
     callback_list.push((server: Server) => server.on("upgrade", proxy["upgrade"]));
     router.use("/", proxy);
 } else {
-    router.get("/",  express.static(webroot))
-    router.get("/*", express.static(webroot))
+    const StaticFileCaches: Set<string> = new Set();
+    router.use("/", async (req: Request, res: Response, next: NextFunction) => {
+        if (StaticFileCaches.has(req.url))
+            return next();
+        const file = path.join(webroot, req.url);
+        try {
+            await fs.promises.stat(file);
+            StaticFileCaches.add(req.url);
+            return next();
+        } catch {
+            return res.status(200).sendFile(path.join(webroot, 'index.html'));
+        }
+    }, express.static(webroot, { etag: true }));
 }
