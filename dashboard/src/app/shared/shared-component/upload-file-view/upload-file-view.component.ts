@@ -1,4 +1,4 @@
-import { Component, OnInit, ElementRef, Input, ViewChild } from '@angular/core';
+import { Component, OnInit, ElementRef, Input } from '@angular/core';
 import { AbsoluteView, BeAbsoluteView } from '../absolute-view/absolute-view';
 import { FileSystemManagerService } from '../../service/file-system-manager.service';
 import { FileStat } from '../../common';
@@ -10,9 +10,10 @@ import { MessageBoxService } from '../../service/message-box.service';
 import { NotifierService } from '../../service/notifier.service';
 import { ViewDraggable } from '../absolute-view/trait/draggable';
 import { NotifierType } from '../notifier/notifier.component';
+import { FileType } from 'src/app/shared/common';
 const assert = console.assert;
 
-const blocksize = 1024 * 1024;
+const blocksize = 512 * 1024;
 
 class UploadOption {
     alwaysOverride: boolean = false;
@@ -121,6 +122,7 @@ export class UploadFileViewComponent extends AbsoluteView implements OnInit {
                 }
             }
         } catch (err) {
+            console.log(err);
             this.notifier.create({message: `upload fail: ${err}`, mtype: NotifierType.Error,duration: 5000}).wait();
         } finally {this.finish = true;}
     } //}
@@ -234,6 +236,10 @@ export class UploadFileViewComponent extends AbsoluteView implements OnInit {
 
         let uploadsize = 0;
         if(stat != null) {
+            if (stat.filetype == FileType.dir) {
+                throw new Error(`upload '${filename}' failed, it's a directory`);
+            }
+
             if (stat.size <= fileData.size && this.userSettings.ContinueSendFileWithSameMD5) {
                 const rmd5 = await this.fileManager.md5(filename);
                 const lmd5 = await this.fileMD5(fileData, 0, stat.size);
@@ -272,15 +278,60 @@ export class UploadFileViewComponent extends AbsoluteView implements OnInit {
             }
         }
 
-        while(uploadsize < fileData.size) {
+        const slices: { buf?: ArrayBuffer, pos: number, len: number }[] = [];
+        let sstart = uploadsize;
+        while(sstart < fileData.size) {
+            const sliceSize = Math.min(blocksize, fileData.size - sstart);
+            slices.push({
+                pos: sstart,
+                len: sliceSize,
+            });
+            sstart += sliceSize;
+        }
+
+        const sessionId = await this.fileManager.createUploadSession(filename, uploadsize);
+        const promises: Promise<any>[] = [];
+        let cocurrentPromises: number = 30;
+        while(slices.length > 0 || promises.length > 0) {
             if(this.closed) return;
 
-            let sliceSize = Math.min(blocksize, fileData.size - uploadsize);
-            const buf = await fileData.slice(uploadsize, uploadsize + sliceSize).arrayBuffer();
-            await this.fileManager.append(filename, buf);
-            uploadsize += sliceSize;
-            this.uploadSize.next(sliceSize);
+            while (promises.length < cocurrentPromises && slices.length > 0) {
+                const slice = slices.splice(0, 1)[0];
+                const buf = slice.buf || await fileData.slice(slice.pos, slice.pos + slice.len).arrayBuffer();
+                const pm =  this.fileManager.uploadSlice(sessionId, slice.pos, buf)
+                                .then(() => [ true, pm, slice.len ], e => [ false, pm, e, slice ]);
+                promises.push(pm);
+            }
+
+            const fResRej = await Promise.race(promises);
+            const [ isResolved, pm ] = fResRej;
+            if (isResolved) {
+                const sliceSize = fResRej[2];
+                this.uploadSize.next(sliceSize);
+                const idx = promises.indexOf(pm);
+                promises.splice(idx, 1);
+            } else {
+                const err = fResRej[2];
+                const slice = fResRej[3];
+
+                const toomanywaiters_prefix = 'too many waiters:';
+                if (!(typeof err === 'string') || !err.trim().startsWith(toomanywaiters_prefix))
+                    throw err;
+
+                const val = Number(err.trim().substring(toomanywaiters_prefix.length));
+                if (Number.isSafeInteger(val) && val > 0) {
+                    cocurrentPromises = val;
+                } else {
+                    cocurrentPromises = Math.max(5, cocurrentPromises - 5);
+                }
+
+                const idx = promises.indexOf(pm);
+                promises.splice(idx, 1);
+                slices.push(slice);
+                slices.sort((a, b) => a.pos - b.pos);
+            }
         }
+        await this.fileManager.expireUploadSession(sessionId);
 
         const rmd5 = await this.fileManager.md5(filename);
         const lmd5 = await this.fileMD5(fileData);

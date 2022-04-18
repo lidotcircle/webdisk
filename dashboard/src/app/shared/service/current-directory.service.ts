@@ -27,5 +27,9 @@ export class CurrentDirectoryService {
         this._cwdSubject.next(this._cwd || '/');
     }
 
-    public get now(): string {return this._cwd;}
+    public get now(): string {return this._cwd || '/';}
+
+    public suggestWhere(dir: string) {
+        this._cwd = this._cwd || dir;
+    }
 }

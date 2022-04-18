@@ -1,6 +1,6 @@
 import * as util from 'util';
 export * from './copy_object';
-import { assignTargetEnumProp, CopySourceEnumProp } from './copy_object';
+import { assignTargetEnumProp } from './copy_object';
 
 export function assert(val: boolean) {
     if(!val) throw new Error("assert fail");
@@ -38,48 +38,42 @@ export function checkArgv(pattern: string, argv: any[]): boolean {
     }
     for(let i=0;i<pattern.length;i++) {
         switch(pattern[i]) {
-            case 'b': {
+            case 'b':
                 if(typeof argv[i] == 'boolean') {
                     continue;
                 } else {
                     return false;
                 }
-            } break;
-            case 'n': {
+            case 'n':
                 if(typeof argv[i] == 'number') {
                     continue;
                 } else {
                     return false;
                 }
-            } break;
-            case 's': {
+            case 's':
                 if(typeof argv[i] == 'string') {
                     continue;
                 } else {
                     return false;
                 }
-            } break;
-            case 'o': {
+            case 'o':
                 if(typeof argv[i] == 'object') {
                     continue;
                 } else {
                     return false;
                 }
-            } break;
-            case 'a': {
+            case 'a':
                 if(typeof argv[i] == 'object' && Array.isArray(argv[i])) {
                     continue;
                 } else {
                     return false;
                 }
-            } break;
-            case 'f': {
+            case 'f':
                 if(argv[i] instanceof ArrayBuffer) {
                     continue;
                 } else {
                     return false;
                 }
-            } break;
             default:
                 return false;
         }

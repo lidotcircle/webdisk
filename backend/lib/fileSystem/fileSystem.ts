@@ -4,7 +4,11 @@ import * as utils from '../utils';
 import { FileStat, FileType } from "../common/file_types";
 import { Readable, Writable } from 'stream';
 import path from 'path';
-import assert from 'assert';
+import { SimpleExpiredStoreService } from '../../service/simple-expired-store-service';
+import { DIProperty } from '../../lib/di';
+import { v4 as uuidv4 } from "uuid";
+import { filter, map } from 'rxjs/operators';
+import { firstValueFrom } from 'rxjs';
 
 class FileSystemNotImplemented extends Error {
     constructor() {
@@ -25,7 +29,7 @@ export class FileSystem {
         throw new FileSystemNotImplemented();
     }
 
-    async chmod(file: string, mode: number) {
+    async chmod(_file: string, _mode: number) {
         throw new FileSystemNotImplemented();
     }
 
@@ -36,7 +40,9 @@ export class FileSystem {
     async copy(src: string, dst: string) //{
     {
         const ss = await this.stat(src);
-        assert.equal(ss.filetype, FileType.reg);
+        if (ss.filetype != FileType.reg) {
+            throw new Error("expect a regular file");
+        }
         const rs = await this.createReadableStream(src, 0, ss.size);
         await this.createNewFileWithReadableStream(dst, rs);
     } //}
@@ -51,7 +57,7 @@ export class FileSystem {
 
         if(ss.filetype == FileType.dir) {
             try {
-                const ds = await this.stat(dst);
+                await this.stat(dst);
             } catch {
                 await this.mkdir(dst);
             }
@@ -68,14 +74,14 @@ export class FileSystem {
         }
     } //}
 
-    async execFile(file: string, argv: string[]): Promise<string> {
+    async execFile(_file: string, _argv: string[]): Promise<string> {
         throw new FileSystemNotImplemented();
     }
 
     /**
-     * @param {string} dir should be a directory
+     * @param {string} _dir should be a directory
      */
-    async getdir(dir: string): Promise<FileStat[]> {
+    async getdir(_dir: string): Promise<FileStat[]> {
         throw new FileSystemNotImplemented();
     }
 
@@ -108,16 +114,16 @@ export class FileSystem {
     }
 
     /**
-     * @param {string} dir shouldn't exist
+     * @param {string} _dir shouldn't exist
      */
-    async mkdir(dir: string) {
+    async mkdir(_dir: string) {
         throw new FileSystemNotImplemented();
     }
 
     /**
-     * @param {string} dir should exist
+     * @param {string} _dir should exist
      */
-    async rmdir(dir: string) {
+    async rmdir(_dir: string) {
         throw new FileSystemNotImplemented();
     }
 
@@ -131,14 +137,14 @@ export class FileSystem {
         await this.remover(src);
     } //}
 
-    async read(file: string, position: number, length: number): Promise<Buffer> {
+    async read(_file: string, _position: number, _length: number): Promise<Buffer> {
         throw new FileSystemNotImplemented();
     }
 
     /**
-     * @param {string} path should be full path of a file
+     * @param {string} _path should be full path of a file
      */
-    async remove(path: string) {
+    async remove(_path: string) {
         throw new FileSystemNotImplemented();
     }
 
@@ -167,28 +173,109 @@ export class FileSystem {
     } //}
 
     /**
-     * @param {string} file should exist
+     * @param {string} _file should exist
      */
-    async stat(file: string): Promise<FileStat> {
+    async stat(_file: string): Promise<FileStat> {
         throw new FileSystemNotImplemented();
     }
 
     /**
-     * @param {string} file valid path
+     * @param {string} _file valid path
      */
-    async touch(file: string) {
+    async touch(_file: string) {
         throw new FileSystemNotImplemented();
     }
 
-    async truncate(file: string, len: number) {
+    async truncate(_file: string, _len: number) {
         throw new FileSystemNotImplemented();
     }
 
-    async append(file: string, buf: ArrayBuffer): Promise<void> {
+    async append(_file: string, _buf: ArrayBuffer): Promise<void> {
         throw new FileSystemNotImplemented();
     }
 
-    async write(file: string, position: number, buf: ArrayBuffer): Promise<number> {
+    @DIProperty(SimpleExpiredStoreService)
+    private kvstore: SimpleExpiredStoreService;
+    private uploadedTimeout: number = 1 * 60 * 1000;
+    // TODO waiters threshold
+    private maxUploadWaiter: number = 20;
+
+    async createUploadSession(file: string, startpos: number): Promise<string> {
+        if (startpos < 0 || !Number.isInteger(startpos)) {
+            throw new Error("bad startpos, should be a non-negative integer");
+        }
+
+        const uuid = uuidv4();
+        this.kvstore.setval(uuid, { filename: file, startpos: startpos, uploadedBytes: startpos, waiters: 0 }, this.uploadedTimeout);
+        await this.touch(file);
+        const fstat = await this.stat(file);
+        if (fstat.filetype != FileType.reg) {
+            throw new Error(`can't upload file to '${file}'`);
+        } else if (fstat.size != startpos) {
+            throw new Error(`bad startpos, currently the size of '${file}' is ${fstat.size}`);
+        }
+        return uuid;
+    }
+
+    async uploadSlice(uploadSessionId: string, pos: number, buf: ArrayBuffer): Promise<void> {
+        const info = this.kvstore.getval(uploadSessionId) as any;
+        if (!info) {
+            throw new Error("session expired or didn't exist");
+        }
+        const filename = info.filename;
+        const startpos = info.startpos;
+        let uploadedBytes = info.uploadedBytes;
+        if (pos < uploadedBytes) {
+            throw new Error("slice already writed");
+        } else {
+            if (pos > uploadedBytes) {
+                const no_waiters: number = info.waiters + 1;
+                if (no_waiters > this.maxUploadWaiter) {
+                    throw new Error(`too many waiters: ${this.maxUploadWaiter + 1}`);
+                }
+
+                info.waiters = no_waiters;
+                info.lowest_bytes = info.lowest_bytes || pos;
+                let msgtype = '';
+                const enheng = await firstValueFrom(this.kvstore.onChange(uploadSessionId)
+                    .pipe(filter(msg => {
+                        if (msg.etype != 'set') return true;
+                        if (msg.value.uploadedBytes >= pos) return true;
+                    }))
+                    .pipe(map(msg => (msgtype = msg.etype) == 'set' && (uploadedBytes = msg.value.uploadedBytes) == pos)));
+                info.waiters = info.waiters - 1;
+
+                if (!enheng) {
+                    throw new Error(`${msgtype}...`);
+                }
+            }
+
+            try {
+                await this.append(filename, buf);
+                info.uploadedBytes = uploadedBytes + buf.byteLength;
+                this.kvstore.setval(uploadSessionId, info, this.uploadedTimeout);
+            } catch (e) {
+                if (pos == startpos) {
+                    this.kvstore.clear(uploadSessionId);
+                }
+                throw e;
+            }
+        }
+    }
+
+    async expireUploadSession(uploadSessionId: string): Promise<void> {
+        const info = this.kvstore.getval<any>(uploadSessionId);
+        if (!info) {
+            throw new Error("upload session expired or did't exists");
+        }
+        const waiters = info.waiters;
+        this.kvstore.clear(uploadSessionId);
+        if (waiters > 0) {
+            throw new Error(`not finished, abort ${waiters} slice don't writed`);
+        }
+    }
+
+    async write(_file: string, _position: number, _buf: ArrayBuffer): Promise<number> {
         throw new FileSystemNotImplemented();
     }
 
@@ -217,19 +304,19 @@ export class FileSystem {
         }
     } //}
 
-    async createReadableStream(filename: string, position: number, length: number): Promise<Readable> {
+    async createReadableStream(_filename: string, _position: number, _length: number): Promise<Readable> {
         throw new FileSystemNotImplemented();
     }
 
-    async createNewFileWithReadableStream(filename: string, reader: Readable): Promise<number> {
+    async createNewFileWithReadableStream(_filename: string, _reader: Readable): Promise<number> {
         throw new FileSystemNotImplemented();
     }
 
-    async canRedirect(filename: string): Promise<boolean> {
+    async canRedirect(_filename: string): Promise<boolean> {
         return false;
     }
 
-    async redirect(filename: string): Promise<string[]> {
+    async redirect(_filename: string): Promise<string[]> {
         throw new FileSystemNotImplemented();
     }
 }

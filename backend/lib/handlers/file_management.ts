@@ -246,6 +246,18 @@ class FileManagement extends MessageHandler {
                     checkArgv('snf', argv);
                     resp.fm_msg.fm_response = await this.write(this.resolveUserPath(rootpath, argv[0]), argv[1], argv[2]);
                 } break;
+                case FileRequest.CREATE_UPLOAD_SESSION: {
+                    checkArgv('sn', argv);
+                    resp.fm_msg.fm_response = await this.filesystem.createUploadSession(argv[0], argv[1]);
+                } break;
+                case FileRequest.UPLOAD_SLICE: {
+                    checkArgv('snf', argv);
+                    await this.filesystem.uploadSlice(argv[0], argv[1], argv[2]);
+                } break;
+                case FileRequest.EXPIRE_UPLOAD_SESSION: {
+                    checkArgv('s', argv);
+                    await this.filesystem.expireUploadSession(argv[0]);
+                } break;
                 default:
                     resp.error = 'file message bad request';
                     break;

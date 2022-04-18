@@ -1,8 +1,3 @@
-import { path } from 'src/app/shared/utils';
-import { FileSystemManagerService } from 'src/app/shared/service/file-system-manager.service';
-import { CurrentDirectoryService } from 'src/app/shared/service/current-directory.service';
-import { InjectViewService } from 'src/app/shared/service/inject-view.service';
-import { UserSettingService } from 'src/app/shared/service/user-setting.service';
 import { FileOperationService } from 'src/app/shared/service/file-operation.service';
 import { FileStat } from 'src/app/shared/common';
 

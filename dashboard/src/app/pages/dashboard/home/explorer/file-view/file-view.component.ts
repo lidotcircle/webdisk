@@ -191,7 +191,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
         this.setup_tools();
 
         AcceptDragItem(this.host.nativeElement as HTMLElement, 
-                      () => this.currentDirectory.now, 
+                      () => this.currentDirectory.now,
                       this.fileoperation, false, 
                       () => this.currentDirectory.justRefresh());
     } //}

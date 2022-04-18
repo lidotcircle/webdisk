@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
 import { FileStat, FileRequestMessage, FileRequest, FileResponseMessage, MessageSource} from '../common';
 import { WSChannelService } from './wschannel.service';
-import { AccountManagerService } from './account-manager.service';
-import { assignTargetEnumProp, isArrayBuffer, hasArrayBuffer } from '../utils';
+import { assignTargetEnumProp, hasArrayBuffer } from '../utils';
 import { AuthService } from 'src/app/service/auth';
 
 export enum FileSystemEvent {
@@ -65,8 +64,24 @@ export class FileSystemManagerService {
         this.absolutePath(file);
         await this.sendTo({
             type: FileRequest.APPEND, 
-            timeout: Math.max(5000, buffer.byteLength / (1 * 1024))
+            timeout: Math.max(5000, buffer.byteLength / (0.1 * 1024))
         }, file, buffer);
+    }
+
+    async createUploadSession(file: string, startpos: number): Promise<string> {
+        this.absolutePath(file);
+        return await this.sendTo({type: FileRequest.CREATE_UPLOAD_SESSION }, file, startpos);
+    }
+
+    async uploadSlice(uploadSessionId: string, pos: number, buf: ArrayBuffer): Promise<void> {
+        await this.sendTo({
+            type: FileRequest.UPLOAD_SLICE, 
+            timeout: Math.max(60 * 1000, buf.byteLength / (0.1 * 1024))
+        }, uploadSessionId, pos, buf);
+    }
+
+    async expireUploadSession(uploadSessionId: string): Promise<void> {
+        await this.sendTo({type: FileRequest.EXPIRE_UPLOAD_SESSION }, uploadSessionId);
     }
 
     async chmod(file: string, mode: string | number): Promise<void> {

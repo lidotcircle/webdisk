@@ -7,6 +7,7 @@ import { LeftPanelService } from './left-panel.service';
 import { DirectoryTreeComponent } from './directory-tree/directory-tree.component';
 import { ActivatedRoute } from '@angular/router';
 import { FileViewComponent } from './file-view/file-view.component';
+import { CurrentDirectoryService } from 'src/app/shared/service/current-directory.service';
 
 
 @Component({
@@ -19,6 +20,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
     constructor(private contextmenu: RightMenuManagerService,
                 private activatedRouter: ActivatedRoute,
                 private toolbar: ToolbarService,
+                private currentDir: CurrentDirectoryService,
                 private leftpanelservice: LeftPanelService)
     {
         this.contextmenu.StartContextMenu();
@@ -51,6 +53,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
         this.paramsSub = this.activatedRouter.queryParamMap.subscribe(async (paramsMap) => {
             const path = paramsMap.get('path') || '/';;
             await this.fileview.chdir(path);
+            this.currentDir.suggestWhere(path);
         });
     }
 }

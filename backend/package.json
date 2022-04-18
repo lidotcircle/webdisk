@@ -36,6 +36,7 @@
     "morgan": "^1.10.0",
     "node-fetch": "^2.6.1",
     "reflect-metadata": "^0.1.13",
+    "rxjs": "^7.5.5",
     "smart-buffer": "^4.1.0",
     "sqlite3": "^5.0.2",
     "typeorm": "^0.3.0",
