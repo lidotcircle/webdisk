@@ -12,7 +12,7 @@ export class DiskDownloadService {
     async getDownloadUrls(filenames: string[]): Promise<string[]> {
         const token = await this.stokenService.getSToken(["download"]);
         if (!token) return null;
-        return filenames.map(filename => `${window.location.origin}/disk${filename}?stoken=${token}`);
+        return filenames.map(filename => `${window.location.origin}/disk/${encodeURIComponent(filename)}?stoken=${encodeURIComponent(token)}`);
     }
 
     async download(filenames: [string,string?][]): Promise<boolean> {

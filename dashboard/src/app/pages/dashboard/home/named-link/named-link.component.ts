@@ -73,7 +73,7 @@ export class NamedLinkComponent implements OnInit {
     async oncopy(n: number) {
         const entry = this.outentries[n];
         const name = entry.name;
-        const link = location.protocol + '//' + location.host + cons.NamedLinkPREFIX + '/' + name;
+        const link = window.location.origin + cons.NamedLinkPREFIX + '/' + encodeURIComponent(name);
         const ans = await this.clipboard.copy(ClipboardContentType.text, link);
         if (ans) {
             this.notifier.create({message: 'Copied the link to clipboard'}).wait();

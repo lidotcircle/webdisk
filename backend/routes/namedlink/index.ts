@@ -10,6 +10,7 @@ export default router;
 
 const handler =  async (req: Request, res: Response) => {
     const link = req.params['link'];
+    const fn = req.query['filename'] as string;
     const service = QueryDependency(NamedLinkService);
     const entry = await service.getLink(link);
     if (!entry) {
@@ -26,7 +27,7 @@ const handler =  async (req: Request, res: Response) => {
         await write_file_response(filename, req.headers, res, {
             attachment: true,
             method_head: req.method.toLowerCase() == 'head',
-            attachmentFilename: link,
+            attachmentFilename: fn || link,
         });
     } catch (e: any) {
         e = syserr2httperr(e);

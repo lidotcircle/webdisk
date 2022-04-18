@@ -23,7 +23,7 @@ const handler = async (req: Request, res: Response) => {
     if (!user)
         throw new createHttpError.NotFound();
 
-    const fn = path.join(user.rootpath, uripath);
+    const fn = path.join(user.rootpath, decodeURIComponent(uripath));
     await write_file_response(fn, req.headers, res);
 }
 
