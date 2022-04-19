@@ -7,17 +7,27 @@ volumes:
       type: 'none'
       o: 'bind'
       device: './webdiskdata'
+  wdatabase:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: './database'
+
 
 services:
   backend.webdisk.com:
     build:
       context: .
       dockerfile: docker/Dockerfile
+    restart: always
     volumes:
       - wdisk:/disk
+      - wdatabase:/webdiskdb
 
   nginx.webdisk.com:
     image: nginx:latest
+    restart: always
     volumes:
       - ./docker/nginx/conf.d:/etc/nginx/conf.d
     ports:
