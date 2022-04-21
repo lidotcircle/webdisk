@@ -42,7 +42,7 @@ export function parseRangeField(range: string): [number, number] //{
     if (fff.length != 2) return null;
     let r1: number, r2: number;
     r1 = parseInt(fff[0]);
-    if (r1 < 0 || r1 == NaN) return null;
+    if (r1 < 0) return null;
     if (fff[1] == "") {
         return [r1, -1];
     } else {
@@ -118,7 +118,7 @@ class BufferStream extends stream.Writable //{
 /**
  * @param { number } statusCode
  * @param { string } statusMessage
- * @param { any    } header field-value pair
+ * @param { any    } headers field-value pair
  * @param { any    } body
  * @exception {Error} if statusMessage is null and statusCode is undefined, throw error
  */

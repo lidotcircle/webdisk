@@ -214,6 +214,10 @@ export class TableViewComponent implements OnInit, OnDestroy {
         this.datatype = "text";
         this.pagesize = 10;
         this.pageno = 1;
+        this.settings = {};
+    }
+
+    private setup_settings() {
         this.settings  = {
             actions: null,
             noDataMessage: 'empty',
@@ -233,8 +237,8 @@ export class TableViewComponent implements OnInit, OnDestroy {
                 },
             },
             pager: {
-                page: 1,
-                perPage: 10,
+                page: this.pageno,
+                perPage: this.pagesize,
                 display: true,
             },
         };
@@ -247,6 +251,7 @@ export class TableViewComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
+        let setuped: boolean = false;
         this.activatedRoute.queryParamMap.subscribe(async (params) => {
             const group = params.get("group");
             const pageno = params.get("pageno");
@@ -256,6 +261,10 @@ export class TableViewComponent implements OnInit, OnDestroy {
                 this.datatype = config.datatype || this.datatype;
             }
 
+            if (!setuped) {
+                setuped = true;
+                this.setup_settings();
+            }
             if (pageno) {
                 const pno = Number(pageno) || 1;
                 this.settings.pager.page = pno;
