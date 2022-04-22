@@ -95,6 +95,12 @@ export class GroupTableComponent implements OnInit, OnDestroy {
                 this.setup_settings(this.pageno, this.pagesize);
                 this.refresh();
             }
+            if (this.source) {
+                const paging: {page: number, perPage: number} = this.source.getPaging();
+                if (paging.page != this.pageno || paging.perPage != this.pagesize) {
+                    this.source.setPaging(this.pageno, this.pagesize, true);
+                }
+            }
         });
     }
 

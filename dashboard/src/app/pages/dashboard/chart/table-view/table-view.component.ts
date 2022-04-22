@@ -276,6 +276,13 @@ export class TableViewComponent implements OnInit, OnDestroy {
             }
             this.pagesize = this.settings.pager.perPage;
 
+            if (this.source) {
+                const paging: {page: number, perPage: number} = this.source.getPaging();
+                if (paging.page != this.pageno || paging.perPage != this.pagesize) {
+                    this.source.setPaging(this.pageno, this.pagesize, true);
+                }
+            }
+
             if(group == null) {
                 this.toastrService.danger("page error", "error");
             } else {
