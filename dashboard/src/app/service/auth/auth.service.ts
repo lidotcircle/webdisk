@@ -50,7 +50,10 @@ export class AuthService {
     private setRefreshTimer() {
         this.cancelRefreshTimer();
         const claim = this.jwtToClaim(this.jwt_token);
-        this.refreshSubscription = timer(new Date(claim.exp * 10**3)).subscribe(() => {
+        const expDate = new Date(claim.exp * 1000);
+        const dueMS = (expDate.getTime() - Date.now()) * 0.8;
+        const refreshDate = new Date(Date.now() + dueMS);
+        this.refreshSubscription = timer(refreshDate).subscribe(() => {
             this.refreshJWT();
         });
     }
