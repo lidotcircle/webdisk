@@ -503,7 +503,7 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
         }
         const book = utils.book_new();
         const worksheet = utils.aoa_to_sheet(data);
-        utils.book_append_sheet(book, worksheet, this.group);
+        utils.book_append_sheet(book, worksheet, encodeURIComponent(this.group));
         writeFile(book, this.group + '.xlsx');
     }
 
