@@ -8,5 +8,11 @@ app-table-view {
         flex-direction: row;
         justify-content: space-between;
     }
+
+    .header-center {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+    }
 }
 

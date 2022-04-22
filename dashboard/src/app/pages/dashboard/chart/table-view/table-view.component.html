@@ -1,5 +1,8 @@
 <nb-card accent='primary'>
   <nb-card-header>
+    <div class='header-center'>
+      {{ this.group }}
+    </div>
     <div class='header-top'>
       <div>Number Of Records: {{ source?.count() }}</div>
       <nb-select size='small' (selectedChange)='select_options_change($event)' 

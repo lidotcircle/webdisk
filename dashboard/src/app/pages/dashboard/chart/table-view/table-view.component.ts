@@ -199,7 +199,7 @@ export class TableViewComponent implements OnInit, OnDestroy {
         });
     }
 
-    private group: string;
+    group: string;
     private destroy$: Subject<void>;
 
     constructor(private toastrService: NbToastrService,
