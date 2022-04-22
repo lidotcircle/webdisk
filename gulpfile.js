@@ -75,7 +75,9 @@ function copy_dir(from, to) {
 gulp.task('dashboard', dashboard_build);
 gulp.task("release", gulp.parallel(
     gulp.series(dashboard_build, copy_dir("dashboard/dist/**", "release")), 
-    gulp.series(forward_gulp_command("backend", "release"), copy_dir("backend/release/**", "release/backend"))));
+    gulp.series(forward_gulp_command("backend", "release"), copy_dir("backend/release/**", "release/backend")),
+    copy_dir("tools/**", "release/tools"),
+));
 gulp.task("default", gulp.series("release"));
 
 gulp.task("serve", gulp.parallel(forward_gulp_command("backend", "serve"), dashboard_serve));

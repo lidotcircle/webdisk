@@ -254,8 +254,8 @@ export class TableViewComponent implements OnInit, OnDestroy {
         let setuped: boolean = false;
         this.activatedRoute.queryParamMap.subscribe(async (params) => {
             const group = params.get("group");
-            const pageno = params.get("pageno");
-            const pagesize = params.get("pagesize")
+            this.pageno = Number(params.get("pageno")) || 1;
+            this.pagesize = Number(params.get("pagesize")) || 10
             const config = await this.localstorage.get(`table-view-config?group=${group}`) as any;
             if (config) {
                 this.datatype = config.datatype || this.datatype;
@@ -265,16 +265,8 @@ export class TableViewComponent implements OnInit, OnDestroy {
                 setuped = true;
                 this.setup_settings();
             }
-            if (pageno) {
-                const pno = Number(pageno) || 1;
-                this.settings.pager.page = pno;
-            }
-
-            this.pageno = this.settings.pager.page;
-            if (pagesize) {
-                this.settings.pager.perPage = pagesize;
-            }
-            this.pagesize = this.settings.pager.perPage;
+            this.settings.pager.page = this.pageno;
+            this.settings.pager.perPage = this.pagesize;
 
             if (this.source) {
                 const paging: {page: number, perPage: number} = this.source.getPaging();

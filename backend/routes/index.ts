@@ -28,6 +28,7 @@ router.use('/apis/stoken',
            ), require('./stoken').default);
 router.use('/apis/flink',     require('./filelink').default);
 router.use('/apis/sdata',     require('./sdata').default);
+router.use('/apis/admin',     require('./admin').default);
 router.use('/disk',           require('./disk').default);
 router.use('/link',           require('./namedlink').default);
 const ws_router = createWebSocketMiddleware(/\/ws/, conn => new MessageGateway(conn));

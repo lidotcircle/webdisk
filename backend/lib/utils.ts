@@ -229,3 +229,14 @@ export function ResolvePathInConfig(origin_path: string, config_path: string): s
     return ans;
 } //}
 
+export function restartProcess()
+{
+    process.on("exit", function () {
+        require("child_process").spawn(process.argv.shift(), process.argv, {
+            cwd: process.cwd(),
+            detached : true,
+            stdio: "inherit"
+        });
+    });
+    process.exit();
+}

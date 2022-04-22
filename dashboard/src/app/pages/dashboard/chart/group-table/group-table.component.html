@@ -1,12 +1,12 @@
 <nb-card accent='info'>
     <nb-card-header>
-      Data Record Groups: {{ source.count() }}
+      Data Record Groups: {{ sourcecount() }}
       <div class="control-components">
           <div></div>
           <button nbButton size='tiny' status="primary" (click)='refresh_data()'>Refresh</button>
       </div>
     </nb-card-header>
-    <nb-card-body [class]='source.count() == 0 ? "record-length-equal-zero" : ""'>
+    <nb-card-body [class]='sourcecount() == 0 ? "record-length-equal-zero" : ""'>
         <ng2-smart-table [settings]="settings" [source]="source"
             (deleteConfirm)="onDeleteConfirm($event)" 
             #datatable>

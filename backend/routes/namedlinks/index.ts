@@ -1,7 +1,7 @@
 import express from 'express';
 import { NamedLinkService } from '../../service';
 import { QueryDependency } from '../../lib/di';
-import { body, query } from 'express-validator';
+import { body, query, validationResult } from 'express-validator';
 import { getAuthUsername } from '../../middleware';
 import assert from 'assert';
 
@@ -38,6 +38,11 @@ router.post('/',
     body('target').isString().matches(/\/.*/).withMessage('target should be a absolute file path'),
     body('duration_ms').optional().isInt().withMessage('duration should be a integer'),
     async (req, res) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(422).json({ errors: errors.array() });
+        }
+
         const username = getAuthUsername(req);
         assert(username, 'username is not found');
 
