@@ -16,11 +16,16 @@
     .files {
         display: flex;
         flex-direction: column;
-        overflow-y: scroll;
+        overflow-y: auto;
+        min-height: 50%;
+
+        &:hover::-webkit-scrollbar {
+            background: #f3f3f3;
+        }
 
         &::-webkit-scrollbar {
             width: 0.5em;
-            background: #f3f3f3;
+            background: transparent;
         }
         &::-webkit-scrollbar-thumb {
             background-color: #777;
