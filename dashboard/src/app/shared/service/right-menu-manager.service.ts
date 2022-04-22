@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, Subscription } from 'rxjs';
 import { ContextMenuComponent } from '../shared-component/context-menu/context-menu.component';
 import { InjectedComponentHandler, InjectViewService } from './inject-view.service';
 
@@ -50,20 +50,16 @@ export class RightMenuManagerService {
     public get menuclick(): Observable<void> {return this._menuclick;}
 
     private menuView: InjectedComponentHandler<ContextMenuComponent>;
-    private start: boolean = false;
 
     constructor(private injector: InjectViewService) {
         this.menuView = null;
-        document.body.addEventListener('click',       (ev: MouseEvent) => this.onbody_click.bind(this)(ev));
-        document.body.addEventListener('contextmenu', (ev: MouseEvent) => this.onbody_menu.bind(this)(ev));
-        this.StartContextMenu();
+        document.body.addEventListener('click', (ev: MouseEvent) => this.onbody_click(ev));
     }
 
-    public StartContextMenu() {
-        if (!this.start) {
-            console.log("start context menu service");
-        }
-        this.start = true;
+    public registerElement(element: HTMLElement): Subscription {
+        const cb = (ev: MouseEvent) => this.onelem_menu(ev);
+        element.addEventListener('contextmenu', cb);
+        return new Subscription(() => element.removeEventListener("contextmenu", cb));
     }
 
     private createRootMenuEntry(): MenuEntry {
@@ -89,14 +85,14 @@ export class RightMenuManagerService {
         return ans;
     }
 
-    private onbody_click(ev: MouseEvent) {
+    private onbody_click(_ev: MouseEvent) {
         if(this.menuView) {
             this.menuView.destroy();
             this.menuView = null;
         }
     }
 
-    private onbody_menu(ev: MouseEvent) {
+    private onelem_menu(ev: MouseEvent) {
         ev.preventDefault();
         if(this.menuView) {
             if(relateElem(ev.target as HTMLElement, this.menuView.instance.element)) {

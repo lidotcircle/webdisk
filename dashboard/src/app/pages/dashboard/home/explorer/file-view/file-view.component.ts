@@ -162,6 +162,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
     private kbsubscription: Subscription;
     ngOnInit(): void //{
     {
+        const menuSub = this.menuManager.registerElement(this.host.nativeElement as HTMLElement);
         this.kbsubscription = this.KeyboardPress.down.subscribe((kv) => {
             switch(kv.code) {
                 case Keycode.ESC:
@@ -187,6 +188,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
                     break;
             }
         });
+        this.kbsubscription.add(menuSub);
         this.life = new Life();
         this.setup_tools();
 

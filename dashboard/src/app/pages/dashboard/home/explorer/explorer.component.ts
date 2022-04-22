@@ -17,14 +17,10 @@ import { CurrentDirectoryService } from 'src/app/shared/service/current-director
 })
 export class ExplorerComponent implements OnInit, OnDestroy {
     private paramsSub: Subscription;
-    constructor(private contextmenu: RightMenuManagerService,
-                private activatedRouter: ActivatedRoute,
+    constructor(private activatedRouter: ActivatedRoute,
                 private toolbar: ToolbarService,
                 private currentDir: CurrentDirectoryService,
-                private leftpanelservice: LeftPanelService)
-    {
-        this.contextmenu.StartContextMenu();
-    }
+                private leftpanelservice: LeftPanelService) {}
 
     ngOnDestroy(): void {
         this.life.die();
