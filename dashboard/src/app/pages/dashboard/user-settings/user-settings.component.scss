@@ -22,12 +22,15 @@ nb-card {
         overflow: hidden;
         display: flex;
         flex-direction: row;
+        padding: 0em;
 
         .settings-nav {
             @include no-select();
+            display: flex;
+            flex-direction: column;
             height: 100%;
             width: 20%;
-            min-width: 120px;
+            min-width: max-content;
             background-color: darken($basecolor, 5%);
 
             .nav-button {
@@ -37,6 +40,7 @@ nb-card {
 
                 &.active {
                     background-color: $basecolor;
+                    font-weight: bold;
                 }
             }
         }
@@ -48,6 +52,31 @@ nb-card {
             .slide {
                 background-color: $basecolor;
                 height: 100%;
+            }
+        }
+
+        @media (max-width: 600px) {
+            & {
+                flex-direction: column;
+
+                .settings-nav {
+                    width: 100%;
+                    height: min-content;
+                    flex-direction: row;
+                    flex-wrap: wrap;
+                    text-align: center;
+
+                    .nav-button {
+                        flex-basis: 0em;
+                        flex-grow: 1;
+                    }
+                }
+
+                .settings-panel {
+                    flex-grow: 1;
+                    flex-shrink: 1;
+                    width: 100%;
+                }
             }
         }
     }

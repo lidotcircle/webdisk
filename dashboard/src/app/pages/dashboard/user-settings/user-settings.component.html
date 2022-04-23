@@ -12,7 +12,7 @@
       <div class="nav-button" (click)='gotoPanel($event)'> About </div>
     </div>
 
-    <swiper class="settings-panel" direction='vertical' [slidesPerView]="1" [spaceBetween]="0" 
+    <swiper class="settings-panel" [direction]='swiperDirection' slidesPerView="auto"
             (slideChange)="onSlideChange($event)" (init)="onSlideInit($event)" #swiper>
       <ng-template swiperSlide><div class="slide"><app-user-account></app-user-account></div></ng-template>
       <ng-template swiperSlide><div class="slide"><app-sub-accounts></app-sub-accounts></div></ng-template>
