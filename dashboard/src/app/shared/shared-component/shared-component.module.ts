@@ -30,6 +30,7 @@ import { SearchBarFloatComponent } from './search-bar-float/search-bar-float.com
 import { ConfirmWindowComponent } from './confirm-window.component';
 import { NbButtonModule, NbSelectModule } from '@nebular/theme';
 import { PrismJSComponent } from './ngx-prismjs/ngx-prismjs.component';
+import { ToastUIModule } from './toast-ui/toast-ui.module';
 
 
 @NgModule({
@@ -65,7 +66,8 @@ import { PrismJSComponent } from './ngx-prismjs/ngx-prismjs.component';
         PageTopComponent,
         PrismJSComponent,
 
-        MediaModule
+        MediaModule,
+        ToastUIModule,
     ]
 })
 export class SharedComponentModule { }
