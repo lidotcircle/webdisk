@@ -47,7 +47,7 @@ export class PasswordStoreService {
         const store = await this.passRepo.findOne({
             where: {
                 id: id,
-                user: user
+                userId: user.id,
             }
         });
         if (!store) {
@@ -66,7 +66,7 @@ export class PasswordStoreService {
         }
         const store = await this.passRepo.findOne({
             where: {
-                user: user,
+                userId: user.id,
                 id: id
             }
         });
@@ -83,7 +83,7 @@ export class PasswordStoreService {
         }
         const ans = await this.passRepo.find({
             where: {
-                user
+                userId: user.id
             }
         });
         return ans.map(x => ({

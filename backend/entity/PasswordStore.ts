@@ -11,6 +11,9 @@ export class PasswordStore {
     user: User
 
     @Column()
+    userId: number;
+
+    @Column()
     site: string
 
     @Column()

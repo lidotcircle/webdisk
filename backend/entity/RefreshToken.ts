@@ -10,8 +10,11 @@ export class RefreshToken {
     @Column({unique: true})
     token: string
 
-    @ManyToOne(() => User, {eager: true})
-    user: User
+    @ManyToOne(() => User)
+    user: Promise<User>;
+
+    @Column()
+    userId: number;
 
     @Column()
     updateCount: number

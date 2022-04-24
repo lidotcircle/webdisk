@@ -15,16 +15,12 @@
             </div>
         </div>
         <div class="detail" *ngIf='details[i]'> 
-            <div class="not-used" *ngIf='details[i][0] == null'>Not in Used</div>
-            <div class="userinfo" *ngIf='details[i][0] != null'>
-                <table class="key-value-table">
-                    <tr>
-                        <td>Username</td> <td>{{details[i][0].username}}</td>
-                    </tr>
-                    <tr>
-                        <td>Register Date</td><td>{{ createTime(i) }}</td>
-                    </tr>
-                </table>
+            <div class="not-used" *ngIf='!invcodeUsed(i)'>Not in Used</div>
+            <div class="userinfo" *ngIf='invcodeUsed(i)'>
+                <div class="key-value-table">
+                      <div>Username</div> <div>{{details[i][0].username}}</div>
+                      <div>Register Date</div><div>{{ createTime(i) }}</div>
+                </div>
             </div>
 
             <div class="permission">
@@ -33,7 +29,7 @@
             </div>
 
             <div class="space"></div>
-            <button class="button" [disabled]='details[i][0]' 
+            <button class="button" [disabled]='invcodeUsed(i)'
                     mat-raised-button color='secondary' (click)='deleteInvCode(i)'>Delete Invitation Code</button>
         </div>
     </div>

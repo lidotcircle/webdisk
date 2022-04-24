@@ -1,10 +1,17 @@
 import { Component, OnInit } from '@angular/core';
-import { UserInfo, UserPermission } from 'src/app/shared/common';
-import { AccountManagerService } from 'src/app/shared/service/account-manager.service';
+import { InvitationService } from 'src/app/service/user/invitation.service';
 import { ClipboardContentType, ClipboardService } from 'src/app/shared/service/clipboard.service';
 import { NotifierService } from 'src/app/shared/service/notifier.service';
 import { NotifierType } from 'src/app/shared/shared-component/notifier/notifier.component';
 import { SettingItem } from '../setting-item/setting-item.component';
+
+interface UserInfo {
+    username: string;
+    createdAt: number;
+};
+interface UserPermission {
+    relpath: string;
+};
 
 @Component({
     selector: 'app-sub-accounts',
@@ -17,7 +24,7 @@ export class SubAccountsComponent implements OnInit {
     details: [UserInfo, UserPermission][] = [];
     permsSetting: SettingItem[][] = [];
 
-    constructor(private accountManager: AccountManagerService,
+    constructor(private invcodeService: InvitationService,
                 private clipboard: ClipboardService,
                 private notifier: NotifierService) { }
 
@@ -28,21 +35,27 @@ export class SubAccountsComponent implements OnInit {
     createTime(n: number): string {
         const info = this.details[n][0];
         if(info == null) return '';
-        return (new Date(info.createTime)).toLocaleString();
+        return (new Date(info.createdAt)).toLocaleString();
+    }
+
+    invcodeUsed(n: number): boolean {
+        const info = this.details[n][0];
+        if(info == null) return false;
+        return info.username != null;
     }
 
     async refresh() {
-        this.invitations = await this.accountManager.getInvCodes();
+        this.invitations = await this.invcodeService.getInvCodes();
     }
 
-    async newinv(n: number) {
-        await this.accountManager.genInvCodes(n);
-        await this.refresh();
+    async newinv(_n: number) {
+        const c = await this.invcodeService.newInvCode();
+        this.invitations.push(c);
     }
 
     async deleteInvCode(i: number) {
         try {
-            await this.accountManager.deleteInvCode(this.invitations[i]);
+            await this.invcodeService.deleteInvCode(this.invitations[i]);
             this.notifier.create({message: 'delete invitation code success'}).wait();
             this.details.splice(i, 1);
             this.indexClassState.splice(i, 1);
@@ -64,7 +77,7 @@ export class SubAccountsComponent implements OnInit {
         for(const key in perm) {
             const s = new SettingItem();
             s.property = key;
-            s.name = UserPermission.getName(key);
+            s.name = key;
             s.initvalue = perm[key];
             s.change = (() => {
                 const code = this.invitations[n];
@@ -93,24 +106,24 @@ export class SubAccountsComponent implements OnInit {
     private async updatePermission(invcode: string, perm: {[key: string]: any}) //{
     {
         try {
-            await this.accountManager.setInvCodePermission(invcode, perm);
+            await this.invcodeService.setInvCodePerms(invcode, perm);
         } catch (err) {
             await this.notifier.create({
                 message: `update invitation code permission fail: ${err.message}`, 
                 mtype: NotifierType.Error
-            });
+            }).wait();
         }
     } //}
 
     private async fetchInvStatus(n: number): Promise<void> //{
     {
         const code = this.invitations[n];
-        let info;
+        let info: { [key: string]: any };
         try {
-            info = await this.accountManager.getUserInfoByInvcode(code);
+            info = await this.invcodeService.getUserInfoByInvCode(code);
         } catch {}
-        const perm = await this.accountManager.getInvCodePermission(code);
-        this.details[n] = [info, perm];
+        const perm = await this.invcodeService.getInvCodePerms(code);
+        this.details[n] = [info as any, perm as any];
         this.updatePermSetting(n);
     } //}
 

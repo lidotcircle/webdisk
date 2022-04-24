@@ -14,7 +14,7 @@ import { AuthService } from 'src/app/service/auth';
 export class RequestPasswordComponent extends NbRequestPasswordComponent implements OnInit {
     user: {
         username: string;
-        inv: string;
+        invitecode: string;
     };
 
     constructor(service: NbAuthService, cd: ChangeDetectorRef, router: Router,
@@ -40,7 +40,7 @@ export class RequestPasswordComponent extends NbRequestPasswordComponent impleme
             });
         } catch (err) {
             if (err instanceof HttpErrorResponse) {
-                this.toastrService.danger(err.error.message, 'Error');
+                this.toastrService.danger(err.error, 'Error');
             } else {
                 this.toastrService.danger(err.message, 'Error');
             }

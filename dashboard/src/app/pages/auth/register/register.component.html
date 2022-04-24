@@ -71,11 +71,11 @@
   <div class="form-control-group">
     <label class="label" for="input-invcode">invitation code:</label>
     <input nbInput
-           [(ngModel)]="user.inv"
+           [(ngModel)]="user.invitecode"
            #invcode="ngModel"
            id="input-invcode"
            name="invcode"
-           pattern="[a-zA-Z1-9\-]+"
+           pattern="[a-zA-Z0-9\-]+"
            placeholder="invitation code"
            fullWidth
            fieldSize="large"

@@ -11,17 +11,17 @@ router.post('/',
     // TODO more validation for username password 
     body('username').isLength({min:2}).withMessage("username is too short"),
     body('password').isLength({min:6}).withMessage("password is too short"),
-    body('inviteCode').isString().withMessage("invite code should be a string"),
+    body('invitecode').isString().withMessage("invite code should be a string"),
     async (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(422).json({ errors: errors.array() });
         }
 
-        const { username, password, inviteCode } = req.body;
+        const { username, password, invitecode } = req.body;
         const userService = QueryDependency(UserService);
 
-        await userService.createUser(username, password, inviteCode);
+        await userService.createUser(username, password, invitecode);
         res.status(200).json({});
     }
 );

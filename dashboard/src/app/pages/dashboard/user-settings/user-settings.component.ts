@@ -1,4 +1,5 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import Swiper from 'swiper';
 import { SwiperComponent } from 'swiper/angular';
@@ -19,8 +20,29 @@ export class UserSettingsComponent implements OnInit, OnDestroy, AfterViewInit {
     private nav: ElementRef;
 
     swiperDirection: string;
+    private query_panel: string;
+    private getPanelName(n: number) {
+        const container = this.nav.nativeElement as HTMLElement;
+        const child = container.children[n];
+        if (!child) return null;
+        return (child as HTMLElement).dataset.panel;
+    }
+    private gotoPanelText(swiper: Swiper, panel: string, speedMS: number) {
+        if (!swiper)
+            return;
 
-    constructor() {
+        const container = this.nav.nativeElement as HTMLElement;
+        for (let i=0;i<container.children.length;i++) {
+            const child = container.children[i] as HTMLElement;
+            if (panel == child.dataset.panel) {
+                swiper.slideTo(i, speedMS);
+                break;
+            }
+        }
+    }
+
+    constructor(private activatedRoute: ActivatedRoute,
+                private router: Router) {
         this.swiperDirection = window.innerWidth <= 600 ? 'horizontal' : 'vertical';
     }
 
@@ -36,6 +58,17 @@ export class UserSettingsComponent implements OnInit, OnDestroy, AfterViewInit {
         }
         window.addEventListener("resize", resizeHandler);
         this.resizeSubscription = new Subscription(() => window.removeEventListener("resize", resizeHandler));
+
+        this.activatedRoute.queryParamMap.subscribe(params => {
+            const panel = params.get("panel");
+            if (panel) {
+                this.gotoPanelText(this.settings.swiperRef, panel, 500);
+                this.query_panel = panel;
+            } else {
+                const n1 = this.getPanelName(0);
+                if (n1) this.gotoPanelText(this.settings.swiperRef, n1, 500);
+            }
+        });
     }
 
     ngOnDestroy(): void {
@@ -45,6 +78,8 @@ export class UserSettingsComponent implements OnInit, OnDestroy, AfterViewInit {
     onSlideInit(swiper: Swiper) {
         swiper.allowTouchMove = false;
         this.onSlideChange(swiper);
+        if (this.query_panel)
+            this.gotoPanelText(swiper, this.query_panel, 0);
     }
 
     onSlideChange(swiper: Swiper) {
@@ -74,6 +109,15 @@ export class UserSettingsComponent implements OnInit, OnDestroy, AfterViewInit {
 
         if(n == this.settings.swiperRef.activeIndex) return;
         this.settings.swiperRef.slideTo(n);
+        const name = this.getPanelName(n);
+        if (name != null) {
+            this.router.navigate([], {
+                queryParams: {
+                    panel: name
+                },
+                relativeTo: this.activatedRoute,
+            });
+        }
     }
 }
 

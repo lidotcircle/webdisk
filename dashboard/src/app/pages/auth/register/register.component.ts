@@ -15,7 +15,7 @@ export class RegisterComponent extends NbRegisterComponent implements OnInit {
     user: {
         username: string;
         password: string;
-        inv: string;
+        invitecode: string;
     };
 
     confirmPassword: string;
@@ -39,10 +39,11 @@ export class RegisterComponent extends NbRegisterComponent implements OnInit {
                 });
             });
         } catch (err) {
+            console.log(err);
             if (err instanceof HttpErrorResponse) {
-                this.toastrService.warning(err.error.message, 'signup');
+                this.toastrService.warning(err.error || "failed", 'signup');
             } else {
-                this.toastrService.warning(err.message, 'signup');
+                this.toastrService.warning(err.message || "failed", 'signup');
             }
         }
     }

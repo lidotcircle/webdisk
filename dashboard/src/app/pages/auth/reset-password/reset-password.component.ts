@@ -13,7 +13,7 @@ import { AuthService } from 'src/app/service/auth';
 export class ResetPasswordComponent extends NbRequestPasswordComponent implements OnInit {
     user: {
         password: string;
-        resetToken: string;
+        token: string;
     };
     confirmPassword: string;
 
@@ -28,18 +28,18 @@ export class ResetPasswordComponent extends NbRequestPasswordComponent implement
 
     ngOnInit(): void {
         this.activatedRoute.queryParamMap.subscribe(params => {
-            this.user.resetToken = params.get('reset-token');
+            this.user.token = params.get('reset-token');
+            if (this.user.token == null) {
+                this.toastrService.danger("bad page", "reset");
+                this.router.navigate(["/wd/auth/login"])
+            }
         });
     }
 
     async resetPass() {
         try {
-            if(this.user.resetToken == null) {
-                this.router.navigate(["/wd/auth/login"])
-                return;
-            }
             await this.authService.reset(this.user);
-            this.toastrService.success("Password reset successfully");
+            this.toastrService.success("Password reset successfully", "reset");
             timer(1000).subscribe(() => this.router.navigate(["../login"], {
                 relativeTo: this.activatedRoute
             }));

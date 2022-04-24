@@ -5,11 +5,11 @@
 
   <nb-card-body>
     <div class="settings-nav" #settingsnav>
-      <div class="nav-button" (click)='gotoPanel($event)'> User Account </div>
-      <div class="nav-button" (click)='gotoPanel($event)'> Sub Accounts </div>
-      <div class="nav-button" (click)='gotoPanel($event)'> File Operations </div>
-      <div class="nav-button" (click)='gotoPanel($event)'> Display </div>
-      <div class="nav-button" (click)='gotoPanel($event)'> About </div>
+      <div class="nav-button" (click)='gotoPanel($event)' data-panel='user-account'> User Account </div>
+      <div class="nav-button" (click)='gotoPanel($event)' data-panel='sub-account'> Sub Accounts </div>
+      <div class="nav-button" (click)='gotoPanel($event)' data-panel='file-operation'> File Operations </div>
+      <div class="nav-button" (click)='gotoPanel($event)' data-panel='display'> Display </div>
+      <div class="nav-button" (click)='gotoPanel($event)' data-panel='about'> About </div>
     </div>
 
     <swiper class="settings-panel" [direction]='swiperDirection' slidesPerView="auto"

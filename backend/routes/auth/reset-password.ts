@@ -10,16 +10,16 @@ export default router;
 
 router.post('/token', 
     body('username').isString().withMessage("username is required"),
-    body('inviteCode').isString().withMessage("invitation code should be a string"),
+    body('invitecode').isString().withMessage("invitation code should be a string"),
     async (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(422).json({ errors: errors.array() });
         }
 
-        const { username, inviteCode } = req.body;
+        const { username, invitecode } = req.body;
         const userService = QueryDependency(UserService);
-        if (await userService.validateUserWithInvcode(username, inviteCode)) {
+        if (await userService.validateUserWithInvcode(username, invitecode)) {
             const token = uuid();
             const storeService = QueryDependency(SimpleExpiredStoreService);
             storeService.setval(token, username, 1000 * 60 * 5);
@@ -30,7 +30,7 @@ router.post('/token',
     }
 )
 
-router.post('/password',
+router.put('/password',
     body('token').isString().withMessage("token is required"),
     body('password').isString().withMessage("password is required"),
     async (req, res) => {

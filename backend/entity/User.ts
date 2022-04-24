@@ -15,10 +15,13 @@ export class User {
 
     @OneToOne(() => InvitationCode, {nullable: true})
     @JoinColumn()
-    selfInvitationCode: InvitationCode;
+    selfInvitationCode: Promise<InvitationCode>;
+
+    @Column({nullable: true})
+    selfInvitationCodeId: number;
 
     @OneToMany(() => InvitationCode, invitationCode => invitationCode.user)
-    invitationCodes: InvitationCode[];
+    invitationCodes: Promise<InvitationCode[]>;
 
     @CreateDateColumn()
     createdAt: Date

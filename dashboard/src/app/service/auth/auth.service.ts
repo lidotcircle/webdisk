@@ -98,16 +98,16 @@ export class AuthService {
         }
     }
 
-    async requestReset(req: {username: string; inv: string;}): Promise<String> {
+    async requestReset(req: {username: string; invitecode: string;}): Promise<String> {
         return (await this.http.post(RESTfulAPI.Auth.requestReset, 
-                                     req).toPromise() as {resetToken: string}).resetToken;
+                                     req).toPromise() as {token: string}).token;
     }
 
-    async reset(req: {resetToken: string, password: string}) {
+    async reset(req: {token: string, password: string}) {
         await this.http.put(RESTfulAPI.Auth.reset, req).toPromise();
     }
 
-    async signup(req: {username: string; password: string; inv: string;}) {
+    async signup(req: {username: string; password: string; invitecode: string;}) {
         await this.http.post(RESTfulAPI.Auth.signup, req).toPromise();
     }
 

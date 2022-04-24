@@ -13,6 +13,9 @@ export class InvitationCode {
     @Column()
     relativepath: string
 
-    @ManyToOne(() => User, user => user.invitationCodes, {eager: true})
-    user: User
+    @ManyToOne(() => User)
+    user: Promise<User>
+
+    @Column()
+    userId: number;
 }
