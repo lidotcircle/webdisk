@@ -37,6 +37,7 @@ const createdAt_symbol = Symbol("createat");
             <mat-checkbox (change)='options_change($event)' [(ngModel)]='cb_smooth'>Smooth Line</mat-checkbox>
             <mat-checkbox (change)='options_change($event)' [(ngModel)]='cb_area'>Area</mat-checkbox>
             <mat-checkbox (change)='options_change($event)' [(ngModel)]='cb_show_yaxis'>yAxis</mat-checkbox>
+            <mat-checkbox (change)='options_change($event)' [(ngModel)]='cb_graph_title'>Title</mat-checkbox>
             <nb-select size='small' (selectedChange)='transform_select_option_change($event)' 
                        status='primary' filled placeholder="Transform" [(selected)]='data_transform'>
               <nb-option value="Identical">NoTransform</nb-option>
@@ -138,6 +139,7 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
     cb_smooth: boolean = true;
     cb_area: boolean = false;
     cb_show_yaxis: boolean = true;
+    cb_graph_title: boolean = false;
     in_xaxis_name: string;
     in_yaxis_name: string;
     data_average: number;
@@ -204,6 +206,9 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
             data_average: this.data_average,
             data_skipn: this.data_skipn,
             data_transform: this.data_transform,
+            show_yaxis: this.cb_show_yaxis,
+            graph_title: this.cb_graph_title,
+            is_area: this.cb_area,
             smooth: this.cb_smooth,
             zoomSlider: this.cb_zoomSlider,
             xaxis_name: this.in_xaxis_name,
@@ -222,6 +227,9 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
         this.data_transform = config.data_transform;
         this.cb_smooth = config.cb_smooth;
         this.cb_zoomSlider = config.zoomSlider;
+        this.cb_area = config.is_area;
+        this.cb_show_yaxis = config.show_yaxis;
+        this.cb_graph_title = config.graph_title;
         this.in_xaxis_name = config.xaxis_name;
         this.in_yaxis_name = config.yaxis_name;
     }
@@ -364,9 +372,6 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
             });
         }
         const options: EChartsOption = {
-            title: {
-                text: this.group,
-            },
             tooltip: {
                 trigger: 'axis',
             },
@@ -397,6 +402,14 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
             },
             series: this.u_series,
         };
+
+        if (this.cb_graph_title) {
+            (options.grid as any).top = '100ex';
+            (options.legend as any).top = '30ex';
+            options.title= {
+                text: this.group,
+            };
+        }
 
         const require_tooltip_formatter = (
             this.u_series?.length > 0 && 
