@@ -7,8 +7,25 @@ import { AsyncLocalStorageService } from 'src/app/shared/service/async-local-sto
 import { utils, writeFile } from 'xlsx';
 
 
-const xaxis_symbol = Symbol("xaxis")
-const createdAt_symbol = Symbol("createat")
+// refer https://echarts.apache.org/en/option.html#tooltip.formatter for details
+interface EChartsFormatterParam {
+    componentType: 'series',
+    seriesType: string,
+    seriesIndex: number,
+    seriesName: string,
+    name: string,
+    dataIndex: number,
+    data: Object,
+    value: number|Array<any>|Object,
+    encode: Object,
+    dimensionNames: Array<String>,
+    dimensionIndex: number,
+    color: string,
+    percent: number
+};
+
+const xaxis_symbol = Symbol("xaxis");
+const createdAt_symbol = Symbol("createat");
 @Component({
     selector: 'app-group-graph',
     template: `
@@ -19,6 +36,13 @@ const createdAt_symbol = Symbol("createat")
             <mat-checkbox (change)='options_change($event)' [(ngModel)]='cb_zoomSlider'>Zoom Slider</mat-checkbox>
             <mat-checkbox (change)='options_change($event)' [(ngModel)]='cb_smooth'>Smooth Line</mat-checkbox>
             <mat-checkbox (change)='options_change($event)' [(ngModel)]='cb_area'>Area</mat-checkbox>
+            <mat-checkbox (change)='options_change($event)' [(ngModel)]='cb_show_yaxis'>yAxis</mat-checkbox>
+            <nb-select size='small' (selectedChange)='transform_select_option_change($event)' 
+                       status='primary' filled placeholder="Transform" [(selected)]='data_transform'>
+              <nb-option value="Identical">NoTransform</nb-option>
+              <nb-option value="AbsAvgUnitBall">AbsUnitBall</nb-option>
+              <nb-option value="Normalize">Normalize</nb-option>
+            </nb-select>
             <mat-form-field>
                 <mat-label>naverage</mat-label>
                 <input (change)='options_change($event)' matInput type="number" min='1' step='1' [(ngModel)]='data_average'>
@@ -48,7 +72,7 @@ const createdAt_symbol = Symbol("createat")
         </div>
       </nb-card-header>
       <nb-card-body>
-        <div *ngIf='!errorMsg && datasize > 0' echarts 
+        <div *ngIf='!errorMsg && datasize > 0' echarts  style="height: 100%;"
              (chartInit)="onChartInit($event)" [options]="options" [merge]="dynamic_options" class="echart"></div>
         <nb-alert *ngIf='errorMsg' status="danger"><div>{{errorMsg}}</div></nb-alert>
         <nb-alert *ngIf='!errorMsg && datasize == 0' status="info"><div>Nothing In This Group</div></nb-alert>
@@ -113,10 +137,12 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
     cb_zoomSlider: boolean = true;
     cb_smooth: boolean = true;
     cb_area: boolean = false;
+    cb_show_yaxis: boolean = true;
     in_xaxis_name: string;
     in_yaxis_name: string;
     data_average: number;
     data_skipn: number;
+    data_transform: string = "Identical";
 
     constructor(private activatedRouter: ActivatedRoute,
                 private dataRecordService: DataRecordService,
@@ -165,6 +191,11 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
         }
     }
 
+    async transform_select_option_change(event: string) {
+        this.data_transform = event;
+        await this.options_change(event);
+    }
+
     async options_change(_event: any)
     {
         this.refresh_chart();
@@ -172,6 +203,7 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
             refresh_sec: this.refresh_sec,
             data_average: this.data_average,
             data_skipn: this.data_skipn,
+            data_transform: this.data_transform,
             smooth: this.cb_smooth,
             zoomSlider: this.cb_zoomSlider,
             xaxis_name: this.in_xaxis_name,
@@ -187,6 +219,7 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
         this.refresh_sec = config.refresh_sec;
         this.data_average = config.data_average;
         this.data_skipn = config.data_skipn;
+        this.data_transform = config.data_transform;
         this.cb_smooth = config.cb_smooth;
         this.cb_zoomSlider = config.zoomSlider;
         this.in_xaxis_name = config.xaxis_name;
@@ -240,10 +273,48 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
         return [after, remain];
     }
 
+    static readonly single_data_point_transform = Symbol("single data point transform");
+    static readonly single_data_point_inverse_transform = Symbol("single data point inverse transform");
+    static readonly extra_series_tip = Symbol("extra series tip");
+    private apply_transform(vals: number[]) {
+        if (vals.length == 0) return;
+
+        if (this.data_transform == 'AbsAvgUnitBall') {
+            const absavg = vals.reduce((a, b) => a + Math.abs(b)) / vals.length;
+            for (let i=0;i<vals.length;i++) vals[i] = vals[i] / absavg;
+            vals[GroupGraphComponent.single_data_point_transform] = (nval: number) => nval / absavg;
+            vals[GroupGraphComponent.single_data_point_inverse_transform] = (nval: number) => nval * absavg;
+        } else if (this.data_transform == 'Normalize') {
+            const mean = vals.reduce((a, b) => a + b) / vals.length;
+            const std = Math.sqrt(vals.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / vals.length);
+            const trans = (v: number) => std != 0 ? (v - mean) / std : v;
+            const ivtrans = (v: number) => (v * std) + mean;
+            if (std != 0) {
+                for (let i=0;i<vals.length;i++)
+                    vals[i] = trans(vals[i]);
+            }
+
+            vals[GroupGraphComponent.single_data_point_transform] = trans;
+            vals[GroupGraphComponent.single_data_point_inverse_transform] = ivtrans;
+            vals[GroupGraphComponent.extra_series_tip] = `
+                <th>
+                    <span style="margin-right: 0.5em;">mean: ${mean}</span>
+                </th>
+                <th>
+                    <span>std: ${std}</span>
+                </th>`;
+        }
+    }
 
     private refresh_chart()
     {
         const [ newdatas, _ ] = this.apply_skip_average(this.u_keyvaldatas, true);
+        // apply single data point transform
+        for (const k of newdatas.keys()) {
+            if (k == xaxis_symbol) continue;
+            const datas = newdatas.get(k);
+            this.apply_transform(datas);
+        }
         this.u_keyvaldatas_after_skip_avg = newdatas;
         this.u_xaxis_data = this.u_keyvaldatas_after_skip_avg.get(xaxis_symbol);
 
@@ -322,9 +393,38 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
             yAxis: {
                 type: 'value',
                 name: this.in_yaxis_name,
+                show: this.cb_show_yaxis,
             },
             series: this.u_series,
         };
+
+        const require_tooltip_formatter = (
+            this.u_series?.length > 0 && 
+            this.u_series[0].data && 
+            this.u_series[0].data[GroupGraphComponent.single_data_point_inverse_transform]
+        );
+        if (require_tooltip_formatter) {
+            const  formatter = (params: EChartsFormatterParam[]) => {
+                let result = '';
+                for (const param of params) {
+                    const series = this.u_series[param.seriesIndex];
+                    const inverse = series.data[GroupGraphComponent.single_data_point_inverse_transform];
+                    const extra_tip  = series.data[GroupGraphComponent.extra_series_tip] || '';
+                    result += (
+                        `<tr style="margin: 0.5em 0em">
+                            <th>
+                                 <div style="background: ${param.color}; width: 1em; height: 1em; border-radius: 0.5em; margin-right: 0.5em;"></div>
+                             </th>
+                            <th><span style="margin-right: 0.5em;">${param.seriesName}</span></th> 
+                            <th><span>${String(inverse(param.data))}</span></th>
+                            ${extra_tip}
+                        </tr>`);
+                }
+                return "<table>" + result + "</table>";
+            }
+            (options.tooltip as any).formatter = formatter;
+        }
+
         if (this.u_series != null) {
             for (const one of this.u_series) {
                 one.smooth = this.cb_smooth;
@@ -385,7 +485,11 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
         for (const key of after_map.keys()) {
             const l1 = after_map.get(key);
             const l2 = this.u_keyvaldatas_after_skip_avg.get(key);
-            for (const val of l1) l2.push(val);
+            const transform = l2[GroupGraphComponent.single_data_point_transform];
+            for (const bval of l1) {
+                const val = transform ? transform(bval) : bval;
+                l2.push(val);
+            }
         }
 
         if (n > 0) {
