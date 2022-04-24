@@ -160,8 +160,19 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
         this.data_skipn = 0;
     }
 
+    private unselectedLegends: string[] = [];
     onChartInit(ins: ECharts) {
         this.echartsInstance = ins;
+
+        this.echartsInstance.on("legendselectchanged", (event: {selected: {[key: string]: boolean}}) => {
+            this.unselectedLegends = [];
+            for (const key in event.selected) {
+                if (!event.selected[key]) {
+                    this.unselectedLegends.push(key);
+                }
+            }
+            this.save_config();
+        });
     }
 
     deselect_all_legend() {
@@ -174,6 +185,9 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
             this.echartsInstance.setOption({
                 darkMode: true
             });
+
+            this.unselectedLegends = this.u_properties.slice();
+            this.save_config();
         }
     }
 
@@ -182,6 +196,9 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
             this.echartsInstance.dispatchAction({
                 type: "legendAllSelect",
             });
+
+            this.unselectedLegends = [];
+            this.save_config();
         }
     }
 
@@ -190,6 +207,14 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
             this.echartsInstance.dispatchAction({
                 type: "legendInverseSelect",
             });
+            const new_unselected = [];
+            for (const legend of this.u_properties) {
+                if (this.unselectedLegends.indexOf(legend) < 0)
+                    new_unselected.push(legend);
+            }
+
+            this.unselectedLegends = new_unselected;
+            this.save_config();
         }
     }
 
@@ -201,6 +226,10 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
     async options_change(_event: any)
     {
         this.refresh_chart();
+        await this.save_config();
+    }
+
+    private async save_config() {
         const page_config = {
             refresh_sec: this.refresh_sec,
             data_average: this.data_average,
@@ -213,6 +242,7 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
             zoomSlider: this.cb_zoomSlider,
             xaxis_name: this.in_xaxis_name,
             yaxis_name: this.in_yaxis_name,
+            unselected: this.unselectedLegends,
         };
         await this.localstorage.set("grouppage_conf_" + this.group, page_config);
     }
@@ -225,13 +255,14 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
         this.data_average = config.data_average;
         this.data_skipn = config.data_skipn;
         this.data_transform = config.data_transform;
-        this.cb_smooth = config.cb_smooth;
+        this.cb_smooth = config.smooth;
         this.cb_zoomSlider = config.zoomSlider;
         this.cb_area = config.is_area;
         this.cb_show_yaxis = config.show_yaxis;
         this.cb_graph_title = config.graph_title;
         this.in_xaxis_name = config.xaxis_name;
         this.in_yaxis_name = config.yaxis_name;
+        this.unselectedLegends = config.unselected || [];
     }
 
     private apply_skip_average(before: Map<string | symbol,number[]>, init_apply: boolean):
@@ -345,6 +376,14 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
         this.dynamic_options = this.options;
     }
 
+    private getSelectedLegends(): { [key: string]: boolean } {
+        const selectedLegends = {};
+        for (const legend of this.u_properties) {
+            selectedLegends[legend] = this.unselectedLegends.indexOf(legend) < 0;
+        }
+        return selectedLegends;
+    }
+
     private generate_options(): EChartsOption {
         const dataZoom: any[]  = [
             {
@@ -377,6 +416,7 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
             },
             legend: {
                 data: this.u_properties,
+                selected: this.getSelectedLegends(),
             },
             grid: {
                 left: '3%',
@@ -517,6 +557,7 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
     }
 
     private append_refresh_chart() {
+        (this.options.legend as any).selected = this.getSelectedLegends();
         const old_options = this.dynamic_options;
         this.dynamic_options = {};
         for (const prop in old_options) {
