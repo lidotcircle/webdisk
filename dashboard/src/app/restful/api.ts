@@ -27,6 +27,15 @@ export module API {
         export const InvCodeUser  = API_ADDRESS + '/apis/user/invite-code/user';
     }
 
+    export module Note {
+        export const note = API_ADDRESS + '/apis/note';
+        export const single = API_ADDRESS + '/apis/note/single';
+        export const title = API_ADDRESS + '/apis/note/title';
+        export const tags = API_ADDRESS + '/apis/note/tags';
+        export const history = API_ADDRESS + '/apis/note/history';
+        export const generation = API_ADDRESS + '/apis/note/generation';
+    }
+
     export const NamedLink = API_ADDRESS + '/apis/named-link';
 
     export module DataRecord {

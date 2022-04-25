@@ -6,6 +6,13 @@ import { createRoot, Root } from 'react-dom/client';
 import { Viewer } from '@toast-ui/react-editor';
 import { EditorPlugin, EditorType, Editor as TUIEditor, EventMap,
          LinkAttributes, ExtendedAutolinks, CustomHTMLRenderer, Sanitizer } from '@toast-ui/editor/types/editor';
+import latex from '../LatexPlugin';
+import uml from '@toast-ui/editor-plugin-uml';
+import chart from '@toast-ui/editor-plugin-chart';
+import colorSyntax from '@toast-ui/editor-plugin-color-syntax';
+import tableMergedCell from '@toast-ui/editor-plugin-table-merged-cell';
+declare const require: any;
+const colorSyntaxHighlight = require('@toast-ui/editor-plugin-code-syntax-highlight/dist/toastui-editor-plugin-code-syntax-highlight-all');
 
 
 @Component({
@@ -46,6 +53,11 @@ export class TuiViewerComponent implements OnInit, OnChanges, OnDestroy, AfterVi
 
     ngOnInit(): void {
         this.root = createRoot(this.host.nativeElement as HTMLElement);
+        this.plugins = this.plugins || [];
+        // TODO colorSyntax error
+        for (const plug of [ uml, chart, colorSyntaxHighlight, tableMergedCell, latex ]) {
+            this.plugins.push(plug);
+        }
     }
 
     ngOnChanges(_changes: SimpleChanges): void {
@@ -65,10 +77,10 @@ export class TuiViewerComponent implements OnInit, OnChanges, OnDestroy, AfterVi
         this.root.render(
             <React.StrictMode>
                 <Viewer
-                initialValue={this.initialValue || ' '}
+                initialValue={ this.initialValue }
                 plugins={this.plugins}
                 key={this.key}
-                theme={this.theme}
+                // TODO dark doesn't work theme={this.theme || 'dark'}
                 events={this.events}
                 frontMatter={this.frontMatter}
                 linkAttributes={this.linkAttributes}

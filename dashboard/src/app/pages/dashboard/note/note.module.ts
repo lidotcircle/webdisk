@@ -14,6 +14,7 @@ import { MarkdownComponent } from './markdown/markdown.component';
 import { NoteTagListComponent } from './note-tag-list/note-tag-list.component';
 import { TimelineComponent } from './timeline/timeline.component';
 import { NoteRoutingModule } from './note-routing.module';
+import { NotePreview } from './note-preview/note-preview.component';
 
 
 @NgModule({
@@ -22,6 +23,7 @@ import { NoteRoutingModule } from './note-routing.module';
         TimelineComponent,
         MarkdownComponent,
         NoteTagListComponent,
+        NotePreview,
     ],
     imports: [
         NoteRoutingModule,

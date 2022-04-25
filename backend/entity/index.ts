@@ -7,3 +7,7 @@ export * from './UserToken';
 export * from './UserSetting';
 export * from './PasswordStore';
 export * from './UploadedFile';
+export * from './Note';
+export * from './NoteTag';
+export * from './NoteJoinNoteTag';
+export * from './NoteHistory';

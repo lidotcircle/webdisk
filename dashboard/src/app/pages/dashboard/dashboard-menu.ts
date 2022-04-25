@@ -52,12 +52,6 @@ export const WebdiskMenu: NbMenuItem[] = [
                 link: '/wd/dashboard/note/tags',
             },
             {
-                title: 'new',
-                icon: 'plus-square-outline',
-                pathMatch: 'full',
-                link: '/wd/dashboard/note/new',
-            },
-            {
                 title: 'markdown',
                 icon: 'layout',
                 link: '/wd/dashboard/note/markdown',

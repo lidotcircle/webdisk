@@ -61,10 +61,9 @@ export class TuiEditorComponent implements OnInit, OnChanges, OnDestroy, AfterVi
     @Output() public readonly beforePreviewRender = new EventEmitter<string>();
     @Output() public readonly beforeConvertWysiwygToMarkdown = new EventEmitter<string>();
 
-    editorRef: React.RefObject<Editor>;
+    editor: TUIEditor;
     private root: Root;
     constructor(private host: ElementRef) {
-        this.editorRef = React.createRef();
     }
 
     ngOnInit(): void {
@@ -75,9 +74,19 @@ export class TuiEditorComponent implements OnInit, OnChanges, OnDestroy, AfterVi
         }
     }
 
+    private refChange(obj: any) {
+        this.editor = obj?.editorInst;
+
+        // TODO props doesn't work properly
+        if (this.editor) {
+            this.editor.setMarkdown(this.initialValue);
+        }
+    }
+
     ngOnChanges(_changes: SimpleChanges): void {
         if (this.root)
             this.render();
+        this.initialValue = this.initialValue || '';
     }
 
     ngAfterViewInit() {
@@ -93,13 +102,14 @@ export class TuiEditorComponent implements OnInit, OnChanges, OnDestroy, AfterVi
         if (this.toolbarItems) opts["toolbarItems"] = this.toolbarItems;
         if (this.widgetRules) opts["widgetRules"] = this.widgetRules;
 
+        const initval = (this.initialValue != null && this.initialValue != '') ? this.initialValue : '\n';
         this.root.render(
             <React.StrictMode>
                 <Editor
                 previewStyle={this.previewStyle || 'vertical'}
                 height={this.height || 'auto'}
                 initialEditType={this.initialEditType || 'markdown'}
-                initialValue={this.initialValue || "\n"}
+                initialValue={initval}
 
                 {... opts}
 
@@ -134,7 +144,7 @@ export class TuiEditorComponent implements OnInit, OnChanges, OnDestroy, AfterVi
                 onCaretChange={ e => this.caretChange.emit(e) }
                 onBeforePreviewRender={ text => { this.beforePreviewRender.emit(text); return text; } }
                 onBeforeConvertWysiwygToMarkdown={ text => { this.beforeConvertWysiwygToMarkdown.emit(text); return text; } }
-                ref={this.editorRef}
+                ref={(e) => this.refChange(e)}
                 />
             </React.StrictMode>);
     }
