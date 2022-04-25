@@ -337,7 +337,7 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
             vals[GroupGraphComponent.single_data_point_inverse_transform] = ivtrans;
             vals[GroupGraphComponent.extra_series_tip] = `
                 <th>
-                    <span style="margin-right: 0.5em;">mean: ${mean}</span>
+                    <span style="margin: 0em 0.5em;">mean: ${mean}</span>
                 </th>
                 <th>
                     <span>std: ${std}</span>

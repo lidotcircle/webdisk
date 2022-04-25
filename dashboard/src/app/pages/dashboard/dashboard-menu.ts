@@ -34,9 +34,42 @@ export const WebdiskMenu: NbMenuItem[] = [
         link: '/wd/dashboard/store-pass',
     },
     {
-        title: 'settings',
-        icon: 'settings-2-outline',
-        link: '/wd/dashboard/settings',
+        title: 'note',
+        icon: 'book-outline',
+        link: '/wd/dashboard/note',
+        pathMatch: 'prefix',
+        children: [
+            {
+                title: 'timeline',
+                icon: 'activity-outline',
+                pathMatch: 'full',
+                link: '/wd/dashboard/note/timeline',
+            },
+            {
+                title: 'tags',
+                icon: 'pricetags',
+                pathMatch: 'full',
+                link: '/wd/dashboard/note/tags',
+            },
+            {
+                title: 'new',
+                icon: 'plus-square-outline',
+                pathMatch: 'full',
+                link: '/wd/dashboard/note/new',
+            },
+            {
+                title: 'markdown',
+                icon: 'layout',
+                link: '/wd/dashboard/note/markdown',
+                hidden: true,
+            },
+            {
+                title: 'todo-list',
+                icon: 'layout',
+                link: '/wd/dashboard/note/todo-list',
+                hidden: true,
+            }
+        ]
     },
     {
         title: 'chart',
@@ -66,5 +99,46 @@ export const WebdiskMenu: NbMenuItem[] = [
                 hidden: true,
             }
         ]
+    },
+    {
+        title: 'settings',
+        icon: 'settings-2-outline',
+        link: '/wd/dashboard/settings',
+        /*
+        children: [
+            {
+                title: 'account',
+                icon: 'person-outline',
+                link: '/wd/dashboard/settings',
+                queryParams: {
+                    panel: 'user-account',
+                }
+            },
+            {
+                title: 'invitation',
+                icon: 'people-outline',
+                link: '/wd/dashboard/settings',
+                queryParams: {
+                    panel: 'sub-account',
+                }
+            },
+            {
+                title: 'display',
+                icon: 'color-palette',
+                link: '/wd/dashboard/settings',
+                queryParams: {
+                    panel: 'display',
+                }
+            },
+            {
+                title: 'about',
+                icon: 'question-mark-circle-outline',
+                link: '/wd/dashboard/settings',
+                queryParams: {
+                    panel: 'about',
+                }
+            }
+        ]
+        */
     },
 ];

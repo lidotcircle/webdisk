@@ -8,7 +8,13 @@ import { EditorPlugin, EditorType, PreviewStyle, Editor as TUIEditor, HookMap, E
          WidgetRule, LinkAttributes, ExtendedAutolinks, CustomHTMLRenderer, Sanitizer } from '@toast-ui/editor/types/editor';
 import { ToolbarItemOptions } from '@toast-ui/editor/types/ui';
 import { ToMdConvertorMap } from '@toast-ui/editor/types/convertor';
-
+import latex from '../LatexPlugin';
+import uml from '@toast-ui/editor-plugin-uml';
+import chart from '@toast-ui/editor-plugin-chart';
+import colorSyntax from '@toast-ui/editor-plugin-color-syntax';
+import tableMergedCell from '@toast-ui/editor-plugin-table-merged-cell';
+declare const require: any;
+const colorSyntaxHighlight = require('@toast-ui/editor-plugin-code-syntax-highlight/dist/toastui-editor-plugin-code-syntax-highlight-all');
 
 @Component({
     selector: 'app-tui-editor',
@@ -63,6 +69,10 @@ export class TuiEditorComponent implements OnInit, OnChanges, OnDestroy, AfterVi
 
     ngOnInit(): void {
         this.root = createRoot(this.host.nativeElement as HTMLElement);
+        this.plugins = this.plugins || [];
+        for (const plug of [ uml, chart, colorSyntax, colorSyntaxHighlight, tableMergedCell, latex ]) {
+            this.plugins.push(plug);
+        }
     }
 
     ngOnChanges(_changes: SimpleChanges): void {
@@ -89,7 +99,7 @@ export class TuiEditorComponent implements OnInit, OnChanges, OnDestroy, AfterVi
                 previewStyle={this.previewStyle || 'vertical'}
                 height={this.height || 'auto'}
                 initialEditType={this.initialEditType || 'markdown'}
-                initialValue={this.initialValue || ' '}
+                initialValue={this.initialValue || "\n"}
 
                 {... opts}
 
