@@ -1,0 +1,91 @@
+@use 'sass:color' as color;
+@use 'src/app/@theme/styles/themes' as *;
+
+
+@include nb-install-component {
+nb-card {
+    margin: 0em;
+    height: 100%;
+
+    nb-card-header {
+        .title {
+            width: 100%;
+            text-align: center;
+            font-size: large;
+            font-weight: bold;
+        }
+    }
+
+    nb-card-body {
+        height: 100%;
+        overflow: auto;
+        padding: 0em;
+
+        .note-item {
+            margin: 1.2em 0em;
+            padding: 1em;
+
+            app-note-preview {
+                height: 16rem;
+            }
+
+            .note-tools {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+
+                * {
+                    flex-grow: 1;
+                    margin: 0.5em;
+                }
+
+                .note-time {
+                    font-weight: bold;
+                }
+            }
+        }
+
+        .history-end {
+            width: 100%;
+            text-align: center;
+            font-size: large;
+            font-weight: bold;
+            margin-top: 2em;
+            height: 2em;
+            user-select: none;
+            color: darken(nb-theme(background-basic-color-1), 30%);
+        }
+
+        .type-day-separator {
+            position: sticky;
+            top: 0;
+        }
+
+        .day-separator {
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            padding: 0.5em;
+            border-radius: 0em 0em 1em 1em;
+            background: nb-theme(background-basic-color-3);
+
+            .date-leader {
+                height: 1px;
+                flex-grow: 1;
+                background: nb-theme(text-basic-color);
+                margin-left: 0.5em;
+                margin-right: 1em;
+            }
+
+            .date-value {
+                font-size: large;
+                font-weight: bold;
+                color: nb-theme(text-info-color);
+                padding-right: 0.5em;
+            }
+        }
+    }
+}
+}

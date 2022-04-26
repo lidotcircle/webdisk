@@ -1,3 +1,5 @@
+import { patch_obj } from 'diff-match-patch';
+
 export * from './common';
 export * from './FileSystemEntry';
 export * from './life';
@@ -165,3 +167,16 @@ export module Convert {
     } //}
 }
 
+export function reversePatch(patch: patch_obj[]): patch_obj[]
+{
+    return patch.map((patchObj: patch_obj) => ({
+        diffs: patchObj.diffs.map(([ op, val ]) => [
+            op * -1, // The money maker
+            val
+        ]),
+        start1: patchObj.start2,
+        start2: patchObj.start1,
+        length1: patchObj.length2,
+        length2: patchObj.length1
+    }));
+}

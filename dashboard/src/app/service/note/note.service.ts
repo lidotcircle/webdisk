@@ -9,7 +9,14 @@ export interface Note {
     contentType: string;
     generation: number;
     id: number;
+    createdAt: string;
 };
+
+export interface NoteHistory {
+    patch: string;
+    createdAt: string;
+};
+
 type PageData<T> = { count: number ; data: T[] };
 const API = RESTfulAPI.Note;
 @Injectable({
@@ -50,9 +57,11 @@ export class NoteService {
         }).toPromise() as any;
     }
 
-    async getNoteHistory(noteid: number, skip: number): Promise<string[]> {
-        return await this.http.put(API.history, {
-            noteid, skip
+    async getNoteHistory(noteid: number, skip: number, take: number): Promise<PageData<NoteHistory>> {
+        return await this.http.get(API.history, {
+            params: {
+                noteid, skip, take
+            }
         }).toPromise() as any;
     }
 

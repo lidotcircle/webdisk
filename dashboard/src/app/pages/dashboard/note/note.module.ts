@@ -17,6 +17,7 @@ import { NotePreview } from './note-preview/note-preview.component';
 import { MarkdownEditorComponent } from './markdown-editor/markdown-editor.component';
 import { MarkdownViewerComponent } from './markdown-viewer/markdown-viewer.component';
 import { MarkdownNoteHistoryComponent } from './markdown-note-history/markdown-note-history.component';
+import { InfiniteScrollModule } from 'ngx-infinite-scroll';
 
 
 @NgModule({
@@ -48,6 +49,7 @@ import { MarkdownNoteHistoryComponent } from './markdown-note-history/markdown-n
         Ng2SmartTableModule,
         NbSpinnerModule,
         NbAlertModule,
+        InfiniteScrollModule,
     ]
 })
 export class NoteModule { }

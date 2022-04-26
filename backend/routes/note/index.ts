@@ -163,6 +163,7 @@ router.get('/history',
     query("noteid").isInt().withMessage("noteid is required"),
     query("skip").isInt({min: 0}).withMessage("skip should be a non-negative integer"),
     query("take").optional().isInt({min: 1}).withMessage("take is optional, if presents it should be a positive integer"),
+    query("order").optional().isString(),
     async (req, res) => {
         const valres = validationResult(req);
         if (!valres.isEmpty()) {
@@ -170,10 +171,19 @@ router.get('/history',
         }
 
         const user = getAuthUsername(req);
-        const { noteid, skip, take } = req.query;
+        const { noteid, skip, take, order } = req.query;
         const noteService = QueryDependency(NoteService);
 
-        res.json(await noteService.getNoteHistory(user, noteid, skip, take));
+        const [ data, count ] = await noteService.getNoteHistory(user, noteid, skip, take || 10, order == "ASC");
+        res.json({
+            count: count,
+            data: data.map(his => {
+                return {
+                    patch: his.patch,
+                    createdAt: his.createdAt.toISOString(),
+                };
+            })
+        });
     }
 );
 

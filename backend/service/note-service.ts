@@ -63,20 +63,21 @@ export class NoteService {
         return { data: ans[0], count: ans[1] };
     }
 
-    async getNoteHistory(username: string, noteid: number, skip: number, take: number) {
+    async getNoteHistory(username: string, noteid: number, skip: number, take: number, ascending: boolean) {
         let query = this.historyRepo
-            .createQueryBuilder()
-            .select("his")
+            .createQueryBuilder("his")
+            .select()
             .innerJoin(Note, "note", "his.noteId = note.id")
             .innerJoin(User, "user", "user.id = note.userId")
             .where("user.username = :un", {un: username})
             .where("note.id = :nid", {nid: noteid})
+            .orderBy("his.id", ascending ? "ASC" : "DESC")
             .skip(skip);
 
         if (take != null)
             query = query.take(take);
 
-        return await query.getMany();
+        return await query.getManyAndCount();
     }
 
     async updateNoteTitle(username: string, noteid: number, newtitle: string): Promise<void> {
