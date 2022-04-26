@@ -1,6 +1,8 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule} from '@angular/router';
-import { MarkdownComponent } from './markdown/markdown.component';
+import { MarkdownEditorComponent } from './markdown-editor/markdown-editor.component';
+import { MarkdownNoteHistoryComponent } from './markdown-note-history/markdown-note-history.component';
+import { MarkdownViewerComponent } from './markdown-viewer/markdown-viewer.component';
 import { NoteTagListComponent } from './note-tag-list/note-tag-list.component';
 import { NoteComponent } from './note.component';
 import { TimelineComponent } from './timeline/timeline.component';
@@ -25,8 +27,16 @@ const routes: Routes = [
                 component: NoteTagListComponent,
             },
             {
-                path: 'markdown',
-                component: MarkdownComponent,
+                path: 'markdown-editor',
+                component: MarkdownEditorComponent,
+            },
+            {
+                path: 'markdown-viewer',
+                component: MarkdownViewerComponent,
+            },
+            {
+                path: 'markdown-note-history',
+                component: MarkdownNoteHistoryComponent,
             },
         ]
     }

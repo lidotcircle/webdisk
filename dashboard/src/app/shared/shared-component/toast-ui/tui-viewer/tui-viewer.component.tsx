@@ -4,7 +4,7 @@ import { AfterViewInit, Component, ElementRef, EventEmitter, Input,
 import * as React from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import { Viewer } from '@toast-ui/react-editor';
-import { EditorPlugin, EditorType, Editor as TUIEditor, EventMap,
+import { Viewer as TUIViewer, EditorPlugin, EditorType, Editor as TUIEditor, EventMap,
          LinkAttributes, ExtendedAutolinks, CustomHTMLRenderer, Sanitizer } from '@toast-ui/editor/types/editor';
 import latex from '../LatexPlugin';
 import uml from '@toast-ui/editor-plugin-uml';
@@ -45,10 +45,16 @@ export class TuiViewerComponent implements OnInit, OnChanges, OnDestroy, AfterVi
     @Output() public readonly beforePreviewRender = new EventEmitter<string>();
     @Output() public readonly beforeConvertWysiwygToMarkdown = new EventEmitter<string>();
 
-    editorRef: React.RefObject<Viewer>;
+    viewer: TUIViewer;
     private root: Root;
-    constructor(private host: ElementRef) {
-        this.editorRef = React.createRef();
+    constructor(private host: ElementRef) {}
+
+    private onRefChange(obj: any) {
+        this.viewer = obj?.viewerInst;
+
+        if (this.viewer) {
+            this.viewer.setMarkdown(this.initialValue);
+        }
     }
 
     ngOnInit(): void {
@@ -99,7 +105,7 @@ export class TuiViewerComponent implements OnInit, OnChanges, OnDestroy, AfterVi
                 onCaretChange={ e => this.caretChange.emit(e) }
                 onBeforePreviewRender={ text => { this.beforePreviewRender.emit(text); return text; } }
                 onBeforeConvertWysiwygToMarkdown={ text => { this.beforeConvertWysiwygToMarkdown.emit(text); return text; } }
-                ref={this.editorRef}
+                ref={this.onRefChange.bind(this)}
                 />
             </React.StrictMode>);
     }

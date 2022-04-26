@@ -10,6 +10,9 @@ class FrontendEndUserSettings {
     MoveFolderWithoutConfirm: boolean = false;
     UsingLoginTokenInPlayer: boolean = true;
     HttpRedirect: boolean = true;
+    
+    Note_Editor_ShowButtons: boolean = false;
+    Note_Editor_SavingInterval: number = 1000 * 60;
 
     static fromJSON(json: string): FrontendEndUserSettings {
         const ans = new FrontendEndUserSettings();

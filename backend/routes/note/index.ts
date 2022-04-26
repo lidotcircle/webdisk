@@ -38,6 +38,7 @@ router.get('/',
                     contentType: note.contentType,
                     title: note.title,
                     id: note.id,
+                    createdAt: note.createdAt.toISOString(),
                 };
             })
         });
@@ -64,6 +65,7 @@ router.get('/single',
             contentType: note.contentType,
             title: note.title,
             id: note.id,
+            createdAt: note.createdAt.toISOString(),
         });
     }
 );

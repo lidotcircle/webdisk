@@ -52,15 +52,27 @@ export const WebdiskMenu: NbMenuItem[] = [
                 link: '/wd/dashboard/note/tags',
             },
             {
-                title: 'markdown',
+                title: 'markdown-editor',
                 icon: 'layout',
-                link: '/wd/dashboard/note/markdown',
+                link: '/wd/dashboard/note/markdown-editor',
                 hidden: true,
             },
             {
-                title: 'todo-list',
+                title: 'markdown-viewer',
                 icon: 'layout',
-                link: '/wd/dashboard/note/todo-list',
+                link: '/wd/dashboard/note/markdown-viewer',
+                hidden: true,
+            },
+            {
+                title: 'todo-list-editor',
+                icon: 'layout',
+                link: '/wd/dashboard/note/todo-list-editor',
+                hidden: true,
+            },
+            {
+                title: 'todo-list-viewer',
+                icon: 'layout',
+                link: '/wd/dashboard/note/todo-list-viewer',
                 hidden: true,
             }
         ]

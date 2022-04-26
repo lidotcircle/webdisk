@@ -10,18 +10,22 @@ import { FormsModule } from '@angular/forms';
 import { SharedModule } from 'src/app/shared/shared.module';
 import { NoteComponent } from './note.component';
 import { RouterModule } from '@angular/router';
-import { MarkdownComponent } from './markdown/markdown.component';
 import { NoteTagListComponent } from './note-tag-list/note-tag-list.component';
 import { TimelineComponent } from './timeline/timeline.component';
 import { NoteRoutingModule } from './note-routing.module';
 import { NotePreview } from './note-preview/note-preview.component';
+import { MarkdownEditorComponent } from './markdown-editor/markdown-editor.component';
+import { MarkdownViewerComponent } from './markdown-viewer/markdown-viewer.component';
+import { MarkdownNoteHistoryComponent } from './markdown-note-history/markdown-note-history.component';
 
 
 @NgModule({
     declarations: [
         NoteComponent,
         TimelineComponent,
-        MarkdownComponent,
+        MarkdownEditorComponent,
+        MarkdownViewerComponent,
+        MarkdownNoteHistoryComponent,
         NoteTagListComponent,
         NotePreview,
     ],

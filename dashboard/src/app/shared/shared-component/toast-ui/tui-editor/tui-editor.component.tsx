@@ -74,18 +74,21 @@ export class TuiEditorComponent implements OnInit, OnChanges, OnDestroy, AfterVi
         }
     }
 
+    private initialValueChanged = false;
     private refChange(obj: any) {
         this.editor = obj?.editorInst;
 
         // TODO props doesn't work properly
-        if (this.editor) {
+        if (this.editor && this.initialValueChanged) {
             this.editor.setMarkdown(this.initialValue);
+            this.initialValueChanged = false;
         }
     }
 
-    ngOnChanges(_changes: SimpleChanges): void {
+    ngOnChanges(changes: SimpleChanges): void {
         if (this.root)
             this.render();
+        this.initialValueChanged = !!changes.initialValue;
         this.initialValue = this.initialValue || '';
     }
 
@@ -144,7 +147,7 @@ export class TuiEditorComponent implements OnInit, OnChanges, OnDestroy, AfterVi
                 onCaretChange={ e => this.caretChange.emit(e) }
                 onBeforePreviewRender={ text => { this.beforePreviewRender.emit(text); return text; } }
                 onBeforeConvertWysiwygToMarkdown={ text => { this.beforeConvertWysiwygToMarkdown.emit(text); return text; } }
-                ref={(e) => this.refChange(e)}
+                ref={this.refChange.bind(this)}
                 />
             </React.StrictMode>);
     }

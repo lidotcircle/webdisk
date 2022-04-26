@@ -24,7 +24,7 @@ export class NotePreview implements OnInit {
     gotoNote() {
         const storekey = this.sharing.store(this.note);
         if (this.note.contentType == 'markdown') {
-            this.router.navigate(["../markdown"], {
+            this.router.navigate(["../markdown-viewer"], {
                 relativeTo: this.activatedRoute,
                 queryParams: {
                     noteref: storekey,

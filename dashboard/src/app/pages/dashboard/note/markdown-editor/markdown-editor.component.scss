@@ -1,0 +1,41 @@
+@use 'sass:color' as color;
+@use 'src/app/@theme/styles/themes' as *;
+
+
+@include nb-install-component {
+nb-card {
+    margin: 0em;
+    height: 100%;
+
+    nb-card-header {
+        .header {
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: space-between;
+
+            .title {
+                font-weight: bold;
+                font-size: large;
+            }
+
+            .savingStatus {
+                color: color.adjust(nb-theme(color-basic-disabled), $lightness: -30%);
+
+                .bd {
+                    color: nb-theme(text-basic-color);
+                }
+
+                .savetime {
+                    margin-right: 0.8em;
+                }
+            }
+        }
+    }
+
+    nb-card-body {
+        height: 100%;
+    }
+}
+}
