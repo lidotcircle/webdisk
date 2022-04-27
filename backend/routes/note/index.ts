@@ -14,6 +14,9 @@ const safeNumber = (val: any): number => val && !Number.isNaN(Number(val)) ? Num
 router.get('/',
     query("pageno").optional().isInt({min: 1}).withMessage("pageno is optional, if presents  pageno should be a positive integer"),
     query("pagesize").optional().isInt({min: 1}).withMessage("pagesize is optional, if presents it should be a positive integer"),
+    query("notetype").optional().isLength({min: 2}),
+    query("sortBy").optional().isLength({min: 2}),
+    query("order").optional().isLength({min: 2}),
     query("tag").optional().isString(),
     async (req, res) => {
         const valres = validationResult(req);
@@ -24,12 +27,17 @@ router.get('/',
         const user = getAuthUsername(req);
         const pageno = safeNumber(req.query['pagneo']) || 1;
         const pagesize = safeNumber(req.query['pagesize']) || 5;
+        const { notetype, sortBy, order } = req.query;
         const skip = (pageno  - 1) * pagesize;
         const take = pagesize;
         const tag = req.query['tag'];
         const noteService = QueryDependency(NoteService);
 
-        const ans = tag ? await noteService.getNoteByTag(user, tag, skip, take) : await noteService.getNotes(user, skip, take);
+        const ans = await noteService.getNotes(user, skip, take, tag, {
+            notetype: notetype,
+            sortBy: sortBy,
+            ascending: order != 'DESC',
+        });
         res.json({
             count: ans.count,
             data: ans.data.map(note => {

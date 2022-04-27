@@ -16,6 +16,12 @@ interface ServiceRepositories {
     readonly userRepo:    Repository<User>;
 };
 
+interface PageOptions {
+    sortBy?: string;
+    ascending?: boolean;
+    notetype?: string;
+};
+
 function EntityManager2Repos(em: EntityManager): ServiceRepositories
 {
     return {
@@ -117,19 +123,6 @@ export class NoteService implements ServiceRepositories {
         }
 
         return note;
-    }
-
-    async getNotes(username: string, skip: number, take?: number): Promise<{ data: Note[], count: number }> {
-        let query = this.noteRepo
-            .createQueryBuilder("note")
-            .select()
-            .innerJoin(User, "user", "note.userId = user.id")
-            .where("user.username = :un", {un: username})
-            .skip(skip);
-        if (take) query = query.take(take);
-
-        const ans = await query.getManyAndCount();
-        return { data: ans[0], count: ans[1] };
     }
 
     private async getUserByUsername(username: string, repos?: ServiceRepositories) {
@@ -349,20 +342,39 @@ export class NoteService implements ServiceRepositories {
         });
     }
 
-    async getNoteByTag(username: string, tag: string, skip: number, take?: number, ascending?: boolean): Promise<{ data: Note[], count: number}> {
+    async getNotes(username: string, skip: number, take?: number, tag?: number, options?: PageOptions): Promise<{ data: Note[], count: number}> {
+        options = options || {};
+
         let query = this.noteRepo
             .createQueryBuilder("note")
             .select()
-            .innerJoin(User, "user", "note.userId = user.id")
-            .innerJoin(NoteJoinNoteTag, "nt", "note.id = nt.noteId")
-            .innerJoin(NoteTag, "tag", "tag.id = nt.tagId")
-            .where("user.username = :un", {un: username})
-            .andWhere("tag.userId = user.id")
-            .andWhere("tag.name = :tagname", {tagname: tag})
+            .innerJoin(User, "user", "note.userId = user.id");
+
+        if (tag) {
+            query = query
+                .innerJoin(NoteJoinNoteTag, "nt", "note.id = nt.noteId")
+                .innerJoin(NoteTag, "tag", "tag.id = nt.tagId")
+                .andWhere("tag.userId = user.id")
+                .andWhere("tag.name = :tagname", {tagname: tag});
+        }
+        query = query.where("user.username = :un", {un: username});
+
+        if (options.notetype && options.notetype != 'all')
+            query = query.andWhere("note.contentType = :nt", {nt: options.notetype});
+
+        if (options.sortBy) {
+            if (options.sortBy != 'createdAt' && options.sortBy != 'updatedAt') {
+                throw new createHttpError.BadRequest(`bad sortBy, get '${options.sortBy}'`);
+            }
+        }
+
+        const sortBy = options.sortBy || 'id';
+        query = query
+            .orderBy('note.' + sortBy, options.ascending != false ? "ASC" : "DESC")
             .skip(skip);
 
+        query = query.skip(skip);
         if (take) query = query.take(take);
-        if (ascending != null) query = query.orderBy("note.id", ascending ? "ASC" : "DESC");
 
         const [ data, count ] =  await query.getManyAndCount();
         return { data, count };

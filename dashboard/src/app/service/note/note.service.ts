@@ -99,19 +99,15 @@ export class NoteService {
     }
 
 
-    async getNotes(pageno: number, pagesize: number): Promise<PageData<Note>> {
-        return await this.http.get(API.note, {
-            params: {
-                pageno, pagesize
-            }
-        }).toPromise() as PageData<Note>;
-    }
+    async getNotes(pageno: number, pagesize: number, tag?: string, notetype?: string, sortBy?: string, order?: string): Promise<PageData<Note>> {
+        const params = { pageno, pagesize };
+        if (tag) params['tag'] = tag;
+        if (notetype) params['notetype'] = notetype;
+        if (sortBy) params['sortBy'] = sortBy;
+        if (order) params['order'] = order;
 
-    async getNotesByTag(tag: string, pageno: number, pagesize: number): Promise<PageData<Note>> {
         return await this.http.get(API.note, {
-            params: {
-                tag, pageno, pagesize
-            }
+            params: params
         }).toPromise() as PageData<Note>;
     }
 }

@@ -2,6 +2,19 @@ nb-card {
     height: 100%;
     margin: 0em;
 
+    nb-card-header {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+
+        .type-filter {
+            display: flex;
+            flex-direction: row;
+        }
+    }
+
     nb-card-body {
         height: 100%;
     }

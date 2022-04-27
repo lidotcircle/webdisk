@@ -30,6 +30,10 @@ nb-card {
         overflow: auto;
         padding: 0em;
 
+        .item-hidden {
+            display: none;
+        }
+
         .type-day-separator + .type-note {
             .note-item {
                 border-top: none;
@@ -89,12 +93,26 @@ nb-card {
             border: 1px solid darken(nb-theme(background-basic-color-1), 15%);
             border-radius: 0em 0em 0.5em 0.5em;
             background: darken(nb-theme(background-basic-color-1), 5%);
+            user-select: none;
+
+            &.closed {
+                background: darken(nb-theme(background-basic-color-1), 20%);
+                border-radius: 0em;
+                margin-bottom: 0.5em;
+            }
+
+            .date-leader-ox {
+                min-height: 2em;
+                flex-grow: 1;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                cursor: pointer;
+            }
 
             .date-leader {
-                height: 1px;
-                flex-grow: 1;
+                height: 1pt;
                 background: nb-theme(text-basic-color);
-                margin: 0em;
             }
 
             .date-value {

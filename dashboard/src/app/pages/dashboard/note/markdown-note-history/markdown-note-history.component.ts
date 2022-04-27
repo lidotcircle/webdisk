@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { NbToastrService } from '@nebular/theme';
 import { diff_match_patch } from 'diff-match-patch';
+import { interval, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { Note, NoteHistory, NoteService } from 'src/app/service/note/note.service';
 import { ObjectSharingService } from 'src/app/service/object-sharing.service';
 import { MessageBoxService } from 'src/app/shared/service/message-box.service';
@@ -34,8 +36,8 @@ interface NoteWithHistory extends Note {
                 [immediateCheck]='false'
                 [infiniteScrollContainer]="'.main-panel'"
                 [fromRoot]='true'
-                (scrolled)='handleScroll($event)'>
-                <div *ngFor='let item of items; let i = index' [class]='"type-" + item.type'>
+                (scrolled)='handleScroll($event)' #scrolledElement>
+                <div *ngFor='let item of items; let i = index' [class]='"type-" + item.type + (item.hidden ? " item-hidden" : "")'>
                     <div *ngIf='item.type == "note" && item.data.generation > 0' class='note-item'>
                         <div class='note-tools'>
                             <div class='note-time'>{{ item.data.UpdatedAt }}</div>
@@ -46,9 +48,9 @@ interface NoteWithHistory extends Note {
                         </div>
                         <app-note-preview [note]='item.data'></app-note-preview>
                     </div>
-                    <div *ngIf='item.type == "day-separator"' class='day-separator'>
+                    <div *ngIf='item.type == "day-separator"' [class]='"day-separator " + (item.data.folded ? "closed" : "open")'>
                         <div class='date-value'> {{ item.data.dateStr }} </div>
-                        <div class='date-leader'></div>
+                        <div class='date-leader-ox' (click)='onDoubleClick(i)'><div class='date-leader'></div></div>
                         <button nbButton [disabled]='onWorking' size='small' status='primary' (click)='onMergeClick(i)'>merge</button>
                     </div>
                     <div *ngIf='item.type == "end"' class='history-end'>
@@ -62,25 +64,36 @@ interface NoteWithHistory extends Note {
     styleUrls: ["./markdown-note-history.component.scss"],
     styles: []
 })
-export class MarkdownNoteHistoryComponent implements OnInit {
+export class MarkdownNoteHistoryComponent implements OnInit, OnDestroy {
     noteHistoryCount: number;
     createdAt: string;
     updatedAt: string;
-    items: { type: string, data: NoteWithHistory | any}[];
+    items: { type: string, data: NoteWithHistory | any, hidden?: boolean }[];
     note: Note;
     private notes: NoteWithHistory[];
     private eachTimeGet: number = 10;
     private histories: NoteHistory[];
+    private destroy$: Subject<void>;
+
+    @ViewChild("scrolledElement", {static: true})
+    private scrolledElement: ElementRef;
 
     constructor(private toastr: NbToastrService,
                 private noteService: NoteService,
                 private msgBox: MessageBoxService,
                 private sharing: ObjectSharingService,
-                private activatedRoute: ActivatedRoute)
+                private activatedRoute: ActivatedRoute,
+                private host: ElementRef)
     {
         this.notes = [];
         this.items = [];
         this.histories = [];
+        this.destroy$ = new Subject();
+    }
+
+    ngOnDestroy(): void {
+        this.destroy$.next();
+        this.destroy$.complete();
     }
 
     ngOnInit(): void {
@@ -116,9 +129,20 @@ export class MarkdownNoteHistoryComponent implements OnInit {
                 this.toastr.danger("failed to get history", "Note");
             }
         });
+
+        const host = this.host.nativeElement as HTMLElement;
+        const panel = host.querySelector(".main-panel") as HTMLElement;
+        const scroll = this.scrolledElement.nativeElement as HTMLElement;
+        interval(1000)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(async () => {
+                if (scroll.clientHeight < panel.clientHeight) {
+                    await this.handleScroll(null)
+                }
+            });
     }
 
-    private lastUpdateDate: Date;
+    private prevSeparator: { data: { folded: boolean, date: Date, [key: string]: any }, [key: string]: any };
     private insertDaySeparator(currentUpdateDate: Date | string) {
         if (typeof currentUpdateDate == 'string') {
             currentUpdateDate = new Date(currentUpdateDate);
@@ -130,15 +154,16 @@ export class MarkdownNoteHistoryComponent implements OnInit {
             d1.getDate() == d2.getDate()
         );
 
-        if (this.lastUpdateDate == null || !isSameDay(this.lastUpdateDate, currentUpdateDate)) {
-            this.lastUpdateDate = currentUpdateDate;
-            this.items.push({
+        if (this.prevSeparator == null || !isSameDay(this.prevSeparator.data.date, currentUpdateDate)) {
+            this.prevSeparator = {
                 type: 'day-separator',
                 data: {
                     dateStr: currentUpdateDate.toLocaleDateString(),
                     date: currentUpdateDate,
+                    folded: false,
                 },
-            });
+            };
+            this.items.push(this.prevSeparator as any);
         }
     }
 
@@ -155,7 +180,7 @@ export class MarkdownNoteHistoryComponent implements OnInit {
             last.updatedAt = history.createdAt;
             this.updateDate(last);
             this.insertDaySeparator(last.updatedAt);
-            this.items.push({ type: 'note', data: last});
+            this.items.push({ type: 'note', data: last, hidden: this.prevSeparator.data.folded});
 
             const patch = reversePatch(dmp.patch_fromText(history.patch));
             const [ old, incons ]= dmp.patch_apply(patch, last.content);
@@ -179,7 +204,7 @@ export class MarkdownNoteHistoryComponent implements OnInit {
             last.updatedAt = last.createdAt;
             this.updateDate(last);
             this.insertDaySeparator(last.updatedAt);
-            this.items.push({ type: 'note', data: last});
+            this.items.push({ type: 'note', data: last, hidden: this.prevSeparator.data.folded});
             this.items.push({ type: 'end', data: null});
         }
     }
@@ -242,7 +267,7 @@ export class MarkdownNoteHistoryComponent implements OnInit {
         this.notes = [ this.note as any ];
         this.items = [];
         this.histories = [];
-        this.lastUpdateDate = null;
+        this.prevSeparator = null;
         this.noteHistoryCount++;
         this.appendHistory(h);
         this.toastr.info("update success", "Note");
@@ -305,7 +330,7 @@ export class MarkdownNoteHistoryComponent implements OnInit {
         this.histories = [];
         this.notes = [ this.note as any ];
         this.items = [];
-        this.lastUpdateDate = null;
+        this.prevSeparator = null;
         this.appendHistory(his);
     }
 
@@ -370,8 +395,21 @@ export class MarkdownNoteHistoryComponent implements OnInit {
         this.histories = [];
         this.notes = [ this.note as any ];
         this.items = [];
-        this.lastUpdateDate = null;
+        this.prevSeparator = null;
         this.appendHistory(his);
+    }
+
+    async onDoubleClick(n: number) {
+        const item = this.items[n];
+        if (!item || item.type != "day-separator") return;
+
+        const data = item.data;
+        data.folded = !data.folded;
+        for (let i=n+1;i<this.items.length;i++) {
+            const item = this.items[i];
+            if (item.type != "note") break;
+            item.hidden = data.folded;
+        }
     }
 
     get onWorking(): boolean {
