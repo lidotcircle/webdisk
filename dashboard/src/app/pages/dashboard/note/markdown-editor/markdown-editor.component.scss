@@ -7,6 +7,22 @@ nb-card {
     margin: 0em;
     height: 100%;
 
+    input.info-input {
+        padding: 0em;
+        background: white;
+        border: 0em;
+        font-size: large;
+        color: color.adjust(nb-theme(text-basic-color), $alpha: -0.2);
+        border-bottom: 1pt solid darken(nb-theme(background-basic-color-1), 20%);
+        width: 50%;
+        border-radius: 0em;
+        padding: 0em 0.5em 0.1em 0.5em;
+
+        &:focus {
+            outline: none;
+        }
+    }
+
     nb-card-header {
         .header {
             width: 100%;
@@ -28,22 +44,6 @@ nb-card {
                 }
             }
 
-            input {
-                padding: 0em;
-                background: white;
-                border: 0em;
-                font-size: large;
-                color: color.adjust(nb-theme(text-basic-color), $alpha: -0.2);
-                border-bottom: 1pt solid darken(nb-theme(background-basic-color-1), 20%);
-                width: 50%;
-                border-radius: 0em;
-                padding: 0em 0.5em 0.1em 0.5em;
-
-                &:focus {
-                    outline: none;
-                }
-            }
-
             .savingStatus {
                 color: color.adjust(nb-theme(color-basic-disabled), $lightness: -30%);
                 padding: 0.1em 0em;
@@ -55,6 +55,44 @@ nb-card {
                 .savetime {
                     margin-right: 0.8em;
                 }
+            }
+        }
+
+        .tags {
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-top: 1em;
+            border-top: 1pt solid darken(nb-theme(background-basic-color-1), 20%);
+            padding-top: 1em;
+
+            .tag {
+                margin-right: 1em;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+            }
+
+            .tag-cx {
+                color: nb-theme(text-basic-color);
+
+                nb-icon {
+                    cursor: pointer;
+
+                    &:hover {
+                        color: lighten(nb-theme(text-basic-color), 10%);
+                    }
+                }
+            }
+
+            .tag-text {
+                margin-left: 0.2em;
+            }
+
+            input {
+                min-width: 25vw;
             }
         }
     }

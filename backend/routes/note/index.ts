@@ -38,6 +38,9 @@ router.get('/',
             sortBy: sortBy,
             ascending: order != 'DESC',
         });
+        for (const note of ans.data) {
+            note['tags'] = await noteService.getNoteTagsById(note.id);
+        }
         res.json({
             count: ans.count,
             data: ans.data.map(note => {
@@ -48,7 +51,9 @@ router.get('/',
                     contentType: note.contentType,
                     title: note.title,
                     id: note.id,
+                    updatedAt: note.updatedAt.toISOString(),
                     createdAt: note.createdAt.toISOString(),
+                    tags: note['tags'],
                 };
             })
         });
@@ -73,13 +78,17 @@ router.get('/single',
             await noteService.getNoteHistoryVersion(user, noteid, generation) :
             await noteService.getNote(user, noteid));
         if (!note) throw new createHttpError.NotFound("note not found, ??");
+
+        note['tags'] = await noteService.getNoteTagsById(note.id);
         res.json({
             generation: note.generation,
             content: note.content,
             contentType: note.contentType,
             title: note.title,
             id: note.id,
+            updatedAt: note.updatedAt.toISOString(),
             createdAt: note.createdAt.toISOString(),
+            tags: note['tags'],
         });
     }
 );
@@ -170,6 +179,42 @@ router.get('/tags',
         const noteService = QueryDependency(NoteService);
         const result = noteid != null ? await noteService.getNoteTags(user, noteid) : await noteService.getUserTags(user);
         res.json(result);
+    }
+);
+
+router.delete('/tags',
+    query("noteid").isInt(),
+    body("tags").isArray(),
+    async (req, res) => {
+        const valres = validationResult(req);
+        if (!valres.isEmpty()) {
+            throw new createHttpError.UnprocessableEntity(valres.array()[0].msg);
+        }
+
+        const noteid = safeNumber(req.query["noteid"]);
+        const tags = req.body['tags'];
+        const user = getAuthUsername(req);
+        const noteService = QueryDependency(NoteService);
+        await noteService.deleteNoteTags(user, noteid, tags);
+        res.status(200).send();
+    }
+);
+
+router.put('/tags',
+    body("noteid").isInt(),
+    body("tags").isArray(),
+    async (req, res) => {
+        const valres = validationResult(req);
+        if (!valres.isEmpty()) {
+            throw new createHttpError.UnprocessableEntity(valres.array()[0].msg);
+        }
+
+        const noteid = req.body["noteid"];
+        const tags = req.body['tags'];
+        const user = getAuthUsername(req);
+        const noteService = QueryDependency(NoteService);
+        await noteService.setNoteTags(user, noteid, tags);
+        res.status(200).send();
     }
 );
 

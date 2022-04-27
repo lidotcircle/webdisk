@@ -1,0 +1,16 @@
+@use 'sass:color' as color;
+@use 'src/app/@theme/styles/themes' as *;
+
+
+@include nb-install-component {
+nb-card {
+    margin: 0em;
+    height: 100%;
+
+    nb-card-body {
+        height: 100%;
+        overflow: auto;
+        padding: 0em;
+    }
+}
+}

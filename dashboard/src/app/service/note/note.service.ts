@@ -9,7 +9,9 @@ export interface Note {
     contentType: string;
     generation: number;
     id: number;
+    updatedAt: string;
     createdAt: string;
+    tags: string[];
 };
 
 export interface NoteHistory {
@@ -27,6 +29,19 @@ export class NoteService {
 
     async getTags(): Promise<string[]> {
         return await this.http.get(API.tags).toPromise() as string[];
+    }
+
+    async addTags(noteid: number, tags: string[]): Promise<void> {
+        await this.http.put(API.tags, {
+            noteid, tags,
+        }).toPromise();
+    }
+
+    async deleteTags(noteid: number, tags: string[]): Promise<void> {
+        await this.http.delete(API.tags, {
+            params: { noteid },
+            body: { tags },
+        }).toPromise();
     }
 
     async getNoteTags(noteid: string): Promise<string[]> {

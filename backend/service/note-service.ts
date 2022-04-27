@@ -451,16 +451,15 @@ export class NoteService implements ServiceRepositories {
                 const rs = await tagJoinNoteRepo
                     .createQueryBuilder()
                     .delete()
-                    .from("rl")
-                    .where("rl.tagId = :tid", {tid: t.id})
-                    .andWhere("rl.noteId = :nid", {nid: note.id})
+                    .where("tagId = :tid", {tid: t.id})
+                    .andWhere("noteId = :nid", {nid: note.id})
                     .execute();
 
                 if (rs.affected == 0) throw new createHttpError.NotFound(`note doesn't contain tag '${tag}'`);
 
                 const nremain = await tagJoinNoteRepo
-                    .createQueryBuilder()
-                    .select("rl")
+                    .createQueryBuilder("rl")
+                    .select()
                     .innerJoin(NoteTag, "tag", "rl.tagId = tag.id")
                     .where("tag.userId = :uid", {uid: user.id})
                     .where("tag.id = :tid", {tid: t.id})
@@ -509,5 +508,15 @@ export class NoteService implements ServiceRepositories {
         });
 
         return ans;
+    }
+
+    // cache
+    async getNoteTagsById(noteid: number): Promise<string[]> {
+        return (await this.tagRepo
+            .createQueryBuilder("tag")
+            .select("tag.name")
+            .innerJoin(NoteJoinNoteTag, "nj", "nj.tagId = tag.id")
+            .where("nj.noteId = :nid", {nid: noteid})
+            .getMany()).map(t => t.name);
     }
 }

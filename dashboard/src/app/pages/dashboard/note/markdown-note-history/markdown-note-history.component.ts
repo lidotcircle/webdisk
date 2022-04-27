@@ -7,7 +7,7 @@ import { takeUntil } from 'rxjs/operators';
 import { Note, NoteHistory, NoteService } from 'src/app/service/note/note.service';
 import { ObjectSharingService } from 'src/app/service/object-sharing.service';
 import { MessageBoxService } from 'src/app/shared/service/message-box.service';
-import { reversePatch } from 'src/app/shared/utils';
+import { reversePatch, saveDataAsFile } from 'src/app/shared/utils';
 
 
 interface NoteWithHistory extends Note {
@@ -41,17 +41,29 @@ interface NoteWithHistory extends Note {
                     <div *ngIf='item.type == "note" && item.data.generation > 0' class='note-item'>
                         <div class='note-tools'>
                             <div class='note-time'>{{ item.data.UpdatedAt }}</div>
-                            <div></div><div></div><div></div>
-                            <div></div><div></div><div></div>
-                            <button nbButton [disabled]='onWorking' size='small' status='primary' (click)='onUseClick(i)'>use</button>
-                            <button nbButton [disabled]='onWorking' size='small' status='primary' (click)='onDeleteClick(i)'>delete</button>
+                            <div class='take-space'></div>
+                            <div class='buttons'>
+                                <button nbButton ghost [disabled]='onWorking' status='primary' (click)='onDownloadClick(i)'>
+                                    <nb-icon icon='download'></nb-icon>
+                                </button>
+                                <button nbButton ghost [disabled]='onWorking' status='primary' (click)='onUseClick(i)'>
+                                    <nb-icon icon='arrow-circle-up'></nb-icon>
+                                </button>
+                                <button nbButton ghost [disabled]='onWorking' status='primary' (click)='onDeleteClick(i)'>
+                                    <nb-icon icon='trash'></nb-icon>
+                                </button>
+                            </div>
                         </div>
                         <app-note-preview [note]='item.data'></app-note-preview>
                     </div>
                     <div *ngIf='item.type == "day-separator"' [class]='"day-separator " + (item.data.folded ? "closed" : "open")'>
                         <div class='date-value'> {{ item.data.dateStr }} </div>
                         <div class='date-leader-ox' (click)='onDoubleClick(i)'><div class='date-leader'></div></div>
-                        <button nbButton [disabled]='onWorking' size='small' status='primary' (click)='onMergeClick(i)'>merge</button>
+                        <div>
+                            <button nbButton ghost [disabled]='onWorking' status='primary' (click)='onMergeClick(i)'>
+                                <nb-icon icon='collapse'></nb-icon>
+                            </button>
+                        </div>
                     </div>
                     <div *ngIf='item.type == "end"' class='history-end'>
                         This is start point
@@ -397,6 +409,15 @@ export class MarkdownNoteHistoryComponent implements OnInit, OnDestroy {
         this.items = [];
         this.prevSeparator = null;
         this.appendHistory(his);
+    }
+
+    onDownloadClick(n: number) {
+        const item = this.items[n];
+        if (!item || item.type != "note") return;
+        const note: Note = item.data;
+
+        saveDataAsFile(note.content,
+                       `${note.title}-${(new Date(note.updatedAt).toLocaleString())}-${note.generation}.md`);
     }
 
     async onDoubleClick(n: number) {

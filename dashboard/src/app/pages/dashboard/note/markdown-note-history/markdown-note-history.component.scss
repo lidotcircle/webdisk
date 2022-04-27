@@ -56,13 +56,22 @@ nb-card {
                 align-items: center;
                 margin-bottom: 0.5em;
 
-                * {
+                .take-space {
                     flex-grow: 1;
                     margin: 0.5em;
                 }
 
                 .note-time {
                     font-weight: bold;
+                }
+
+                .buttons {
+                    display: flex;
+                    flex-direction: row;
+
+                    button {
+                        margin: 0em 0.5em;
+                    }
                 }
             }
         }

@@ -1,3 +1,8 @@
+@use 'sass:color' as color;
+@use 'src/app/@theme/styles/themes' as *;
+
+
+@include nb-install-component {
 nb-card {
     height: 100%;
     margin: 0em;
@@ -8,6 +13,7 @@ nb-card {
         flex-wrap: wrap;
         align-items: center;
         justify-content: space-between;
+        user-select: none;
 
         .type-filter {
             display: flex;
@@ -17,5 +23,114 @@ nb-card {
 
     nb-card-body {
         height: 100%;
+        overflow: auto;
+        padding: 0em;
+
+        .item-hidden {
+            display: none;
+        }
+
+        .type-day-separator + .type-note {
+            .note-item {
+                border-top: none;
+            }
+        }
+
+        .note-item {
+            margin: 1.2em 0em;
+            padding: 1em;
+            border-top: 1px solid darken(nb-theme(background-basic-color-1), 20%);
+
+            app-note-preview {
+                height: 16rem;
+            }
+
+            .note-tools {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 0.5em;
+
+                .take-space {
+                    flex-grow: 1;
+                    margin: 0.5em;
+                }
+
+                .note-time {
+                    font-weight: bold;
+                }
+
+                .buttons {
+                    display: flex;
+                    flex-direction: row;
+
+                    button {
+                        margin: 0em 0.5em;
+                    }
+                }
+            }
+        }
+
+        .history-end {
+            width: 100%;
+            text-align: center;
+            font-size: large;
+            font-weight: bold;
+            margin-top: 2em;
+            height: 2em;
+            user-select: none;
+            color: darken(nb-theme(background-basic-color-1), 30%);
+        }
+
+        .type-day-separator {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .day-separator {
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            padding: 0.5em;
+            border: 1px solid darken(nb-theme(background-basic-color-1), 15%);
+            border-radius: 0em 0em 0.5em 0.5em;
+            background: darken(nb-theme(background-basic-color-1), 5%);
+            user-select: none;
+
+            &.closed {
+                background: darken(nb-theme(background-basic-color-1), 20%);
+                border-radius: 0em;
+                margin-bottom: 0.5em;
+            }
+
+            .date-leader-ox {
+                min-height: 2em;
+                flex-grow: 1;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                cursor: pointer;
+            }
+
+            .date-leader {
+                height: 1pt;
+                background: nb-theme(text-basic-color);
+            }
+
+            .date-value {
+                font-size: large;
+                font-weight: bold;
+                color: nb-theme(text-info-color);
+                padding: 0em 0.5em;
+            }
+            
+            button {
+                margin: 0em 0.5em;
+            }
+        }
     }
+}
 }

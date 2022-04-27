@@ -18,13 +18,27 @@ import { FrontendSettingService } from 'src/app/service/user/frontend-setting.se
     <nb-card>
         <nb-card-header>
             <div class='header'>
-                 <div *ngIf='showTitle'  class='title' (click)='showTitle = false; inputTitle=note?.title'>{{ note?.title }}</div>
-                 <input matInput *ngIf='!showTitle' [disabled]='!note' [(ngModel)]='inputTitle' (blur)='onTitleBlur()'>
-                 <div class='savingStatus' *ngIf='!lastSaveTime'>Not Saved</div>
-                 <div class='savingStatus' *ngIf='lastSaveTime'>
+                <div *ngIf='showTitle'  class='title' (click)='showTitle = false; inputTitle=note?.title'>{{ note?.title }}</div>
+                <input class='info-input' matInput *ngIf='!showTitle' [disabled]='!note' [(ngModel)]='inputTitle' (blur)='onTitleBlur()'>
+                <div class='savingStatus' *ngIf='!lastSaveTime'>Not Saved</div>
+                <div class='savingStatus' *ngIf='lastSaveTime'>
                      Last Saved: <span class='bd savetime'>{{ lastSaveTime }}</span>
                      <span class='bd'>{{ lastSaveElapsedMin }}</span> minutes ago
                  </div>
+            </div>
+            <div class='tags'>
+                <div *ngFor='let tag of tags; let i = index' class='tag tag-cx'>
+                    <nb-icon icon='star' (click)='onDeleteTagClick(i)'></nb-icon>
+                    <span class='tag-text'>{{ tag }}</span>
+                </div>
+                <div *ngIf='!inAddingTag' class='tag add-tag'>
+                    <button ghost nbButton [disabled]='!note' status='primary'  (click)='onAddTagClick()'>
+                        <nb-icon icon='plus-square'></nb-icon>
+                    </button>
+                </div>
+                <div *ngIf='inAddingTag' class='tag add-tag-input'>
+                    <input class='info-input' nbInput type='text' [disabled]='!note' [(ngModel)]='newtag' (blur)='onTagInputBlur_addTag()'>
+                </div>
             </div>
         </nb-card-header>
         <nb-card-body>
@@ -44,11 +58,17 @@ import { FrontendSettingService } from 'src/app/service/user/frontend-setting.se
 })
 export class MarkdownEditorComponent implements OnInit, OnDestroy {
     note: Note;
+    get tags(): string[] {
+        if (!this.note) return [];
+        return this.note.tags;
+    }
 
     lastSaveTime: string;
     lastSaveElapsedMin: number;
     showTitle: boolean = true;
     inputTitle: string;
+    newtag: string;
+    inAddingTag: boolean;
 
     @ViewChild("editor", { static: true})
     private editorComponentRef: TuiEditorComponent;
@@ -214,6 +234,36 @@ export class MarkdownEditorComponent implements OnInit, OnDestroy {
             this.toastr.danger("update title failed", "Note");
             this.showTitle = false;
             this.inputTitle = oldTitle;
+        }
+    }
+
+    async onAddTagClick() {
+        this.inAddingTag = true;
+    }
+
+    async onTagInputBlur_addTag() {
+        if (this.newtag == '') {
+            this.inAddingTag = false;
+            return;
+        }
+
+        try {
+            await this.noteService.addTags(this.note.id, [ this.newtag ]);
+            this.tags.push(this.newtag);
+            this.newtag = '';
+            this.inAddingTag = false;
+        } catch {
+            this.toastr.danger("add tag failed", "Note");
+        }
+    }
+
+    async onDeleteTagClick(n: number) {
+        const tag = this.tags[n];
+        try {
+            await this.noteService.deleteTags(this.note.id, [ tag ]);
+            this.tags.splice(n, 1);
+        } catch {
+            this.toastr.danger("delete tag failed", "Note");
         }
     }
 }
