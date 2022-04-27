@@ -18,7 +18,8 @@ import { FrontendSettingService } from 'src/app/service/user/frontend-setting.se
     <nb-card>
         <nb-card-header>
             <div class='header'>
-                 <div class='title'>{{ note?.title }}</div>
+                 <div *ngIf='showTitle'  class='title' (click)='showTitle = false; inputTitle=note?.title'>{{ note?.title }}</div>
+                 <input matInput *ngIf='!showTitle' [disabled]='!note' [(ngModel)]='inputTitle' (blur)='onTitleBlur()'>
                  <div class='savingStatus' *ngIf='!lastSaveTime'>Not Saved</div>
                  <div class='savingStatus' *ngIf='lastSaveTime'>
                      Last Saved: <span class='bd savetime'>{{ lastSaveTime }}</span>
@@ -46,6 +47,8 @@ export class MarkdownEditorComponent implements OnInit, OnDestroy {
 
     lastSaveTime: string;
     lastSaveElapsedMin: number;
+    showTitle: boolean = true;
+    inputTitle: string;
 
     @ViewChild("editor", { static: true})
     private editorComponentRef: TuiEditorComponent;
@@ -190,6 +193,27 @@ export class MarkdownEditorComponent implements OnInit, OnDestroy {
                     this.downloadMarkdown();
                     break;
             }
+        }
+    }
+
+    async onTitleBlur() {
+        if (this.inputTitle == '') {
+            this.inputTitle = this.note?.title;
+        }
+
+        const oldTitle = this.inputTitle;
+        this.showTitle = true;
+        if (this.inputTitle == this.note?.title) {
+            return;
+        }
+
+        try {
+            await this.noteService.changeTitle(this.note.id, this.inputTitle);
+            this.note.title = this.inputTitle;
+        } catch {
+            this.toastr.danger("update title failed", "Note");
+            this.showTitle = false;
+            this.inputTitle = oldTitle;
         }
     }
 }

@@ -246,6 +246,7 @@ export class NoteService implements ServiceRepositories {
 
     async updateNoteTitle(username: string, noteid: number, newtitle: string): Promise<void> {
         const note = await this.getNote(username, noteid);
+        if (!note) throw new createHttpError.NotFound(`${username}, ${noteid}`);
         note.title = newtitle;
         await this.noteRepo.save(note);
     }

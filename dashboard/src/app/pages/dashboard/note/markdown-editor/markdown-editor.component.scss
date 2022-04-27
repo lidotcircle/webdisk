@@ -14,14 +14,39 @@ nb-card {
             flex-direction: row;
             flex-wrap: wrap;
             justify-content: space-between;
+            align-items: center;
 
             .title {
                 font-weight: bold;
                 font-size: large;
+                color: color.adjust(nb-theme(text-basic-color), $alpha: -0.1);
+                cursor: pointer;
+
+                &:hover {
+                    color: nb-theme(text-basic-color);
+                    text-shadow: 0pt 0pt 1pt color.adjust(nb-theme(text-basic-color), $alpha: -0.3);
+                }
+            }
+
+            input {
+                padding: 0em;
+                background: white;
+                border: 0em;
+                font-size: large;
+                color: color.adjust(nb-theme(text-basic-color), $alpha: -0.2);
+                border-bottom: 1pt solid darken(nb-theme(background-basic-color-1), 20%);
+                width: 50%;
+                border-radius: 0em;
+                padding: 0em 0.5em 0.1em 0.5em;
+
+                &:focus {
+                    outline: none;
+                }
             }
 
             .savingStatus {
                 color: color.adjust(nb-theme(color-basic-disabled), $lightness: -30%);
+                padding: 0.1em 0em;
 
                 .bd {
                     color: nb-theme(text-basic-color);

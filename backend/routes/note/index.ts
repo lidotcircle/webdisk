@@ -123,8 +123,7 @@ router.put('/title',
         }
 
         const user = getAuthUsername(req);
-        const noteid = safeNumber(req.query['noteid']);
-        const title = req.query['title'];
+        const { noteid, title } = req.body;
 
         const noteService = QueryDependency(NoteService);
         await noteService.updateNoteTitle(user, noteid, title);
