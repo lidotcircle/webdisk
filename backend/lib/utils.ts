@@ -11,6 +11,7 @@ import * as stream from 'stream';
 
 import * as proc from 'process';
 import { getStatusText } from 'http-status-codes';
+import { patch_obj } from 'diff-match-patch';
 
 
 function getCaller () //{
@@ -239,4 +240,18 @@ export function restartProcess()
         });
     });
     process.exit();
+}
+
+export function reversePatch(patch: patch_obj[]): patch_obj[]
+{
+    return patch.map((patchObj: patch_obj) => ({
+        diffs: patchObj.diffs.map(([ op, val ]) => [
+            op * -1, // The money maker
+            val
+        ]),
+        start1: patchObj.start2,
+        start2: patchObj.start1,
+        length1: patchObj.length2,
+        length2: patchObj.length1
+    }));
 }

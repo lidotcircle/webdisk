@@ -5,15 +5,35 @@ import { EntityManager, Repository } from "typeorm";
 import { UserService } from "./user-service";
 import { diff_match_patch } from 'diff-match-patch';
 import createHttpError from "http-errors";
+import { reversePatch } from "../lib/utils";
+import assert from "assert";
 
+
+interface ServiceRepositories {
+    readonly noteRepo:    Repository<Note>;
+    readonly tagRepo:     Repository<NoteTag>;
+    readonly historyRepo: Repository<NoteHistory>;
+    readonly userRepo:    Repository<User>;
+};
+
+function EntityManager2Repos(em: EntityManager): ServiceRepositories
+{
+    return {
+        noteRepo:    em.getRepository(Note),
+        tagRepo:     em.getRepository(NoteTag),
+        historyRepo: em.getRepository(NoteHistory),
+        userRepo: em.getRepository(User),
+    };
+}
 
 @Injectable({
     lazy: true
 })
-export class NoteService {
-    private noteRepo: Repository<Note>;
-    private tagRepo: Repository<NoteTag>;
-    private historyRepo: Repository<NoteHistory>;
+export class NoteService implements ServiceRepositories {
+    noteRepo: Repository<Note>;
+    tagRepo: Repository<NoteTag>;
+    historyRepo: Repository<NoteHistory>;
+    userRepo: Repository<User>;
     @DIProperty(UserService)
     private userService: UserService;
 
@@ -22,6 +42,7 @@ export class NoteService {
         this.noteRepo = dataSource.getRepository(Note);
         this.tagRepo = dataSource.getRepository(NoteTag);
         this.historyRepo = dataSource.getRepository(NoteHistory);
+        this.userRepo = dataSource.getRepository(User);
     }
 
     async createNote(username: string, title: string, contentType: string): Promise<number> {
@@ -40,14 +61,62 @@ export class NoteService {
         return doc.id;
     }
 
-    async getNote(username: string, noteid: number): Promise<Note> {
-        return await this.noteRepo
+    async getNote(username: string, noteid: number, repos?: ServiceRepositories): Promise<Note> {
+        repos = repos || this;
+
+        return await repos.noteRepo
             .createQueryBuilder("note")
             .select()
             .innerJoin(User, "user", "note.userId = user.id")
             .where("note.id = :nid", {nid: noteid})
             .andWhere("user.username = :un", {un: username})
             .getOne();
+    }
+
+    async getNoteHistoryVersion(username: string, noteid: number, generation: number, repos?: ServiceRepositories): Promise<Note> {
+        let note: Note;
+        const query = async (repos: ServiceRepositories) => {
+            const latestNote = await this.getNote(username, noteid, repos);
+
+            if (!latestNote)
+                throw new createHttpError.NotFound("note not found, hv");
+            if (generation > latestNote.generation)
+                throw new createHttpError.BadRequest("bad generation");
+
+            if (generation == latestNote.generation) {
+                note = latestNote;
+                return;
+            }
+
+            const histories = await repos.historyRepo
+                .createQueryBuilder("his")
+                .select()
+                .where("his.noteId = :nid", {nid: latestNote.id})
+                .orderBy("his.id", "DESC")
+                .take(latestNote.generation - generation)
+                .getMany();
+
+            const dmp = new diff_match_patch();
+            for (const h of histories) {
+                const patch = reversePatch(dmp.patch_fromText(h.patch));
+                const [ newcontent, patchStatus ] = dmp.patch_apply(patch, latestNote.content);
+                if (patchStatus.length > 0 && !patchStatus.reduce((a, b) => a && b)) {
+                    throw new createHttpError.InternalServerError("inconsistent patch");
+                }
+                latestNote.generation--;
+                latestNote.content = newcontent;
+            }
+
+            note = latestNote;
+        };
+        if (repos) {
+            await query(repos);
+        } else {
+            const ds = getDataSource();
+            await ds.transaction(async (em: EntityManager) => await query(EntityManager2Repos(em)));
+        }
+
+        return note;
     }
 
     async getNotes(username: string, skip: number, take?: number): Promise<{ data: Note[], count: number }> {
@@ -63,14 +132,45 @@ export class NoteService {
         return { data: ans[0], count: ans[1] };
     }
 
+    private async getUserByUsername(username: string, repos?: ServiceRepositories) {
+        repos = repos || this;
+
+        return await repos.userRepo
+            .createQueryBuilder("user")
+            .select()
+            .where("user.username = :un", {un: username})
+            .getOne();
+    }
+
     async getNoteHistory(username: string, noteid: number, skip: number, take: number, ascending: boolean) {
-        let query = this.historyRepo
+        let ans: [NoteHistory[], number] = [null, null];
+
+        const ds = getDataSource();
+        await ds.transaction(async (em: EntityManager) => {
+            const repos = EntityManager2Repos(em);
+            // whether including this query into transction ?
+            const user = await this.getUserByUsername(username, repos);
+            if (!user) throw new createHttpError.InternalServerError();
+
+            ans = await this.getNoteHistoryV2(user.id, noteid, skip, take, ascending, repos);
+        });
+        return ans;
+    }
+
+    private async getNoteHistoryV2(
+        userid: number, noteid: number, skip: number, take: number, 
+        ascending: boolean, repos?: ServiceRepositories)
+    {
+        repos = repos || this;
+        let query = repos.historyRepo
             .createQueryBuilder("his")
             .select()
-            .innerJoin(Note, "note", "his.noteId = note.id")
-            .innerJoin(User, "user", "user.id = note.userId")
-            .where("user.username = :un", {un: username})
-            .where("note.id = :nid", {nid: noteid})
+            .innerJoin(Note, "note", "his.noteId = note.id");
+
+        if (userid != null)
+            query = query.where("note.userId = :uid", {uid: userid})
+
+        query = query.where("note.id = :nid", {nid: noteid})
             .orderBy("his.id", ascending ? "ASC" : "DESC")
             .skip(skip);
 
@@ -78,6 +178,70 @@ export class NoteService {
             query = query.take(take);
 
         return await query.getManyAndCount();
+    }
+
+    private async getNoteHistoryV3(noteid: number, generation: number, repos: ServiceRepositories): Promise<NoteHistory> {
+        const qr = await this.getNoteHistoryV2(null, noteid, generation - 1, 1, true, repos);
+        if (!qr || !qr[0] || qr[0].length != 1) return null;
+        return qr[0][0];
+    }
+
+    private async deleteNoteHistoryRange(noteid: number, hisBeg: number, hisEnd: number, repos: ServiceRepositories) {
+        const beg = await this.getNoteHistoryV3(noteid, hisBeg, repos);
+        const end = await this.getNoteHistoryV3(noteid, hisEnd - 1, repos);
+
+        const result = await repos.historyRepo
+            .createQueryBuilder()
+            .delete()
+            .where("noteId = :nid", {nid: noteid})
+            .where("id >= :hbeg", {hbeg: beg.id})
+            .andWhere("id <= :hend", {hend: end.id})
+            .execute();
+        if (result.affected != (hisEnd - hisBeg))
+            throw new createHttpError.InternalServerError();
+    }
+
+    async deleteNoteHistory(username: string, noteid: number, hisBeg: number, hisEnd: number) {
+        assert(hisBeg < hisEnd && hisBeg >= 1);
+        const ds = getDataSource();
+        await ds.transaction(async (em: EntityManager) => {
+            const repos = EntityManager2Repos(em);
+            const user = await this.getUserByUsername(username, repos);
+            const note = await this.getNote(username, noteid, repos);
+            if (!note) throw new createHttpError.NotFound("note not found, history");
+
+            // TODO merge patches, possible ?
+            const dmp = new diff_match_patch();
+            if (hisEnd <= note.generation) {
+                const hv  = await this.getNoteHistoryVersion(username, noteid, hisEnd, repos);
+                let c1 = '';
+                if (hisBeg > 1) {
+                    const ohv  = await this.getNoteHistoryVersion(username, noteid, hisBeg - 1, repos);
+                    c1 = ohv.content;
+                }
+                const patchText = dmp.patch_toText(dmp.patch_make(c1, hv.content));
+                const pl = await this.getNoteHistoryV2(user.id, noteid, hisEnd - 1, 1, true, repos);
+                if (!pl || !pl[0] || pl[0].length != 1) {
+                    throw new createHttpError.InternalServerError();
+                }
+                const p = pl[0][0];
+                p.patch = patchText;
+                await repos.historyRepo.save(p);
+            } else if (hisEnd == note.generation + 1) {
+                let newcontent = '';
+                if (hisBeg > 0) {
+                    const hv = await this.getNoteHistoryVersion(username, noteid, hisBeg - 1);
+                    newcontent = hv.content;
+                }
+                note.content = newcontent;
+            } else {
+                throw new createHttpError.BadRequest("request out of range of note history");
+            }
+
+            note.generation -= (hisEnd - hisBeg);
+            await this.deleteNoteHistoryRange(noteid, hisBeg, hisEnd, repos);
+            await repos.noteRepo.save(note);
+        });
     }
 
     async updateNoteTitle(username: string, noteid: number, newtitle: string): Promise<void> {

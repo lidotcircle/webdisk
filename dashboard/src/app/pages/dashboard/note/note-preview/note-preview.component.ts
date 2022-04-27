@@ -29,6 +29,7 @@ export class NotePreview implements OnInit {
                 queryParams: {
                     noteref: storekey,
                     noteid: this.note.id,
+                    generation: this.note.generation,
                 }
             });
         }

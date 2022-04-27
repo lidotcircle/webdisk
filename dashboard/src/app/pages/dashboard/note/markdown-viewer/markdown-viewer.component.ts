@@ -38,6 +38,7 @@ export class MarkdownViewerComponent implements OnInit {
     ngOnInit(): void {
         this.activatedRoute.queryParamMap.subscribe(async (params) => {
             const key = params.get("noteref");
+            const generation = params.get("generation");
             const noteid = params.get("noteid");
             if (key) {
                 this.note = this.sharing.loadClear(Number(key));
@@ -49,9 +50,9 @@ export class MarkdownViewerComponent implements OnInit {
             }
 
             if (!this.note){
-                this.note = await this.noteService.getNote(Number(noteid));
+                const gen = generation ? Number(generation) : null;
+                this.note = await this.noteService.getNote(Number(noteid), gen);
             }
-
         });
     }
 

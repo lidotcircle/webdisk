@@ -47,6 +47,7 @@ router.get('/',
 
 router.get('/single',
     query("noteid").isInt(),
+    query("generation").optional().isInt(),
     async (req, res) => {
         const valres = validationResult(req);
         if (!valres.isEmpty()) {
@@ -54,11 +55,13 @@ router.get('/single',
         }
 
         const user = getAuthUsername(req);
-        const noteid = req.query['noteid'];
+        const { noteid, generation } = req.query;
         const noteService = QueryDependency(NoteService);
 
-        const note = await noteService.getNote(user, noteid);
-        if (!note) throw new createHttpError.NotFound("note not found");
+        const note = (generation != null ? 
+            await noteService.getNoteHistoryVersion(user, noteid, generation) :
+            await noteService.getNote(user, noteid));
+        if (!note) throw new createHttpError.NotFound("note not found, ??");
         res.json({
             generation: note.generation,
             content: note.content,
@@ -184,6 +187,30 @@ router.get('/history',
                 };
             })
         });
+    }
+);
+
+router.delete('/history',
+    query("noteid").isInt(),
+    query("generationStart").isInt({min: 1}),
+    query("generationEnd").optional().isInt(),
+    async (req, res) => {
+        const valres = validationResult(req);
+        if (!valres.isEmpty()) {
+            throw new createHttpError.UnprocessableEntity(valres.array()[0].msg);
+        }
+
+        const user = getAuthUsername(req);
+        let { noteid, generationStart, generationEnd } = req.query;
+        const noteService = QueryDependency(NoteService);
+        if (!generationEnd) {
+            generationEnd = generationStart + 1;
+        } else if (generationEnd <= generationStart) {
+            throw new createHttpError.UnprocessableEntity("bad history range");
+        }
+
+        await noteService.deleteNoteHistory(user, noteid, generationStart, generationEnd);
+        res.status(200).send();
     }
 );
 

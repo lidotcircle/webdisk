@@ -1,13 +1,23 @@
+@use 'sass:color' as color;
+@use 'src/app/@theme/styles/themes' as *;
+
+
+@include nb-install-component {
 
 .previewer {
     height: inherit;
     overflow: hidden;
     text-overflow: clip;
-    border: 1px solid;
+    border: 1px solid darken(nb-theme(background-basic-color-1), 15%);
     padding: 0.5em;
     box-sizing: border-box;
     border-radius: 1em;
-    box-shadow: 0.5em 0.5em #eee;
+    box-shadow: 0pt 0pt 5pt 1pt darken(nb-theme(background-basic-color-1), 10%);
     user-select: none;
-}
+    cursor: pointer;
 
+    &:hover {
+        box-shadow: 0pt 0pt 5pt 1pt darken(nb-theme(background-basic-color-1), 20%);
+    }
+}
+}

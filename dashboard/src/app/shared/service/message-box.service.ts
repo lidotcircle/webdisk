@@ -30,5 +30,17 @@ export class MessageBoxService {
         const view = this.injector.inject(MessageBoxComponent, data);
         return new MessageBoxHandler(view);
     }
+
+    async confirmMSG(message: string, title: string = "confirm ?"): Promise<boolean> {
+        const doit = await this.create({
+            title: title,
+            message: message,
+            buttons: [
+                {name: 'confirm'}, {name: 'cancel'},
+            ]
+        }).wait();
+
+        return !doit.closed && doit.buttonValue == 0;
+    }
 }
 

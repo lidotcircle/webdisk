@@ -21,9 +21,16 @@ nb-card {
         overflow: auto;
         padding: 0em;
 
+        .type-day-separator + .type-note {
+            .note-item {
+                border-top: none;
+            }
+        }
+
         .note-item {
             margin: 1.2em 0em;
             padding: 1em;
+            border-top: 1px solid darken(nb-theme(background-basic-color-1), 20%);
 
             app-note-preview {
                 height: 16rem;
@@ -34,6 +41,7 @@ nb-card {
                 flex-direction: row;
                 justify-content: space-between;
                 align-items: center;
+                margin-bottom: 0.5em;
 
                 * {
                     flex-grow: 1;
@@ -60,6 +68,7 @@ nb-card {
         .type-day-separator {
             position: sticky;
             top: 0;
+            z-index: 1;
         }
 
         .day-separator {
@@ -68,22 +77,26 @@ nb-card {
             flex-direction: row;
             align-items: center;
             padding: 0.5em;
-            border-radius: 0em 0em 1em 1em;
-            background: nb-theme(background-basic-color-3);
+            border: 1px solid darken(nb-theme(background-basic-color-1), 15%);
+            border-radius: 0em 0em 0.5em 0.5em;
+            background: darken(nb-theme(background-basic-color-1), 5%);
 
             .date-leader {
                 height: 1px;
                 flex-grow: 1;
                 background: nb-theme(text-basic-color);
-                margin-left: 0.5em;
-                margin-right: 1em;
+                margin: 0em;
             }
 
             .date-value {
                 font-size: large;
                 font-weight: bold;
                 color: nb-theme(text-info-color);
-                padding-right: 0.5em;
+                padding: 0em 0.5em;
+            }
+            
+            button {
+                margin: 0em 0.5em;
             }
         }
     }

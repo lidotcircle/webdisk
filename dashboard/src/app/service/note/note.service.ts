@@ -65,6 +65,15 @@ export class NoteService {
         }).toPromise() as any;
     }
 
+    async deleteNoteHistory(noteid: number, generationStart: number, generationEnd?: number): Promise<void> {
+        generationEnd = generationEnd || generationStart + 1;
+        await this.http.delete(API.history, {
+            params: {
+                noteid, generationStart, generationEnd,
+            }
+        }).toPromise();
+    }
+
     async getNoteGeneratioin(noteid: number): Promise<number> {
         const ans = await this.http.put(API.generation, {
             noteid
@@ -80,11 +89,12 @@ export class NoteService {
         }).toPromise();
     }
 
-    async getNote(noteid: number): Promise<Note> {
+    async getNote(noteid: number, generation?: number): Promise<Note> {
+        const params = {};
+        params['noteid'] = noteid;
+        if (generation != null) params['generation'] = generation;
         return await this.http.get(API.single, {
-            params: {
-                noteid
-            }
+            params: params
         }).toPromise() as Note;
     }
 

@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { NbToastrService } from '@nebular/theme';
 import { diff_match_patch } from 'diff-match-patch';
 import { Note, NoteHistory, NoteService } from 'src/app/service/note/note.service';
 import { ObjectSharingService } from 'src/app/service/object-sharing.service';
+import { MessageBoxService } from 'src/app/shared/service/message-box.service';
 import { reversePatch } from 'src/app/shared/utils';
 
 
@@ -29,20 +30,21 @@ interface NoteWithHistory extends Note {
                 [infiniteScrollContainer]="'.main-panel'"
                 [fromRoot]='true'
                 (scrolled)='handleScroll($event)'>
-                <div *ngFor='let item of items' [class]='"type-" + item.type'>
-                    <div *ngIf='item.type == "note"' class='note-item'>
+                <div *ngFor='let item of items; let i = index' [class]='"type-" + item.type'>
+                    <div *ngIf='item.type == "note" && item.data.generation > 0' class='note-item'>
                         <div class='note-tools'>
                             <div class='note-time'>{{ item.data.UpdatedAt }}</div>
                             <div></div><div></div><div></div>
                             <div></div><div></div><div></div>
-                            <button nbButton size='small' status='primary'>use</button>
-                            <button nbButton size='small' status='primary'>delete</button>
+                            <button nbButton size='small' status='primary' (click)='onUseClick(i)'>use</button>
+                            <button nbButton size='small' status='primary' (click)='onDeleteClick(i)'>delete</button>
                         </div>
                         <app-note-preview [note]='item.data'></app-note-preview>
                     </div>
                     <div *ngIf='item.type == "day-separator"' class='day-separator'>
+                        <div class='date-value'> {{ item.data.dateStr }} </div>
                         <div class='date-leader'></div>
-                        <div class='date-value'> {{ item.data }} </div>
+                        <button nbButton size='small' status='primary' (click)='onMergeClick(i)'>merge</button>
                     </div>
                     <div *ngIf='item.type == "end"' class='history-end'>
                         This is start point
@@ -61,15 +63,17 @@ export class MarkdownNoteHistoryComponent implements OnInit {
     note: Note;
     private notes: NoteWithHistory[];
     private eachTimeGet: number = 10;
+    private histories: NoteHistory[];
 
     constructor(private toastr: NbToastrService,
-                private router: Router,
                 private noteService: NoteService,
+                private msgBox: MessageBoxService,
                 private sharing: ObjectSharingService,
                 private activatedRoute: ActivatedRoute)
     {
         this.notes = [];
         this.items = [];
+        this.histories = [];
     }
 
     ngOnInit(): void {
@@ -122,12 +126,16 @@ export class MarkdownNoteHistoryComponent implements OnInit {
             this.lastUpdateDate = currentUpdateDate;
             this.items.push({
                 type: 'day-separator',
-                data: currentUpdateDate.toLocaleDateString(),
+                data: {
+                    dateStr: currentUpdateDate.toLocaleDateString(),
+                    date: currentUpdateDate,
+                },
             });
         }
     }
 
     private appendHistory(histories: NoteHistory[]) {
+        histories.forEach(v => this.histories.push(v));
         const dmp = new diff_match_patch();
         for (const history of histories) {
             const last = this.notes[this.notes.length - 1];
@@ -139,7 +147,7 @@ export class MarkdownNoteHistoryComponent implements OnInit {
             const patch = reversePatch(dmp.patch_fromText(history.patch));
             const [ old, incons ]= dmp.patch_apply(patch, last.content);
             const old_note: NoteWithHistory = {} as any;
-            const success = incons.reduce((a, b) => a && b);
+            const success = incons.length == 0 || incons.reduce((a, b) => a && b);
             if (!success) {
                 this.toastr.warning("data inconsistency", "Note");
             }
@@ -175,5 +183,71 @@ export class MarkdownNoteHistoryComponent implements OnInit {
         if (this.notes.length > this.noteHistoryCount) return;
         const his = await this.noteService.getNoteHistory(this.note.id, this.notes.length - 1, this.eachTimeGet);
         this.appendHistory(his.data);
+    }
+
+    async onUseClick(n: number) {
+        const item = this.items[n];
+        if (!item || item.type != "note") return;
+
+        const dmp = new diff_match_patch();
+        const note: Note = item.data;
+        if (this.note.content == note.content) {
+            this.toastr.info("already update-to-date", "Note");
+            return;
+        }
+
+        const patchText = dmp.patch_toText(dmp.patch_make(this.note.content, note.content));
+        try {
+            const resp = await this.noteService.updateNote(this.note.id, patchText);
+            if (resp.generation != this.note.generation + 1) {
+                this.toastr.warning("inconsistent data, reload page", "Note");
+                setTimeout(() => window.location.reload(), 3000);
+            }
+        } catch {
+            this.toastr.danger("Use history content failed", "Note");
+            return;
+        }
+
+        this.note.content = note.content;
+        this.note.generation++;
+        const newHis: NoteHistory = {} as any;
+        newHis.patch = patchText;
+        newHis.createdAt = (new Date()).toISOString();
+        this.histories.splice(0, 0, newHis);
+
+        const h = this.histories;
+        this.notes = [ this.note as any ];
+        this.items = [];
+        this.histories = [];
+        this.lastUpdateDate = null;
+        this.appendHistory(h);
+        this.toastr.info("update success", "Note");
+    }
+
+    async onDeleteClick(n: number) {
+        const item = this.items[n];
+        if (!item || item.type != "note") return;
+        const note: Note = item.data;
+
+        if (note.generation == this.note.generation) {
+            if (!(await this.msgBox.confirmMSG("This operation will cause current status change, confirm?"))) {
+                return;
+            }
+        } else if (note.generation == 0) {
+            this.toastr.danger("impossible", "Note");
+            return;
+        }
+
+        try {
+            await this.noteService.deleteNoteHistory(note.id, note.generation);
+        } catch {
+            this.toastr.danger("delete history failed", "Note");
+            return;
+        }
+    }
+
+    async onMergeClick(n: number) {
+        const item = this.items[n];
+        if (!item || item.type != "day-separator") return;
     }
 }
