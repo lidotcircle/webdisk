@@ -20,6 +20,11 @@ interface NoteWithHistory extends Note {
     <nb-card>
         <nb-card-header>
             <div class='title'>{{ note?.title }}</div>
+            <div class='info'>
+                <span>Versions: {{ noteHistoryCount }}</span>
+                <span>CreatedAt: {{ createdAt }}</span>
+                <span>UpdatedAt: {{ updatedAt }}</span>
+            </div>
         </nb-card-header>
         <nb-card-body class='main-panel'>
             <div style='height: max-content;'
@@ -36,15 +41,15 @@ interface NoteWithHistory extends Note {
                             <div class='note-time'>{{ item.data.UpdatedAt }}</div>
                             <div></div><div></div><div></div>
                             <div></div><div></div><div></div>
-                            <button nbButton size='small' status='primary' (click)='onUseClick(i)'>use</button>
-                            <button nbButton size='small' status='primary' (click)='onDeleteClick(i)'>delete</button>
+                            <button nbButton [disabled]='onWorking' size='small' status='primary' (click)='onUseClick(i)'>use</button>
+                            <button nbButton [disabled]='onWorking' size='small' status='primary' (click)='onDeleteClick(i)'>delete</button>
                         </div>
                         <app-note-preview [note]='item.data'></app-note-preview>
                     </div>
                     <div *ngIf='item.type == "day-separator"' class='day-separator'>
                         <div class='date-value'> {{ item.data.dateStr }} </div>
                         <div class='date-leader'></div>
-                        <button nbButton size='small' status='primary' (click)='onMergeClick(i)'>merge</button>
+                        <button nbButton [disabled]='onWorking' size='small' status='primary' (click)='onMergeClick(i)'>merge</button>
                     </div>
                     <div *ngIf='item.type == "end"' class='history-end'>
                         This is start point
@@ -59,6 +64,8 @@ interface NoteWithHistory extends Note {
 })
 export class MarkdownNoteHistoryComponent implements OnInit {
     noteHistoryCount: number;
+    createdAt: string;
+    updatedAt: string;
     items: { type: string, data: NoteWithHistory | any}[];
     note: Note;
     private notes: NoteWithHistory[];
@@ -98,6 +105,7 @@ export class MarkdownNoteHistoryComponent implements OnInit {
                 }
             }
 
+            this.createdAt = (new Date(this.note.createdAt)).toLocaleString();
             this.notes.push(this.note as any);
             try {
                 const his = await this.noteService.getNoteHistory(this.note.id, 0, this.eachTimeGet + 1);
@@ -119,7 +127,7 @@ export class MarkdownNoteHistoryComponent implements OnInit {
         const isSameDay = (d1: Date, d2: Date) => (
             d1.getFullYear() == d2.getFullYear() &&
             d1.getMonth() == d2.getMonth() &&
-            d1.getDay() == d2.getDay()
+            d1.getDate() == d2.getDate()
         );
 
         if (this.lastUpdateDate == null || !isSameDay(this.lastUpdateDate, currentUpdateDate)) {
@@ -135,7 +143,12 @@ export class MarkdownNoteHistoryComponent implements OnInit {
     }
 
     private appendHistory(histories: NoteHistory[]) {
+        if (histories.length == 0) return;
+
         histories.forEach(v => this.histories.push(v));
+        const lastupdate = this.histories[0];
+        this.updatedAt = (new Date(lastupdate.createdAt)).toLocaleString();
+
         const dmp = new diff_match_patch();
         for (const history of histories) {
             const last = this.notes[this.notes.length - 1];
@@ -185,7 +198,17 @@ export class MarkdownNoteHistoryComponent implements OnInit {
         this.appendHistory(his.data);
     }
 
+    useClickIndex: number;
     async onUseClick(n: number) {
+        try {
+            this.useClickIndex = n;
+            await this.onUseClickTrue(n);
+        } finally {
+            this.useClickIndex = null;
+        }
+    }
+
+    private async onUseClickTrue(n: number) {
         const item = this.items[n];
         if (!item || item.type != "note") return;
 
@@ -220,16 +243,28 @@ export class MarkdownNoteHistoryComponent implements OnInit {
         this.items = [];
         this.histories = [];
         this.lastUpdateDate = null;
+        this.noteHistoryCount++;
         this.appendHistory(h);
         this.toastr.info("update success", "Note");
     }
 
+    deleteClickIndex: number;
     async onDeleteClick(n: number) {
+        try {
+            this.deleteClickIndex = n;
+            await this.onDeleteClickTrue(n);
+        } finally {
+            this.deleteClickIndex = null;
+        }
+    }
+
+    private async onDeleteClickTrue(n: number) {
         const item = this.items[n];
         if (!item || item.type != "note") return;
         const note: Note = item.data;
 
-        if (note.generation == this.note.generation) {
+        const isLast = note.generation == this.note.generation;
+        if (isLast) {
             if (!(await this.msgBox.confirmMSG("This operation will cause current status change, confirm?"))) {
                 return;
             }
@@ -244,10 +279,104 @@ export class MarkdownNoteHistoryComponent implements OnInit {
             this.toastr.danger("delete history failed", "Note");
             return;
         }
+
+        const notes = this.items.filter(item => item.type == 'note').map(item => item.data as Note);
+        if (isLast) {
+            console.assert(notes.length > 1);
+            this.note.content = notes[1].content;
+            this.histories.splice(0, 1);
+        } else {
+            const dmp = new diff_match_patch();
+            const mt = notes.find(v => v.generation == note.generation + 1);
+            let oldc = '';
+            if (note.generation > 1) {
+                const c = notes.find(v => v.generation == note.generation - 1);
+                oldc = c.content;
+            }
+            const newPatchText = dmp.patch_toText(dmp.patch_make(oldc, mt.content));
+            const idx = notes.indexOf(note);
+            this.histories.splice(idx, 1);
+            this.histories[idx].patch = newPatchText;
+        }
+        this.note.generation--;
+        this.noteHistoryCount--;
+
+        const his = this.histories;
+        this.histories = [];
+        this.notes = [ this.note as any ];
+        this.items = [];
+        this.lastUpdateDate = null;
+        this.appendHistory(his);
     }
 
+    mergeClickIndex: number;
     async onMergeClick(n: number) {
+        try {
+            this.mergeClickIndex = n;
+            await this.onMergeClickTrue(n);
+        } finally {
+            this.mergeClickIndex = null;
+        }
+    }
+
+    private async onMergeClickTrue(n: number) {
         const item = this.items[n];
         if (!item || item.type != "day-separator") return;
+        const theday: Date = item.data.date;
+        const daybegin = new Date(theday.getFullYear(), theday.getMonth(), theday.getDate(), 0, 0, 0, 0);
+        const dayend = new Date(daybegin.getTime() + 24 * 60 * 60 * 1000);
+
+        const notes = this.items.filter(item => item.type == 'note').map(item => item.data as NoteWithHistory);
+        const gn = notes.findIndex(v => {
+            const updatedAt = new Date(v.updatedAt);
+            return (daybegin.getTime() <= updatedAt.getTime() &&
+                    updatedAt.getTime() < dayend.getTime());
+        });
+        const mtnote = notes[gn];
+        const generationEnd = mtnote.generation;
+        let generationStart = 1;
+        for (let i=gn+1;i<notes.length;i++) {
+            const n = notes[i];
+            const updatedAt = new Date(n.updatedAt);
+            if (updatedAt.getTime() < daybegin.getTime()) {
+                generationStart = n.generation + 1;
+                break;
+            }
+        }
+
+        if (generationStart == generationEnd) {
+            this.toastr.info("merge nothing", "Note");
+            return;
+        }
+
+        try {
+            await this.noteService.deleteNoteHistory(this.note.id, generationStart, generationEnd);
+        } catch {
+            this.toastr.danger("merge history failed", "Note");
+            return;
+        }
+
+        const dmp = new diff_match_patch();
+        const ntnote = notes.find(v => v.generation == generationStart - 1);
+        const newPatchText = dmp.patch_toText(dmp.patch_make(ntnote.content, mtnote.content));
+        this.histories[gn].patch = newPatchText;
+        const deleteCount = generationEnd - generationStart;
+        this.histories.splice(gn + 1, deleteCount);
+
+        this.note.generation -= deleteCount;
+        this.noteHistoryCount -= deleteCount;
+
+        const his = this.histories;
+        this.histories = [];
+        this.notes = [ this.note as any ];
+        this.items = [];
+        this.lastUpdateDate = null;
+        this.appendHistory(his);
+    }
+
+    get onWorking(): boolean {
+        return (this.useClickIndex != null || 
+                this.deleteClickIndex != null || 
+                this.mergeClickIndex != null);
     }
 }

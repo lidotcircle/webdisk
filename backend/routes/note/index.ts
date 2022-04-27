@@ -9,6 +9,8 @@ const router = express.Router();
 export default router;
 
 
+const safeNumber = (val: any): number => val && !Number.isNaN(Number(val)) ? Number(val) : null;
+
 router.get('/',
     query("pageno").optional().isInt({min: 1}).withMessage("pageno is optional, if presents  pageno should be a positive integer"),
     query("pagesize").optional().isInt({min: 1}).withMessage("pagesize is optional, if presents it should be a positive integer"),
@@ -20,8 +22,8 @@ router.get('/',
         }
 
         const user = getAuthUsername(req);
-        const pageno = req.query['pagneo'] || 1;
-        const pagesize = req.query['pagesize'] || 5;
+        const pageno = safeNumber(req.query['pagneo']) || 1;
+        const pagesize = safeNumber(req.query['pagesize']) || 5;
         const skip = (pageno  - 1) * pagesize;
         const take = pagesize;
         const tag = req.query['tag'];
@@ -55,7 +57,8 @@ router.get('/single',
         }
 
         const user = getAuthUsername(req);
-        const { noteid, generation } = req.query;
+        const noteid = safeNumber(req.query['noteid']);
+        const generation = safeNumber(req.query['generation']);
         const noteService = QueryDependency(NoteService);
 
         const note = (generation != null ? 
@@ -102,7 +105,7 @@ router.delete('/',
         }
 
         const user = getAuthUsername(req);
-        const { noteid } = req.query;
+        const noteid = safeNumber(req.query['noteid']);
 
         const noteService = QueryDependency(NoteService);
         await noteService.deleteNote(user, noteid);
@@ -120,7 +123,8 @@ router.put('/title',
         }
 
         const user = getAuthUsername(req);
-        const { noteid, title } = req.query;
+        const noteid = safeNumber(req.query['noteid']);
+        const title = req.query['title'];
 
         const noteService = QueryDependency(NoteService);
         await noteService.updateNoteTitle(user, noteid, title);
@@ -174,7 +178,10 @@ router.get('/history',
         }
 
         const user = getAuthUsername(req);
-        const { noteid, skip, take, order } = req.query;
+        const noteid = safeNumber(req.query['noteid']);
+        const skip = safeNumber(req.query['skip']);
+        const take = safeNumber(req.query['take']);
+        const order = req.query['order'];
         const noteService = QueryDependency(NoteService);
 
         const [ data, count ] = await noteService.getNoteHistory(user, noteid, skip, take || 10, order == "ASC");
@@ -201,12 +208,14 @@ router.delete('/history',
         }
 
         const user = getAuthUsername(req);
-        let { noteid, generationStart, generationEnd } = req.query;
+        const noteid = safeNumber(req.query['noteid']);
+        const generationStart = safeNumber(req.query['generationStart']);
+        let generationEnd = safeNumber(req.query['generationEnd']);
         const noteService = QueryDependency(NoteService);
         if (!generationEnd) {
             generationEnd = generationStart + 1;
-        } else if (generationEnd <= generationStart) {
-            throw new createHttpError.UnprocessableEntity("bad history range");
+        } else if (generationStart >= generationEnd) {
+            throw new createHttpError.UnprocessableEntity(`bad history range (${generationStart},${generationEnd})`);
         }
 
         await noteService.deleteNoteHistory(user, noteid, generationStart, generationEnd);
@@ -222,7 +231,7 @@ router.get('/generation',
             throw new createHttpError.UnprocessableEntity(valres.array()[0].msg);
         }
 
-        const noteid = Number(req.query['noteid']);
+        const noteid = safeNumber(req.query['noteid']);
         const user = getAuthUsername(req);
         const noteService = QueryDependency(NoteService);
         const note = await noteService.getNote(user, noteid);
