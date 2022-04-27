@@ -104,32 +104,38 @@ function stream2promise(stream) {
         stream.on('error', reject);
     });
 }
-function try_watch(restart) //{
+
+async function sleep(timeoutMS) {
+    await new Promise(resolve => {
+        setTimeout(() => resolve(), timeoutMS);
+    });
+}
+
+async function try_watch(restart) //{
 {
-    let watcher = gulp.watch([
-        "bin/**/*.ts", "entity/**/*.ts", "lib/**/*.ts", 
-        "middleware/**/*.ts", "repository/**/*.ts", "routes/**/*.ts", 
-        "service/**/*.ts", "index.ts", "resources/**"
+    const threshold = 2000;
+    const tscwatch =  run_command_as_promise('npx', ['tsc', '-w', '--outDir', 'release']);
+    const watcher = gulp.watch([
+        "release/**/*.js", "resources/**"
     ]);
-    let handle = async (fp, _) => {
+    let prevTime;
+    const handle = async (fp, _) => {
         console.log(`----- file [${fp}]`);
-        if (fp.endsWith(".ts")) {
-            const js_dest = path.join("release/", path.dirname(fp));
-            console.log(`compile ${fp} to ${js_dest}`);
-            try {
-                await compile_ts_dir(fp, js_dest, false, null)();
-            } catch (e) {
-                console.log(e);
-            }
-            if(restart) await restart_backend_server();
-        } else {
-            await(stream2promise(copy_stuff_task()));
-            if(restart) await restart_backend_server();
+        if (prevTime && (Date.now() - prevTime) < threshold) {
+            return;
         }
+        prevTime = Date.now();
+
+        if (!fp.endsWith(".js")) {
+            await(stream2promise(copy_stuff_task()));
+        }
+        await sleep(threshold);
+        if(restart) await restart_backend_server();
     }
     watcher.on("change", handle);
     watcher.on("add", handle);
     watcher.on("error", onerror);
+    await tscwatch;
 } //}
 
 let BackendProcessHandler = null;
