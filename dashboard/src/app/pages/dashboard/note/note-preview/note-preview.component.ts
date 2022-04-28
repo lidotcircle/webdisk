@@ -8,6 +8,7 @@ import { ObjectSharingService } from 'src/app/service/object-sharing.service';
     selector: 'app-note-preview',
     template: `
         <div class='previewer' (click)="gotoNote()">
+            <a class='pesudo-button' (click)='gotoNote()'></a>
             <app-tui-viewer *ngIf='note' [initialValue]='note?.content'></app-tui-viewer>
         </div>`,
     styleUrls: [`./note-preview.component.scss`]

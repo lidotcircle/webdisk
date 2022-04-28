@@ -21,9 +21,11 @@
     color: nb-theme(text-basic-color);
     padding: 0.25em 0em;
 
-    nb-icon {
+    a {
         cursor: pointer;
+    }
 
+    nb-icon {
         &:hover {
             color: lighten(nb-theme(text-basic-color), 10%);
         }

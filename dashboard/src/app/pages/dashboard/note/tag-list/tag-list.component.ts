@@ -1,13 +1,15 @@
 import { Component, ElementRef, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
-import { Subject } from 'rxjs';
+import { Router } from '@angular/router';
+import { interval, Subject } from 'rxjs';
+import { filter, take } from 'rxjs/operators';
 
 
 @Component({
     selector: 'app-tag-list',
     template: `
     <div *ngFor='let tag of tags; let i = index' class='tag tag-cx'>
-        <nb-icon icon='star' (click)='onDeleteTagClick(i)'></nb-icon>
-        <span class='tag-text'>{{ tag }}</span>
+        <a (click)='onDeleteTagClick(i)'><nb-icon icon='star'></nb-icon></a>
+        <a (click)='onTagClick(i)'><span class='tag-text'>{{ tag }}</span></a>
     </div>
     <div *ngIf='!inAddingTag && addButton' class='tag add-tag'>
         <button ghost nbButton [disabled]='addButtonDisabled' status='primary'  (click)='onAddTagClick()'>
@@ -37,7 +39,7 @@ export class TagListComponent implements OnInit, OnDestroy {
     @ViewChild('input')
     private input: ElementRef;
 
-    constructor()
+    constructor(private router: Router)
     {
         this.destroy$ = new Subject();
     }
@@ -52,6 +54,15 @@ export class TagListComponent implements OnInit, OnDestroy {
 
     async onAddTagClick() {
         this.inAddingTag = true;
+        await interval(100).pipe(
+            filter(() => this.input.nativeElement != null && (this.input.nativeElement as HTMLElement).clientHeight > 0),
+            take(1),
+        ).toPromise();
+        const input = this.input.nativeElement as HTMLInputElement;
+        input.focus();
+    }
+
+    async onTagClick() {
     }
 
     async onTagInputBlur_addTag() {
@@ -73,10 +84,17 @@ export class TagListComponent implements OnInit, OnDestroy {
     }
 
     async onDeleteTagClick(n: number) {
-        if (!this.deleteButton) return;
-
         const tag = this.tags[n];
-        this.tags.splice(n, 1);
-        this.deleteTag.next(tag);
+
+        if (!this.deleteButton) {
+            this.router.navigate(["/wd/dashboard/note/notes-of-tag"], {
+                queryParams: {
+                    tag
+                }
+            });
+        } else {
+            this.tags.splice(n, 1);
+            this.deleteTag.next(tag);
+        }
     }
 }

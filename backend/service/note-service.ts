@@ -478,11 +478,13 @@ export class NoteService implements ServiceRepositories {
         const user = await this.userService.getUser(username);
         if (!user) throw new createHttpError.InternalServerError("500 in getusertags");
 
-        return (await this.tagRepo.find({
-            where: {
-                userId: user.id
-            }
-        })).map(v => v.name);
+        const queryRes = await this.tagRepo
+            .createQueryBuilder("tag")
+            .select("tag.name")
+            .where("tag.userId = :uid", {uid: user.id})
+            .orderBy("tag.id")
+            .getMany()
+        return queryRes.map(v => v.name);
     }
 
     async getNoteTags(username: string, noteid: number): Promise<string[]> {

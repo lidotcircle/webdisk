@@ -7,10 +7,88 @@ nb-card {
     margin: 0em;
     height: 100%;
 
+    nb-card-header {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        user-select: none;
+
+        .label {
+            margin-right: 0.5em;
+        }
+
+        .filter {
+            min-width: 25vw;
+            padding: 0em;
+            background: nb-theme(background-basic-color-1);
+            border: 0em;
+            font-size: large;
+            color: color.adjust(nb-theme(text-basic-color), $alpha: -0.2);
+            border-bottom: 1pt solid darken(nb-theme(background-basic-color-1), 20%);
+            width: 50%;
+            border-radius: 0em;
+            padding: 0em 0.5em 0.1em 0.5em;
+
+            &:hover {
+                background: nb-theme(background-basic-color-1);
+                border-bottom: 1pt solid darken(nb-theme(background-primary-color-1), 10%);
+            }
+
+            &:focus {
+                outline: none;
+            }
+        }
+    }
+
     nb-card-body {
         height: 100%;
         overflow: auto;
-        padding: 0em;
+        padding: 1.5em;
+
+        .tags {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 20% 20% 20% 20% 20%;
+            grid-row-gap: 1em;
+            grid-column-gap: 1em;
+
+            @media (max-width: 1360px) {
+                grid-template-columns: 25% 25% 25% 25%;
+            }
+
+            @media (max-width: 1080px) {
+                grid-template-columns: 33% 33% 33%;
+            }
+
+            @media (max-width: 720px) {
+                grid-template-columns: 50% 50%;
+            }
+
+            @media (max-width: 480px) {
+                grid-template-columns: 100%;
+            }
+        }
+
+        .tag {
+            margin-right: 1em;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+
+            nb-icon {
+                margin-right: 0.3em;
+            }
+
+            a {
+                cursor: pointer;
+                font-weight: bold;
+                &:hover {
+                    color: lighten(nb-theme(text-basic-color), 15%);
+                }
+            }
+        }
     }
 }
 }

@@ -19,6 +19,7 @@ import { MarkdownViewerComponent } from './markdown-viewer/markdown-viewer.compo
 import { MarkdownNoteHistoryComponent } from './markdown-note-history/markdown-note-history.component';
 import { InfiniteScrollModule } from 'ngx-infinite-scroll';
 import { TagListComponent } from './tag-list/tag-list.component';
+import { NotesOfTagComponent } from './notes-of-tag/notes-of-tag.component';
 
 
 @NgModule({
@@ -31,6 +32,7 @@ import { TagListComponent } from './tag-list/tag-list.component';
         NoteTagListComponent,
         NotePreview,
         TagListComponent,
+        NotesOfTagComponent,
     ],
     imports: [
         NoteRoutingModule,

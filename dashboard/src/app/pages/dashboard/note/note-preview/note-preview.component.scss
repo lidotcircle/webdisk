@@ -15,9 +15,20 @@
     box-shadow: 0pt 0pt 5pt 1pt darken(nb-theme(background-basic-color-1), 10%);
     user-select: none;
     cursor: pointer;
+    position: relative;
 
     &:hover {
         box-shadow: 0pt 0pt 5pt 1pt darken(nb-theme(background-basic-color-1), 20%);
+    }
+
+    .pesudo-button {
+        position: absolute;
+        top: 0;
+        left: 0;
+        background: transparent;
+        display: inline-block;
+        width: 1em;
+        height: 1em;
     }
 }
 }

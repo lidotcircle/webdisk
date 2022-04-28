@@ -5,6 +5,7 @@ import { MarkdownNoteHistoryComponent } from './markdown-note-history/markdown-n
 import { MarkdownViewerComponent } from './markdown-viewer/markdown-viewer.component';
 import { NoteTagListComponent } from './note-tag-list/note-tag-list.component';
 import { NoteComponent } from './note.component';
+import { NotesOfTagComponent } from './notes-of-tag/notes-of-tag.component';
 import { TimelineComponent } from './timeline/timeline.component';
 
 
@@ -25,6 +26,10 @@ const routes: Routes = [
             {
                 path: 'tags',
                 component: NoteTagListComponent,
+            },
+            {
+                path: 'notes-of-tag',
+                component: NotesOfTagComponent,
             },
             {
                 path: 'markdown-editor',

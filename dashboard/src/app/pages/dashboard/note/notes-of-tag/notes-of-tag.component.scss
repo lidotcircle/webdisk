@@ -15,6 +15,20 @@ nb-card {
         justify-content: space-between;
         user-select: none;
 
+        .total {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+
+            nb-icon {
+                margin-right: 0.2em;
+            }
+
+            .tag {
+                margin-right: 2em;
+            }
+        }
+
         .type-filter {
             display: flex;
             flex-direction: row;
