@@ -18,6 +18,7 @@ import { MarkdownEditorComponent } from './markdown-editor/markdown-editor.compo
 import { MarkdownViewerComponent } from './markdown-viewer/markdown-viewer.component';
 import { MarkdownNoteHistoryComponent } from './markdown-note-history/markdown-note-history.component';
 import { InfiniteScrollModule } from 'ngx-infinite-scroll';
+import { TagListComponent } from './tag-list/tag-list.component';
 
 
 @NgModule({
@@ -29,6 +30,7 @@ import { InfiniteScrollModule } from 'ngx-infinite-scroll';
         MarkdownNoteHistoryComponent,
         NoteTagListComponent,
         NotePreview,
+        TagListComponent,
     ],
     imports: [
         NoteRoutingModule,

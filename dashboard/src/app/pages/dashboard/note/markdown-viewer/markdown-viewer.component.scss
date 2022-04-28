@@ -14,6 +14,22 @@ nb-card {
             font-size: large;
             font-weight: bold;
         }
+
+        .info {
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            margin: 0.5em 0em;
+        }
+
+        .tags {
+            width: 100%;
+            margin-top: 1em;
+            border-top: 1pt solid darken(nb-theme(background-basic-color-1), 5%);
+            padding-top: 1em;
+        }
     }
 
     nb-card-body {

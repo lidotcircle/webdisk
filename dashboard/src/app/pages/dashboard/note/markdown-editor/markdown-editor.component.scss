@@ -60,40 +60,9 @@ nb-card {
 
         .tags {
             width: 100%;
-            display: flex;
-            flex-direction: row;
-            flex-wrap: wrap;
-            align-items: center;
             margin-top: 1em;
             border-top: 1pt solid darken(nb-theme(background-basic-color-1), 20%);
             padding-top: 1em;
-
-            .tag {
-                margin-right: 1em;
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-            }
-
-            .tag-cx {
-                color: nb-theme(text-basic-color);
-
-                nb-icon {
-                    cursor: pointer;
-
-                    &:hover {
-                        color: lighten(nb-theme(text-basic-color), 10%);
-                    }
-                }
-            }
-
-            .tag-text {
-                margin-left: 0.2em;
-            }
-
-            input {
-                min-width: 25vw;
-            }
         }
     }
 

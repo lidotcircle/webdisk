@@ -11,6 +11,11 @@ import { ObjectSharingService } from 'src/app/service/object-sharing.service';
     <nb-card>
         <nb-card-header>
             <div class='title'>{{ note?.title }}</div>
+            <div class='info'>
+                <span>CreatedAt: {{ createdAt }}</span>
+                <span>UpdatedAt: {{ updatedAt }}</span>
+            </div>
+            <app-tag-list class='tags' [tags]='note?.tags || []'></app-tag-list>
         </nb-card-header>
         <nb-card-body>
             <app-tui-viewer [initialValue]='note?.content'></app-tui-viewer>
@@ -27,6 +32,19 @@ import { ObjectSharingService } from 'src/app/service/object-sharing.service';
 })
 export class MarkdownViewerComponent implements OnInit {
     note: Note;
+    get createdAt() {
+        if (!this.note) {
+            return "";
+        }
+        return new Date(this.note.createdAt).toLocaleString();
+    }
+
+    get updatedAt() {
+        if (!this.note) {
+            return "";
+        }
+        return new Date(this.note.updatedAt).toLocaleString();
+    }
 
     constructor(private toastr: NbToastrService,
                 private router: Router,

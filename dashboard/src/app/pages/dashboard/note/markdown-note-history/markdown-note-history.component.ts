@@ -27,6 +27,7 @@ interface NoteWithHistory extends Note {
                 <span>CreatedAt: {{ createdAt }}</span>
                 <span>UpdatedAt: {{ updatedAt }}</span>
             </div>
+            <app-tag-list class='tags' [tags]='note?.tags || []'></app-tag-list>
         </nb-card-header>
         <nb-card-body class='main-panel'>
             <div style='height: max-content;'

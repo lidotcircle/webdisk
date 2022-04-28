@@ -1,0 +1,62 @@
+@use 'sass:color' as color;
+@use 'src/app/@theme/styles/themes' as *;
+
+
+:host {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+@include nb-install-component {
+.tag {
+    margin-right: 1em;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.tag-cx {
+    color: nb-theme(text-basic-color);
+    padding: 0.25em 0em;
+
+    nb-icon {
+        cursor: pointer;
+
+        &:hover {
+            color: lighten(nb-theme(text-basic-color), 10%);
+        }
+    }
+}
+
+.add-tag button {
+    padding: 0em !important;
+}
+
+.tag-text {
+    margin-left: 0.2em;
+}
+
+input {
+    min-width: 25vw;
+    padding: 0em;
+    background: nb-theme(background-basic-color-1);
+    border: 0em;
+    font-size: large;
+    color: color.adjust(nb-theme(text-basic-color), $alpha: -0.2);
+    border-bottom: 1pt solid darken(nb-theme(background-basic-color-1), 20%);
+    width: 50%;
+    border-radius: 0em;
+    padding: 0em 0.5em 0.1em 0.5em;
+
+    &:hover {
+        background: nb-theme(background-basic-color-1);
+        border-bottom: 1pt solid darken(nb-theme(background-primary-color-1), 10%);
+    }
+
+    &:focus {
+        outline: none;
+    }
+}
+}

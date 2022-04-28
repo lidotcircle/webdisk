@@ -26,20 +26,9 @@ import { FrontendSettingService } from 'src/app/service/user/frontend-setting.se
                      <span class='bd'>{{ lastSaveElapsedMin }}</span> minutes ago
                  </div>
             </div>
-            <div class='tags'>
-                <div *ngFor='let tag of tags; let i = index' class='tag tag-cx'>
-                    <nb-icon icon='star' (click)='onDeleteTagClick(i)'></nb-icon>
-                    <span class='tag-text'>{{ tag }}</span>
-                </div>
-                <div *ngIf='!inAddingTag' class='tag add-tag'>
-                    <button ghost nbButton [disabled]='!note' status='primary'  (click)='onAddTagClick()'>
-                        <nb-icon icon='plus-square'></nb-icon>
-                    </button>
-                </div>
-                <div *ngIf='inAddingTag' class='tag add-tag-input'>
-                    <input class='info-input' nbInput type='text' [disabled]='!note' [(ngModel)]='newtag' (blur)='onTagInputBlur_addTag()'>
-                </div>
-            </div>
+            <app-tag-list class='tags' [addButton]='true' [deleteButton]='true' [tags]='note?.tags || []'
+                          (deleteTag)='onDeleteTagClick($event)'
+                          (addTag)='onAddTagClick($event)'></app-tag-list>
         </nb-card-header>
         <nb-card-body>
             <app-tui-editor height="100%" [initialValue]='note?.content' 
@@ -58,17 +47,10 @@ import { FrontendSettingService } from 'src/app/service/user/frontend-setting.se
 })
 export class MarkdownEditorComponent implements OnInit, OnDestroy {
     note: Note;
-    get tags(): string[] {
-        if (!this.note) return [];
-        return this.note.tags;
-    }
-
     lastSaveTime: string;
     lastSaveElapsedMin: number;
     showTitle: boolean = true;
     inputTitle: string;
-    newtag: string;
-    inAddingTag: boolean;
 
     @ViewChild("editor", { static: true})
     private editorComponentRef: TuiEditorComponent;
@@ -237,32 +219,20 @@ export class MarkdownEditorComponent implements OnInit, OnDestroy {
         }
     }
 
-    async onAddTagClick() {
-        this.inAddingTag = true;
-    }
-
-    async onTagInputBlur_addTag() {
-        if (this.newtag == '') {
-            this.inAddingTag = false;
-            return;
-        }
-
+    async onAddTagClick(tag: string) {
         try {
-            await this.noteService.addTags(this.note.id, [ this.newtag ]);
-            this.tags.push(this.newtag);
-            this.newtag = '';
-            this.inAddingTag = false;
+            await this.noteService.addTags(this.note.id, [ tag ]);
         } catch {
+            this.note.tags.splice(this.note.tags.indexOf(tag), 1);
             this.toastr.danger("add tag failed", "Note");
         }
     }
 
-    async onDeleteTagClick(n: number) {
-        const tag = this.tags[n];
+    async onDeleteTagClick(tag: string) {
         try {
             await this.noteService.deleteTags(this.note.id, [ tag ]);
-            this.tags.splice(n, 1);
         } catch {
+            this.note.tags.push(tag);
             this.toastr.danger("delete tag failed", "Note");
         }
     }
