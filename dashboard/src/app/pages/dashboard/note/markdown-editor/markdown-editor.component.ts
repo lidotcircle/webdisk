@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { NbThemeService, NbToastrService } from '@nebular/theme';
 import { Note, NoteService } from 'src/app/service/note/note.service';
@@ -20,6 +20,7 @@ import { FrontendSettingService } from 'src/app/service/user/frontend-setting.se
             <div class='header'>
                 <a *ngIf='showTitle'  class='title' (click)='onToggleTitleClick()'>{{ note?.title }}</a>
                 <input class='info-input' matInput *ngIf='!showTitle' [disabled]='!note' [(ngModel)]='inputTitle' (blur)='onTitleBlur()' #titleinput>
+                <div class='savingStatus how-many-be-modified' *ngIf='howManyBeModified>0'>Patch Length: <span class='bd'>{{ howManyBeModified }}</span></div>
                 <div class='savingStatus' *ngIf='!lastSaveTime'>Not Saved</div>
                 <div class='savingStatus' *ngIf='lastSaveTime'>
                      Last Saved: <span class='bd savetime'>{{ lastSaveTime }}</span>
@@ -52,6 +53,7 @@ export class MarkdownEditorComponent implements OnInit, OnDestroy {
     showTitle: boolean = true;
     inputTitle: string;
     theme: string = 'dark';
+    howManyBeModified: number;
 
     @ViewChild("editor", { static: true})
     private editorComponentRef: TuiEditorComponent;
@@ -110,6 +112,12 @@ export class MarkdownEditorComponent implements OnInit, OnDestroy {
                 this.lastSaveTime = this.lastSavingDate.toLocaleTimeString();
             });
 
+        if (this.settings.Note_Editor_ShowPatchLength) {
+            interval(3000)
+                .pipe(takeUntil(this.destroy$))
+                .subscribe(() => this.howManyBeModified = this.patchLength());
+        }
+
         const inter = Math.max(5 * 60 * 1000, this.savingInterval);
         interval(inter)
             .pipe(takeUntil(this.destroy$))
@@ -128,17 +136,40 @@ export class MarkdownEditorComponent implements OnInit, OnDestroy {
         });
     }
 
-    private shouldUpdate(): boolean {
-        if (!this.note || !this.editor) return false;
+    @HostListener("document:keydown.control.a", ["$event"])
+    onCtrlA(event: KeyboardEvent) {
+        event.stopPropagation();
+        event.preventDefault();
+        if (this.editor) {
+            this.editor.moveCursorToStart();
+        }
+    }
+
+    @HostListener("document:keydown.control.e", ["$event"])
+    onCtrlE(event: KeyboardEvent) {
+        event.stopPropagation();
+        event.preventDefault();
+        if (this.editor) {
+            this.editor.moveCursorToEnd();
+        }
+    }
+    // TODO ctrl-f ctrl-b ... even vim-mode
+
+    private patchLength(): number {
+        if (!this.note || !this.editor) return 0;
 
         const origin = this.note.content;
         const text = this.editor.getMarkdown();
-        if (origin == text) return false;
+        if (origin == text) return 0;
 
         const dmp = new diff_match_patch();
         const patch = dmp.patch_make(origin, text);
         const patchText = dmp.patch_toText(patch);
-        return patchText.length > 500;
+        return patchText.length;
+    }
+
+    private shouldUpdate(): boolean {
+        return this.patchLength() > 500;
     }
 
     private lastSavingDate: Date;

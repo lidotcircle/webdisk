@@ -13,6 +13,7 @@ class FrontendEndUserSettings {
     
     Note_Editor_ShowButtons: boolean = false;
     Note_Editor_SavingInterval: number = 1000 * 60;
+    Note_Editor_ShowPatchLength: boolean = true;
 
     static fromJSON(json: string): FrontendEndUserSettings {
         const ans = new FrontendEndUserSettings();
