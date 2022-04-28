@@ -59,7 +59,7 @@ interface NoteWithHistory extends Note {
                     </div>
                     <div *ngIf='item.type == "day-separator"' [class]='"day-separator " + (item.data.folded ? "closed" : "open")'>
                         <div class='date-value'> {{ item.data.dateStr }} </div>
-                        <div class='date-leader-ox' (click)='onDoubleClick(i)'><div class='date-leader'></div></div>
+                        <a class='date-leader-ox' (click)='onDoubleClick(i)'><div class='date-leader'></div></a>
                         <div>
                             <button nbButton ghost [disabled]='onWorking' status='primary' (click)='onMergeClick(i)'>
                                 <nb-icon icon='collapse'></nb-icon>

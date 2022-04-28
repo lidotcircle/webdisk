@@ -62,7 +62,7 @@ interface ItemType {
                     </div>
                     <div *ngIf='item.type == "day-separator"' [class]='"day-separator " + (item.data.folded ? "closed" : "open")'>
                         <div class='date-value'> {{ item.data.dateStr }} </div>
-                        <div class='date-leader-ox' (click)='onDoubleClick(i)'><div class='date-leader'></div></div>
+                        <a class='date-leader-ox' (click)='onDoubleClick(i)'><div class='date-leader'></div></a>
                     </div>
                     <div *ngIf='item.type == "end"' class='history-end'>End</div>
                 </div>
