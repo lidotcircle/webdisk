@@ -348,7 +348,8 @@ export class NoteService implements ServiceRepositories {
         let query = this.noteRepo
             .createQueryBuilder("note")
             .select()
-            .innerJoin(User, "user", "note.userId = user.id");
+            .innerJoin(User, "user", "note.userId = user.id")
+            .where("user.username = :un", {un: username});
 
         if (tag) {
             query = query
@@ -357,7 +358,6 @@ export class NoteService implements ServiceRepositories {
                 .andWhere("tag.userId = user.id")
                 .andWhere("tag.name = :tagname", {tagname: tag});
         }
-        query = query.where("user.username = :un", {un: username});
 
         if (options.notetype && options.notetype != 'all')
             query = query.andWhere("note.contentType = :nt", {nt: options.notetype});

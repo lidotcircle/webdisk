@@ -17,7 +17,7 @@ router.get('/',
     query("notetype").optional().isLength({min: 2}),
     query("sortBy").optional().isLength({min: 2}),
     query("order").optional().isLength({min: 2}),
-    query("tag").optional().isString(),
+    query("tag").optional().isLength({min: 1}),
     async (req, res) => {
         const valres = validationResult(req);
         if (!valres.isEmpty()) {
