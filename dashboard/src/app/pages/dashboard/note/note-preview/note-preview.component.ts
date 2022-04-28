@@ -16,6 +16,8 @@ import { ObjectSharingService } from 'src/app/service/object-sharing.service';
 export class NotePreview implements OnInit {
     @Input()
     note: Note;
+    @Input()
+    generation: boolean = true;
 
     constructor(private router: Router,
                 private sharing: ObjectSharingService,
@@ -25,13 +27,15 @@ export class NotePreview implements OnInit {
     gotoNote() {
         const storekey = this.sharing.store(this.note);
         if (this.note.contentType == 'markdown') {
+            const params = {
+                noteref: storekey,
+                noteid: this.note.id,
+            };
+            if (this.generation)
+                params['generation'] = this.note.generation;
             this.router.navigate(["../markdown-viewer"], {
                 relativeTo: this.activatedRoute,
-                queryParams: {
-                    noteref: storekey,
-                    noteid: this.note.id,
-                    generation: this.note.generation,
-                }
+                queryParams: params
             });
         }
     }

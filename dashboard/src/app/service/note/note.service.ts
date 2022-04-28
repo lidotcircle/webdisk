@@ -90,8 +90,8 @@ export class NoteService {
     }
 
     async getNoteGeneratioin(noteid: number): Promise<number> {
-        const ans = await this.http.put(API.generation, {
-            noteid
+        const ans = await this.http.get(API.generation, {
+            params: {noteid }
         }).toPromise() as { generation: number};
         return ans.generation;
     }

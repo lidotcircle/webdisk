@@ -58,7 +58,7 @@ interface ItemType {
                                 </button>
                             </div>
                         </div>
-                        <app-note-preview [note]='item.data'></app-note-preview>
+                        <app-note-preview [generation]='false' [note]='item.data'></app-note-preview>
                     </div>
                     <div *ngIf='item.type == "day-separator"' [class]='"day-separator " + (item.data.folded ? "closed" : "open")'>
                         <div class='date-value'> {{ item.data.dateStr }} </div>

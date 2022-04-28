@@ -1,8 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NbToastrService } from '@nebular/theme';
+import { interval, Subject } from 'rxjs';
+import { filter, takeUntil } from 'rxjs/operators';
 import { Note, NoteService } from 'src/app/service/note/note.service';
 import { ObjectSharingService } from 'src/app/service/object-sharing.service';
+import { MessageBoxService } from 'src/app/shared/service/message-box.service';
 
 
 @Component({
@@ -30,7 +33,10 @@ import { ObjectSharingService } from 'src/app/service/object-sharing.service';
     styleUrls: ["./markdown-viewer.component.scss"],
     styles: []
 })
-export class MarkdownViewerComponent implements OnInit {
+export class MarkdownViewerComponent implements OnInit, OnDestroy {
+    private destroy$ = new Subject();
+    private generation: number;
+
     note: Note;
     get createdAt() {
         if (!this.note) {
@@ -47,11 +53,18 @@ export class MarkdownViewerComponent implements OnInit {
     }
 
     constructor(private toastr: NbToastrService,
+                private msgBox: MessageBoxService,
                 private router: Router,
                 private noteService: NoteService,
                 private sharing: ObjectSharingService,
                 private activatedRoute: ActivatedRoute) {
     }
+
+    ngOnDestroy(): void {
+        this.destroy$.next();
+        this.destroy$.complete();
+    }
+
 
     ngOnInit(): void {
         this.activatedRoute.queryParamMap.subscribe(async (params) => {
@@ -61,17 +74,50 @@ export class MarkdownViewerComponent implements OnInit {
             if (key) {
                 this.note = this.sharing.loadClear(Number(key));
             } 
+            if (generation != null) {
+                this.generation = Number(generation);
+            } else {
+                this.generation = null;
+            }
 
             if (!this.note && noteid == null) {
                 this.toastr.danger("page error", "Note");
                 return;
             }
 
-            if (!this.note){
-                const gen = generation ? Number(generation) : null;
-                this.note = await this.noteService.getNote(Number(noteid), gen);
+            if (this.note && this.generation == null) {
+                const gen = await this.noteService.getNoteGeneratioin(this.note.id);
+                if (gen != this.note.generation) {
+                    // TODO using patch ?
+                    this.note = null;
+                }
+            }
+
+            if (!this.note) {
+                await this.refresh(Number(noteid));
             }
         });
+
+        let doit = false;
+        interval(5000)
+            .pipe(takeUntil(this.destroy$), filter(() => this.note != null && !doit && this.generation == null))
+            .subscribe(async () => {
+                doit = true;
+                try {
+                    const gen = await this.noteService.getNoteGeneratioin(this.note.id);
+                    if (gen != this.note.generation)
+                        await this.refresh(this.note.id);
+                    doit = false;
+                } catch {}
+            });
+    }
+
+    async refresh(noteid: number) {
+        try {
+            this.note = await this.noteService.getNote(Number(noteid), this.generation);
+        } catch {
+            this.toastr.danger("page error", "Note");
+        }
     }
 
     async gotoEditor() {
@@ -101,5 +147,16 @@ export class MarkdownViewerComponent implements OnInit {
     }
 
     async deleteNote() {
+        if (await this.msgBox.confirmMSG("Are you sure to delete this note?", "Note")) {
+            try {
+                await this.noteService.deleteNote(this.note.id);
+                this.toastr.success("note deleted", "Note");
+                this.router.navigate(["../timeline"], {
+                    relativeTo: this.activatedRoute
+                });
+            } catch {
+                this.toastr.danger("note delete failed", "Note");
+            }
+        }
     }
 }

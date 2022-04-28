@@ -33,7 +33,6 @@ router.get('/',
         const tag = req.query['tag'];
         const noteService = QueryDependency(NoteService);
 
-        console.log("??", tag, pageno, pagesize, req.query);
         const ans = await noteService.getNotes(user, skip, take, tag, {
             notetype: notetype,
             sortBy: sortBy,
