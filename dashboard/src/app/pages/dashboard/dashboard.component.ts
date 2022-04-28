@@ -1,4 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { WebdiskLayoutService } from 'src/app/layout/webdisk-layout.service';
+import hotkeys from 'hotkeys-js';
+
 
 @Component({
     selector: 'ngx-dashboard',
@@ -9,9 +12,21 @@ import { Component, OnInit } from '@angular/core';
   `,
     styles: []
 })
-export class DashboardComponent implements OnInit {
-    constructor() { }
+export class DashboardComponent implements OnInit, OnDestroy {
+    private toggled: boolean;
+    constructor(private layoutService: WebdiskLayoutService) { }
+
+    ngOnDestroy(): void {
+        hotkeys.unbind("f8");
+        if (this.toggled) {
+            this.layoutService.toggle();
+        }
+    }
 
     ngOnInit(): void {
+        hotkeys("f8", (_event, _handler) => {
+            this.toggled = !this.toggled;
+            this.layoutService.toggle();
+        });
     }
 }
