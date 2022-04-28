@@ -1,14 +1,14 @@
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { NbToastrService } from '@nebular/theme';
+import { NbThemeService, NbToastrService } from '@nebular/theme';
 import { Note, NoteService } from 'src/app/service/note/note.service';
 import { ObjectSharingService } from 'src/app/service/object-sharing.service';
 import { TuiEditorComponent } from 'src/app/shared/shared-component/toast-ui/tui-editor/tui-editor.component';
 import { diff_match_patch } from 'diff-match-patch';
 import { interval, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { filter, take, takeUntil } from 'rxjs/operators';
 import hotkeys from 'hotkeys-js';
-import { saveDataAsFile } from 'src/app/shared/utils';
+import { nbThemeIsDark, saveDataAsFile } from 'src/app/shared/utils';
 import { FrontendSettingService } from 'src/app/service/user/frontend-setting.service';
 
 
@@ -18,8 +18,8 @@ import { FrontendSettingService } from 'src/app/service/user/frontend-setting.se
     <nb-card>
         <nb-card-header>
             <div class='header'>
-                <div *ngIf='showTitle'  class='title' (click)='showTitle = false; inputTitle=note?.title'>{{ note?.title }}</div>
-                <input class='info-input' matInput *ngIf='!showTitle' [disabled]='!note' [(ngModel)]='inputTitle' (blur)='onTitleBlur()'>
+                <a *ngIf='showTitle'  class='title' (click)='onToggleTitleClick()'>{{ note?.title }}</a>
+                <input class='info-input' matInput *ngIf='!showTitle' [disabled]='!note' [(ngModel)]='inputTitle' (blur)='onTitleBlur()' #titleinput>
                 <div class='savingStatus' *ngIf='!lastSaveTime'>Not Saved</div>
                 <div class='savingStatus' *ngIf='lastSaveTime'>
                      Last Saved: <span class='bd savetime'>{{ lastSaveTime }}</span>
@@ -31,7 +31,7 @@ import { FrontendSettingService } from 'src/app/service/user/frontend-setting.se
                           (addTag)='onAddTagClick($event)'></app-tag-list>
         </nb-card-header>
         <nb-card-body>
-            <app-tui-editor height="100%" [initialValue]='note?.content' 
+            <app-tui-editor height="100%" [initialValue]='note?.content' [theme]='theme'
                 (blur)='handleBlur($event)' (change)='handleChange($event)'#editor
                 (keydown)='handleKeydown($event)'>
             </app-tui-editor>
@@ -51,9 +51,12 @@ export class MarkdownEditorComponent implements OnInit, OnDestroy {
     lastSaveElapsedMin: number;
     showTitle: boolean = true;
     inputTitle: string;
+    theme: string = 'dark';
 
     @ViewChild("editor", { static: true})
     private editorComponentRef: TuiEditorComponent;
+    @ViewChild("titleinput")
+    private titleInputRef: ElementRef;
 
     private get editor() { return this.editorComponentRef.editor; }
     private destroy$: Subject<void>;
@@ -64,8 +67,10 @@ export class MarkdownEditorComponent implements OnInit, OnDestroy {
                 private noteService: NoteService,
                 private sharing: ObjectSharingService,
                 private activatedRoute: ActivatedRoute,
-                private settings: FrontendSettingService)
+                private settings: FrontendSettingService,
+                private nbtheme: NbThemeService)
     {
+        this.theme = nbThemeIsDark(this.nbtheme.currentTheme) ? 'dark' : 'light';
         this.destroy$ = new Subject();
         this.showButtons = this.settings.Note_Editor_ShowButtons;
         this.savingInterval = this.settings.Note_Editor_SavingInterval;
@@ -196,6 +201,14 @@ export class MarkdownEditorComponent implements OnInit, OnDestroy {
                     break;
             }
         }
+    }
+
+    async onToggleTitleClick() {
+        this.showTitle = false; 
+        this.inputTitle=this.note?.title
+        await interval(100).pipe(takeUntil(this.destroy$), filter(() => this.titleInputRef.nativeElement != null), take(1)).toPromise();
+        const input = this.titleInputRef.nativeElement as HTMLInputElement;
+        input.focus();
     }
 
     async onTitleBlur() {

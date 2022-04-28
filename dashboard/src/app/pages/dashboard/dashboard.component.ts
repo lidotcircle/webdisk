@@ -1,6 +1,5 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { WebdiskLayoutService } from 'src/app/layout/webdisk-layout.service';
-import hotkeys from 'hotkeys-js';
 
 
 @Component({
@@ -17,16 +16,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
     constructor(private layoutService: WebdiskLayoutService) { }
 
     ngOnDestroy(): void {
-        hotkeys.unbind("f8");
         if (this.toggled) {
             this.layoutService.toggle();
         }
     }
 
+    @HostListener("document:keydown.f8")
+    toggleLayout() {
+        this.toggled = !this.toggled;
+        this.layoutService.toggle();
+    }
+
     ngOnInit(): void {
-        hotkeys("f8", (_event, _handler) => {
-            this.toggled = !this.toggled;
-            this.layoutService.toggle();
-        });
     }
 }

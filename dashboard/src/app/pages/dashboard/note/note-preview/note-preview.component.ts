@@ -1,7 +1,9 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { NbThemeService } from '@nebular/theme';
 import { Note } from 'src/app/service/note/note.service';
 import { ObjectSharingService } from 'src/app/service/object-sharing.service';
+import { nbThemeIsDark } from 'src/app/shared/utils';
 
 
 @Component({
@@ -9,7 +11,7 @@ import { ObjectSharingService } from 'src/app/service/object-sharing.service';
     template: `
         <div class='previewer' (click)="gotoNote()">
             <a class='pesudo-button' (click)='gotoNote()'></a>
-            <app-tui-viewer *ngIf='note' [initialValue]='note?.content'></app-tui-viewer>
+            <app-tui-viewer [theme]='theme' *ngIf='note' [initialValue]='note?.content'></app-tui-viewer>
         </div>`,
     styleUrls: [`./note-preview.component.scss`]
 })
@@ -18,10 +20,14 @@ export class NotePreview implements OnInit {
     note: Note;
     @Input()
     generation: boolean = true;
+    theme: string = 'light';
 
     constructor(private router: Router,
                 private sharing: ObjectSharingService,
-                private activatedRoute: ActivatedRoute) { 
+                private nbThemeService: NbThemeService,
+                private activatedRoute: ActivatedRoute)
+    {
+        this.theme = nbThemeIsDark(this.nbThemeService.currentTheme) ? 'dark' : 'light';
     }
 
     gotoNote() {

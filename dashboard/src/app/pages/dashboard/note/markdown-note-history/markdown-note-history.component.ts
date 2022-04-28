@@ -1,5 +1,5 @@
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { NbToastrService } from '@nebular/theme';
 import { diff_match_patch } from 'diff-match-patch';
 import { interval, Subject } from 'rxjs';
@@ -95,6 +95,7 @@ export class MarkdownNoteHistoryComponent implements OnInit, OnDestroy {
                 private noteService: NoteService,
                 private msgBox: MessageBoxService,
                 private sharing: ObjectSharingService,
+                private router: Router,
                 private activatedRoute: ActivatedRoute,
                 private host: ElementRef)
     {
@@ -394,6 +395,7 @@ export class MarkdownNoteHistoryComponent implements OnInit, OnDestroy {
             return;
         }
 
+        try {
         const dmp = new diff_match_patch();
         const ntnote = notes.find(v => v.generation == generationStart - 1);
         const newPatchText = dmp.patch_toText(dmp.patch_make(ntnote.content, mtnote.content));
@@ -410,6 +412,12 @@ export class MarkdownNoteHistoryComponent implements OnInit, OnDestroy {
         this.items = [];
         this.prevSeparator = null;
         this.appendHistory(his);
+        } catch { 
+            this.router.navigate(['.'], {
+                relativeTo: this.activatedRoute, 
+                queryParams: { count: Math.random(), noteid: this.note.id }
+            });
+        }
     }
 
     onDownloadClick(n: number) {

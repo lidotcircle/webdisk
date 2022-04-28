@@ -1,11 +1,12 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { NbToastrService } from '@nebular/theme';
+import { NbThemeService, NbToastrService } from '@nebular/theme';
 import { interval, Subject } from 'rxjs';
 import { filter, takeUntil } from 'rxjs/operators';
 import { Note, NoteService } from 'src/app/service/note/note.service';
 import { ObjectSharingService } from 'src/app/service/object-sharing.service';
 import { MessageBoxService } from 'src/app/shared/service/message-box.service';
+import { nbThemeIsDark } from 'src/app/shared/utils';
 
 
 @Component({
@@ -21,7 +22,7 @@ import { MessageBoxService } from 'src/app/shared/service/message-box.service';
             <app-tag-list class='tags' [tags]='note?.tags || []'></app-tag-list>
         </nb-card-header>
         <nb-card-body>
-            <app-tui-viewer [initialValue]='note?.content'></app-tui-viewer>
+            <app-tui-viewer [theme]='theme' [initialValue]='note?.content'></app-tui-viewer>
         </nb-card-body>
         <nb-card-footer>
             <button status='primary' size='small' nbButton (click)='gotoEditor()'>edit</button>
@@ -38,6 +39,7 @@ export class MarkdownViewerComponent implements OnInit, OnDestroy {
     private generation: number;
 
     note: Note;
+    theme: string;
     get createdAt() {
         if (!this.note) {
             return "";
@@ -57,7 +59,10 @@ export class MarkdownViewerComponent implements OnInit, OnDestroy {
                 private router: Router,
                 private noteService: NoteService,
                 private sharing: ObjectSharingService,
-                private activatedRoute: ActivatedRoute) {
+                private nbthemeService: NbThemeService,
+                private activatedRoute: ActivatedRoute)
+    {
+        this.theme = nbThemeIsDark(this.nbthemeService.currentTheme) ? 'dark' : 'light';
     }
 
     ngOnDestroy(): void {

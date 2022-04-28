@@ -86,7 +86,7 @@ export class TuiViewerComponent implements OnInit, OnChanges, OnDestroy, AfterVi
                 initialValue={ this.initialValue }
                 plugins={this.plugins}
                 key={this.key}
-                // TODO dark doesn't work theme={this.theme || 'dark'}
+                theme={this.theme || 'light'}
                 events={this.events}
                 frontMatter={this.frontMatter}
                 linkAttributes={this.linkAttributes}

@@ -180,3 +180,7 @@ export function reversePatch(patch: patch_obj[]): patch_obj[]
         length2: patchObj.length1
     }));
 }
+
+export function nbThemeIsDark(theme: string): boolean {
+    return theme == 'dark' || theme == 'cosmic';
+}
