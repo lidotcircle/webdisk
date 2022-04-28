@@ -6,7 +6,7 @@ import { Note, NoteService } from 'src/app/service/note/note.service';
 import { AsyncLocalStorageService } from 'src/app/shared/service/async-local-storage.service';
 import onChange from 'on-change';
 import { saveDataAsFile } from 'src/app/shared/utils';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 
 interface PageConfig {
@@ -53,6 +53,9 @@ interface ItemType {
                             </div>
                             <div class='take-space'></div>
                             <div class='buttons'>
+                                <button nbButton ghost [disabled]='onWorking' status='primary' (click)='gotoEditor(i)'>
+                                    <nb-icon icon='edit'></nb-icon>
+                                </button>
                                 <button nbButton ghost [disabled]='onWorking' status='primary' (click)='onDownloadClick(i)'>
                                     <nb-icon icon='download'></nb-icon>
                                 </button>
@@ -87,6 +90,7 @@ export class NotesOfTagComponent implements OnInit, OnDestroy {
     constructor(private toastr: NbToastrService,
                 private noteService: NoteService,
                 private localstorage: AsyncLocalStorageService,
+                private router: Router,
                 private activatedRoute: ActivatedRoute,
                 private host: ElementRef)
     {
@@ -253,6 +257,19 @@ export class NotesOfTagComponent implements OnInit, OnDestroy {
             if (item.type != "note") break;
             item.hidden = data.folded;
         }
+    }
+
+    async gotoEditor(n: number) {
+        const item = this.items[n];
+        if (!item || item.type != "note") return;
+        const note: Note = item.data;
+
+        this.router.navigate(["../markdown-editor"], {
+            queryParams: {
+                noteid: note.id,
+            },
+            relativeTo: this.activatedRoute,
+        });
     }
 
     onDownloadClick(n: number) {

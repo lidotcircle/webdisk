@@ -62,7 +62,14 @@ export class TagListComponent implements OnInit, OnDestroy {
         input.focus();
     }
 
-    async onTagClick() {
+    async onTagClick(n: number) {
+        const tag = this.tags[n];
+
+        this.router.navigate(["/wd/dashboard/note/notes-of-tag"], {
+            queryParams: {
+                tag
+            }
+        });
     }
 
     async onTagInputBlur_addTag() {

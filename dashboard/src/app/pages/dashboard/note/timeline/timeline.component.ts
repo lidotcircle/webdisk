@@ -7,6 +7,7 @@ import { AsyncLocalStorageService } from 'src/app/shared/service/async-local-sto
 import { MessageBoxService } from 'src/app/shared/service/message-box.service';
 import onChange from 'on-change';
 import { saveDataAsFile } from 'src/app/shared/utils';
+import { ActivatedRoute, Router } from '@angular/router';
 
 
 interface PageConfig {
@@ -54,6 +55,9 @@ interface ItemType {
                             </div>
                             <div class='take-space'></div>
                             <div class='buttons'>
+                                <button nbButton ghost [disabled]='onWorking' status='primary' (click)='gotoEditor(i)'>
+                                    <nb-icon icon='edit'></nb-icon>
+                                </button>
                                 <button nbButton ghost [disabled]='onWorking' status='primary' (click)='onDownloadClick(i)'>
                                     <nb-icon icon='download'></nb-icon>
                                 </button>
@@ -87,6 +91,8 @@ export class TimelineComponent implements OnInit, OnDestroy {
 
     constructor(private msgbox: MessageBoxService,
                 private toastr: NbToastrService,
+                private router: Router,
+                private activatedRoute: ActivatedRoute,
                 private noteService: NoteService,
                 private localstorage: AsyncLocalStorageService,
                 private host: ElementRef)
@@ -254,6 +260,18 @@ export class TimelineComponent implements OnInit, OnDestroy {
                        `${note.title}-${(new Date(note.updatedAt).toLocaleString())}.md`);
     }
 
+    async gotoEditor(n: number) {
+        const item = this.items[n];
+        if (!item || item.type != "note") return;
+        const note: Note = item.data;
+
+        this.router.navigate(["../markdown-editor"], {
+            queryParams: {
+                noteid: note.id,
+            },
+            relativeTo: this.activatedRoute,
+        });
+    }
 
     async createNote(_event: any) {
         const rs = await this.msgbox.create({
