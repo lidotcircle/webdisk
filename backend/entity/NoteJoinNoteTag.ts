@@ -12,7 +12,7 @@ export class NoteJoinNoteTag {
     @Column()
     noteId: number;
 
-    @ManyToOne(() => Note)
+    @ManyToOne(() => Note, { onDelete: "CASCADE" })
     note: Promise<Note>;
 
     @Column()

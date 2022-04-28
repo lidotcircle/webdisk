@@ -10,7 +10,7 @@ export class NoteHistory {
     @Column()
     patch: string;
 
-    @ManyToOne(() => Note)
+    @ManyToOne(() => Note, { onDelete: "CASCADE" })
     note: Promise<Note>;
 
     @Column()
