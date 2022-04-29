@@ -7,6 +7,7 @@ import { Viewer } from '@toast-ui/react-editor';
 import { Viewer as TUIViewer, EditorPlugin, EditorType, Editor as TUIEditor, EventMap,
          LinkAttributes, ExtendedAutolinks, CustomHTMLRenderer, Sanitizer } from '@toast-ui/editor/types/editor';
 import latex from '../LatexPlugin';
+import emoji from '../EmojiPlugin';
 import uml from '@toast-ui/editor-plugin-uml';
 import chart from '@toast-ui/editor-plugin-chart';
 import colorSyntax from '@toast-ui/editor-plugin-color-syntax';
@@ -61,7 +62,7 @@ export class TuiViewerComponent implements OnInit, OnChanges, OnDestroy, AfterVi
         this.root = createRoot(this.host.nativeElement as HTMLElement);
         this.plugins = this.plugins || [];
         // TODO colorSyntax error
-        for (const plug of [ uml, chart, colorSyntaxHighlight, tableMergedCell, latex ]) {
+        for (const plug of [ uml, chart, colorSyntaxHighlight, tableMergedCell, latex, emoji ]) {
             this.plugins.push(plug);
         }
     }
