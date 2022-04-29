@@ -10,6 +10,8 @@ import { filter, take, takeUntil } from 'rxjs/operators';
 import hotkeys from 'hotkeys-js';
 import { nbThemeIsDark, saveDataAsFile } from 'src/app/shared/utils';
 import { FrontendSettingService } from 'src/app/service/user/frontend-setting.service';
+import { EditorView } from 'prosemirror-view';
+import { TextSelection } from 'prosemirror-state';
 
 
 @Component({
@@ -136,8 +138,8 @@ export class MarkdownEditorComponent implements OnInit, OnDestroy {
         });
     }
 
-    @HostListener("document:keydown.control.a", ["$event"])
-    onCtrlA(event: KeyboardEvent) {
+    @HostListener("document:keydown.alt.a", ["$event"])
+    onAltA(event: KeyboardEvent) {
         event.stopPropagation();
         event.preventDefault();
         if (this.editor) {
@@ -145,15 +147,67 @@ export class MarkdownEditorComponent implements OnInit, OnDestroy {
         }
     }
 
-    @HostListener("document:keydown.control.e", ["$event"])
-    onCtrlE(event: KeyboardEvent) {
+    @HostListener("document:keydown.alt.e", ["$event"])
+    onAltE(event: KeyboardEvent) {
         event.stopPropagation();
         event.preventDefault();
         if (this.editor) {
             this.editor.moveCursorToEnd();
         }
     }
-    // TODO ctrl-f ctrl-b ... even vim-mode
+
+    @HostListener("document:keydown.alt.b", ["$event"])
+    onAltB(event: KeyboardEvent) {
+        event.stopPropagation();
+        event.preventDefault();
+        const view = this.pmView()
+        if (!view || !view.hasFocus()) return;
+
+        view.state.doc
+        const { from } = view.state.selection;
+        if (from == 1) return;
+        const newpos = view.state.doc.resolve(from - 1);
+        const newsel = new TextSelection(newpos, newpos);
+        view.dispatch(view.state.tr.setSelection(newsel));
+    }
+
+    @HostListener("document:keydown.alt.f", ["$event"])
+    onAltF(event: KeyboardEvent) {
+        event.stopPropagation();
+        event.preventDefault();
+        const view = this.pmView()
+        if (!view || !view.hasFocus()) return;
+
+        const { to } = view.state.selection;
+        if (view.state.doc.nodeSize <= to + 2) return;
+        const newpos = view.state.doc.resolve(to + 1);
+        const newsel = new TextSelection(newpos, newpos);
+        view.dispatch(view.state.tr.setSelection(newsel));
+    }
+
+    @HostListener("document:keydown.alt.p", ["$event"])
+    onAltP(event: KeyboardEvent) {
+        event.stopPropagation();
+        event.preventDefault();
+        const view = this.pmView()
+        if (!view || !view.hasFocus()) return;
+
+        // TODO
+    }
+
+    @HostListener("document:keydown.alt.n", ["$event"])
+    onAltN(event: KeyboardEvent) {
+        event.stopPropagation();
+        event.preventDefault();
+        const view = this.pmView()
+        if (!view || !view.hasFocus()) return;
+
+        // TODO
+    }
+
+    private pmView(): EditorView {
+        return (this.editor as any)?.mdEditor?.view
+    }
 
     private patchLength(): number {
         if (!this.note || !this.editor) return 0;

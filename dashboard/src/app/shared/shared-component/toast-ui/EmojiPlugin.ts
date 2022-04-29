@@ -5,6 +5,7 @@ import { Editor } from '@toast-ui/editor/types';
 import { ToolbarCustomOptions } from '@toast-ui/editor/types/ui';
 import { Trie } from './trie';
 import { EditorView } from 'prosemirror-view';
+import { TextSelection } from 'prosemirror-state';
 
 
 const emojiMap: Map<string,string> = new Map([
@@ -496,6 +497,15 @@ function parseText(text: string): {type: 'text' | 'emoji', content: string}[] {
 function addLangs(_i18n: I18n) {
 }
 
+function simulateKey(view: EditorView, keyCode: number, key: string) {
+    const event = document.createEvent("Event");
+    event.initEvent("keydown", true, true);
+    (event as any).keyCode = keyCode;
+    (event as any).key = (event as any).code = key;
+    return view.someProp("handleKeyDown", f => f(view, event))
+}
+
+
 export default function emojiPlugin(context: PluginContext, options: any): PluginInfo {
     options = options || {};
     const { i18n, eventEmitter } = context;
@@ -576,14 +586,14 @@ export default function emojiPlugin(context: PluginContext, options: any): Plugi
 
         icon.innerHTML = `<span>${emoji}</span>`;
         icon.onclick = () => {
-            // TODO
             eventEmitter.emit("closePopup");
             const view = viewGetter();
             if (view) {
                 const tr = view.state.tr;
-                console.log(view.editable);
-                tr.insertText(`:${key}:`);
+                const { from, to } = view.state.selection;
+                tr.insertText(`:${key}:`, from, to);
                 view.dispatch(tr);
+                view.focus();
             }
         }
 
