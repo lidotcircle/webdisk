@@ -5,7 +5,7 @@ import { Editor } from '@toast-ui/editor/types';
 import { ToolbarCustomOptions } from '@toast-ui/editor/types/ui';
 import { Trie } from './trie';
 import { EditorView } from 'prosemirror-view';
-import { TextSelection } from 'prosemirror-state';
+import { inlineLatexConvertor } from './LatexPlugin';
 
 
 const emojiMap: Map<string,string> = new Map([
@@ -534,7 +534,8 @@ export default function emojiPlugin(context: PluginContext, options: any): Plugi
             }
         });
 
-        return [ { type: 'text', content:  ans.map(v => v.content).join('') } ];
+        node.literal = ans.map( v => v.content).join('');
+        return inlineLatexConvertor(node, _ccontext, _convertors);
     };
 
     const toHTMLRenderers = {
