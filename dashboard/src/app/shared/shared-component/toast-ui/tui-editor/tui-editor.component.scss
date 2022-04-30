@@ -5,4 +5,8 @@
 
 app-tui-editor {
     width: 100%;
+
+    .toastui-editor-mode-switch {
+        display: none !important;
+    }
 }
