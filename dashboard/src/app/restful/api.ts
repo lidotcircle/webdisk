@@ -33,6 +33,7 @@ export module API {
         export const title = API_ADDRESS + '/apis/note/title';
         export const tags = API_ADDRESS + '/apis/note/tags';
         export const history = API_ADDRESS + '/apis/note/history';
+        export const mergeHistory = API_ADDRESS + '/apis/note/history/mergeall';
         export const generation = API_ADDRESS + '/apis/note/generation';
     }
 

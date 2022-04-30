@@ -275,6 +275,23 @@ router.delete('/history',
     }
 );
 
+router.put('/history/mergeall',
+    body("noteid").isInt(),
+    async (req, res) => {
+        const valres = validationResult(req);
+        if (!valres.isEmpty()) {
+            throw new createHttpError.UnprocessableEntity(valres.array()[0].msg);
+        }
+
+        const user = getAuthUsername(req);
+        const { noteid } = req.body;
+
+        const noteService = QueryDependency(NoteService);
+        await noteService.mergeIntoOneHistory(user, noteid);
+        res.status(200).send();
+    }
+);
+
 router.get('/generation',
     query("noteid").isInt().withMessage("noteid is required and should be a integer"),
     async (req, res) => {

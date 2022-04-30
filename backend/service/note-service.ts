@@ -237,6 +237,33 @@ export class NoteService implements ServiceRepositories {
         });
     }
 
+    async mergeIntoOneHistory(username: string, noteid: number): Promise<void> {
+        const ds = getDataSource();
+        await ds.transaction(async (em: EntityManager) => {
+            const repos = EntityManager2Repos(em);
+            const note = await this.getNote(username, noteid, repos);
+            if (note.generation <= 1) return;
+
+            await repos.historyRepo
+                .createQueryBuilder()
+                .delete()
+                .from(NoteHistory)
+                .where("noteId = :nid", {nid: note.id})
+                .execute();
+
+            const dmp = new diff_match_patch();
+            const patchText = dmp.patch_toText(dmp.patch_make('', note.content));
+            const his = new NoteHistory();
+            his.patch = patchText;
+            his.noteId = note.id;
+            his.note = Promise.resolve(note);
+            await repos.historyRepo.save(his);
+
+            note.generation = 1;
+            await repos.noteRepo.save(note);
+        });
+    }
+
     async updateNoteTitle(username: string, noteid: number, newtitle: string): Promise<void> {
         const note = await this.getNote(username, noteid);
         if (!note) throw new createHttpError.NotFound(`${username}, ${noteid}`);

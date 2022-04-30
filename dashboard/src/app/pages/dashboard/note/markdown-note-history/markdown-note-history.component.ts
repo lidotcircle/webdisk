@@ -26,6 +26,10 @@ interface NoteWithHistory extends Note {
                 <span>Versions: {{ noteHistoryCount }}</span>
                 <span>CreatedAt: {{ createdAt }}</span>
                 <span>UpdatedAt: {{ updatedAt }}</span>
+
+                <button nbButton ghost [disabled]='onWorking' status='primary' (click)='onMergeAllClick()'>
+                    <nb-icon icon='collapse'></nb-icon>
+                </button>
             </div>
             <app-tag-list class='tags' [tags]='note?.tags || []'></app-tag-list>
         </nb-card-header>
@@ -99,10 +103,19 @@ export class MarkdownNoteHistoryComponent implements OnInit, OnDestroy {
                 private activatedRoute: ActivatedRoute,
                 private host: ElementRef)
     {
+        this.resetComponent();
+        this.destroy$ = new Subject();
+    }
+
+    private resetComponent() {
+        this.note = null;
         this.notes = [];
         this.items = [];
         this.histories = [];
-        this.destroy$ = new Subject();
+        this.noteHistoryCount = null;
+        this.createdAt = null;
+        this.updatedAt = null;
+        this.prevSeparator = null;
     }
 
     ngOnDestroy(): void {
@@ -112,6 +125,8 @@ export class MarkdownNoteHistoryComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.activatedRoute.queryParamMap.subscribe(async (params) => {
+            this.resetComponent();
+
             const key = params.get("noteref");
             const noteid = params.get("noteid");
             if (key) {
@@ -217,7 +232,6 @@ export class MarkdownNoteHistoryComponent implements OnInit, OnDestroy {
             const last = this.notes[this.notes.length - 1];
             last.updatedAt = last.createdAt;
             this.updateDate(last);
-            this.insertDaySeparator(last.updatedAt);
             this.items.push({ type: 'note', data: last, hidden: this.prevSeparator.data.folded});
             this.items.push({ type: 'end', data: null});
         }
@@ -358,6 +372,30 @@ export class MarkdownNoteHistoryComponent implements OnInit, OnDestroy {
         }
     }
 
+    private mergeAllClick: boolean;
+    async onMergeAllClick() {
+        if (this.mergeAllClick)
+            return;
+
+        try {
+            this.mergeAllClick = true;
+            if (await this.msgBox.confirmMSG("This operation will cause all histories lost, confirm?"))
+                await this.noteService.mergeNoteHistory(this.note.id);
+        } catch {
+            this.toastr.danger("merge history failed", "Note");
+        } finally {
+            this.mergeAllClick = false;
+            this.routeRefresh();
+        }
+    }
+
+    private routeRefresh() {
+        this.router.navigate(['.'], {
+            relativeTo: this.activatedRoute, 
+            queryParams: { count: Math.random(), noteid: this.note.id }
+        });
+    }
+
     private async onMergeClickTrue(n: number) {
         const item = this.items[n];
         if (!item || item.type != "day-separator") return;
@@ -373,17 +411,18 @@ export class MarkdownNoteHistoryComponent implements OnInit, OnDestroy {
         });
         const mtnote = notes[gn];
         const generationEnd = mtnote.generation;
-        let generationStart = 1;
+        let generationStart = null;
         for (let i=gn+1;i<notes.length;i++) {
             const n = notes[i];
             const updatedAt = new Date(n.updatedAt);
-            if (updatedAt.getTime() < daybegin.getTime()) {
-                generationStart = n.generation + 1;
+            if (updatedAt.getTime() < daybegin.getTime() || n.generation == 0) {
                 break;
+            } else {
+                generationStart = n.generation;
             }
         }
 
-        if (generationStart == generationEnd) {
+        if (generationStart == null || generationStart >= generationEnd) {
             this.toastr.info("merge nothing", "Note");
             return;
         }
@@ -413,10 +452,7 @@ export class MarkdownNoteHistoryComponent implements OnInit, OnDestroy {
         this.prevSeparator = null;
         this.appendHistory(his);
         } catch { 
-            this.router.navigate(['.'], {
-                relativeTo: this.activatedRoute, 
-                queryParams: { count: Math.random(), noteid: this.note.id }
-            });
+            this.routeRefresh();
         }
     }
 
@@ -445,6 +481,7 @@ export class MarkdownNoteHistoryComponent implements OnInit, OnDestroy {
     get onWorking(): boolean {
         return (this.useClickIndex != null || 
                 this.deleteClickIndex != null || 
-                this.mergeClickIndex != null);
+                this.mergeClickIndex != null ||
+                this.mergeAllClick);
     }
 }

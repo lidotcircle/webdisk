@@ -89,6 +89,12 @@ export class NoteService {
         }).toPromise();
     }
 
+    async mergeNoteHistory(noteid: number): Promise<void> {
+        await this.http.put(API.mergeHistory, {
+                noteid
+        }).toPromise();
+    }
+
     async getNoteGeneratioin(noteid: number): Promise<number> {
         const ans = await this.http.get(API.generation, {
             params: {noteid }
