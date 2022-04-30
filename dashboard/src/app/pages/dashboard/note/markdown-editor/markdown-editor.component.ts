@@ -34,7 +34,7 @@ import { TextSelection } from 'prosemirror-state';
                           (addTag)='onAddTagClick($event)'></app-tag-list>
         </nb-card-header>
         <nb-card-body>
-            <app-tui-editor height="100%" [initialValue]='note?.content' [theme]='theme'
+            <app-tui-editor height="100%" [initialValue]='noteInitContent' [theme]='theme'
                 (blur)='handleBlur($event)' (change)='handleChange($event)'#editor
                 (keydown)='handleKeydown($event)'>
             </app-tui-editor>
@@ -50,6 +50,7 @@ import { TextSelection } from 'prosemirror-state';
 })
 export class MarkdownEditorComponent implements OnInit, OnDestroy {
     note: Note;
+    noteInitContent: string;
     lastSaveTime: string;
     lastSaveElapsedMin: number;
     showTitle: boolean = true;
@@ -103,6 +104,9 @@ export class MarkdownEditorComponent implements OnInit, OnDestroy {
             if (!this.note){
                 this.note = await this.noteService.getNote(Number(noteid));
             }
+
+            if (this.note)
+                this.noteInitContent = this.note.content;
         });
 
         interval(1000)
