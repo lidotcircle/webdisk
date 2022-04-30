@@ -17,7 +17,7 @@
 <div class="header-container">
     <nb-actions size="small">
         <nb-action class="user-action" *nbIsGranted="['view', 'user']" >
-            <nb-label style='font-size: medium; padding: 0em 0.5em;'>{{ user?.username }}</nb-label>
+            <nb-label style='font-size: medium; padding: 0em 0.5em;' class='username'>{{ user?.username }}</nb-label>
             <nb-user [nbContextMenu]="userMenu" nbContextMenuTag='user-click'
                    [onlyPicture]="userPictureOnly"
                    [name]="null"

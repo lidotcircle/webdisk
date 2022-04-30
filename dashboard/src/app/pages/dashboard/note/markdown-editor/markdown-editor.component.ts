@@ -229,7 +229,7 @@ export class MarkdownEditorComponent implements OnInit, OnDestroy {
     private lastSavingDate: Date;
     insaving: boolean = false;
     async doUpdate() {
-        if (!this.note || !this.editor) return;
+        if (!this.note || !this.editor || this.insaving) return;
 
         const origin = this.note.content;
         const text = this.editor.getMarkdown();

@@ -19,6 +19,11 @@
         align-content: center;
     }
 
+    .username {
+        user-select: none;
+        cursor: pointer;
+    }
+
     nb-user {
         cursor: pointer;
     }

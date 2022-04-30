@@ -10,6 +10,10 @@ class FrontendEndUserSettings {
     MoveFolderWithoutConfirm: boolean = false;
     UsingLoginTokenInPlayer: boolean = true;
     HttpRedirect: boolean = true;
+
+    Fullscreen_exit_single_click: boolean = true;
+    Fullscreen_enter_single_click: boolean = false;
+    Fullscreen_exit_button_always_show: boolean = true;
     
     Note_Editor_ShowButtons: boolean = false;
     Note_Editor_SavingInterval: number = 1000 * 60;

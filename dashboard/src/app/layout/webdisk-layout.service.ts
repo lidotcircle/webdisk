@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { interval, Observable, Subject, Subscription } from 'rxjs';
 import { filter, take } from 'rxjs/operators';
+import { FrontendSettingService } from '../service/user/frontend-setting.service';
 
 
 function injectCssIntoDocument(css: string): () => void {
@@ -18,7 +19,7 @@ export class WebdiskLayoutService {
     private statusSubject: Subject<boolean>;
     private readonly selectorPrefix: string;
 
-    constructor() {
+    constructor(private settings: FrontendSettingService) {
         this.statusSubject = new Subject();
         this.selectorPrefix = `ngx-dashboard > ngx-default-layout > ngx-one-column-single-page-layout > nb-layout > div.scrollable-container > div.layout`;
 
@@ -27,6 +28,7 @@ export class WebdiskLayoutService {
 
     private async setHeaderClick() {
         const getHeader = () => document.body.querySelector(this.selectorPrefix + ' > nb-layout-header .header-space');
+        const getUsername = () => document.body.querySelector(this.selectorPrefix + ' > nb-layout-header .username');
 
         while (true) {
             await interval(1000)
@@ -34,21 +36,26 @@ export class WebdiskLayoutService {
                 .toPromise();
 
             const header = getHeader() as HTMLElement;
+            const username = getUsername() as HTMLElement;
             header.style.cursor = 'pointer';
             let prevClick: Date = null;
             const clickHandler = () => {
-                if (prevClick && (new Date().getTime() - prevClick.getTime()) < 500) {
-                    this.toggle();
+                if (this.settings.Fullscreen_enter_single_click ||
+                    (prevClick && (new Date().getTime() - prevClick.getTime()) < 500))
+                {
+                    this.hide();
                 } else {
                     prevClick = new Date();
                 }
             }
 
             header.addEventListener('click', clickHandler);
-            await interval(1000)
+            username.addEventListener('click', clickHandler);
+            await interval(5000)
                 .pipe(filter(() => header.parentNode == null), take(1))
                 .toPromise();
             header.removeEventListener('click', clickHandler);
+            username.removeEventListener('click', clickHandler);
         }
     }
 
@@ -119,7 +126,9 @@ export class WebdiskLayoutService {
         document.body.appendChild(exitButton);
         let prevClick: Date = null;
         exitButton.addEventListener('click', () => {
-            if (prevClick && (new Date().getTime() - prevClick.getTime()) < 500) {
+            if (this.settings.Fullscreen_exit_single_click ||
+                (prevClick && (new Date().getTime() - prevClick.getTime()) < 500))
+            {
                 this.subscription.unsubscribe();
                 this.subscription = null;
                 this.statusSubject.next(false);
@@ -140,6 +149,9 @@ export class WebdiskLayoutService {
 
         let buttonHidden = false;
         const hideButton = async () => {
+            if (this.settings.Fullscreen_exit_button_always_show)
+                return;
+
             while (true) {
                 await interval(750).pipe(filter(() => !pointerInBottomRightRegion()), take(2)).toPromise();
                 await interval(1500).pipe(take(1)).toPromise();
@@ -149,6 +161,8 @@ export class WebdiskLayoutService {
 
             exitButton.classList.add('hidden');
             buttonHidden = true;
+            await interval(500).pipe(take(1)).toPromise();
+            exitButton.style.display = 'none';
         }
 
         let waitingMouseHoverBottom = false;
@@ -163,6 +177,7 @@ export class WebdiskLayoutService {
             waitingMouseHoverBottom = false;
 
             if (pointerInBottomRightRegion()) {
+                exitButton.style.display = 'block';
                 exitButton.classList.remove('hidden');
                 buttonHidden = false;
                 hideButton();
