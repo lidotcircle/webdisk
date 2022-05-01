@@ -13,6 +13,12 @@ class LocalUserSettings {
     Note_Editor_SavingInterval_s: number = 60;
     Note_Editor_ShowPatchLength: boolean = true;
 
+    File_Upload_ValidateMD5: boolean = true;
+    File_Upload_Just_Continue: boolean = false;
+    File_Upload_Always_Overwrite: boolean = false;
+
+    Explorer_Default_Item_Per_Page: number = 50;
+
     static fromJSON(json: string): LocalUserSettings {
         const ans = new LocalUserSettings();
         const j = JSON.parse(json);

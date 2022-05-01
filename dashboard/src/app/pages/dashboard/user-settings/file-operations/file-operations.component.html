@@ -1,3 +1,17 @@
 
-<app-audio-player></app-audio-player>
+<app-wrapper>
+  <div class='title'><div class='leader'></div><span>File Upload</span></div>
+  <div class='panel'>
+    <app-setting-item name='Validate MD5' type='checkbox' [(initValue)]='settings.File_Upload_ValidateMD5'></app-setting-item>
+    <app-setting-item name='Always Overwrite' type='checkbox' [(initValue)]='settings.File_Upload_Just_Continue'></app-setting-item>
+    <app-setting-item name='Just Continue' type='checkbox' [(initValue)]='settings.File_Upload_Always_Overwrite'></app-setting-item>
+  </div>
+
+  <div class='title'><div class='leader'></div><span>Explorer</span></div>
+  <div class='panel'>
+    <app-setting-item name='Default Item Per Page' [extra]='{ min: 30, step: 10, type: "number" }' type='input' 
+                      [(initValue)]='settings.Explorer_Default_Item_Per_Page'></app-setting-item>
+  </div>
+
+</app-wrapper>
 

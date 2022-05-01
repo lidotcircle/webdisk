@@ -11,6 +11,7 @@ import { NotifierService } from '../../service/notifier.service';
 import { ViewDraggable } from '../absolute-view/trait/draggable';
 import { NotifierType } from '../notifier/notifier.component';
 import { FileType } from 'src/app/shared/common';
+import { LocalSettingService } from 'src/app/service/user/local-setting.service';
 const assert = console.assert;
 
 const blocksize = 512 * 1024;
@@ -72,7 +73,8 @@ export class UploadFileViewComponent extends AbsoluteView implements OnInit {
                 private fileManager: FileSystemManagerService,
                 private userSettings: UserSettingService,
                 private messagebox: MessageBoxService,
-                private notifier: NotifierService) {
+                private notifier: NotifierService,
+                private localSettings: LocalSettingService) {
         super(host, new ViewDraggable());
         this.uploadOption = new UploadOption();
     }
@@ -241,17 +243,24 @@ export class UploadFileViewComponent extends AbsoluteView implements OnInit {
             }
 
             if (stat.size <= fileData.size && this.userSettings.ContinueSendFileWithSameMD5) {
-                const rmd5 = await this.fileManager.md5(filename);
-                const lmd5 = await this.fileMD5(fileData, 0, stat.size);
-                if(rmd5 == lmd5) {
+                if (this.localSettings.File_Upload_Just_Continue) {
                     uploadsize = stat.size;
                     this.uploadSize.next(stat.size);
+                } else {
+                    const rmd5 = await this.fileManager.md5(filename);
+                    const lmd5 = await this.fileMD5(fileData, 0, stat.size);
+                    if(rmd5 == lmd5) {
+                        uploadsize = stat.size;
+                        this.uploadSize.next(stat.size);
+                    }
                 }
             }
 
             if (uploadsize == 0) {
                 let override = false;
-                if(this.uploadOption.alwaysOverride) {
+                if(this.localSettings.File_Upload_Always_Overwrite ||
+                   this.uploadOption.alwaysOverride)
+                {
                     override = true;
                 } else if (!this.uploadOption.alwaysSkipSameName) {
                     const opt = await this.PopOverrideOptionWindow();
@@ -326,10 +335,12 @@ export class UploadFileViewComponent extends AbsoluteView implements OnInit {
         }
         await this.fileManager.expireUploadSession(sessionId);
 
-        const rmd5 = await this.fileManager.md5(filename);
-        const lmd5 = await this.fileMD5(fileData);
-        if (rmd5 != lmd5) {
-            throw new Error(`upload file fail, unexpected md5 ${rmd5}, require ${lmd5}`);
+        if (this.localSettings.File_Upload_ValidateMD5) {
+            const rmd5 = await this.fileManager.md5(filename);
+            const lmd5 = await this.fileMD5(fileData);
+            if (rmd5 != lmd5) {
+                throw new Error(`upload file fail, unexpected md5 ${rmd5}, require ${lmd5}`);
+            }
         }
     } //}
 

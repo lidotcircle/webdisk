@@ -13,6 +13,7 @@ nb-card {
         text-align: center;
         font-family: 'Roboto', sans-serif;
         font-size: large;
+        user-select: none;
     }
     $basecolor: nb-theme(background-basic-color-1);
 
