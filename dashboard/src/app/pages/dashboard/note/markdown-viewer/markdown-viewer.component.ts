@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NbThemeService, NbToastrService } from '@nebular/theme';
 import { interval, Subject } from 'rxjs';
@@ -6,7 +6,8 @@ import { filter, takeUntil } from 'rxjs/operators';
 import { Note, NoteService } from 'src/app/service/note/note.service';
 import { ObjectSharingService } from 'src/app/service/object-sharing.service';
 import { MessageBoxService } from 'src/app/shared/service/message-box.service';
-import { nbThemeIsDark } from 'src/app/shared/utils';
+import { downloadURI, nbThemeIsDark } from 'src/app/shared/utils';
+import html2canvas from 'html2canvas';
 
 
 @Component({
@@ -26,6 +27,7 @@ import { nbThemeIsDark } from 'src/app/shared/utils';
         </nb-card-body>
         <nb-card-footer>
             <button status='primary' size='small' nbButton (click)='gotoEditor()'>edit</button>
+            <button status='primary' size='small' nbButton [disabled]='inScreenshoting' (click)='saveAsImage()'>screenshot</button>
             <button status='primary' size='small' nbButton (click)='gotoHistory()'>history</button>
             <button status='danger'  size='small' nbButton (click)='deleteNote()'>delete</button>
         </nb-card-footer>
@@ -60,6 +62,7 @@ export class MarkdownViewerComponent implements OnInit, OnDestroy {
                 private noteService: NoteService,
                 private sharing: ObjectSharingService,
                 private nbthemeService: NbThemeService,
+                private host: ElementRef,
                 private activatedRoute: ActivatedRoute)
     {
         this.theme = nbThemeIsDark(this.nbthemeService.currentTheme) ? 'dark' : 'light';
@@ -162,6 +165,20 @@ export class MarkdownViewerComponent implements OnInit, OnDestroy {
             } catch {
                 this.toastr.danger("note delete failed", "Note");
             }
+        }
+    }
+
+    inScreenshoting = false;
+    async saveAsImage() {
+        this.inScreenshoting = true;
+        try {
+            const host = this.host.nativeElement as HTMLElement;
+            const viewer = host.querySelector('app-tui-viewer') as HTMLElement;
+            const canvas = await html2canvas(viewer);
+            const imgData = canvas.toDataURL('image/png');
+            downloadURI(imgData, `${this.note.title}.png`);
+        } finally {
+            this.inScreenshoting = false;
         }
     }
 }
