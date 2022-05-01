@@ -1,19 +1,13 @@
-@import 'src/app/style/utils.scss';
 
 :host {
+    user-select: none;
     display: flex;
     flex-direction: row;
+    width: 100%;
     align-items: center;
     justify-content: space-between;
 
     .name {
-        user-select: none;
         font-weight: bold;
     }
-
-    .checkbox {
-        flex-shrink: 0;
-        width: min-content;
-    }
 }
-

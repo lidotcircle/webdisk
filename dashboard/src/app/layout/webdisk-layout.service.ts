@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { interval, Observable, Subject, Subscription } from 'rxjs';
 import { filter, take } from 'rxjs/operators';
-import { FrontendSettingService } from '../service/user/frontend-setting.service';
+import { LocalSettingService } from '../service/user/local-setting.service';
 
 
 function injectCssIntoDocument(css: string): () => void {
@@ -19,7 +19,7 @@ export class WebdiskLayoutService {
     private statusSubject: Subject<boolean>;
     private readonly selectorPrefix: string;
 
-    constructor(private settings: FrontendSettingService) {
+    constructor(private settings: LocalSettingService) {
         this.statusSubject = new Subject();
         this.selectorPrefix = `ngx-dashboard > ngx-default-layout > ngx-one-column-single-page-layout > nb-layout > div.scrollable-container > div.layout`;
 
@@ -40,6 +40,7 @@ export class WebdiskLayoutService {
             header.style.cursor = 'pointer';
             let prevClick: Date = null;
             const clickHandler = () => {
+                console.log(this.settings.Fullscreen_enter_single_click);
                 if (this.settings.Fullscreen_enter_single_click ||
                     (prevClick && (new Date().getTime() - prevClick.getTime()) < 500))
                 {

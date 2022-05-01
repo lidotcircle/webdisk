@@ -1,8 +1,5 @@
 
-<div class="boxbox">
-    <div class="name">{{ name }}</div>
-    <div class="take-space"></div>
-    <mat-checkbox class='checkbox'
-                  [(ngModel)]='initvalue' (change)='onchange()'></mat-checkbox>
-</div>
+<div class="name">{{ name }}</div>
+<mat-checkbox class='checkbox'
+              [(ngModel)]='initvalue' (change)='onchange($event)'></mat-checkbox>
 

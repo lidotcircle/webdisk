@@ -6,9 +6,16 @@
               [init]='setting.initvalue'
               (change)='onchange($event)'></app-checkbox>
 
-<app-input *ngIf='setting.type=="text" || setting.type=="number"' 
+<app-input *ngIf='setting.type=="input"' 
            [name]='setting.name' 
             type ='{{setting.type}}' 
            [init]='setting.initvalue'
+           [options]='setting.extra || {}'
            (change)='onchange($event)'></app-input>
+
+<app-select *ngIf='setting.type=="select"' 
+           [name]='setting.name' 
+           [init]='setting.initvalue'
+           [options]='setting.extra'
+           (change)='onchange($event)'></app-select>
 

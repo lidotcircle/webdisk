@@ -9,15 +9,6 @@ class FrontendEndUserSettings {
     ContinueSendFileWithSameMD5: boolean = true;
     MoveFolderWithoutConfirm: boolean = false;
     UsingLoginTokenInPlayer: boolean = true;
-    HttpRedirect: boolean = true;
-
-    Fullscreen_exit_single_click: boolean = true;
-    Fullscreen_enter_single_click: boolean = false;
-    Fullscreen_exit_button_always_show: boolean = true;
-    
-    Note_Editor_ShowButtons: boolean = false;
-    Note_Editor_SavingInterval: number = 1000 * 60;
-    Note_Editor_ShowPatchLength: boolean = true;
 
     static fromJSON(json: string): FrontendEndUserSettings {
         const ans = new FrontendEndUserSettings();
@@ -36,8 +27,7 @@ function AutoUpdateInChange(sm: string, gm?: string) {
         return class extends constructor {
             constructor(...args: any[]) {
                 super(...args);
-                let keys = [];
-                for(let key in this) keys.push(key);
+                const keys = Object.getOwnPropertyNames(this);
 
                 return new Proxy(this, {
                     get: function (target, prop, receiver) {
@@ -51,12 +41,12 @@ function AutoUpdateInChange(sm: string, gm?: string) {
                         return Reflect.get(target, prop, receiver);
                     },
                     set: function (target, prop, value, receiver) {
+                        Reflect.set(target, prop, value, receiver);
                         if (keys.indexOf(prop as string) >= 0) {
                             const f = Reflect.get(target, sm) as Function;
                             console.assert(typeof f === 'function');
                             f.bind(target)(prop);
                         }
-                        Reflect.set(target, prop,value, receiver);
                         return true;
                     }
                 });
@@ -98,6 +88,11 @@ export class FrontendSettingService extends Setting {
                 this.localstorage.remove(SETTING_KEY);
                 return;
             }
+            const sobj = new FrontendEndUserSettings();
+            assignTargetEnumProp(this, sobj);
+            const current_setting = JSON.stringify(sobj);
+            if (current_setting == setting) return;
+
             const obj = FrontendEndUserSettings.fromJSON(setting);
             this.stopAutomateSaving = true;
             CopySourceEnumProp(obj, this);

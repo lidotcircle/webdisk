@@ -1,23 +1,19 @@
 @import 'src/app/style/utils.scss';
 
-.boxbox {
+:host {
     display: flex;
     flex-direction: row;
     align-items: center;
+    justify-content: space-between;
 
     .name {
-        @include no-select();
-        padding: 0em 0.5em;
-        color: #555;
+        font-weight: bold;
         white-space: nowrap;
-    }
-
-    .take-space {
-        flex-grow: 1;
+        user-select: none;
     }
 
     mat-form-field {
-        width: 20%;
+        width: 50%;
 
         input {
             width: 100%;

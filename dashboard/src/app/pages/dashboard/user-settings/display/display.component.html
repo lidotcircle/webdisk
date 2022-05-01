@@ -1,12 +1,26 @@
 <app-wrapper>
-  <div class="global-settings">
-    <div class="key-value-table">
-      <div>Theme</div>
-      <div>
-        <nb-select [selected]="currentTheme" (selectedChange)="changeTheme($event)" status="primary">
-          <nb-option *ngFor="let theme of themes" [value]="theme.value"> {{ theme.name }}</nb-option>
-        </nb-select>
-      </div>
-    </div>
+  <div class='title'><div class='leader'></div><span>General</span></div>
+  <div class='panel'>
+    <app-setting-item 
+       name='Theme' type='select'
+       (change)='changeTheme($event)' [(initValue)]='currentTheme'
+       [extra]='[ {value: "default", name: "Default"}, {value: "dark", name: "Dark"}, {value: "cosmic", name: "Cosmic"}, {value: "corporate", name: "Corporate"} ]'>
+    </app-setting-item>
   </div>
+
+  <div class='title'><div class='leader'></div><span>Full Screen Option</span></div>
+  <div class='panel'>
+    <app-setting-item name='Single Click Entering' type='checkbox' [(initValue)]='settings.Fullscreen_enter_single_click'></app-setting-item>
+    <app-setting-item name='Single Click Exit' type='checkbox' [(initValue)]='settings.Fullscreen_exit_single_click'></app-setting-item>
+    <app-setting-item name='Always Show Exit Button' type='checkbox' [(initValue)]='settings.Fullscreen_exit_button_always_show'></app-setting-item>
+  </div>
+
+  <div class='title'><div class='leader'></div><span>Markdown Editor</span></div>
+  <div class='panel'>
+    <app-setting-item name='Show Buttons' type='checkbox' [(initValue)]='settings.Note_Editor_ShowButtons'></app-setting-item>
+    <app-setting-item name='Save Interval (seconds)' [extra]='{ min: 30, step: 10, type: "number" }' type='input' 
+                      [(initValue)]='settings.Note_Editor_SavingInterval_s'></app-setting-item>
+    <app-setting-item name='Show Patch Length' type='checkbox' [(initValue)]='settings.Note_Editor_ShowPatchLength'></app-setting-item>
+  </div>
+
 </app-wrapper>

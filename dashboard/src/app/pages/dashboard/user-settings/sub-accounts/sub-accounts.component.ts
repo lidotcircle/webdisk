@@ -76,7 +76,6 @@ export class SubAccountsComponent implements OnInit {
         const settingItems = [];
         for(const key in perm) {
             const s = new SettingItem();
-            s.property = key;
             s.name = key;
             s.initvalue = perm[key];
             s.change = (() => {
@@ -92,8 +91,8 @@ export class SubAccountsComponent implements OnInit {
 
             switch(typeof perm[key]) {
                 case 'boolean': s.type = 'checkbox'; break;
-                case 'number':  s.type = 'number'; break;
-                case 'string':  s.type = 'text'; break;
+                case 'number':  s.type = 'input'; s.extra = { type: 'number' }; break;
+                case 'string':  s.type = 'input'; s.extra = { type: 'text' }; break;
             }
 
             if(typeof s.type === 'string') {

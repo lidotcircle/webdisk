@@ -19,7 +19,7 @@ export class CheckboxComponent implements OnInit {
     ngOnInit(): void {
     }
 
-    onchange() {
+    onchange(_event: any) {
         this.valuechange.next(this.initvalue);
     }
 }

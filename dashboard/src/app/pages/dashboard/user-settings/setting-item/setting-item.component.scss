@@ -1,16 +1,20 @@
+@use 'sass:color' as color;
+@use 'src/app/@theme/styles/themes' as *;
 
-app-setting-item {
+
+:host {
     width: 100%;
-
-    .sv-seperator {
-        width: 100%;
-        height: 2px;
-        background-color: #777;
-        margin: 0.5em 0em;
-    }
 
     &:nth-child(1) .sv-seperator {
         display: none;
     }
 }
 
+@include nb-install-component {
+    .sv-seperator {
+        width: 100%;
+        height: 1px;
+        background-color: darken(nb-theme(background-basic-color-1), 20%);
+        margin: 1em 0em;
+    }
+}

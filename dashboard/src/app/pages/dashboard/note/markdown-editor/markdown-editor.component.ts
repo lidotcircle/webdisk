@@ -9,9 +9,9 @@ import { interval, Subject } from 'rxjs';
 import { filter, take, takeUntil } from 'rxjs/operators';
 import hotkeys from 'hotkeys-js';
 import { nbThemeIsDark, saveDataAsFile } from 'src/app/shared/utils';
-import { FrontendSettingService } from 'src/app/service/user/frontend-setting.service';
 import { EditorView } from 'prosemirror-view';
 import { TextSelection } from 'prosemirror-state';
+import { LocalSettingService } from 'src/app/service/user/local-setting.service';
 
 
 @Component({
@@ -72,13 +72,13 @@ export class MarkdownEditorComponent implements OnInit, OnDestroy {
                 private noteService: NoteService,
                 private sharing: ObjectSharingService,
                 private activatedRoute: ActivatedRoute,
-                private settings: FrontendSettingService,
+                private settings: LocalSettingService,
                 private nbtheme: NbThemeService)
     {
         this.theme = nbThemeIsDark(this.nbtheme.currentTheme) ? 'dark' : 'light';
         this.destroy$ = new Subject();
         this.showButtons = this.settings.Note_Editor_ShowButtons;
-        this.savingInterval = this.settings.Note_Editor_SavingInterval;
+        this.savingInterval = this.settings.Note_Editor_SavingInterval_s * 1000;
     }
 
     ngOnDestroy(): void {

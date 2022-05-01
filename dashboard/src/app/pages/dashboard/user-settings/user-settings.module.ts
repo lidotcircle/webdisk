@@ -14,6 +14,7 @@ import { SettingItemComponent } from './setting-item/setting-item.component';
 import { CheckboxComponent } from './setting-item/checkbox/checkbox.component';
 import { InputComponent } from './setting-item/input/input.component';
 import { NbCardModule } from '@nebular/theme';
+import { SelectComponent } from './setting-item/select/select.component';
 
 
 @NgModule({
@@ -27,7 +28,8 @@ import { NbCardModule } from '@nebular/theme';
         WrapperComponent,
         SettingItemComponent,
         CheckboxComponent,
-        InputComponent
+        InputComponent,
+        SelectComponent,
     ],
     imports: [
         CommonModule,

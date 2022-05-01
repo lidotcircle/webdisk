@@ -25,7 +25,7 @@ router.get('/',
         }
 
         const user = getAuthUsername(req);
-        const pageno = safeNumber(req.query['pagneo']) || 1;
+        const pageno = safeNumber(req.query['pageno']) || 1;
         const pagesize = safeNumber(req.query['pagesize']) || 5;
         const { notetype, sortBy, order } = req.query;
         const skip = (pageno  - 1) * pagesize;

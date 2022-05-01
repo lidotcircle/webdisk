@@ -2,6 +2,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { NbThemeService } from '@nebular/theme';
 import { Subject } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
+import { LocalSettingService } from 'src/app/service/user/local-setting.service';
 
 
 @Component({
@@ -11,27 +12,14 @@ import { map, takeUntil } from 'rxjs/operators';
 })
 export class DisplayComponent implements OnInit, OnDestroy {
     private destroy$: Subject<void> = new Subject<void>();
-    themes = [
-        {
-            value: 'default',
-            name: 'Default',
-        },
-        {
-            value: 'dark',
-            name: 'Dark',
-        },
-        {
-            value: 'cosmic',
-            name: 'Cosmic',
-        },
-        {
-            value: 'corporate',
-            name: 'Corporate',
-        },
-    ];
     currentTheme = 'default';
 
-    constructor(private themeService: NbThemeService) { }
+    settings: LocalSettingService;
+
+    constructor(private themeService: NbThemeService, private _settings: LocalSettingService)
+    {
+        this.settings = this._settings;
+    }
 
     ngOnInit(): void {
         this.currentTheme = this.themeService.currentTheme;

@@ -1,10 +1,8 @@
 
-<div class="boxbox">
-    <div class="name">{{ name }}</div>
-    <div class="take-space"></div>
-    <mat-form-field>
-        <input matInput type='{{ type }}'
-               [(ngModel)]='initvalue' (change)='onchange($event)'>
-    </mat-form-field>
-</div>
+<div class="name">{{ name }}</div>
+<mat-form-field>
+    <input matInput type='{{ options?.type || "text"}}'
+           [attr.min]='options.min' [attr.step]='options.step' [attr.max]='options.max'
+           [(ngModel)]='initvalue' (change)='onchange($event)'>
+</mat-form-field>
 

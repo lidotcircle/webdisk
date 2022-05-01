@@ -15,11 +15,15 @@ export class InputComponent implements OnInit {
     type: string;
     @Output('change')
     private valuechange: Subject<any> = new Subject<any>();
+
+    @Input()
+    options: { type: string, min?: number, max?: number, step?: number };
     
     constructor() { }
 
     ngOnInit(): void {
         this.type = this.type || 'text';
+        this.options = this.options || { } as any;
     }
 
     onchange(event: Event) {
