@@ -20,21 +20,26 @@ export function AcceptDragItem(elem: HTMLElement, destination: () => string,
         ev.stopPropagation();
         ev.preventDefault();
     });
-    elem.addEventListener("drop", (ev: DragEvent) => {
+    elem.addEventListener("drop", async (ev: DragEvent) => {
         ev.stopPropagation();
         ev.preventDefault();
         const filepath = ev.dataTransfer.getData("path");
         if (filepath == '') {
+            const entries = [];
             for(let i=0; i<ev.dataTransfer.items.length; i++) {
                 const entry = ev.dataTransfer.items[i].webkitGetAsEntry();
+                entries.push(entry);
+            }
+            for(const entry of entries) {
                 if (entry.isFile || entry.isDirectory) { // FileSystemEntry
-                    fileOperation.upload([entry], destination())
-                    .catch(err => console.error(err))
-                    .then(() => {
-                        if(uploadHook) uploadHook.bind(null)();
-                    });;
+                    try {
+                        await fileOperation.upload([entry], destination());
+                    } catch (e) {
+                        console.log(e);
+                    }
                 }
             }
+            if (uploadHook) uploadHook();
         } else if (filepath != destination() && acceptDragItem) {
             const nf = new FileStat();
             nf.filename = filepath;
