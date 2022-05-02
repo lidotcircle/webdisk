@@ -14,6 +14,5 @@ export module CONS {
     }
 
     export const wsurl: string = `${location.protocol == 'https:' ? 'wss' : 'ws'}://${location.host}/ws`;
-    export const WS_RETRY_BASE: number = 2000;
 }
 

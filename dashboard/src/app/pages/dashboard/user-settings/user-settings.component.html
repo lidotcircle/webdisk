@@ -9,6 +9,7 @@
       <div class="nav-button" (click)='gotoPanel($event)' data-panel='sub-account'> Sub Accounts </div>
       <div class="nav-button" (click)='gotoPanel($event)' data-panel='file-operation'> File Operations </div>
       <div class="nav-button" (click)='gotoPanel($event)' data-panel='display'> Display </div>
+      <div class="nav-button" (click)='gotoPanel($event)' data-panel='misc'> Misc </div>
       <div class="nav-button" (click)='gotoPanel($event)' data-panel='about'> About </div>
     </div>
 
@@ -18,6 +19,7 @@
       <ng-template swiperSlide><div class="slide"><app-sub-accounts></app-sub-accounts></div></ng-template>
       <ng-template swiperSlide><div class="slide"><app-file-operations></app-file-operations></div></ng-template>
       <ng-template swiperSlide><div class="slide"><app-display></app-display></div></ng-template>
+      <ng-template swiperSlide><div class="slide"><app-misc></app-misc></div></ng-template>
       <ng-template swiperSlide><div class="slide"><app-about>  </app-about>  </div></ng-template>
     </swiper>
   </nb-card-body>

@@ -1,10 +1,13 @@
 import { Injectable } from '@angular/core';
-import { BasicMessage, MessageType, CONS, MessageSource, DownloadManageEventMessage, FileEventMessage, MiscMessageType } from '../common';
+import { BasicMessage, MessageType, MessageSource, DownloadManageEventMessage, FileEventMessage, MiscMessageType } from '../common';
 import { MessageEncoderService } from './message-encoder.service';
 import { nextTick } from '../utils';
-import { Observable, Subject } from 'rxjs';
+import { interval, Observable, Subject } from 'rxjs';
+import { take } from 'rxjs/operators';
+import { LocalSettingService } from 'src/app/service/user/local-setting.service';
 
 type MSGCallback = (response: BasicMessage) => void;
+const wsurl: string = `${window.location.protocol == 'https:' ? 'wss' : 'ws'}://${location.host}/ws`;
 
 @Injectable({
     providedIn: 'root'
@@ -21,13 +24,13 @@ export class WSChannelService {
     get xconnection(): Observable<void> {return this._connection;}
     get xdisconnect(): Observable<void> {return this._disconnect;}
 
-    constructor(private encoder: MessageEncoderService) //{
+    constructor(private encoder: MessageEncoderService, private localSetting: LocalSettingService) //{
     {
         this.connection      = null;
         this.waiter_list     = new Map();
-        this.request_timeout = 5000;
+        this.request_timeout = Math.max(this.localSetting.Websocket_Request_Timeout_s, 5) * 1000;;
         this.max_id          = 0;
-        this.retry_base      = CONS.WS_RETRY_BASE;
+        this.retry_base      = Math.max(this.localSetting.Websocket_Reconnect_Interval_s, 1) * 1000;
         this.pendding_list   = [];
         this.setup_new_connection();
     } //}
@@ -104,9 +107,18 @@ export class WSChannelService {
         }, maxTimeout || this.request_timeout));
     } //}
 
-    private reconnect() {
-        setTimeout(() => this.setup_new_connection(), this.retry_base);
-        this.retry_base *= 2;
+    private inReconnecting: boolean;
+    private async reconnect() {
+        if (this.inReconnecting) return;
+
+        try {
+            this.inReconnecting = true;
+            await interval(this.retry_base).pipe(take(1)).toPromise();
+            this.setup_new_connection();
+        } finally {
+            this.inReconnecting = false;
+            this.retry_base *= 2;
+        }
     }
 
     private setup_new_connection() //{
@@ -115,19 +127,18 @@ export class WSChannelService {
             this.connection.close();
             this.connection = null;
         }
-        this.connection = new WebSocket(CONS.wsurl);
+        this.connection = new WebSocket(wsurl);
         this.connection.onmessage = (msg) => this.onmessage(msg);
-        this.connection.onclose   = ()    => {
+        this.connection.onclose   = () => {
             this._disconnect.next();
             this.reconnect();
         }
         this.connection.onerror   = (err) => {
             console.warn(err);
             this._disconnect.next();
-            this.reconnect();
         }
         this.connection.onopen    = ()    => {
-            this.retry_base = CONS.WS_RETRY_BASE;
+            this.retry_base = this.localSetting.Websocket_Reconnect_Interval_s * 1000;
             this.__call_all_msg();
             this._connection.next();
         }

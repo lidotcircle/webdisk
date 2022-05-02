@@ -19,6 +19,9 @@ class LocalUserSettings {
 
     Explorer_Default_Item_Per_Page: number = 50;
 
+    Websocket_Reconnect_Interval_s: number = 2;
+    Websocket_Request_Timeout_s: number = 8;
+
     static fromJSON(json: string): LocalUserSettings {
         const ans = new LocalUserSettings();
         const j = JSON.parse(json);
