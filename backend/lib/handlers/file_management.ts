@@ -248,7 +248,8 @@ class FileManagement extends MessageHandler {
                 } break;
                 case FileRequest.CREATE_UPLOAD_SESSION: {
                     checkArgv('sn', argv);
-                    resp.fm_msg.fm_response = await this.filesystem.createUploadSession(argv[0], argv[1]);
+                    const filepath = this.resolveUserPath(rootpath, argv[0]);
+                    resp.fm_msg.fm_response = await this.filesystem.createUploadSession(filepath, argv[1]);
                 } break;
                 case FileRequest.UPLOAD_SLICE: {
                     checkArgv('snf', argv);
