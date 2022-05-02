@@ -1,3 +1,4 @@
+import io
 import json
 from subprocess import Popen, PIPE
 import sys
@@ -11,15 +12,17 @@ from base64 import decodebytes, encodebytes
 
 class TdLogger:
     def __init__(self, endpoint: str, default_group: str, sdata_naverage: int, credential: Union[str, Tuple[str,str]], 
-                 timeout: int = 5, group_prefiex: str = ""):
+                 timeout: int = 5, group_prefix: str = "", disabled: bool = False):
         self.endpoint = endpoint
         self.default_group = default_group
         self.sdataNaverage = sdata_naverage
         self.timeout = timeout
         self.credential = credential
-        self.group_prefiex = group_prefiex
+        self.group_prefix = group_prefix
+        self.disabled = disabled
         assert(self.credential != "")
-        self.__start_subprocess()
+        if not self.disabled:
+            self.__start_subprocess()
         self.__data_list: Dict[str,List[dict]] = { }
 
     def __start_subprocess(self):
@@ -78,8 +81,13 @@ class TdLogger:
                 self.__data_list[group] = []
 
     def __sendSData(self, data: dict, group: str):
-        payload = json.dumps({ "data": data, "group": group })
+        payload = json.dumps({ "data": data, "group": self.group_prefix + group })
         self.__sendmsg("sdata", payload)
+
+    def sendBlobFile(self, file: str, blobname: str, dst: str, group: str):
+        with io.open(file, mode = "rb") as image_file:
+            image_bytes = image_file.read()
+            self.sendBlob(image_bytes, blobname, dst, group)
 
     def sendBlob(self, blob: bytes, blobname: str, dst: str, group: str):
         blob_b64 = encodebytes(blob).decode("ascii")
@@ -87,11 +95,13 @@ class TdLogger:
             "blobB64": blob_b64,
             "blobname": blobname,
             "destination": dst,
-            "group": group,
+            "group": self.group_prefix + group,
         })
         self.__sendmsg("blob", msg)
 
     def __sendmsg(self, msgtype: str, payload: str):
+        if self.disabled:
+            return
         msg = json.dumps({"type": msgtype, "msg": payload})
         if (self._subpipe.stdin != None):
             try:
@@ -234,4 +244,4 @@ if __name__ == "__main__":
     httplogger = HttpLogger(args.endpoint, args.timeout, 
                             username=args.username, password=args.password, 
                             grouptoken=args.grouptoken)
-    asyncio.run(httplogger.run())
+ 

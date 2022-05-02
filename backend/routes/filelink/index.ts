@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { UserUploadFileService } from '../../service';
 import { QueryDependency } from '../../lib/di';
 import { createPasswordAuthMiddleware, getAuthUsername, defaultJWTAuthMiddleware, AnyOfNoError } from '../../middleware';
@@ -12,14 +12,14 @@ export default router;
 
 const passwordAuthMiddleware = createPasswordAuthMiddleware("username", "password");
 const defaultAuth = AnyOfNoError(passwordAuthMiddleware, defaultJWTAuthMiddleware);
-router.get('/:fileid',
-    async (req, res) => {
+const handler = async (req: Request, res: Response) => {
         const fileid = req.params['fileid'];
         const filename = req.query['filename'] as string;
         const service = QueryDependency(UserUploadFileService);
         await service.downloadFile(fileid, req, res, filename);
     }
-)
+router.get('/:fileid', handler);
+router.head('/:fileid', handler);
 
 router.post('/', defaultAuth,
     query('filepath').isString(),
