@@ -2,10 +2,9 @@ import { RequestHandler, Request, Response, NextFunction } from 'express';
 import createHttpError from 'http-errors';
 import { DIProperty } from '../lib/di';
 import { UserTokenService } from '../service';
+import { setAuthUsername, setAuthUser } from './userinfo';
 
 
-const UsernameSymbol = Symbol('username');
-const UserSymbol = Symbol('user');
 class STokenAuthMiddleware {
     @DIProperty(UserTokenService)
     private userTokenService: UserTokenService;
@@ -26,8 +25,8 @@ class STokenAuthMiddleware {
         if (!user)
             return next(new createHttpError.BadRequest());
 
-        req[UsernameSymbol] = user.username;
-        req[UserSymbol] = user;
+        setAuthUser(req, user);
+        setAuthUsername(req, user.username);
         next();
     }
 }
@@ -35,12 +34,4 @@ class STokenAuthMiddleware {
 export function createSTokenAuthMiddleware(usage: string) {
     const { middleware } =  new STokenAuthMiddleware(usage);
     return middleware;
-}
-
-export function getSTokenAuthUser(req: Request) {
-    return req[UserSymbol];
-}
-
-export function getSTokenAuthUsername(req: Request) {
-    return req[UsernameSymbol];
 }

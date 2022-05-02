@@ -46,6 +46,9 @@ export class UserService {
     }
 
     public async getUser(username: string): Promise<User> {
+        if (typeof username != 'string') {
+            throw new createHttpError.InternalServerError("expect username");
+        }
         return await this.userRepo.findOne({
             where: {
                 username: username

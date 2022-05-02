@@ -18,6 +18,9 @@ const handler = async (req: Request, res: Response) => {
     const qpos = req.url.indexOf('?');
     const uripath = qpos > 0 ? req.url.substring(0, qpos) : req.url;
     const username = getAuthUsername(req);
+    if (!username)
+        throw new createHttpError.Unauthorized();
+
     const userService = QueryDependency(UserService);
     const user = await userService.getUser(username);
     if (!user)
