@@ -1,7 +1,4 @@
-import { Component, ElementRef, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
-import { MousePointerService } from '../../service/mouse-pointer.service';
-import { AbsoluteView, BeAbsoluteView } from '../absolute-view/absolute-view';
-import { ViewDraggable } from '../absolute-view/trait/draggable';
+import { Component, EventEmitter, OnInit, Output, ViewChild } from '@angular/core';
 import { ProgressCircleComponent } from './progress-circle/progress-circle.component';
 
 @Component({
@@ -9,8 +6,7 @@ import { ProgressCircleComponent } from './progress-circle/progress-circle.compo
     templateUrl: './message-progress-bar.component.html',
     styleUrls: ['./message-progress-bar.component.scss']
 })
-@BeAbsoluteView()
-export class MessageProgressBarComponent extends AbsoluteView implements OnInit {
+export class MessageProgressBarComponent implements OnInit {
     @Output('close')
     private close = new EventEmitter<void>();
     @ViewChild('progresscircle', {static: true})
@@ -18,11 +14,7 @@ export class MessageProgressBarComponent extends AbsoluteView implements OnInit 
 
     title = 'unknown';
     message: string;
-    constructor(private _h: ElementRef,
-                private mousepointer: MousePointerService) {
-        //super(_h, new ViewDraggable(()=>true, ...mousepointer.pixelCoordinate));
-        super(_h, new ViewDraggable(()=>true, '50%', '50%'));
-    }
+    constructor() {}
 
     ngOnInit(): void {
     }

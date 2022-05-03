@@ -1,5 +1,5 @@
 
-<app-window title='{{title}}' (close)="onClose()">
+<app-window title='{{title}}' (close)="onClose()" movable [classes]='["window-toolbar"]' bounded>
 <div class="message-box">
 
     <form #fs1="ngForm" class='message-box-content' draggable='true' (dragstart)="preventDefaultAndStop($event)" novalidate>

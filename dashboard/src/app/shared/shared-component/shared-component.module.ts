@@ -31,6 +31,7 @@ import { ConfirmWindowComponent } from './confirm-window.component';
 import { NbButtonModule, NbSelectModule } from '@nebular/theme';
 import { PrismJSComponent } from './ngx-prismjs/ngx-prismjs.component';
 import { ToastUIModule } from './toast-ui/toast-ui.module';
+import { SharedDirectiveModule } from '../shared-directive/shared-directive.module';
 
 
 @NgModule({
@@ -52,7 +53,8 @@ import { ToastUIModule } from './toast-ui/toast-ui.module';
         FormsModule,
         NbButtonModule,
         NbSelectModule,
-        MediaModule
+        MediaModule,
+        SharedDirectiveModule,
     ],
     exports: [
         LoginBGComponent,
@@ -65,6 +67,7 @@ import { ToastUIModule } from './toast-ui/toast-ui.module';
         WindowComponent,
         PageTopComponent,
         PrismJSComponent,
+        SharedDirectiveModule,
 
         MediaModule,
         ToastUIModule,

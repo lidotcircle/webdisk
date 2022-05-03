@@ -4,6 +4,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { NbThemeService } from '@nebular/theme';
 import { map } from 'rxjs/operators';
 import { AsyncLocalStorageService } from './shared/service/async-local-storage.service';
+import { MousePointerService } from './shared/service/mouse-pointer.service';
 import { rootViewContainerRefSymbol } from './shared/utils';
 
 declare const require: any;
@@ -51,9 +52,12 @@ export class AppComponent {
                 private matIconRegistry: MatIconRegistry,
                 private themeService: NbThemeService,
                 private localstorage: AsyncLocalStorageService,
-                private domSanitizer: DomSanitizer) {
+                private mousePointerService: MousePointerService,
+                private domSanitizer: DomSanitizer) 
+    {
         window[rootViewContainerRefSymbol] = this.bodyContainer;
 
+        console.log("setup mouse pointer ", this.mousePointerService.coordinate);
         icons.forEach(v => this.matIconRegistry.addSvgIconLiteral(v.name, this.domSanitizer.bypassSecurityTrustHtml(v.svg)));
         this.themeStoreRecovery();
     }

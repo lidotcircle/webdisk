@@ -1,5 +1,4 @@
-import { ElementRef, ComponentRef, OnInit, OnDestroy, AfterViewChecked, AfterContentChecked, OnChanges, SimpleChanges, AfterViewInit, Component } from '@angular/core';
-import { nextTick } from '../../utils';
+import { ElementRef } from '@angular/core';
 import { ViewTrait } from './trait/view-trait';
 
 
@@ -22,11 +21,6 @@ export class AbsoluteView {
     __ngOnDestroy__(): void {
         for(const trait of this.traits) trait.destroyHook();
     }
-}
-
-interface AbsoluteViewPrototype {
-    ngAfterViewInit(): void;
-    ngOnDestroy(): void;
 }
 
 function mergeMethod(obj: object, methodname: string, hook: ()=>void) {

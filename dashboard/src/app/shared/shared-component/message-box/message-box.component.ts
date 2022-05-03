@@ -1,8 +1,5 @@
-import { Component, OnInit, ElementRef, ViewContainerRef, OnDestroy, Input } from '@angular/core';
-import { MousePointerService } from '../../service/mouse-pointer.service';
-import { assignTargetEnumProp } from '../../utils';
-import { AbsoluteView, BeAbsoluteView } from '../absolute-view/absolute-view';
-import { ViewDraggable } from '../absolute-view/trait/draggable';
+import { Component, OnInit, Input } from '@angular/core';
+
 
 export class MessageBoxInput {
     label: string;
@@ -46,8 +43,7 @@ class MessageBoxReturnData {
     templateUrl: './message-box.component.html',
     styleUrls: ['./message-box.component.scss']
 })
-@BeAbsoluteView()
-export class MessageBoxComponent extends AbsoluteView implements OnInit {
+export class MessageBoxComponent implements OnInit {
     @Input()
     title: string = 'origin';
     @Input()
@@ -57,10 +53,7 @@ export class MessageBoxComponent extends AbsoluteView implements OnInit {
     @Input()
     buttons: MessageBoxButton[] = [];
 
-    constructor(protected host: ElementRef,
-                private mousepointer: MousePointerService) {
-        super(host, new ViewDraggable(()=>true, ...mousepointer.pixelCoordinate));
-    }
+    constructor() {}
 
     ngOnInit(): void {
         this.inputs = JSON.parse(JSON.stringify(this.inputs));

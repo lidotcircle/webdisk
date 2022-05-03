@@ -1,5 +1,4 @@
 import { Component, OnInit, ElementRef, Input } from '@angular/core';
-import { AbsoluteView, BeAbsoluteView } from '../absolute-view/absolute-view';
 import { FileSystemManagerService } from '../../service/file-system-manager.service';
 import { FileStat } from '../../common';
 import { Observable, Subject } from 'rxjs';
@@ -8,7 +7,6 @@ import * as crypto from 'crypto-js';
 import { UserSettingService } from '../../service/user-setting.service';
 import { MessageBoxService } from '../../service/message-box.service';
 import { NotifierService } from '../../service/notifier.service';
-import { ViewDraggable } from '../absolute-view/trait/draggable';
 import { NotifierType } from '../notifier/notifier.component';
 import { FileType } from 'src/app/shared/common';
 import { LocalSettingService } from 'src/app/service/user/local-setting.service';
@@ -30,8 +28,7 @@ class UploadOption {
     templateUrl: './upload-file-view.component.html',
     styleUrls: ['./upload-file-view.component.scss']
 })
-@BeAbsoluteView()
-export class UploadFileViewComponent extends AbsoluteView implements OnInit {
+export class UploadFileViewComponent implements OnInit {
     @Input()
     private fileEntries: FileSystemEntryWrapper[];
     @Input()
@@ -69,13 +66,11 @@ export class UploadFileViewComponent extends AbsoluteView implements OnInit {
 
     get progressPercent() {return this.totalSize > 0 ? this.uploadedSize / this.totalSize * 100 : 0;}
 
-    constructor(protected host: ElementRef,
-                private fileManager: FileSystemManagerService,
+    constructor(private fileManager: FileSystemManagerService,
                 private userSettings: UserSettingService,
                 private messagebox: MessageBoxService,
                 private notifier: NotifierService,
                 private localSettings: LocalSettingService) {
-        super(host, new ViewDraggable());
         this.uploadOption = new UploadOption();
     }
 

@@ -1,5 +1,4 @@
-import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
-import { DragableView } from '../absolute-view/dragable-view';
+import { Component, Input, OnInit } from '@angular/core';
 
 @Component({
     selector: 'app-progress-bar',

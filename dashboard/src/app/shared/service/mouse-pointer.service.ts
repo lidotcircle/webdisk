@@ -14,9 +14,20 @@ export class MousePointerService {
         });
     }
 
-    get coordinate(): [number, number] {return [Math.floor(this.clientX), Math.floor(this.clientY)];}
+    get coordinate(): [number, number] {
+        if (this.clientY != null) {
+            return [Math.floor(this.clientX), Math.floor(this.clientY)];
+        } else {
+            return null;
+        }
+    }
     get pixelCoordinate(): [string, string] {
-        return [this.coordinate[0].toString() + 'px', this.coordinate[1].toString() + 'px'];
+        const coord = this.coordinate;
+        if (coord) {
+            return [coord[0].toString() + 'px', coord[1].toString() + 'px'];
+        } else {
+            return null;
+        }
     }
 }
 
