@@ -25,6 +25,38 @@ nb-card {
         flex-direction: row;
         padding: 0em;
 
+        .nav-container {
+            overflow-x: hidden;
+            overflow-y: auto;
+
+            &::-webkit-scrollbar {
+                width: 0.3em;
+                height: 0.3em;
+                background-color: transparent;
+            }
+            &::-webkit-scrollbar-thumb {
+                background-color: rgba(180, 180, 180, 0);
+                border-radius: 0.2em;
+            }
+            &:hover {
+                &::-webkit-scrollbar-thumb {
+                    background-color: rgba(180, 180, 180, 0.7);
+                }
+            }
+
+            @media (max-width: 600px) {
+                width: 100%;
+                overflow-x: auto;
+                overflow-y: hidden;
+
+                &:hover {
+                    &::-webkit-scrollbar-thumb {
+                        background-color: transparent;
+                    }
+                }
+            }
+        }
+
         .settings-nav {
             @include no-select();
             display: flex;
