@@ -87,6 +87,9 @@ export class ImageViewerComponent implements OnInit {
     @ViewChild('tools', {static: true})
     private tools: ElementRef;
 
+    @ViewChild('toolwp', {static: true})
+    private toolwp: ElementRef;
+
     @ViewChild('navbutton', {static: true})
     private navs: ElementRef;
 
@@ -107,15 +110,11 @@ export class ImageViewerComponent implements OnInit {
 
     private closed: boolean;
     toggleTools() {
-        const elem = this.tools.nativeElement as HTMLElement;
-        const elem2 = this.navs.nativeElement as HTMLElement;
+        const toolwp = this.toolwp.nativeElement as HTMLElement;
         if(this.closed) {
-            elem.style.transform = '';
-            elem.style.display = 'flex';
-            elem2.style.display = 'flex';
+            toolwp.classList.add("active");
         } else {
-            elem.style.transform = `translate(0, ${elem.clientHeight}px)`;
-            elem2.style.display = 'none';
+            toolwp.classList.remove("active");
         }
         this.closed = !this.closed;
     }
@@ -154,6 +153,10 @@ export class ImageViewerComponent implements OnInit {
     get loaded(): boolean {return this._loaded;}
     onImageLoad() {
         this._loaded = true;
+    }
+
+    handleMove(xy: {x: number, y: number}) {
+        this.move(xy.x, xy.y);
     }
 
     move(x: number, y: number) {

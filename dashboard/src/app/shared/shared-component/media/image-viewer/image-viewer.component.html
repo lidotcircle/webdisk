@@ -1,15 +1,16 @@
 
-<div class="image-container">
+<div class="image-container" (click)='toggleTools()'>
     <div class="take-space-to-full"></div>
     <div class="image" #imagex>
         <div class="take-space"></div>
 
         <div class="image-transform" #imageanchor>
-            <img (load)='onImageLoad()' [src]="images[imageIndex]" draggable='false'>
+            <img (load)='onImageLoad()' (click)='$event.stopPropagation()' (dblclick)='toggleTools()'
+             [src]="images[imageIndex]" draggable='false' movable onlyEmit='true' (delta)='handleMove($event)'>
 
-            <div class="loading-icon">
+            <div class="loading-icon" *ngIf='!loaded'>
                 <div class="take-space"></div>
-                <div class="icon" *ngIf='!loaded'>
+                <div class="icon">
                     <div class="take-space"></div>
                     <app-loading-bar></app-loading-bar>
                     <div class="take-space"></div>
@@ -22,9 +23,9 @@
     </div>
     <div class="take-space-to-full"></div>
 
-    <div class="tools-wrapper">
-        <div class="tools-nav" (click)='toggleTools()'>
-            <div class="tools-wrapper-2" style='display: none;' #navbutton>
+    <div class="tools-wrapper" #toolwp>
+        <div class="tools-nav">
+            <div class="tools-wrapper-2" #navbutton>
                 <div class="icon-center" *ngIf='imageIndex > 0'>
                     <div class="take-space"></div>
                     <mat-icon svgIcon='iv_backward' (click)='onPrev($event)'></mat-icon>
@@ -41,17 +42,17 @@
             </div>
         </div>
 
-        <div class="tools" style='display: none;' #tools>
-            <mat-icon svgIcon='iv_zoom_out' (click)='onScaleUp()'></mat-icon>
-            <mat-icon svgIcon='iv_zoom_in' (click)='onScaleDown()'></mat-icon>
-            <mat-icon svgIcon='iv_rotate_left' (click)='onRotateLeft()'></mat-icon>
-            <mat-icon svgIcon='iv_rotate_right' (click)='onRotateRight()'></mat-icon>
-            <mat-icon svgIcon='iv_reset' (click)='onReset()'></mat-icon>
+        <div class="tools" #tools>
+            <mat-icon svgIcon='iv_zoom_out' (click)='$event.stopPropagation(); onScaleUp()'></mat-icon>
+            <mat-icon svgIcon='iv_zoom_in' (click)='$event.stopPropagation(); onScaleDown()'></mat-icon>
+            <mat-icon svgIcon='iv_rotate_left' (click)='$event.stopPropagation(); onRotateLeft()'></mat-icon>
+            <mat-icon svgIcon='iv_rotate_right' (click)='$event.stopPropagation(); onRotateRight()'></mat-icon>
+            <mat-icon svgIcon='iv_reset' (click)='$event.stopPropagation(); onReset()'></mat-icon>
 
-            <mat-icon svgIcon='iv_backward' (click)='moveUnit(-1,  0)'></mat-icon>
-            <mat-icon svgIcon='iv_forward'  (click)='moveUnit( 1,  0)'></mat-icon>
-            <mat-icon svgIcon='iv_up'       (click)='moveUnit( 0, -1)'></mat-icon>
-            <mat-icon svgIcon='iv_down'     (click)='moveUnit( 0,  1)'></mat-icon>
+            <mat-icon svgIcon='iv_backward' (click)='$event.stopPropagation(); moveUnit(-1,  0)'></mat-icon>
+            <mat-icon svgIcon='iv_forward'  (click)='$event.stopPropagation(); moveUnit( 1,  0)'></mat-icon>
+            <mat-icon svgIcon='iv_up'       (click)='$event.stopPropagation(); moveUnit( 0, -1)'></mat-icon>
+            <mat-icon svgIcon='iv_down'     (click)='$event.stopPropagation(); moveUnit( 0,  1)'></mat-icon>
         </div>
     </div>
 </div>

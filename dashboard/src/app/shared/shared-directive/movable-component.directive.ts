@@ -1,4 +1,4 @@
-import { AfterViewInit, Directive, ElementRef, HostListener, Input, OnInit } from '@angular/core';
+import { AfterViewInit, Directive, ElementRef, EventEmitter, HostListener, Input, OnInit, Output } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { MousePointerService } from '../service/mouse-pointer.service';
 
@@ -11,6 +11,10 @@ export class MovableDirective implements OnInit, AfterViewInit {
     classes: string[];
     @Input()
     stopMoving: boolean;
+    @Input()
+    onlyEmit: boolean;
+    @Output()
+    delta: EventEmitter<{ x: number, y: number }> = new EventEmitter();
 
     private bounded: boolean;
     private centering: boolean;
@@ -27,7 +31,9 @@ export class MovableDirective implements OnInit, AfterViewInit {
         const host = this.host.nativeElement as HTMLElement;
         this.bounded = host.hasAttribute('bounded');
         this.centering = host.hasAttribute('centering');
-        host.style.position = 'absolute';
+        if (!this.onlyEmit) {
+            host.style.position = 'absolute';
+        }
 
         this.draggableElements = [ host ];
         if (this.classes) {
@@ -48,6 +54,8 @@ export class MovableDirective implements OnInit, AfterViewInit {
     }
 
     ngAfterViewInit(): void {
+        if (this.onlyEmit) return;
+
         const host = this.host.nativeElement as HTMLElement;
         const mousePointer = this.mouseService.coordinate;
         const parent = this.getParentElement();
@@ -122,6 +130,7 @@ export class MovableDirective implements OnInit, AfterViewInit {
                 delta.y = event.touches[0].clientY - this.startCursorPosition.y;
             }
 
+            const oldShift = this.currentShift;
             this.currentShift = {
                 left: this.startShift.left + delta.x,
                 top: this.startShift.top + delta.y
@@ -132,7 +141,14 @@ export class MovableDirective implements OnInit, AfterViewInit {
             }
 
             const host = this.host.nativeElement as HTMLElement;
-            host.style.transform = `translate(${this.currentShift.left}px, ${this.currentShift.top}px)`;
+            if (!this.onlyEmit) {
+                host.style.transform = `translate(${this.currentShift.left}px, ${this.currentShift.top}px)`;
+            }
+
+            const trueDelta = { x: this.currentShift.left - oldShift.left, y: this.currentShift.top - oldShift.top };
+            if (trueDelta.x != 0 || trueDelta.y != 0) {
+                this.delta.emit(trueDelta);
+            }
         }
     }
 
