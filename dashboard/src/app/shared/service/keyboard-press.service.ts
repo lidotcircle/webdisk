@@ -42,13 +42,11 @@ export class KeyboardPressService {
     get shift(): boolean {return this._shift;}
     get alt(): boolean   {return this._alt;}
 
-    private up_listener;
-    private down_listener;
     private in_press_table: Map<Keycode, number> = new Map<Keycode, number>();
 
     constructor() {
-        this.down_listener = document.body.addEventListener('keydown', this.keydownListener.bind(this));
-        this.up_listener = document.body.addEventListener('keyup',   this.keyupListener.bind(this));
+        document.body.addEventListener('keydown', this.keydownListener.bind(this));
+        document.body.addEventListener('keyup',   this.keyupListener.bind(this));
         window.addEventListener("blur", () => this.in_press_table.clear());
         window.addEventListener("focus", () => this.in_press_table.clear());
     }
@@ -65,7 +63,6 @@ export class KeyboardPressService {
         if(kv.code != Keycode.Unindentified) {
             this.in_press_table.set(code, Date.now());
         }
-        console.log('key down ', ev.key);
         this._down.next(kv);
     }
 
@@ -78,7 +75,6 @@ export class KeyboardPressService {
         if(this.in_press_table.has(kv.code)) {
             this.in_press_table.delete(kv.code);
         }
-        console.log('key up ', ev.key);
         this._up.next(kv);
     }
 

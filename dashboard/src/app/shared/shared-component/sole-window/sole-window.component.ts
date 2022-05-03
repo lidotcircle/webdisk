@@ -1,6 +1,5 @@
-import { Component, ElementRef, OnDestroy, OnInit, Output } from '@angular/core';
-import { Subject, Subscription } from 'rxjs';
-import { KeyboardPressService, Keycode } from '../../service/keyboard-press.service';
+import { Component, ElementRef, HostListener, OnDestroy, OnInit, Output } from '@angular/core';
+import { Subject } from 'rxjs';
 import { BeAbsoluteView } from '../absolute-view/absolute-view';
 import { FullScreenViewShadow } from '../absolute-view/full-screen-view-shadow';
 
@@ -14,22 +13,18 @@ export class SoleWindowComponent extends FullScreenViewShadow implements OnInit,
     @Output('bgclick')
     private _bgclick: Subject<void> = new Subject<void>();
 
-    constructor(protected host: ElementRef,
-                private keyboard: KeyboardPressService) {
+    constructor(protected host: ElementRef) {
         super(host);
     }
 
-    private subscription: Subscription;
+    @HostListener("document:keydown.escape", ["$event"])
+    exitByESC(event: KeyboardEvent) {
+        event.stopPropagation();
+        this._bgclick.next();
+    }
+
     private backed: boolean = false;
     ngOnInit(): void {
-        this.subscription = this.keyboard.up.subscribe(key => {
-            const elem = this.host.nativeElement as HTMLElement;
-
-            if(elem.clientWidth > 0 && key.code == Keycode.ESC) {
-                this._bgclick.next();
-            }
-        });
-
         window.addEventListener('popstate', (event) => {
             event.preventDefault();
             this.backed = true;
@@ -40,7 +35,6 @@ export class SoleWindowComponent extends FullScreenViewShadow implements OnInit,
     }
 
     ngOnDestroy(): void {
-        this.subscription.unsubscribe();
         if(!this.backed) {
             history.back();
         }
