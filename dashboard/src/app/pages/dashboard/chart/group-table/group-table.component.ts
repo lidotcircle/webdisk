@@ -7,6 +7,7 @@ import { ConfirmWindowComponent } from 'src/app/shared/shared-component/confirm-
 import { ViewCell } from 'ng2-smart-table';
 import { takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
+import { LocalSettingService } from 'src/app/service/user/local-setting.service';
 
 
 @Component({
@@ -70,6 +71,7 @@ export class GroupTableComponent implements OnInit, OnDestroy {
     private pagesize: number;
 
     constructor(private toastrService: NbToastrService,
+                private localSetting: LocalSettingService,
                 private router: Router,
                 private windowService: NbWindowService,
                 private activatedRoute: ActivatedRoute,
@@ -185,19 +187,22 @@ export class GroupTableComponent implements OnInit, OnDestroy {
         confirm: {resolve: (data:  DataType ) => void, reject: () => void},
     })
     {
-        const win = this.windowService.open(ConfirmWindowComponent, {
-            title: `delete ${event.data.group}`,
-            context: {}
-        });
-        await win.onClose.toPromise();
-        if(win.config.context['isConfirmed']) {
-            try {
-                await this.dataRecordService.deleteGroup(event.data.group);
-                event.confirm.resolve(event.data);
-            } catch (err) {
-                this.toastrService.danger(err.message || "failed to delete group", "Group");
-                event.confirm.reject();
-            }
+        if (!this.localSetting.Group_Delete_Without_Confirm) {
+            const win = this.windowService.open(ConfirmWindowComponent, {
+                title: `delete ${event.data.group}`,
+                context: {}
+            });
+            await win.onClose.toPromise();
+            if (!win.config.context['isConfirmed'])
+                return;
+        }
+
+        try {
+            await this.dataRecordService.deleteGroup(event.data.group);
+            event.confirm.resolve(event.data);
+        } catch (err) {
+            this.toastrService.danger(err.message || "failed to delete group", "Group");
+            event.confirm.reject();
         }
     }
 }

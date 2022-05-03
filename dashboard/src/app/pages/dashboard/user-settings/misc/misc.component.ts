@@ -13,6 +13,12 @@ import { LocalSettingService } from 'src/app/service/user/local-setting.service'
         <app-setting-item name='Reconnect Interval Base (s)' [extra]='{ min: 1, step: 1, type: "number" }' type='input' 
                           [(initValue)]='settings.Websocket_Reconnect_Interval_s'></app-setting-item>
       </div>
+
+      <div class='title'><div class='leader'></div><span>Group</span></div>
+      <div class='panel'>
+        <app-setting-item name='Delete Without Confirm' type='checkbox' 
+                          [(initValue)]='settings.Group_Delete_Without_Confirm'></app-setting-item>
+      </div>
     </app-wrapper>
     `,
     styleUrls: ['./misc.component.scss']

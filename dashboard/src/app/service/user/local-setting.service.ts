@@ -22,6 +22,8 @@ class LocalUserSettings {
     Websocket_Reconnect_Interval_s: number = 2;
     Websocket_Request_Timeout_s: number = 8;
 
+    Group_Delete_Without_Confirm: boolean = false;
+
     static fromJSON(json: string): LocalUserSettings {
         const ans = new LocalUserSettings();
         const j = JSON.parse(json);
