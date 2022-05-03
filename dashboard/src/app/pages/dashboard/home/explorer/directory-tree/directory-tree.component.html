@@ -1,17 +1,17 @@
 
 <div class="dir-tree" #tree>
     <div class="dir-row">
-        <div [class]="((geted && children.length == 0) ? 'over' : '') + ' get'" (click)='onGet()'>
+        <a [class]="((geted && children.length == 0) ? 'over' : '') + ' get'" (click)='onGet()'>
             <mat-icon *ngIf="!expanded">chevron_right</mat-icon>
             <mat-icon *ngIf=" expanded">expand_more</mat-icon>
-        </div>
+        </a>
 
-        <div class="icon-name" (click)='onGoto()'>
+        <a class="icon-name" (click)='onGoto()'>
             <div class="icon">
                 <app-file-icon icon='folder'></app-file-icon>
             </div>
             <div class="name">{{ basename }}</div>
-        </div>
+        </a>
     </div>
 
     <div [class]="(expanded ? 'show' : '') + ' sub-dir'">

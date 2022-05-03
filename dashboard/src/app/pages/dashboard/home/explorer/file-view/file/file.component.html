@@ -1,5 +1,5 @@
 
-<div [class]="getItemClass()" (click)="onClick()" (contextmenu)="onContextMenu()" draggable='true' #fileitem>
+<a [class]="getItemClass()" (click)="onClick()" (contextmenu)="onContextMenu()" draggable='true' #fileitem>
     <div class="file-icon" #fileicon>
         <app-file-icon icon='{{ icon }}'></app-file-icon>
     </div>
@@ -18,5 +18,5 @@
             <div class="file-v"> File Size: {{ FileSize }}  </div>
         </div>
     </div>
-</div>
+</a>
 

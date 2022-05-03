@@ -1,7 +1,6 @@
 import { Component, OnInit, ElementRef, OnDestroy, ViewChild } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { Life } from 'src/app/shared/utils';
-import { RightMenuManagerService } from 'src/app/shared/service/right-menu-manager.service';
 import { Tool, ToolbarService, ToolType } from './file-view/toolbar.service';
 import { LeftPanelService } from './left-panel.service';
 import { DirectoryTreeComponent } from './directory-tree/directory-tree.component';
