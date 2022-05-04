@@ -12,7 +12,8 @@ import { filter, take } from 'rxjs/operators';
         <a (click)='onTagClick(i)'><span class='tag-text'>{{ tag }}</span></a>
     </div>
     <div *ngIf='!inAddingTag && addButton' class='tag add-tag'>
-        <button ghost nbButton [disabled]='addButtonDisabled' status='primary'  (click)='onAddTagClick()'>
+        <button nbTooltip='add tag' nbTooltipStatus='primary'
+            ghost nbButton [disabled]='addButtonDisabled' status='primary'  (click)='onAddTagClick()'>
             <nb-icon icon='plus-square'></nb-icon>
         </button>
     </div>

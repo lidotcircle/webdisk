@@ -21,6 +21,10 @@
     border: 2pt solid #aaa;
     border-radius: 0.5em;
 
+    nb-icon {
+        font-size: large;
+    }
+
     &:hover {
         background-color: $color-tool-hover;
 

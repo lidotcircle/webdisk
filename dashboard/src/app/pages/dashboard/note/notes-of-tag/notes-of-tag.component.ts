@@ -53,10 +53,12 @@ interface ItemType {
                             </div>
                             <div class='take-space'></div>
                             <div class='buttons'>
-                                <button nbButton ghost [disabled]='onWorking' status='primary' (click)='gotoEditor(i)'>
+                                <button nbTooltip='edit' nbTooltipStatus='primary'
+                                    nbButton ghost [disabled]='onWorking' status='primary' (click)='gotoEditor(i)'>
                                     <nb-icon icon='edit'></nb-icon>
                                 </button>
-                                <button nbButton ghost [disabled]='onWorking' status='primary' (click)='onDownloadClick(i)'>
+                                <button nbTooltip='download' nbTooltipStatus='primary'
+                                    nbButton ghost [disabled]='onWorking' status='primary' (click)='onDownloadClick(i)'>
                                     <nb-icon icon='download'></nb-icon>
                                 </button>
                             </div>

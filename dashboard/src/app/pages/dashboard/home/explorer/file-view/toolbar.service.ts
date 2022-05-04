@@ -13,13 +13,11 @@ export enum ToolType {
 export class Tool {
     private _name: string;
     private _icon: string;
-    private _external: boolean;
     cssclass: string = '';
 
-    constructor(name: string, icon: string, external_icon: boolean = false, clickhook?: () => void, enable?: () => boolean) {
+    constructor(name: string, icon: string, clickhook?: () => void, enable?: () => boolean) {
         this._name = name;
         this._icon = icon;
-        this._external = external_icon;
         this.clickHook = clickhook;
         this.enableTool = enable || this.enableTool;
     }
@@ -29,7 +27,6 @@ export class Tool {
 
     get name() {return this._name;}
     get icon() {return this._icon;}
-    get external() {return this._external;}
 }
 
 @Injectable({

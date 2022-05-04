@@ -198,10 +198,10 @@ export class FileViewComponent implements OnInit, OnDestroy {
 
     private setup_tools() //{
     {
-        const tool_home = new Tool('Home', 'home', false, () => this.currentDirectory.cd('/'));
-        const tool_refresh = new Tool('Refresh', 'refresh', false, 
+        const tool_home = new Tool('Home', 'home', () => this.currentDirectory.cd('/'));
+        const tool_refresh = new Tool('Refresh', 'refresh',
                                       () => this.currentDirectory.justRefresh()); 
-        const tool_back = new Tool('Back', 'arrow_back', false, 
+        const tool_back = new Tool('Back', 'backward',
                                    () => this.currentDirectory.cd(dirname(this.currentDirectory.now)),
                                    () => this.currentDirectory.now && dirname(this.currentDirectory.now).length > 0);
 
@@ -209,16 +209,16 @@ export class FileViewComponent implements OnInit, OnDestroy {
         this.toolbar.register(ToolType.Navigation, tool_refresh, this.life);
         this.toolbar.register(ToolType.Navigation, tool_back, this.life);
 
-        const tool_copy = new Tool('Copy', 'content_copy', false, () => {
+        const tool_copy = new Tool('Copy', 'copy', () => {
             this.clipboard.copy(ClipboardContentType.files, this.selectedFiles());
             this.select = [];
         }, () => this.has_select());
-        const tool_cut = new Tool('Cut', 'content_cut', false, () => {
+        const tool_cut = new Tool('Cut', 'cut', () => {
             this.clipboard.cut(ClipboardContentType.files, this.selectedFiles());
             this.cuts = [];
             this.select = [];
         }, () => this.has_select());
-        const tool_paste = new Tool('Paste', 'content_paste', false, () => {
+        const tool_paste = new Tool('Paste', 'paste', () => {
             const pastecwd = this.currentDirectory.now;
             this.clipboard.paste((iscut, files: FileStat[]) => {
                 if(iscut) {
@@ -228,10 +228,10 @@ export class FileViewComponent implements OnInit, OnDestroy {
                 }
             });
         }, () => this.clipboard.contenttype == ClipboardContentType.files);
-        const tool_clear = new Tool('Clear', 'clear', false, () => {
+        const tool_clear = new Tool('Clear', 'ban', () => {
             this.select = [];
         }, () => this.selectedFiles().length > 0);
-        const tool_reverseSelection = new Tool('Revert', 'tab', false, () => {
+        const tool_reverseSelection = new Tool('Revert', 'yin-yang', () => {
             for(let i=0;i<this.fileslice.length;i++) {
                 this.select[i] = !this.select[i];
             }
@@ -243,16 +243,16 @@ export class FileViewComponent implements OnInit, OnDestroy {
         this.toolbar.register(ToolType.Clipboard, tool_clear, this.life);
         this.toolbar.register(ToolType.Clipboard, tool_reverseSelection, this.life);
 
-        const tool_delete = new Tool('Delete', 'delete', false, () => {
+        const tool_delete = new Tool('Delete', 'trash', () => {
             this.fileoperation.delete(this.selectedFiles());
         }, () => this.selectedFiles().length > 0);
-        const tool_newfile = new Tool('File', 'add_circle', false, () => {
+        const tool_newfile = new Tool('File', 'circle-plus', () => {
             this.fileoperation.new_file(this.currentDirectory.now);
         });
-        const tool_newfolder = new Tool('Folder', 'create_new_folder', false, () => {
+        const tool_newfolder = new Tool('Folder', 'folder-plus', () => {
             this.fileoperation.new_folder(this.currentDirectory.now);
         });
-        const tool_filter = new Tool('Filter', 'search', false, async () => {
+        const tool_filter = new Tool('Filter', 'search', async () => {
             const ans = await this.messagebox.create({
                 title: 'Search in Current Directory',
                 message: '',
@@ -283,8 +283,8 @@ export class FileViewComponent implements OnInit, OnDestroy {
         this.toolbar.register(ToolType.FileManage, tool_newfolder, this.life);
         this.toolbar.register(ToolType.FileManage, tool_filter, this.life);
 
-        const tool_revert = new Tool('Reverse', 'swap_vert', false, () => this.reverse());
-        const tool_sortby = new Tool('Sortby', 'sortby', true, async () => {
+        const tool_revert = new Tool('Reverse', 'up-down', () => this.reverse());
+        const tool_sortby = new Tool('Sortby', 'arrow-down-short-wide', async () => {
             const ans = await this.messagebox.create({
                 title: 'Sortby',
                 message: '',
@@ -300,7 +300,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
                 this.refresh();
             }
         });
-        const tool_hide_folder = new Tool('Hide Dir', 'hide_folder', true, () => {
+        const tool_hide_folder = new Tool('Hide Dir', 'circle-minus', () => {
             let nfs = [];
             this.files.forEach(file => {
                 if(file.filetype != FileType.dir) {
@@ -320,7 +320,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
         this.toolbar.register(ToolType.SortStuff, tool_sortby, this.life);
         this.toolbar.register(ToolType.SortStuff, tool_hide_folder, this.life);
 
-        const tool_namedlink = new Tool('NL', 'link', false, () => {
+        const tool_namedlink = new Tool('NL', 'link', () => {
             this.router.navigate(['../namedlink'], {relativeTo: this.activatedroute});
         });
         this.toolbar.register(ToolType.LinkManage, tool_namedlink, this.life);

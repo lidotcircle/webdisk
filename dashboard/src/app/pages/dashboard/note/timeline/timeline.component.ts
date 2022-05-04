@@ -35,7 +35,10 @@ interface ItemType {
             <nb-checkbox [(ngModel)]='config.sortByModifiedTime'>Sort By Modified Time</nb-checkbox>
             <nb-checkbox [(ngModel)]='config.ascending'>Ascending</nb-checkbox>
             <div class='total'>{{ numberOfNotes }}</div>
-            <button nbButton size='large' status='primary' ghost (click)='createNote($event)'><nb-icon icon='plus-square'></nb-icon></button>
+            <button nbTooltip='create new note' nbTooltipStatus='primary'
+                    nbButton size='large' status='primary' ghost (click)='createNote($event)'>
+                <nb-icon icon='plus-square'></nb-icon>
+            </button>
         </nb-card-header>
         <nb-card-body class='main-panel'>
             <div style='height: max-content;'
@@ -55,10 +58,12 @@ interface ItemType {
                             </div>
                             <div class='take-space'></div>
                             <div class='buttons'>
-                                <button nbButton ghost [disabled]='onWorking' status='primary' (click)='gotoEditor(i)'>
+                                <button nbTooltip='edit' nbTooltipStatus='primary'
+                                    nbButton ghost [disabled]='onWorking' status='primary' (click)='gotoEditor(i)'>
                                     <nb-icon icon='edit'></nb-icon>
                                 </button>
-                                <button nbButton ghost [disabled]='onWorking' status='primary' (click)='onDownloadClick(i)'>
+                                <button nbTooltip='download' nbTooltipStatus='primary'
+                                    nbButton ghost [disabled]='onWorking' status='primary' (click)='onDownloadClick(i)'>
                                     <nb-icon icon='download'></nb-icon>
                                 </button>
                             </div>

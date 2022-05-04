@@ -40,7 +40,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.leftpanelservice.initialize(this.leftpanel.nativeElement);
-        const panelToggle = new Tool('Panel', 'menu', false, () => {
+        const panelToggle = new Tool('Panel', 'bars', () => {
             this.leftpanelservice.toggle();
         });
         panelToggle.cssclass = 'panel-button';

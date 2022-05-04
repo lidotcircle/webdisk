@@ -41,8 +41,14 @@ import { AsyncLocalStorageService } from 'src/app/shared/service/async-local-sto
             </app-tui-editor>
         </nb-card-body>
         <nb-card-footer *ngIf='showButtons'>
-            <button nbButton size='small' status='primary' [disabled]='!note || insaving' (click)='handleSaveClick($event)'>Save</button>
-            <button nbButton size='small' status='primary' [disabled]='!note' (click)='downloadMarkdown()'>Download</button>
+            <button nbTooltip='save' nbTooltipStatus='primary'
+                nbButton size='small' status='primary' [disabled]='!note || insaving' (click)='handleSaveClick($event)'>
+                <nb-icon icon='save' pack='fas'></nb-icon>
+            </button>
+            <button nbTooltip='download' nbTooltipStatus='primary'
+                nbButton size='small' status='primary' [disabled]='!note' (click)='downloadMarkdown()'>
+                <nb-icon icon='download' pack='fas'></nb-icon>
+            </button>
         </nb-card-footer>
     </nb-card>
     `,

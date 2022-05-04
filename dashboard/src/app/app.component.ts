@@ -1,7 +1,7 @@
 import { Component, ViewContainerRef } from '@angular/core';
 import { MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
-import { NbThemeService } from '@nebular/theme';
+import { NbIconLibraries, NbThemeService } from '@nebular/theme';
 import { map } from 'rxjs/operators';
 import { AsyncLocalStorageService } from './shared/service/async-local-storage.service';
 import { MousePointerService } from './shared/service/mouse-pointer.service';
@@ -51,6 +51,7 @@ export class AppComponent {
     constructor(private bodyContainer: ViewContainerRef,
                 private matIconRegistry: MatIconRegistry,
                 private themeService: NbThemeService,
+                private nbIconLibraries: NbIconLibraries,
                 private localstorage: AsyncLocalStorageService,
                 private mousePointerService: MousePointerService,
                 private domSanitizer: DomSanitizer) 
@@ -60,6 +61,16 @@ export class AppComponent {
         console.log("setup mouse pointer ", this.mousePointerService.coordinate);
         icons.forEach(v => this.matIconRegistry.addSvgIconLiteral(v.name, this.domSanitizer.bypassSecurityTrustHtml(v.svg)));
         this.themeStoreRecovery();
+
+        const fontawesomePacks = [
+            'fas', 'fa-solid', 'far', 'fa-regular', 'fal', 'fa-light',
+            'fat', 'fa-thin', 'fad', 'fa-duotone', 'fab', 'fa-brands',
+        ];
+        fontawesomePacks.forEach(pack => {
+            this.nbIconLibraries.registerFontPack(pack, { packClass: pack, iconClassPrefix: 'fa' });
+        })
+
+        // this.nbIconLibraries.setDefaultPack('fa-solid');
     }
 
     private async themeStoreRecovery()

@@ -123,7 +123,7 @@ export class WebdiskLayoutService {
 
         const exitButton = document.createElement('div');
         exitButton.classList.add('fullscreen-exit-button');
-        exitButton.innerHTML = '<i class="nb-close"></i>';
+        exitButton.innerHTML = '<i class="fas fa-compress"></i>';
         document.body.appendChild(exitButton);
         let prevClick: Date = null;
         exitButton.addEventListener('click', () => {

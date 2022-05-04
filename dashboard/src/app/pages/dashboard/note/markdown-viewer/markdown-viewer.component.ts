@@ -26,11 +26,16 @@ import html2canvas from 'html2canvas';
             <app-tui-viewer [theme]='theme' [initialValue]='note?.content'></app-tui-viewer>
         </nb-card-body>
         <nb-card-footer>
-            <button status='primary' size='small' nbButton (click)='gotoEditor()'>edit</button>
-            <button status='primary' size='small' nbButton (click)='fullscreen()'>fullscreen</button>
-            <button status='primary' size='small' nbButton [disabled]='inScreenshoting' (click)='saveAsImage()'>screenshot</button>
-            <button status='primary' size='small' nbButton (click)='gotoHistory()'>history</button>
-            <button status='danger'  size='small' nbButton (click)='deleteNote()'>delete</button>
+            <button nbTooltip="edit" nbTooltipStatus="primary"
+                    status='primary' size='small' ghost nbButton (click)='gotoEditor()'><nb-icon icon='edit' pack='fas'></nb-icon></button>
+            <button nbTooltip="fullscreen" nbTooltipStatus="primary"
+                    status='primary' size='small' ghost nbButton (click)='fullscreen()'><nb-icon icon='expand' pack='fas'></nb-icon></button>
+            <button nbTooltip="screenshot" nbTooltipStatus="primary"
+                    status='primary' size='small' ghost nbButton [disabled]='inScreenshoting' (click)='saveAsImage()'><nb-icon icon='image' pack='fas'></nb-icon></button>
+            <button nbTooltip="history" nbTooltipStatus="primary"
+                    status='primary' size='small' ghost nbButton (click)='gotoHistory()'><nb-icon icon='history' pack='fas'></nb-icon></button>
+            <button nbTooltip="delete" nbTooltipStatus="danger"
+                    status='danger'  size='small' ghost nbButton (click)='deleteNote()'><nb-icon icon='trash' pack='fas'></nb-icon></button>
         </nb-card-footer>
     </nb-card>
     `,

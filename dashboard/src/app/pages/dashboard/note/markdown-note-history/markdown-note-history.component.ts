@@ -27,7 +27,8 @@ interface NoteWithHistory extends Note {
                 <span>CreatedAt: {{ createdAt }}</span>
                 <span>UpdatedAt: {{ updatedAt }}</span>
 
-                <button nbButton ghost [disabled]='onWorking' status='primary' (click)='onMergeAllClick()'>
+                <button nbTooltip='merge all into 1' nbTooltipStatus='primary'
+                    nbButton ghost [disabled]='onWorking' status='primary' (click)='onMergeAllClick()'>
                     <nb-icon icon='collapse'></nb-icon>
                 </button>
             </div>
@@ -48,13 +49,16 @@ interface NoteWithHistory extends Note {
                             <div class='note-time'>{{ item.data.UpdatedAt }}</div>
                             <div class='take-space'></div>
                             <div class='buttons'>
-                                <button nbButton ghost [disabled]='onWorking' status='primary' (click)='onDownloadClick(i)'>
+                                <button nbTooltip='download' nbTooltipStatus='primary'
+                                    nbButton ghost [disabled]='onWorking' status='primary' (click)='onDownloadClick(i)'>
                                     <nb-icon icon='download'></nb-icon>
                                 </button>
-                                <button nbButton ghost [disabled]='onWorking' status='primary' (click)='onUseClick(i)'>
+                                <button  nbTooltip='use as latest' nbTooltipStatus='primary'
+                                    nbButton ghost [disabled]='onWorking' status='primary' (click)='onUseClick(i)'>
                                     <nb-icon icon='arrow-circle-up'></nb-icon>
                                 </button>
-                                <button nbButton ghost [disabled]='onWorking' status='primary' (click)='onDeleteClick(i)'>
+                                <button nbTooltip='delete' nbTooltipStatus='danger'
+                                    nbButton ghost [disabled]='onWorking' status='primary' (click)='onDeleteClick(i)'>
                                     <nb-icon icon='trash'></nb-icon>
                                 </button>
                             </div>
@@ -65,7 +69,8 @@ interface NoteWithHistory extends Note {
                         <div class='date-value'> {{ item.data.dateStr }} </div>
                         <a class='date-leader-ox' (click)='onDoubleClick(i)'><div class='date-leader'></div></a>
                         <div>
-                            <button nbButton ghost [disabled]='onWorking' status='primary' (click)='onMergeClick(i)'>
+                            <button nbTooltip='merge into 1' nbTooltipStatus='primary'
+                                nbButton ghost [disabled]='onWorking' status='primary' (click)='onMergeClick(i)'>
                                 <nb-icon icon='collapse'></nb-icon>
                             </button>
                         </div>

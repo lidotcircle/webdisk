@@ -3,8 +3,7 @@
     <div class="l2">
         <a [class]="(enable ? '' : 'disable') + ' tool'" (click)='onClick()'>
             <div class="icon">
-                <mat-icon *ngIf=' tool.external' svgIcon='{{ tool.icon }}'></mat-icon>
-                <mat-icon *ngIf='!tool.external'> {{ tool.icon }} </mat-icon>
+              <nb-icon icon='{{ tool.icon }}' pack='fas'></nb-icon>
             </div>
 
             <div class="title"> {{ tool.name }} </div>
