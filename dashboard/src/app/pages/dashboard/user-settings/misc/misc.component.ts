@@ -19,6 +19,14 @@ import { LocalSettingService } from 'src/app/service/user/local-setting.service'
         <app-setting-item name='Delete Without Confirm' type='checkbox' 
                           [(initValue)]='settings.Group_Delete_Without_Confirm'></app-setting-item>
       </div>
+
+      <div class='title'><div class='leader'></div><span>Markdown Editor</span></div>
+      <div class='panel'>
+        <app-setting-item name='Saving When Leave' type='checkbox' 
+                          [(initValue)]='settings.Markdown_Editor_Saving_When_Leave'></app-setting-item>
+        <app-setting-item name='Apply Local Patch' type='checkbox' 
+                          [(initValue)]='settings.Markdown_Editor_Apply_Local_Patch'></app-setting-item>
+      </div>
     </app-wrapper>
     `,
     styleUrls: ['./misc.component.scss']

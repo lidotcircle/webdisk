@@ -12,6 +12,7 @@ import { nbThemeIsDark, saveDataAsFile } from 'src/app/shared/utils';
 import { EditorView } from 'prosemirror-view';
 import { TextSelection } from 'prosemirror-state';
 import { LocalSettingService } from 'src/app/service/user/local-setting.service';
+import { AsyncLocalStorageService } from 'src/app/shared/service/async-local-storage.service';
 
 
 @Component({
@@ -73,6 +74,7 @@ export class MarkdownEditorComponent implements OnInit, OnDestroy {
                 private sharing: ObjectSharingService,
                 private activatedRoute: ActivatedRoute,
                 private settings: LocalSettingService,
+                private localStorage: AsyncLocalStorageService,
                 private nbtheme: NbThemeService)
     {
         this.theme = nbThemeIsDark(this.nbtheme.currentTheme) ? 'dark' : 'light';
@@ -81,9 +83,33 @@ export class MarkdownEditorComponent implements OnInit, OnDestroy {
         this.savingInterval = this.settings.Note_Editor_SavingInterval_s * 1000;
     }
 
+    private async savePatchToLocal(patch: string): Promise<void> {
+        if (!this.note) return;
+
+        await this.localStorage.set(`${this.note.id}_patch`, patch);
+    }
+
+    private async getPatchFromLocal(): Promise<string | null> {
+        if (!this.note) return null;
+
+        return await this.localStorage.get(`${this.note.id}_patch`);
+    }
+
+    private async clearPatchFromLocal(): Promise<void> {
+        if (!this.note) return;
+
+        await this.localStorage.remove(`${this.note.id}_patch`);
+    }
+
     ngOnDestroy(): void {
         this.destroy$.next();
         this.destroy$.complete();
+
+        const patch = this.notePatch();
+        if (patch && this.settings.Markdown_Editor_Saving_When_Leave) {
+            this.SavePatch(this.latestContent, patch)
+                .then(() => this.toastr.info("Autosave", "Note"), () => {});
+        }
 
         hotkeys.deleteScope("md-editor");
     }
@@ -105,8 +131,22 @@ export class MarkdownEditorComponent implements OnInit, OnDestroy {
                 this.note = await this.noteService.getNote(Number(noteid));
             }
 
-            if (this.note)
-                this.noteInitContent = this.note.content;
+            const oldPatch = await this.getPatchFromLocal();
+            if (this.note) {
+                let content = this.note.content;
+                if (oldPatch && this.settings.Markdown_Editor_Apply_Local_Patch) {
+                    const dmp = new diff_match_patch();
+                    const patch = dmp.patch_fromText(oldPatch);
+                    const [ patched_content, inconsistencies ] = dmp.patch_apply(patch, content);
+                    if (inconsistencies.length > 0 && !inconsistencies.reduce((a, b) => a && b)) {
+                        this.toastr.danger("patch inconsistency", "Note");
+                    }
+                    content = patched_content;
+                }
+
+                this.noteInitContent = content;
+                this.latestContent = content;
+            }
         });
 
         interval(1000)
@@ -121,7 +161,7 @@ export class MarkdownEditorComponent implements OnInit, OnDestroy {
         if (this.settings.Note_Editor_ShowPatchLength) {
             interval(3000)
                 .pipe(takeUntil(this.destroy$))
-                .subscribe(() => this.howManyBeModified = this.patchLength());
+                .subscribe(() => this.howManyBeModified = this.patchLength);
         }
 
         const inter = Math.max(5 * 60 * 1000, this.savingInterval);
@@ -213,42 +253,40 @@ export class MarkdownEditorComponent implements OnInit, OnDestroy {
         return (this.editor as any)?.mdEditor?.view
     }
 
-    private patchLength(): number {
-        if (!this.note || !this.editor) return 0;
+    private get patchLength(): number {
+        const patch = this.notePatch();
+        if (!patch) return 0;
+
+        return patch.length;
+    }
+
+    private notePatch(): string | null {
+        if (!this.note) return null;
 
         const origin = this.note.content;
-        const text = this.editor.getMarkdown();
-        if (origin == text) return 0;
+        const text = this.latestContent;
+        if (origin == text) return null;
 
         const dmp = new diff_match_patch();
         const patch = dmp.patch_make(origin, text);
         const patchText = dmp.patch_toText(patch);
-        return patchText.length;
+        return patchText;
     }
 
-    private shouldUpdate(): boolean {
-        return this.patchLength() > 500;
+    private shouldUpdate(patch: string): boolean {
+        if (!patch) return false;
+        return patch && patch.length > 500;
     }
 
-    private lastSavingDate: Date;
-    insaving: boolean = false;
-    async doUpdate() {
-        if (!this.note || !this.editor || this.insaving) return;
-
-        const origin = this.note.content;
-        const text = this.editor.getMarkdown();
-        if (origin == text) return;
-
-        const dmp = new diff_match_patch();
-        const patch = dmp.patch_make(origin, text);
-        const patchText = dmp.patch_toText(patch);
+    private async SavePatch(text: string, patch: string): Promise<void> {
         try {
             this.insaving = true;
-            const resp = await this.noteService.updateNote(this.note.id, patchText);
+            const resp = await this.noteService.updateNote(this.note.id, patch);
             if (resp.inconsistency > 0) {
                 this.toastr.warning("doesn't fully syncronize", "Note");
                 return;
             }
+            await this.clearPatchFromLocal();
             // TODO generation update
             this.note.content = text;
             this.note.generation = resp.generation;
@@ -260,15 +298,36 @@ export class MarkdownEditorComponent implements OnInit, OnDestroy {
         }
     }
 
+    private lastSavingDate: Date;
+    insaving: boolean = false;
+    async doUpdate() {
+        if (!this.note || !this.editor || this.insaving) return;
+
+        const origin = this.note.content;
+        const text = this.latestContent;
+        if (origin == text) return;
+
+        const dmp = new diff_match_patch();
+        const patch = dmp.patch_make(origin, text);
+        const patchText = dmp.patch_toText(patch);
+        await this.SavePatch(text, patchText);
+    }
+
     async handleBlur(_event: any) {
         // TODO paste text will raise blur event ...
         // which may causes data becoming inconsistency after updating
         return;
     }
 
+    private latestContent: string;
     async handleChange(_event: any) {
-        if (this.shouldUpdate())
+        this.latestContent = this.editor.getMarkdown();
+        const patch = this.notePatch();
+        if (this.shouldUpdate(patch)) {
             await this.doUpdate();
+        } else {
+            await this.savePatchToLocal(patch);
+        }
     }
 
     async handleSaveClick(_event: any) {

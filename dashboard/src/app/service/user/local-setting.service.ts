@@ -13,6 +13,9 @@ class LocalUserSettings {
     Note_Editor_SavingInterval_s: number = 60;
     Note_Editor_ShowPatchLength: boolean = true;
 
+    Markdown_Editor_Saving_When_Leave: boolean = true;
+    Markdown_Editor_Apply_Local_Patch: boolean = true;
+
     File_Upload_ValidateMD5: boolean = true;
     File_Upload_Just_Continue: boolean = false;
     File_Upload_Always_Overwrite: boolean = false;
