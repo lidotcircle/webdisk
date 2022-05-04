@@ -22,7 +22,7 @@ export class MovableDirective implements OnInit, AfterViewInit {
     private draggableElements: HTMLElement[];
     private moving: Subscription;
     private startShift: { left: number, top: number } = { left: 0, top: 0 };
-    private currentShift: { left: number, top: number } = { left: 0, top: 0 };
+    private currentShift: { left: number, top: number } = null;
     private startCursorPosition: { x: number, y: number };
     private shiftBoundary: { leftMin: number, leftMax: number, topMin: number, topMax: number };
     constructor(private host: ElementRef, private mouseService: MousePointerService) {}
@@ -130,7 +130,7 @@ export class MovableDirective implements OnInit, AfterViewInit {
                 delta.y = event.touches[0].clientY - this.startCursorPosition.y;
             }
 
-            const oldShift = this.currentShift;
+            const oldShift = this.currentShift || this.startShift;
             this.currentShift = {
                 left: this.startShift.left + delta.x,
                 top: this.startShift.top + delta.y
@@ -157,8 +157,10 @@ export class MovableDirective implements OnInit, AfterViewInit {
     stopMove() {
         if (!this.moving) return;
 
-        this.startShift = this.currentShift;
-        this.currentShift = { left: 0, top: 0 };
+        if (this.currentShift) {
+            this.startShift = this.currentShift;
+            this.currentShift = null;
+        }
 
         this.moving.unsubscribe();
         this.moving = null;

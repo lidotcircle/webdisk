@@ -84,17 +84,14 @@ export class ImageViewerComponent implements OnInit {
     @ViewChild('imagex', {static: true})
     private imagex: ElementRef;
 
-    @ViewChild('tools', {static: true})
-    private tools: ElementRef;
-
     @ViewChild('toolwp', {static: true})
     private toolwp: ElementRef;
 
-    @ViewChild('navbutton', {static: true})
-    private navs: ElementRef;
-
     constructor(private addMatIcon: AddMatIconService,
-                private elementref: ElementRef) {}
+                private elementref: ElementRef)
+    {
+        this.addMatIcon;
+    }
 
     ngOnInit(): void {
         const elem = this.elementref.nativeElement as HTMLElement;
@@ -120,8 +117,13 @@ export class ImageViewerComponent implements OnInit {
     }
 
     private refresh() {
-        const elem = this.imageanchor.nativeElement as HTMLElement;
-        elem.style.transform = this.transformM.transform;
+        const image = this.imageanchor.nativeElement as HTMLElement;
+        image.style.transform = this.transformM.transform;
+        if (this.quickMove) {
+            image.style.transition = '0s transform';
+        } else {
+            image.style.transition = '';
+        }
     }
 
     onReset() {
@@ -155,8 +157,11 @@ export class ImageViewerComponent implements OnInit {
         this._loaded = true;
     }
 
+    private quickMove: boolean = false;
     handleMove(xy: {x: number, y: number}) {
+        this.quickMove = true;
         this.move(xy.x, xy.y);
+        this.quickMove = false;
     }
 
     move(x: number, y: number) {
