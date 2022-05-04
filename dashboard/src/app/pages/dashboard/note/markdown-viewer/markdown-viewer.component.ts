@@ -22,11 +22,12 @@ import html2canvas from 'html2canvas';
             </div>
             <app-tag-list class='tags' [tags]='note?.tags || []'></app-tag-list>
         </nb-card-header>
-        <nb-card-body>
+        <nb-card-body class='viewer-body'>
             <app-tui-viewer [theme]='theme' [initialValue]='note?.content'></app-tui-viewer>
         </nb-card-body>
         <nb-card-footer>
             <button status='primary' size='small' nbButton (click)='gotoEditor()'>edit</button>
+            <button status='primary' size='small' nbButton (click)='fullscreen()'>fullscreen</button>
             <button status='primary' size='small' nbButton [disabled]='inScreenshoting' (click)='saveAsImage()'>screenshot</button>
             <button status='primary' size='small' nbButton (click)='gotoHistory()'>history</button>
             <button status='danger'  size='small' nbButton (click)='deleteNote()'>delete</button>
@@ -139,6 +140,20 @@ export class MarkdownViewerComponent implements OnInit, OnDestroy {
             },
             relativeTo: this.activatedRoute,
         });
+    }
+
+    async fullscreen() {
+        const host = this.host.nativeElement as HTMLElement;
+        const viewbody = host.querySelector(".viewer-body");
+        viewbody.classList.add("fullscreen");
+
+        const popstateHandler = (event: Event) => {
+            event.preventDefault();
+            viewbody.classList.remove("fullscreen");
+            window.removeEventListener("popstate", popstateHandler);
+        };
+        window.addEventListener('popstate', popstateHandler);
+        history.pushState({page: this.note.title}, this.note.title, `${location.href}?notefullscree`);
     }
 
     async gotoHistory() {

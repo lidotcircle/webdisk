@@ -35,6 +35,16 @@ nb-card {
     nb-card-body {
         height: 100%;
         overflow: auto;
+
+        &.fullscreen {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            top: 0;
+            left: 0;
+            background: nb-theme(background-basic-color-1);
+            z-index: 9999;
+        }
     }
 
     nb-card-footer {
