@@ -18,6 +18,7 @@ class LocalUserSettings {
     File_Upload_Always_Overwrite: boolean = false;
 
     Explorer_Default_Item_Per_Page: number = 50;
+    Explorer_Filesize_Unit_Always_KB: boolean = true;
 
     Websocket_Reconnect_Interval_s: number = 2;
     Websocket_Request_Timeout_s: number = 8;

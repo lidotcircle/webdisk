@@ -15,6 +15,8 @@ import { CurrentDirectoryService } from 'src/app/shared/service/current-director
     styleUrls: ['./explorer.component.scss'],
 })
 export class ExplorerComponent implements OnInit, OnDestroy {
+    cwd: string;
+
     private paramsSub: Subscription;
     constructor(private activatedRouter: ActivatedRoute,
                 private toolbar: ToolbarService,
@@ -49,6 +51,7 @@ export class ExplorerComponent implements OnInit, OnDestroy {
             const path = paramsMap.get('path') || '/';;
             await this.fileview.chdir(path);
             this.currentDir.suggestWhere(path);
+            this.cwd = this.currentDir.now;
         });
     }
 }

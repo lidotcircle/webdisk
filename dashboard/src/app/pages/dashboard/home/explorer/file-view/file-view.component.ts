@@ -1,4 +1,4 @@
-import { Component, OnInit, ElementRef, OnDestroy, ViewChild } from '@angular/core';
+import { Component, OnInit, ElementRef, OnDestroy, ViewChild, Input } from '@angular/core';
 import { FileStat, FileType } from 'src/app/shared/common';
 import { FileSystemManagerService } from 'src/app/shared/service/file-system-manager.service';
 import { KeyboardPressService, Keycode } from 'src/app/shared/service/keyboard-press.service';
@@ -190,10 +190,10 @@ export class FileViewComponent implements OnInit, OnDestroy {
         this.kbsubscription.add(menuSub);
         this.life = new Life();
         this.setup_tools();
-        this.dropdir = this.currentDirectory.now;
     } //}
 
-    dropdir: string;
+    @Input()
+    currentDir: string;
     handleDropdone = () => this.currentDirectory.justRefresh();
 
     private setup_tools() //{

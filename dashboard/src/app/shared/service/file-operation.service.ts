@@ -39,7 +39,7 @@ export class FileOperationService {
         await this.notifier.create({message: msg}).wait();
     } //}
 
-    async move(files: FileStat[], destination: string) //{
+    async move(files: FileStat[], destination: string): Promise<boolean> //{
     {
         let move = this.settings.MoveFolderWithoutConfirm;
         if(!move) {
@@ -71,12 +71,15 @@ export class FileOperationService {
                     this.reportError(err);
                     b.stop();
                     this.cwd.justRefresh();
-                    return;
+                    return false;
                 }
             }
             await b.finish();
             this.cwd.justRefresh();
+            return true;
         }
+
+        return false;
     } //}
 
     async copy(files: FileStat[], destination: string) //{

@@ -24,7 +24,6 @@ export class DragItemDirective implements OnInit {
         host.draggable = true;
         host.addEventListener("dragstart", (ev: DragEvent) => {
             ev.stopPropagation();
-            console.log(this.dragkey, this.dragvalue);
             ev.dataTransfer.setData(this.dragkey, this.dragvalue);
             ev.dataTransfer.setDragImage(host, 0, 0);
         });
@@ -52,13 +51,14 @@ export class DropDirectoryDirective implements OnInit {
         this.acceptDragItem = this.acceptDragItem || host.hasAttribute("accept-drag-item");
 
         host.addEventListener("dragover", (ev: DragEvent) => {
+            if (this.dropdir == null) return;
             ev.stopPropagation();
             ev.preventDefault();
         });
         host.addEventListener("drop", async (ev: DragEvent) => {
+            if (this.dropdir == null) return;
             ev.stopPropagation();
             ev.preventDefault();
-            if (this.dropdir == null) return;
 
             const filepath = ev.dataTransfer.getData("path");
             if (filepath == '') {
@@ -80,8 +80,9 @@ export class DropDirectoryDirective implements OnInit {
             } else if (filepath != this.dropdir && this.acceptDragItem) {
                 const nf = new FileStat();
                 nf.filename = filepath;
-                await this.fileOperation.move([nf], this.dropdir);
-                this.dropdone.next();
+                if (await this.fileOperation.move([nf], this.dropdir)) {
+                    this.dropdone.next();
+                }
             }
         });
     }
