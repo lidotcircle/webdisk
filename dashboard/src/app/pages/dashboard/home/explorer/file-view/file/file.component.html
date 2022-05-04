@@ -1,5 +1,8 @@
 
-<a [class]="getItemClass()" (click)="onClick()" (contextmenu)="onContextMenu()" draggable='true' #fileitem>
+<a [class]="getItemClass()" (click)="onClick()" (contextmenu)="onContextMenu()" draggable='true'
+   [dropdir]='dropdir' (dropdone)='handleDropdone()' accept-drag-item
+   dragitem dragkey='path' [dragvalue]='file?.filename'
+   #fileitem>
     <div class="file-icon" #fileicon>
         <app-file-icon icon='{{ icon }}'></app-file-icon>
     </div>

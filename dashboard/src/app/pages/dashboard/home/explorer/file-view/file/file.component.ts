@@ -5,7 +5,6 @@ import { FileViewStyle } from '../file-view.component';
 import { FileSystemManagerService } from 'src/app/shared/service/file-system-manager.service';
 import { CurrentDirectoryService } from 'src/app/shared/service/current-directory.service';
 import { InjectViewService } from 'src/app/shared/service/inject-view.service';
-import { AcceptDragItem, AsDragItem } from './dragdrop';
 import { UserSettingService } from 'src/app/shared/service/user-setting.service';
 import { FileOperationService } from 'src/app/shared/service/file-operation.service';
 
@@ -66,17 +65,19 @@ export class FileComponent implements OnInit {
 
     private _icon: string = 'blank';
     get icon() {return this._icon;}
+
+    get dropdir() { 
+        if (!this.file || this.file.filetype != FileType.dir) {
+            return null;
+        }
+
+        return this.file.filename;
+    }
+    handleDropdone = () => this.cwd.cd(this.dropdir);
+
     ngOnInit(): void {
         if(this.file == null || this.file.filename == null) {
             throw new Error('bad filename');
-        }
-
-        if(this.file.filetype == FileType.dir) {
-            const path = this.file.filename;
-            AcceptDragItem(this.host.nativeElement as HTMLElement,
-                           () => this.file.filename, 
-                           this.fileOperation, true, 
-                           () => this.cwd.cd(path));
         }
 
         if(this.file.filetype == FileType.dir) {
@@ -86,8 +87,6 @@ export class FileComponent implements OnInit {
         } else {
             this._icon = this.file.extension;
         }
-
-        AsDragItem(this.itemElem.nativeElement as HTMLElement, this.file);
     }
 
     getPropCSS(order: number, width: number) {

@@ -10,7 +10,6 @@ import { FileOperationService } from 'src/app/shared/service/file-operation.serv
 import { ClipboardContentType, ClipboardService } from 'src/app/shared/service/clipboard.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Tool, ToolbarService, ToolType } from './toolbar.service';
-import { AcceptDragItem } from './file/dragdrop';
 import { FileViewerService } from './plugins/file-viewer.service';
 import { NbToastrService } from '@nebular/theme';
 import { CurrentDirectoryService } from 'src/app/shared/service/current-directory.service';
@@ -191,12 +190,11 @@ export class FileViewComponent implements OnInit, OnDestroy {
         this.kbsubscription.add(menuSub);
         this.life = new Life();
         this.setup_tools();
-
-        AcceptDragItem(this.host.nativeElement as HTMLElement, 
-                      () => this.currentDirectory.now,
-                      this.fileoperation, false, 
-                      () => this.currentDirectory.justRefresh());
+        this.dropdir = this.currentDirectory.now;
     } //}
+
+    dropdir: string;
+    handleDropdone = () => this.currentDirectory.justRefresh();
 
     private setup_tools() //{
     {

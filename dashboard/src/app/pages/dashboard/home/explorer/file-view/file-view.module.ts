@@ -9,10 +9,15 @@ import { FileViewComponent } from './file-view.component';
 import { ToolsComponent } from './tools/tools.component';
 import { ToolComponent } from './tools/tool/tool.component';
 import { MatPaginatorModule } from '@angular/material/paginator';
+import { DragItemDirective, DropDirectoryDirective } from './drag-drop.directive';
 
 
 @NgModule({
-    declarations: [FileComponent, FileSortComponent, DetailViewHeaderComponent, FileViewComponent, ToolsComponent, ToolComponent],
+    declarations: [
+        FileComponent, FileSortComponent, DetailViewHeaderComponent,
+        FileViewComponent, ToolsComponent, ToolComponent,
+        DragItemDirective, DropDirectoryDirective,
+    ],
     imports: [
         CommonModule,
         SharedModule,
