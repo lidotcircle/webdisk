@@ -20,6 +20,12 @@
     <app-setting-item name='Always Show Exit Button' type='checkbox' [(initValue)]='settings.Fullscreen_exit_button_always_show'></app-setting-item>
   </div>
 
+  <div class='title'><div class='leader'></div><span>Markdown</span></div>
+  <div class='panel'>
+    <app-setting-item name='Show TOC' type='checkbox' [(initValue)]='settings.Markdown_Show_TOC'></app-setting-item>
+    <app-setting-item name='Show Heading NO.' type='checkbox' [(initValue)]='settings.Markdown_Show_Heading_NO'></app-setting-item>
+  </div>
+
   <div class='title'><div class='leader'></div><span>Markdown Editor</span></div>
   <div class='panel'>
     <app-setting-item name='Show Buttons' type='checkbox' [(initValue)]='settings.Note_Editor_ShowButtons'></app-setting-item>

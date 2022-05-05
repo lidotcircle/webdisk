@@ -36,6 +36,40 @@ nb-card {
         height: 100%;
         overflow: auto;
 
+        .toc {
+            border-bottom: 2px solid darken(nb-theme(background-basic-color-1), 20%);
+            margin-bottom: 0.5em;
+
+            &.toc-open {
+                box-shadow: 0pt 0pt 3pt 3pt darken(nb-theme(background-basic-color-1), 10%);
+                padding-right: 0.5em;
+                padding-bottom: 0.5em;
+                border-bottom: none;
+                border-radius: 0.5em;
+                outline: 2px solid darken(nb-theme(background-basic-color-1), 10%);
+            }
+
+            ul {
+                list-style: none;
+                padding-left: 1em;
+            }
+
+            .toc-title {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                user-select: none;
+
+                .take-space {
+                    flex-grow: 1;
+                }
+
+                .toc-text {
+                    font-weight: bold;
+                }
+            }
+        }
+
         &.fullscreen {
             position: fixed;
             width: 100vw;
@@ -44,6 +78,15 @@ nb-card {
             left: 0;
             background: nb-theme(background-basic-color-1);
             z-index: 9999;
+
+            .toc {
+                position: sticky;
+                top: 0em;
+                left: 0em;
+                background: nb-theme(background-basic-color-1);
+                transform: translate(0px, -1.1em);
+                z-index: 10000;
+            }
         }
     }
 

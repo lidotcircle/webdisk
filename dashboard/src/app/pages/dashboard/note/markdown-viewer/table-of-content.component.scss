@@ -1,0 +1,47 @@
+@use 'sass:color' as color;
+@use 'src/app/@theme/styles/themes' as *;
+
+
+@include nb-install-component {
+li {
+    margin: 0.3em 0em;
+}
+
+ul {
+    list-style: none;
+
+    &.noindent {
+        padding-left: 0em;
+    }
+}
+
+.title-line {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 0.3em 1em;
+    border-radius: 0.3em;
+    background-color: darken(nb-theme(background-basic-color-1), 3%);
+    &:hover {
+        background-color: darken(nb-theme(background-basic-color-1), 5%);
+    }
+
+    .title-no {
+        font-weight: bold;
+        margin-right: 0.5rem;
+    }
+
+    .take-space {
+        height: 1em;
+        flex-grow: 1;
+        cursor: pointer;
+    }
+
+    a:hover {
+        text-decoration: underline;
+        cursor: pointer;
+        color: color.adjust(nb-theme(text-basic-color), $alpha: 0.8, $hue: -10deg);
+    }
+}
+
+}

@@ -26,6 +26,9 @@ class LocalUserSettings {
     Websocket_Reconnect_Interval_s: number = 2;
     Websocket_Request_Timeout_s: number = 8;
 
+    Markdown_Show_Heading_NO: boolean = true;
+    Markdown_Show_TOC: boolean = true;
+
     Group_Delete_Without_Confirm: boolean = false;
 
     static fromJSON(json: string): LocalUserSettings {

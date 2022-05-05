@@ -20,6 +20,7 @@ import { MarkdownNoteHistoryComponent } from './markdown-note-history/markdown-n
 import { InfiniteScrollModule } from 'ngx-infinite-scroll';
 import { TagListComponent } from './tag-list/tag-list.component';
 import { NotesOfTagComponent } from './notes-of-tag/notes-of-tag.component';
+import { TableOfContentsComponent } from './markdown-viewer/table-of-content.component';
 
 
 @NgModule({
@@ -33,6 +34,7 @@ import { NotesOfTagComponent } from './notes-of-tag/notes-of-tag.component';
         NotePreview,
         TagListComponent,
         NotesOfTagComponent,
+        TableOfContentsComponent,
     ],
     imports: [
         NoteRoutingModule,

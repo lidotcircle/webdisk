@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnDestroy, OnInit } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NbThemeService, NbToastrService } from '@nebular/theme';
 import { interval, Subject } from 'rxjs';
@@ -7,7 +7,39 @@ import { Note, NoteService } from 'src/app/service/note/note.service';
 import { ObjectSharingService } from 'src/app/service/object-sharing.service';
 import { MessageBoxService } from 'src/app/shared/service/message-box.service';
 import { downloadURI, nbThemeIsDark } from 'src/app/shared/utils';
+import { Parser as TUIParser } from '@toast-ui/editor/types/toastmark';
 import html2canvas from 'html2canvas';
+import { GenerateHeadingInfo, GetHeadingNodeInfo } from '../markdown-heading';
+import { TOCItem } from './table-of-content.component';
+import { TuiViewerComponent } from 'src/app/shared/shared-component/toast-ui/tui-viewer/tui-viewer.component';
+import { Viewer } from '@toast-ui/editor/types';
+import { HTMLConvertor, HeadingMdNode } from '@toast-ui/editor/types/toastmark';
+import { MergeTextRenderer } from 'src/app/shared/shared-component/toast-ui/MergeTextRendererPlugin';
+import { emojiConvertor } from 'src/app/shared/shared-component/toast-ui/EmojiPlugin';
+import { inlineLatexConvertor } from 'src/app/shared/shared-component/toast-ui/LatexPlugin';
+import { LocalSettingService } from 'src/app/service/user/local-setting.service';
+declare const require: any;
+const Parser = require('@toast-ui/toastmark').Parser;
+
+const convertor = MergeTextRenderer(emojiConvertor, inlineLatexConvertor);
+const pluginfo = convertor(null, null);
+const textRenderer: HTMLConvertor = pluginfo.toHTMLRenderers['text'] as HTMLConvertor;
+function text2HTML(text: string): string {
+    if (!text) return null;
+    let result = textRenderer({type: 'text', literal: text} as any, null, null);
+
+    if (!Array.isArray(result)) {
+        result = [result];
+    }
+
+    return result.map(v => {
+        if (v.type == 'text') 
+            return `<span>${v.content}</span>`;
+        else if (v.type == 'html')
+            return v.content;
+        else return '?????';
+    }).join('');;
+}
 
 
 @Component({
@@ -23,7 +55,20 @@ import html2canvas from 'html2canvas';
             <app-tag-list class='tags' [tags]='note?.tags || []'></app-tag-list>
         </nb-card-header>
         <nb-card-body class='viewer-body'>
-            <app-tui-viewer [theme]='theme' [initialValue]='note?.content'></app-tui-viewer>
+            <div [class]='"toc " + (showTOC ? "toc-open" : "")' *ngIf='(showTOCMenu || inFullscree) && headingList && headingList.length > 0'>
+                <div class='toc-title'>
+                    <button nbButton ghost status='primary' (click)='showTOC = !showTOC'>
+                        <nb-icon icon='bars' pack='fas'></nb-icon>
+                    </button>
+                    <span class='take-space'></span>
+                    <span class='toc-text'>{{ TOCTitle }}</span>
+                    <span class='take-space'></span>
+                </div>
+                <ul class='toc-list' *ngIf='showTOC'>
+                    <app-toc *ngFor='let item of headingList' [toc]='item' (scrollTo)='showTOC=false'></app-toc>
+                </ul>
+            </div>
+            <app-tui-viewer [theme]='theme' [initialValue]='note?.content' [customHTMLRenderer]='CustomHTMLRenderer' #viewer></app-tui-viewer>
         </nb-card-body>
         <nb-card-footer>
             <button nbTooltip="edit" nbTooltipStatus="primary"
@@ -45,6 +90,45 @@ import html2canvas from 'html2canvas';
 export class MarkdownViewerComponent implements OnInit, OnDestroy {
     private destroy$ = new Subject();
     private generation: number;
+
+    @ViewChild('viewer', {static: true})
+    private tuiviewer: TuiViewerComponent;
+
+    get viewer(): Viewer {
+        return this.tuiviewer.viewer;
+    }
+
+    readonly CustomHTMLRenderer = {
+        heading: (node: HeadingMdNode, { entering }) => {
+            const showHeadingNO = this.settings.Markdown_Show_Heading_NO;
+            const { level } = node;
+
+            if (entering) {
+                const ans: any[] = [
+                    {
+                        type: 'openTag',
+                        tagName: `h${level}`
+                    },
+                ];
+
+
+                const info = GetHeadingNodeInfo(node);
+                const id = `toc-${info?.levels.join('.')}`;
+                ans.push({
+                    type: 'html',
+                    content: `<span class='heading-info' style='margin-right: 0.5em; user-select: none;' id='${id}'>
+                                  ${showHeadingNO ? info?.levels?.join('.') : ''}
+                              </span>`
+                });
+                return ans;
+            } else {
+                return {
+                    type: 'closeTag',
+                    tagName: `h${level}`
+                }
+            }
+        },
+    };
 
     note: Note;
     theme: string;
@@ -69,6 +153,7 @@ export class MarkdownViewerComponent implements OnInit, OnDestroy {
                 private sharing: ObjectSharingService,
                 private nbthemeService: NbThemeService,
                 private host: ElementRef,
+                private settings: LocalSettingService,
                 private activatedRoute: ActivatedRoute)
     {
         this.theme = nbThemeIsDark(this.nbthemeService.currentTheme) ? 'dark' : 'light';
@@ -81,6 +166,8 @@ export class MarkdownViewerComponent implements OnInit, OnDestroy {
 
 
     ngOnInit(): void {
+        this.showTOCMenu = this.settings.Markdown_Show_TOC;
+
         this.activatedRoute.queryParamMap.subscribe(async (params) => {
             const key = params.get("noteref");
             const generation = params.get("generation");
@@ -126,10 +213,37 @@ export class MarkdownViewerComponent implements OnInit, OnDestroy {
             });
     }
 
+    get TOCTitle() {
+        return this.inFullscree ? this.note.title : 'Table of Contents';
+    }
+
+    showTOCMenu: boolean;
+    showTOC: boolean = false;
+    headingList: TOCItem[];
+    private generateTOC() {
+        if (this.note == null) {
+            return;
+        }
+
+        const parser: TUIParser = new Parser();
+        const node = parser.parse(this.note.content);
+        const headings = GenerateHeadingInfo(node);
+        const node2tocitems = (info: typeof headings[0]) => {
+            const item: TOCItem = {} as TOCItem;
+            item.levelText = info.levels.join(".");
+            item.title = text2HTML(info.node?.firstChild?.literal);
+            item.children = info.children && info.children.map(node2tocitems);
+            return item;
+        };
+        this.headingList = headings.map(node2tocitems);
+    }
+
     async refresh(noteid: number) {
         try {
             this.note = await this.noteService.getNote(Number(noteid), this.generation);
-        } catch {
+            this.generateTOC();
+        } catch (e) {
+            console.error(e);
             this.toastr.danger("page error", "Note");
         }
     }
@@ -147,10 +261,12 @@ export class MarkdownViewerComponent implements OnInit, OnDestroy {
         });
     }
 
+    inFullscree: boolean = false;
     async fullscreen() {
         const host = this.host.nativeElement as HTMLElement;
         const viewbody = host.querySelector(".viewer-body");
         viewbody.classList.add("fullscreen");
+        this.inFullscree = true;
 
         const popstateHandler = (event: Event) => {
             event.preventDefault();

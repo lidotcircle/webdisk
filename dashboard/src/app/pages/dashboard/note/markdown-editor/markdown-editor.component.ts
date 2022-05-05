@@ -13,6 +13,8 @@ import { EditorView } from 'prosemirror-view';
 import { TextSelection } from 'prosemirror-state';
 import { LocalSettingService } from 'src/app/service/user/local-setting.service';
 import { AsyncLocalStorageService } from 'src/app/shared/service/async-local-storage.service';
+import { GetHeadingNodeInfo, ReGenerateHeadingInfo } from '../markdown-heading';
+import { HeadingMdNode } from '@toast-ui/editor/types/toastmark';
 
 
 @Component({
@@ -37,7 +39,7 @@ import { AsyncLocalStorageService } from 'src/app/shared/service/async-local-sto
         <nb-card-body>
             <app-tui-editor height="100%" [initialValue]='noteInitContent' [theme]='theme'
                 (blur)='handleBlur($event)' (change)='handleChange($event)'#editor
-                (keydown)='handleKeydown($event)'>
+                (keydown)='handleKeydown($event)' [customHTMLRenderer]='CustomHTMLRenderer'>
             </app-tui-editor>
         </nb-card-body>
         <nb-card-footer *ngIf='showButtons'>
@@ -106,6 +108,42 @@ export class MarkdownEditorComponent implements OnInit, OnDestroy {
 
         await this.localStorage.remove(`${this.note.id}_patch`);
     }
+
+    readonly CustomHTMLRenderer = {
+        heading: (node: HeadingMdNode, { entering }) => {
+            const showHeadingNO = this.settings.Markdown_Show_Heading_NO;
+            const { level } = node;
+
+            if (entering) {
+                const ans: any[] = [
+                    {
+                        type: 'openTag',
+                        tagName: `h${level}`
+                    },
+                ];
+
+                let info = GetHeadingNodeInfo(node);
+                if (!info) ReGenerateHeadingInfo(node);
+                info = GetHeadingNodeInfo(node);
+                const NOs = showHeadingNO ? info?.levels?.join('.') : null;
+
+                if (NOs) {
+                    ans.push({
+                        type: 'html',
+                        content: `<span class='heading-info' style='margin-right: 0.5em; user-select: none;''>
+                                  ${NOs}
+                                  </span>`
+                    });
+                }
+                return ans;
+            } else {
+                return {
+                    type: 'closeTag',
+                    tagName: `h${level}`
+                }
+            }
+        },
+    };
 
     ngOnDestroy(): void {
         this.destroy$.next();
