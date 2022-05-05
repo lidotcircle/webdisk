@@ -200,6 +200,8 @@ export class MarkdownViewerComponent implements OnInit, OnDestroy {
 
             if (!this.note) {
                 await this.refresh(Number(noteid));
+            } else {
+                this.generateTOC();
             }
         });
 
