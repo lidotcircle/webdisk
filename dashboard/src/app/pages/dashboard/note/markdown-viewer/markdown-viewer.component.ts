@@ -9,7 +9,7 @@ import { MessageBoxService } from 'src/app/shared/service/message-box.service';
 import { downloadURI, nbThemeIsDark } from 'src/app/shared/utils';
 import { Parser as TUIParser } from '@toast-ui/editor/types/toastmark';
 import html2canvas from 'html2canvas';
-import { GenerateHeadingInfo, GetHeadingNodeInfo } from '../markdown-heading';
+import { GenerateHeadingInfo, GetHeadingNodeInfo, ReGenerateHeadingInfo } from '../markdown-heading';
 import { TOCItem } from './table-of-content.component';
 import { TuiViewerComponent } from 'src/app/shared/shared-component/toast-ui/tui-viewer/tui-viewer.component';
 import { Viewer } from '@toast-ui/editor/types';
@@ -112,7 +112,11 @@ export class MarkdownViewerComponent implements OnInit, OnDestroy {
                 ];
 
 
-                const info = GetHeadingNodeInfo(node);
+                let info = GetHeadingNodeInfo(node);
+                if (!info) {
+                    ReGenerateHeadingInfo(node);
+                    info = GetHeadingNodeInfo(node);
+                }
                 const id = `toc-${info?.levels.join('.')}`;
                 ans.push({
                     type: 'html',
