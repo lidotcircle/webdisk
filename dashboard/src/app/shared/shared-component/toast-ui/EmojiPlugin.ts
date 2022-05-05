@@ -5,7 +5,6 @@ import { Editor } from '@toast-ui/editor/types';
 import { ToolbarCustomOptions } from '@toast-ui/editor/types/ui';
 import { Trie } from './trie';
 import { EditorView } from 'prosemirror-view';
-import { inlineLatexConvertor } from './LatexPlugin';
 
 
 const emojiMap: Map<string,string> = new Map([
@@ -497,14 +496,20 @@ function parseText(text: string): {type: 'text' | 'emoji', content: string}[] {
 function addLangs(_i18n: I18n) {
 }
 
-function simulateKey(view: EditorView, keyCode: number, key: string) {
-    const event = document.createEvent("Event");
-    event.initEvent("keydown", true, true);
-    (event as any).keyCode = keyCode;
-    (event as any).key = (event as any).code = key;
-    return view.someProp("handleKeyDown", f => f(view, event))
-}
+export const emojiConvertor: HTMLConvertor = (node: MdNode, _ccontext: Context, _convertors?: HTMLConvertorMap) => {
+    const output = parseText(node.literal);
+    const ans: any[] = output.map( v => {
+        if (v.type == 'text') {
+            return v;
+        } else {
+            v.type = 'text';
+            v.content = emojiMap.get(v.content);
+            return v;
+        }
+    });
 
+    return { type: 'text', content: ans.map( v => v.content).join('')};
+};
 
 export default function emojiPlugin(context: PluginContext, options: any): PluginInfo {
     options = options || {};
@@ -521,22 +526,6 @@ export default function emojiPlugin(context: PluginContext, options: any): Plugi
             return null;
         }
     }
-
-    const emojiConvertor: HTMLConvertor = (node: MdNode, _ccontext: Context, _convertors?: HTMLConvertorMap) => {
-        const output = parseText(node.literal);
-        const ans: any[] = output.map( v => {
-            if (v.type == 'text') {
-                return v;
-            } else {
-                v.type = 'text';
-                v.content = emojiMap.get(v.content);
-                return v;
-            }
-        });
-
-        node.literal = ans.map( v => v.content).join('');
-        return inlineLatexConvertor(node, _ccontext, _convertors);
-    };
 
     const toHTMLRenderers = {
         text: emojiConvertor,
