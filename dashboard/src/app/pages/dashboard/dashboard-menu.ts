@@ -8,46 +8,46 @@ export class MenuItem extends NbMenuItem {
 export const WebdiskMenu: NbMenuItem[] = [
     {
         title: 'disk',
-        icon: 'home-outline',
+        icon: 'house',
         link: '/wd/dashboard/home',
         children: [
             {
                 title: 'explorer',
-                icon: 'folder-outline',
+                icon: 'folder',
                 link: '/wd/dashboard/home/explorer',
             },
             {
                 title: 'namedlink',
-                icon: 'link-outline',
+                icon: 'link',
                 link: '/wd/dashboard/home/namedlink',
             }
         ]
     },
     {
         title: 'download',
-        icon: 'cloud-download-outline',
+        icon: 'download',
         link: '/wd/dashboard/download',
     },
     {
         title: 'passstore',
-        icon: 'hash-outline',
+        icon: 'key',
         link: '/wd/dashboard/store-pass',
     },
     {
         title: 'note',
-        icon: 'book-outline',
+        icon: 'sticky-note',
         link: '/wd/dashboard/note',
         pathMatch: 'prefix',
         children: [
             {
                 title: 'timeline',
-                icon: 'activity-outline',
+                icon: 'timeline',
                 pathMatch: 'full',
                 link: '/wd/dashboard/note/timeline',
             },
             {
                 title: 'tags',
-                icon: 'pricetags',
+                icon: 'tags',
                 pathMatch: 'full',
                 link: '/wd/dashboard/note/tags',
             },
@@ -79,12 +79,12 @@ export const WebdiskMenu: NbMenuItem[] = [
     },
     {
         title: 'chart',
-        icon: 'pie-chart-outline',
+        icon: 'chart-line',
         link: '/wd/dashboard/chart',
         children: [
             {
                 title: 'table',
-                icon: 'list-outline',
+                icon: 'table',
                 link: '/wd/dashboard/chart/group-table',
             },
             {
@@ -108,7 +108,7 @@ export const WebdiskMenu: NbMenuItem[] = [
     },
     {
         title: 'settings',
-        icon: 'settings-2-outline',
+        icon: 'gears',
         link: '/wd/dashboard/settings',
         /*
         children: [

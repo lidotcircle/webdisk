@@ -70,7 +70,7 @@ export class AppComponent {
             this.nbIconLibraries.registerFontPack(pack, { packClass: pack, iconClassPrefix: 'fa' });
         })
 
-        // this.nbIconLibraries.setDefaultPack('fa-solid');
+        this.nbIconLibraries.setDefaultPack('fa-solid');
     }
 
     private async themeStoreRecovery()
