@@ -24,6 +24,9 @@
   <div class='panel'>
     <app-setting-item name='Show TOC' type='checkbox' [(initValue)]='settings.Markdown_Show_TOC'></app-setting-item>
     <app-setting-item name='Show Heading NO.' type='checkbox' [(initValue)]='settings.Markdown_Show_Heading_NO'></app-setting-item>
+    <app-setting-item name='Fullscreen Viewer Width (%)' [extra]='{ min: 50, max: 100, step: 1, type: "number" }' type='input' 
+                      [(initValue)]='settings.Markdown_Fullscreen_Width_Percent'></app-setting-item>
+
   </div>
 
   <div class='title'><div class='leader'></div><span>Markdown Editor</span></div>

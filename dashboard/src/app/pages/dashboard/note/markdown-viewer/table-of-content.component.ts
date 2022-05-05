@@ -21,7 +21,7 @@ export interface TOCItem {
                 <span *ngIf='!showChildren'><i class='fas fa-angle-right'></i></span>
             </button>
         </span>
-        <ul id='{{ targetID }}' *ngIf='showChildren' [attr.class]='!toggleButton ? "noindent" : null'>
+        <ul *ngIf='showChildren' [attr.class]='!toggleButton ? "noindent" : null'>
             <app-toc *ngFor="let item of toc.children || []" [toc]="item" (scrollTo)='scrollTo.next($event)'></app-toc>
         </ul>
     </li>

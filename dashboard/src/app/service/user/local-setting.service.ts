@@ -28,6 +28,7 @@ class LocalUserSettings {
 
     Markdown_Show_Heading_NO: boolean = true;
     Markdown_Show_TOC: boolean = true;
+    Markdown_Fullscreen_Width_Percent: number = 100;
 
     Group_Delete_Without_Confirm: boolean = false;
 

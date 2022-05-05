@@ -68,7 +68,11 @@ function text2HTML(text: string): string {
                     <app-toc *ngFor='let item of headingList' [toc]='item' (scrollTo)='showTOC=false'></app-toc>
                 </ul>
             </div>
-            <app-tui-viewer [theme]='theme' [initialValue]='note?.content' [customHTMLRenderer]='CustomHTMLRenderer' #viewer></app-tui-viewer>
+            <div class='viewer-container-outter'>
+                <div class='viewer-container' #viewerContainer>
+                    <app-tui-viewer [theme]='theme' [initialValue]='note?.content' [customHTMLRenderer]='CustomHTMLRenderer' #viewer></app-tui-viewer>
+                </div>
+            </div>
         </nb-card-body>
         <nb-card-footer>
             <button nbTooltip="edit" nbTooltipStatus="primary"
@@ -93,6 +97,9 @@ export class MarkdownViewerComponent implements OnInit, OnDestroy {
 
     @ViewChild('viewer', {static: true})
     private tuiviewer: TuiViewerComponent;
+
+    @ViewChild('viewerContainer', {static: true})
+    private viewerContainer: ElementRef;
 
     get viewer(): Viewer {
         return this.tuiviewer.viewer;
@@ -269,6 +276,10 @@ export class MarkdownViewerComponent implements OnInit, OnDestroy {
 
     inFullscree: boolean = false;
     async fullscreen() {
+        const widthPer = Math.max(this.settings.Markdown_Fullscreen_Width_Percent, 50);
+        const container = this.viewerContainer.nativeElement as HTMLElement;
+        container.style.width = `${widthPer}%`;
+
         const host = this.host.nativeElement as HTMLElement;
         const viewbody = host.querySelector(".viewer-body");
         viewbody.classList.add("fullscreen");
@@ -278,6 +289,7 @@ export class MarkdownViewerComponent implements OnInit, OnDestroy {
             event.preventDefault();
             viewbody.classList.remove("fullscreen");
             window.removeEventListener("popstate", popstateHandler);
+            container.style.width = "100%";
         };
         window.addEventListener('popstate', popstateHandler);
         history.pushState({page: this.note.title}, this.note.title, `${location.href}?notefullscree`);
