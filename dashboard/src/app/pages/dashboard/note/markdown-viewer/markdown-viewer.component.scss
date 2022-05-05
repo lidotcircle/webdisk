@@ -59,6 +59,19 @@ nb-card {
                 flex-direction: row;
                 align-items: center;
                 user-select: none;
+                position: relative;
+
+                button {
+                    z-index: 2;
+                }
+
+                .percentage-bar {
+                    display: none;
+                    position: absolute;
+                    height: 100%;
+                    background: darken(nb-theme(background-basic-color-1), 20%);
+                    opacity: 0.5;
+                }
 
                 .take-space {
                     flex-grow: 1;
@@ -86,6 +99,14 @@ nb-card {
                 left: 0em;
                 background: nb-theme(background-basic-color-1);
                 z-index: 10000;
+
+                .toc-title > .percentage-bar {
+                    display: block;
+                }
+            }
+
+            &::-webkit-scrollbar {
+                display: none;
             }
         }
 

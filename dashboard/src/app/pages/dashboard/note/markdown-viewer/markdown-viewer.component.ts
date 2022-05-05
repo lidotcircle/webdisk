@@ -54,12 +54,13 @@ function text2HTML(text: string): string {
             </div>
             <app-tag-list class='tags' [tags]='note?.tags || []'></app-tag-list>
         </nb-card-header>
-        <nb-card-body class='viewer-body'>
+        <nb-card-body class='viewer-body' (scroll)='handleScroll($event)'>
             <div [class]='"toc " + (showTOC ? "toc-open" : "")' *ngIf='(showTOCMenu || inFullscree) && headingList && headingList.length > 0'>
                 <div class='toc-title'>
                     <button nbButton ghost status='primary' (click)='showTOC = !showTOC'>
                         <nb-icon icon='bars' pack='fas'></nb-icon>
                     </button>
+                    <div class='percentage-bar' #percentageBar></div>
                     <span class='take-space'></span>
                     <span class='toc-text'>{{ TOCTitle }}</span>
                     <span class='take-space'></span>
@@ -100,6 +101,9 @@ export class MarkdownViewerComponent implements OnInit, OnDestroy {
 
     @ViewChild('viewerContainer', {static: true})
     private viewerContainer: ElementRef;
+
+    @ViewChild('percentageBar', {static: false})
+    private perBar: ElementRef;
 
     get viewer(): Viewer {
         return this.tuiviewer.viewer;
@@ -285,14 +289,37 @@ export class MarkdownViewerComponent implements OnInit, OnDestroy {
         viewbody.classList.add("fullscreen");
         this.inFullscree = true;
 
+        this.handleScroll({ target: viewbody} as any);
+        const popupSubject = new Subject<void>();
+        interval(1000)
+            .pipe(takeUntil(this.destroy$), takeUntil(popupSubject))
+            .subscribe(async () => this.handleScroll({ target: viewbody} as any));
+
         const popstateHandler = (event: Event) => {
             event.preventDefault();
             viewbody.classList.remove("fullscreen");
             window.removeEventListener("popstate", popstateHandler);
             container.style.width = "100%";
+            popupSubject.next();
+            popupSubject.complete();
         };
         window.addEventListener('popstate', popstateHandler);
         history.pushState({page: this.note.title}, this.note.title, `${location.href}?notefullscree`);
+    }
+
+    ScrollPercent: number = 0;
+    handleScroll(event: Event) {
+        if (!this.inFullscree) return;
+
+        const target = event.target as HTMLElement;
+        if (target.clientHeight >= target.scrollHeight) {
+            this.ScrollPercent = 100;
+        } else {
+            this.ScrollPercent = target.scrollTop / (target.scrollHeight - target.clientHeight);
+        }
+
+        const perElem = this.perBar.nativeElement as HTMLElement;
+        perElem.style.width = `${this.ScrollPercent * 100}%`;
     }
 
     async gotoHistory() {
