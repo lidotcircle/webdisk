@@ -48,6 +48,7 @@ interface ItemType {
                     <div *ngIf='item.type == "note"' class='note-item'>
                         <div class='note-tools'>
                             <div class='note-time'>{{ item.data.Time }}</div>
+                            <div class='title'> {{ item.data.title }} </div>
                             <div class='tags-wrapper'>
                                 <app-tag-list class='tags' [tags]='item.data.tags'></app-tag-list>
                             </div>

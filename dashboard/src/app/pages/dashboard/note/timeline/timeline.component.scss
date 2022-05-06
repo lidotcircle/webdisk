@@ -57,6 +57,12 @@ nb-card {
                     max-width: 70%;
                     overflow: auto;
 
+                    .tags {
+                        width: max-content;
+                    }
+                }
+
+                .tags-wrapper, .title {
                     &::-webkit-scrollbar {
                         width: 0.3em;
                         height: 0.3em;
@@ -71,10 +77,6 @@ nb-card {
                             background-color: rgba(180, 180, 180, 0.7);
                         }
                     }
-
-                    .tags {
-                        width: max-content;
-                    }
                 }
 
                 .take-space {
@@ -84,6 +86,14 @@ nb-card {
 
                 .note-time {
                     font-weight: bold;
+                }
+
+                .title {
+                    font-weight: bold;
+                    max-width: 50%;
+                    margin: 0em 1.5em;
+                    overflow-x: auto;
+                    white-space: nowrap;
                 }
 
                 .buttons {
