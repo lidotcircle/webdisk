@@ -61,7 +61,12 @@ function parseInlineDollarDollar(text: string): { type: 'text' | 'latex', conten
 
 const latexConvertor: HTMLConvertor = (node: CustomBlockMdNode, _ccontext: Context, _convertors?: HTMLConvertorMap) => {
     const text = node.info == 'aligned' ? `\\begin{aligned}${node.literal}\\end{aligned}` : node.literal;
-    const html = katex.renderToString(text);
+    let html: string;
+    try {
+        html = katex.renderToString(text);
+    } catch (e) {
+        html = `<span><span style='color: blue'>${text}</span><span style='color: red'>${e.message}</span></span>`;
+    }
 
     return [
         { type: 'openTag', tagName: 'div', outerNewLine: true },
@@ -75,6 +80,19 @@ const latexConvertor: HTMLConvertor = (node: CustomBlockMdNode, _ccontext: Conte
     ];
 };
 
+function ArrayFlatten(arr: any[]): any[] {
+    const ans = [];
+    for (const a of arr) {
+        if (Array.isArray(a)) {
+            ans.push(...ArrayFlatten(a));
+        } else {
+            ans.push(a);
+        }
+    }
+    return ans;
+}
+
+// TODO make multi-line equation eg. \begin{cases} ... \end{cases} work properly
 export const inlineLatexConvertor: HTMLConvertor = (node: MdNode, _ccontext: Context, _convertors?: HTMLConvertorMap) => {
     const sl = parseInlineDollarDollar(node.literal);
     const ans: any[] = sl.map( v => {
@@ -83,14 +101,19 @@ export const inlineLatexConvertor: HTMLConvertor = (node: MdNode, _ccontext: Con
         } else {
             try {
                 const html = katex.renderToString(v.content);
-                return { type: 'html', content: html };
-            } catch {
-                return { type: 'html', content: `<span style="color: red;">${v.content}</span>`};
+                return [
+                    { type: 'html', content: html },
+                ];
+            } catch (e) {
+                return [
+                    { type: 'html', content: `<span style="color: blue;">${v.content}</span>`},
+                    { type: 'html', content: `<span style="color: red;">${e.message}</span>`}
+                ];
             }
         }
     });
 
-    return ans;
+    return ArrayFlatten(ans);
 };
 
 export default function latex(_context: PluginContext, _options: any): PluginInfo {

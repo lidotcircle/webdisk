@@ -245,6 +245,7 @@ export class MarkdownViewerComponent implements OnInit, OnDestroy {
         const parser: TUIParser = new Parser();
         const node = parser.parse(this.note.content);
         const headings = GenerateHeadingInfo(node);
+        if (!headings) return;
         const node2tocitems = (info: typeof headings[0]) => {
             const item: TOCItem = {} as TOCItem;
             item.levelText = info.levels.join(".");
