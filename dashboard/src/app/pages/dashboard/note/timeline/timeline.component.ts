@@ -231,7 +231,6 @@ export class TimelineComponent implements OnInit, OnDestroy {
             data: note,
             hidden: this.prevSeparator.data.folded,
         });
-        console.log(note);
 
         if (this.notes.length == this.numberOfNotes) {
             this.items.push({

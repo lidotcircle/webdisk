@@ -1,6 +1,6 @@
 import { PluginContext } from '@toast-ui/editor/types/editor';
 import { PluginInfo } from '@toast-ui/editor/types';
-import { HTMLConvertor, MdNode, Context, HTMLConvertorMap } from '@toast-ui/editor/types/toastmark';
+import { HTMLConvertor, MdNode, CustomBlockMdNode, Context, HTMLConvertorMap } from '@toast-ui/editor/types/toastmark';
 import katex from 'katex';
 import 'katex/contrib/mhchem';
 
@@ -59,8 +59,9 @@ function parseInlineDollarDollar(text: string): { type: 'text' | 'latex', conten
     return ans;
 }
 
-const latexConvertor: HTMLConvertor = (node: MdNode, _ccontext: Context, _convertors?: HTMLConvertorMap) => {
-    const html = katex.renderToString(node.literal);
+const latexConvertor: HTMLConvertor = (node: CustomBlockMdNode, _ccontext: Context, _convertors?: HTMLConvertorMap) => {
+    const text = node.info == 'aligned' ? `\\begin{aligned}${node.literal}\\end{aligned}` : node.literal;
+    const html = katex.renderToString(text);
 
     return [
         { type: 'openTag', tagName: 'div', outerNewLine: true },
@@ -94,6 +95,7 @@ export const inlineLatexConvertor: HTMLConvertor = (node: MdNode, _ccontext: Con
 
 export default function latex(_context: PluginContext, _options: any): PluginInfo {
     const toHTMLRenderers = {
+        aligned: latexConvertor,
         latex: latexConvertor,
         text: inlineLatexConvertor,
     }
