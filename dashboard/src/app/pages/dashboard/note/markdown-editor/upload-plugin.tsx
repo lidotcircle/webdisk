@@ -15,6 +15,7 @@ import { FileSystemManagerService } from 'src/app/shared/service/file-system-man
 import { FileLinkService } from 'src/app/service/file-link.service';
 import { HTMLConvertor, HTMLToken, MdNode, Context, HTMLConvertorMap } from '@toast-ui/editor/types/toastmark';
 import { FileSystemEntryWrapper } from 'src/app/shared/FileSystemEntry';
+import { OpenSystemChooseFilesService } from 'src/app/shared/service/open-system-choose-files.service';
 
 function simulateKey(view: any, keyCode: number, key: string) {
     const event = document.createEvent("Event") as any;
@@ -225,6 +226,14 @@ class UploadPanelComponent extends React.Component<UploadPanelProps, PanelState>
         await this.newAttachment(entry);
     }
 
+    private async handleDoubleClick() {
+        if (this.state.uploading) return;
+
+        const chooser = this.props.injector.get(OpenSystemChooseFilesService);
+        const file = await chooser.getFile("image/*");
+        await this.newAttachment(file);
+    }
+
     render() {
         const toolStyle: React.CSSProperties = {
             display: 'flex',
@@ -252,7 +261,8 @@ class UploadPanelComponent extends React.Component<UploadPanelProps, PanelState>
             onPaste={this.handlePaste.bind(this)}
             onDrop={this.handleDrop.bind(this)}
             onDragOver={this.handleDragOver.bind(this)}>
-            <div style={{ fontWeight: 'bold', fontSize: 'large' }}>
+            <div style={{ fontWeight: 'bold', fontSize: 'large', userSelect: 'none', cursor: 'pointer' }}
+                onDoubleClick={ this.handleDoubleClick.bind(this) }>
                 Upload Attachment
             </div>
             {this.state.uploading
