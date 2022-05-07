@@ -46,6 +46,11 @@ export module API {
         export const record = API_ADDRESS + '/apis/sdata';
     }
 
+    export module FileLink {
+        export const File = API_ADDRESS + '/apis/flink';
+        export const FileId = API_ADDRESS + '/apis/flink/fileid';
+    }
+
     export const PassStore = API_ADDRESS + '/apis/passstore';
     export const SToken = API_ADDRESS + '/apis/stoken';
 }

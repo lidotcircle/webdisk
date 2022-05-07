@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 import { UserUploadFileService } from '../../service';
 import { QueryDependency } from '../../lib/di';
 import { createPasswordAuthMiddleware, getAuthUsername, defaultJWTAuthMiddleware, AnyOfNoError } from '../../middleware';
-import { query } from 'express-validator';
+import { query, validationResult } from 'express-validator';
 import path from 'path';
 import createHttpError from 'http-errors';
 
@@ -24,6 +24,11 @@ router.head('/:fileid', handler);
 router.post('/', defaultAuth,
     query('filepath').isString(),
     async (req, res) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(422).json({ errors: errors.array() });
+        }
+
         const service = QueryDependency(UserUploadFileService);
         const user = getAuthUsername(req);
         const filepath: string = req.query['filepath'];
@@ -31,6 +36,25 @@ router.post('/', defaultAuth,
             throw new createHttpError.BadRequest(`filepath should be a absolute path, got '${filepath}'`);
         }
         const fileid = await service.saveToFile(user, filepath, req);
+        return res.status(200).json({ fileid: fileid });
+    }
+)
+
+router.post('/fileid', defaultAuth,
+    query('filepath').isString(),
+    async (req, res) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(422).json({ errors: errors.array() });
+        }
+
+        const service = QueryDependency(UserUploadFileService);
+        const user = getAuthUsername(req);
+        const filepath: string = req.query['filepath'];
+        if (!path.isAbsolute(filepath) || /\.\./.test(filepath)) {
+            throw new createHttpError.BadRequest(`filepath should be a absolute path, got '${filepath}'`);
+        }
+        const fileid = await service.createNewFileId(user, filepath);
         return res.status(200).json({ fileid: fileid });
     }
 )

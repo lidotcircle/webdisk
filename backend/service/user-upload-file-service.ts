@@ -82,4 +82,21 @@ export class UserUploadFileService {
         await this.ufRepo.save(uf);
         return fileid;
     }
+
+    async createNewFileId(username: string, filepath: string): Promise<string>
+    {
+        const user = await this.userService.getUser(username);
+        if (!user) {
+            throw createError(404, `User ${username} not found`);
+        }
+
+        const uf = new UploadedFile();
+        const fileid = uuidv4();
+        uf.user = Promise.resolve(user);
+        uf.userId = user.id;
+        uf.target = filepath;
+        uf.fileid = fileid;
+        await this.ufRepo.save(uf);
+        return fileid;
+    }
 }

@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, Injector, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { NbThemeService, NbToastrService } from '@nebular/theme';
 import { Note, NoteService } from 'src/app/service/note/note.service';
@@ -15,6 +15,7 @@ import { LocalSettingService } from 'src/app/service/user/local-setting.service'
 import { AsyncLocalStorageService } from 'src/app/shared/service/async-local-storage.service';
 import { GetHeadingNodeInfo, ReGenerateHeadingInfo } from '../markdown-heading';
 import { HeadingMdNode } from '@toast-ui/editor/types/toastmark';
+import UploadPlugin from './upload-plugin';
 
 
 @Component({
@@ -39,6 +40,7 @@ import { HeadingMdNode } from '@toast-ui/editor/types/toastmark';
         <nb-card-body>
             <app-tui-editor height="100%" [initialValue]='noteInitContent' [theme]='theme'
                 (blur)='handleBlur($event)' (change)='handleChange($event)'#editor
+                [plugins]='editorPlugins'
                 (keydown)='handleKeydown($event)' [customHTMLRenderer]='CustomHTMLRenderer'>
             </app-tui-editor>
         </nb-card-body>
@@ -74,6 +76,7 @@ export class MarkdownEditorComponent implements OnInit, OnDestroy {
 
     private get editor() { return this.editorComponentRef.editor; }
     private destroy$: Subject<void>;
+    editorPlugins = [];
 
     showButtons: boolean;
     savingInterval: number;
@@ -83,12 +86,14 @@ export class MarkdownEditorComponent implements OnInit, OnDestroy {
                 private activatedRoute: ActivatedRoute,
                 private settings: LocalSettingService,
                 private localStorage: AsyncLocalStorageService,
+                private injector: Injector,
                 private nbtheme: NbThemeService)
     {
         this.theme = nbThemeIsDark(this.nbtheme.currentTheme) ? 'dark' : 'light';
         this.destroy$ = new Subject();
         this.showButtons = this.settings.Note_Editor_ShowButtons;
         this.savingInterval = this.settings.Note_Editor_SavingInterval_s * 1000;
+        this.editorPlugins.push([ UploadPlugin, { editorGetter: () => this.editor, injector: this.injector, noteGetter: () => this.note }]);
     }
 
     private async savePatchToLocal(patch: string): Promise<void> {
