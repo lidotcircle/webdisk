@@ -49,12 +49,12 @@ export class FileSystemEntryWrapper {
             return ans;
         } //}
 
-    static fromFile(file: File, fullpath?: string) //{
+    static fromFile(file: File, filename?: string) //{
     {
         const ans = new FileSystemEntryWrapper;
         ans._isFile = true;
         ans._isDirectory = false;
-        ans._name = file.name;
+        ans._name = filename || file.name;
         ans._file = file;
         return ans;
     } //}
