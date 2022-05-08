@@ -29,7 +29,7 @@ interface NoteWithHistory extends Note {
 
                 <button nbTooltip='merge all into 1' nbTooltipStatus='primary'
                     nbButton ghost [disabled]='onWorking' status='primary' (click)='onMergeAllClick()'>
-                    <nb-icon icon='collapse'></nb-icon>
+                    <nb-icon icon='code-merge'></nb-icon>
                 </button>
             </div>
             <app-tag-list class='tags' [tags]='note?.tags || []'></app-tag-list>
@@ -71,7 +71,7 @@ interface NoteWithHistory extends Note {
                         <div>
                             <button nbTooltip='merge into 1' nbTooltipStatus='primary'
                                 nbButton ghost [disabled]='onWorking' status='primary' (click)='onMergeClick(i)'>
-                                <nb-icon icon='collapse'></nb-icon>
+                                <nb-icon icon='code-merge'></nb-icon>
                             </button>
                         </div>
                     </div>
