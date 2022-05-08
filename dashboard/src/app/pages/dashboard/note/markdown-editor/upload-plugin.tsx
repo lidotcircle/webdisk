@@ -2,6 +2,7 @@ import { PluginContext, I18n } from '@toast-ui/editor/types/editor';
 import { PluginInfo } from '@toast-ui/editor/types';
 import { Editor } from '@toast-ui/editor/types';
 import { ToolbarCustomOptions } from '@toast-ui/editor/types/ui';
+import { Emitter } from '@toast-ui/editor/types/event';
 import { EditorView } from 'prosemirror-view';
 import * as React from 'react';
 import { createRoot } from 'react-dom/client';
@@ -37,6 +38,7 @@ function randomString(length: number) {
 
 interface UploadPanelProps {
     children?: any;
+    eventEmitter: Emitter;
     injector: Injector;
     editorGetter: () => Editor;
     viewGetter: () => EditorView;
@@ -45,6 +47,7 @@ interface UploadPanelProps {
 };
 interface PanelState {
     dragover?: boolean;
+    markdownFormatImage: boolean;
     centering?: boolean;
     uploading?: boolean;
     caption?: string;
@@ -59,7 +62,16 @@ class UploadPanelComponent extends React.Component<UploadPanelProps, PanelState>
         this.state = {
             width: 'auto',
             centering: true,
+            markdownFormatImage: true,
         };
+
+        this.props.eventEmitter.removeEventHandler("addImageBlobHook");
+        this.props.eventEmitter.listen("addImageBlobHook", async (blob: File, callback) => {
+            const filename = `${randomString(10)}${blob.name}`;
+            const entry = FileSystemEntryWrapper.fromFile(blob, filename);
+            const link = await this.newAttachment(entry, false);
+            callback(link, filename);
+        });
     }
 
     private changeStateKey(key: string, value: any) {
@@ -122,7 +134,7 @@ class UploadPanelComponent extends React.Component<UploadPanelProps, PanelState>
     }
 
     private insertImageLink(filename: string, link: string) {
-        if (link == null) {
+        if (this.state.markdownFormatImage) {
             const tr = this.view.state.tr;
             const { from } = this.view.state.selection;
             tr.insertText(`![${filename}](${link})\n`, from);
@@ -173,7 +185,7 @@ class UploadPanelComponent extends React.Component<UploadPanelProps, PanelState>
         await this.newAttachment(entry);
     }
 
-    private async newAttachment(entry: any) {
+    private async newAttachment(entry: any, insertLink: boolean = true): Promise<string> {
         const note = this.props.noteGetter();
         if (!note || note.id == null) {
             this.toastr.danger('note a valid note', "upload");
@@ -195,7 +207,9 @@ class UploadPanelComponent extends React.Component<UploadPanelProps, PanelState>
             }
 
             const link = await this.fileLink.newlink(fullpath, true);
-            this.insertImageLink(filename, link);
+            if (insertLink)
+                this.insertImageLink(filename, link);
+            return link;
         } catch (e) {
             console.error(e);
             this.toastr.danger(e.message || 'failed', "upload");
@@ -279,13 +293,13 @@ class UploadPanelComponent extends React.Component<UploadPanelProps, PanelState>
                     justifyContent: 'space-between',
                     flexWrap: 'wrap',
                 }}>
-                    <span style={toolStyle}>
+                    <span style={{ width: '100%', ...toolStyle}}>
                         <label style={labelStyle}>Caption</label>
-                        <input type='text' value={this.state.caption} onChange={e => {
+                        <input type='text' value={this.state.caption || ''} onChange={e => {
                             this.changeStateKey('caption', e.target.value);
                         }} />
                     </span>
-                    <span style={toolStyle}>
+                    <span style={{ width: '100%', ...toolStyle}}>
                         <label style={labelStyle}>Width</label>
                         <input type='text' value={this.state.width} onChange={e => {
                             this.changeStateKey('width', e.target.value);
@@ -296,6 +310,12 @@ class UploadPanelComponent extends React.Component<UploadPanelProps, PanelState>
                         <label style={labelStyle}>Centering</label>
                         <input type='checkbox' checked={this.state.centering} onChange={e => {
                             this.changeStateKey('centering', e.target.checked);
+                        }} />
+                    </span>
+                    <span style={toolStyle}>
+                        <label style={labelStyle}>Markdown Format</label>
+                        <input type='checkbox' checked={this.state.markdownFormatImage} onChange={e => {
+                            this.changeStateKey('markdownFormatImage', e.target.checked);
                         }} />
                     </span>
                 </div>
@@ -339,6 +359,7 @@ export default function UploadPlugin(context: PluginContext, options: any): Plug
                 editorGetter={editorGetter}
                 viewGetter={viewGetter}
                 noteGetter={noteGetter}
+                eventEmitter={eventEmitter}
                 onDone={() => eventEmitter.emit('closePopup')}>
             </UploadPanelComponent>
         </React.StrictMode>
