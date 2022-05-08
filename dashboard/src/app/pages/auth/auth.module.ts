@@ -9,6 +9,7 @@ import { NbAuthModule } from '@nebular/auth';
 import { RequestPasswordComponent } from './request-password/request-password.component';
 import { NbInputModule, NbButtonModule, NbCheckboxModule, NbCardModule } from '@nebular/theme';
 import { FormsModule } from '@angular/forms';
+import { NbEvaIconsModule } from '@nebular/eva-icons';
 
 
 @NgModule({
@@ -22,6 +23,7 @@ import { FormsModule } from '@angular/forms';
         NbInputModule,
         NbButtonModule,
         NbCheckboxModule,
+        NbEvaIconsModule,
     ],
 })
 export class AuthModule { }

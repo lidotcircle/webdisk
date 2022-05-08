@@ -1,4 +1,5 @@
 import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
+import { NbIconLibraries } from '@nebular/theme';
 import { WebdiskLayoutService } from 'src/app/layout/webdisk-layout.service';
 
 
@@ -13,7 +14,11 @@ import { WebdiskLayoutService } from 'src/app/layout/webdisk-layout.service';
 })
 export class DashboardComponent implements OnInit, OnDestroy {
     private toggled: boolean;
-    constructor(private layoutService: WebdiskLayoutService) { }
+    constructor(private layoutService: WebdiskLayoutService,
+                private iconLibrary: NbIconLibraries)
+    {
+        this.iconLibrary.setDefaultPack('fa-solid');
+    }
 
     ngOnDestroy(): void {
         if (this.toggled) {
