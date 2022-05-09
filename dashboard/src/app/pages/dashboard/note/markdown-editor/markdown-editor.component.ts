@@ -24,7 +24,8 @@ import UploadPlugin from './upload-plugin';
     <nb-card>
         <nb-card-header>
             <div class='header'>
-                <a *ngIf='showTitle'  class='title' (click)='onToggleTitleClick()'>{{ note?.title }}</a>
+                <a *ngIf='showTitle'  class='title' (click)='onToggleTitleClick()'>{{ note?.title || '⚪' }}</a>
+                <span class='invalid-note' *ngIf='invalidNote'>INVALID NOTE</span>
                 <input class='info-input' matInput *ngIf='!showTitle' [disabled]='!note' [(ngModel)]='inputTitle' (blur)='onTitleBlur()' #titleinput>
                 <div class='savingStatus how-many-be-modified' *ngIf='howManyBeModified>0'>Patch Length: <span class='bd'>{{ howManyBeModified }}</span></div>
                 <div class='savingStatus' *ngIf='!lastSaveTime'>Not Saved</div>
@@ -96,22 +97,32 @@ export class MarkdownEditorComponent implements OnInit, OnDestroy {
         this.editorPlugins.push([ UploadPlugin, { editorGetter: () => this.editor, injector: this.injector, noteGetter: () => this.note }]);
     }
 
-    private async savePatchToLocal(patch: string): Promise<void> {
+    private async saveLatestNoteToLocal(note: string): Promise<void> {
         if (!this.note) return;
 
-        await this.localStorage.set(`${this.note.id}_patch`, patch);
+        await this.localStorage.set(`note_${this.note.id}`, note);
+    }
+
+    private async saveLatestSyncronizedNoteToLocal(note: string): Promise<void> {
+        await this.localStorage.set(`syncnote_${this.note.id}`, note);
     }
 
     private async getPatchFromLocal(): Promise<string | null> {
         if (!this.note) return null;
 
-        return await this.localStorage.get(`${this.note.id}_patch`);
+        const n1 = await this.localStorage.get<string>(`syncnote_${this.note.id}`);
+        const n2 = await this.localStorage.get<string>(`note_${this.note.id}`);
+        if (!n1 || !n2) return null;
+        const dmp = new diff_match_patch();
+        return dmp.patch_toText(dmp.patch_make(n1, n2));
     }
 
-    private async clearPatchFromLocal(): Promise<void> {
+    private async clearPatchFromLocal(latestSync: string): Promise<void> {
         if (!this.note) return;
 
-        await this.localStorage.remove(`${this.note.id}_patch`);
+        await this.localStorage.remove(`note_${this.note.id}`);
+        if (latestSync)
+            await this.saveLatestSyncronizedNoteToLocal(latestSync);
     }
 
     readonly CustomHTMLRenderer = {
@@ -163,6 +174,7 @@ export class MarkdownEditorComponent implements OnInit, OnDestroy {
         hotkeys.deleteScope("md-editor");
     }
 
+    invalidNote: boolean = false;
     ngOnInit(): void {
         this.activatedRoute.queryParamMap.subscribe(async (params) => {
             const key = params.get("noteref");
@@ -177,12 +189,17 @@ export class MarkdownEditorComponent implements OnInit, OnDestroy {
             }
 
             if (!this.note){
-                this.note = await this.noteService.getNote(Number(noteid));
+                try {
+                    this.note = await this.noteService.getNote(Number(noteid));
+                } catch (e) {
+                    this.toastr.danger('fail to get note', "Note");
+                }
             }
 
             const oldPatch = await this.getPatchFromLocal();
             if (this.note) {
                 let content = this.note.content;
+                await this.saveLatestSyncronizedNoteToLocal(content);
                 if (oldPatch && this.settings.Markdown_Editor_Apply_Local_Patch) {
                     const dmp = new diff_match_patch();
                     const patch = dmp.patch_fromText(oldPatch);
@@ -196,6 +213,8 @@ export class MarkdownEditorComponent implements OnInit, OnDestroy {
                 this.noteInitContent = content;
                 this.latestContent = content;
             }
+
+            this.invalidNote = !this.note;
         });
 
         interval(1000)
@@ -335,7 +354,7 @@ export class MarkdownEditorComponent implements OnInit, OnDestroy {
                 this.toastr.warning("doesn't fully syncronize", "Note");
                 return;
             }
-            await this.clearPatchFromLocal();
+            await this.clearPatchFromLocal(text);
             // TODO generation update
             this.note.content = text;
             this.note.generation = resp.generation;
@@ -369,13 +388,26 @@ export class MarkdownEditorComponent implements OnInit, OnDestroy {
     }
 
     private latestContent: string;
+    private prevLength: number;
+    private changeCount: number = 0;
     async handleChange(_event: any) {
+        this.changeCount++;
+        const prevLen = this.prevLength || this.note?.content?.length;
+        if (prevLen == null) return;
+
         this.latestContent = this.editor.getMarkdown();
+        this.prevLength = this.latestContent.length;
+        if (prevLen + 50 > this.latestContent.length && this.changeCount < 30) {
+            await this.saveLatestNoteToLocal(this.latestContent);
+            return;
+        }
+
+        this.changeCount = 0;
         const patch = this.notePatch();
         if (this.shouldUpdate(patch)) {
             await this.doUpdate();
         } else {
-            await this.savePatchToLocal(patch);
+            await this.saveLatestNoteToLocal(this.latestContent);
         }
     }
 

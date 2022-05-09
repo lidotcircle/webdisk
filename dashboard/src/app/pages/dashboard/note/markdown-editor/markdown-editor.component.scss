@@ -44,6 +44,13 @@ nb-card {
                 }
             }
 
+            .invalid-note {
+                font-weight: bold;
+                font-size: large;
+                color: nb-theme(text-danger-color);
+                user-select: none;
+            }
+
             .savingStatus {
                 color: color.adjust(nb-theme(color-basic-disabled), $lightness: -30%);
                 padding: 0.1em 0em;
