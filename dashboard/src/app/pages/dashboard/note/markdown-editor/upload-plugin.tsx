@@ -62,7 +62,7 @@ class UploadPanelComponent extends React.Component<UploadPanelProps, PanelState>
         this.state = {
             width: 'auto',
             centering: true,
-            markdownFormatImage: true,
+            markdownFormatImage: false,
         };
 
         this.props.eventEmitter.removeEventHandler("addImageBlobHook");

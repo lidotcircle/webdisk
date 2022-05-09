@@ -5,6 +5,7 @@ import { Note } from 'src/app/service/note/note.service';
 import { ObjectSharingService } from 'src/app/service/object-sharing.service';
 import { nbThemeIsDark } from 'src/app/shared/utils';
 import { Parser as TUIParser } from '@toast-ui/editor/types/toastmark';
+import AttachmentPlugin from '../markdown-editor/upload-plugin';
 declare const require: any;
 const Parser = require('@toast-ui/toastmark').Parser;
 
@@ -14,7 +15,7 @@ const Parser = require('@toast-ui/toastmark').Parser;
     template: `
         <div class='previewer' (click)="gotoNote()">
             <a class='pesudo-button' (click)='gotoNote()'></a>
-            <app-tui-viewer [theme]='theme' *ngIf='note' [initialValue]='thinContent'></app-tui-viewer>
+            <app-tui-viewer [theme]='theme' *ngIf='note' [plugins]='plugins' [initialValue]='thinContent'></app-tui-viewer>
         </div>`,
     styleUrls: [`./note-preview.component.scss`]
 })
@@ -25,6 +26,7 @@ export class NotePreview implements OnInit {
     generation: boolean = true;
     theme: string = 'light';
     thinContent: string;
+    plugins: any[] = [AttachmentPlugin];
 
     constructor(private router: Router,
                 private sharing: ObjectSharingService,

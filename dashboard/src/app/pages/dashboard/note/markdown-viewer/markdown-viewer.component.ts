@@ -18,6 +18,7 @@ import { MergeTextRenderer } from 'src/app/shared/shared-component/toast-ui/Merg
 import { emojiConvertor } from 'src/app/shared/shared-component/toast-ui/EmojiPlugin';
 import { inlineLatexConvertor } from 'src/app/shared/shared-component/toast-ui/LatexPlugin';
 import { LocalSettingService } from 'src/app/service/user/local-setting.service';
+import AttachmentPlugin from '../markdown-editor/upload-plugin';
 declare const require: any;
 const Parser = require('@toast-ui/toastmark').Parser;
 
@@ -71,7 +72,7 @@ function text2HTML(text: string): string {
             </div>
             <div class='viewer-container-outter'>
                 <div class='viewer-container' #viewerContainer>
-                    <app-tui-viewer [theme]='theme' [initialValue]='note?.content' [customHTMLRenderer]='CustomHTMLRenderer' #viewer></app-tui-viewer>
+                    <app-tui-viewer [theme]='theme' [initialValue]='note?.content' [plugins]='plugins' [customHTMLRenderer]='CustomHTMLRenderer' #viewer></app-tui-viewer>
                 </div>
             </div>
         </nb-card-body>
@@ -95,6 +96,7 @@ function text2HTML(text: string): string {
 export class MarkdownViewerComponent implements OnInit, OnDestroy {
     private destroy$ = new Subject();
     private generation: number;
+    plugins: any[] = [AttachmentPlugin];
 
     @ViewChild('viewer', {static: true})
     private tuiviewer: TuiViewerComponent;
