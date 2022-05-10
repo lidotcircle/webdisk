@@ -14,12 +14,14 @@ class UploadHandler {
         });
     }
 
-    async upload() {
-        await this.view.instance.upload();
+    async upload(): Promise<boolean> {
+        const ans = await this.view.instance.upload();
 
-        if(this.destoryed) return;
+        if(this.destoryed) return ans;
         this.view.destroy();
         this.destoryed = true;
+
+        return ans;
     }
 }
 

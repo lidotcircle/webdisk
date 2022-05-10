@@ -123,7 +123,7 @@ export class FileOperationService {
         }
     } //}
 
-    async upload(fileEntries: FileSystemEntryWrapper[] | FileSystemEntry[], destination: string) //{
+    async upload(fileEntries: FileSystemEntryWrapper[] | FileSystemEntry[], destination: string): Promise<boolean> //{
     {
         let entries = fileEntries as FileSystemEntryWrapper[];
         if(fileEntries.length > 0 && !(fileEntries[0] instanceof FileSystemEntryWrapper)) {
@@ -132,7 +132,7 @@ export class FileOperationService {
                 entries.push(await FileSystemEntryWrapper.fromFileSystemEntry(entry as FileSystemEntry));
             }
         }
-        await this.uploadservice.create(entries, destination).upload();
+        return await this.uploadservice.create(entries, destination).upload();
     } //}
     async filechooser_upload_file_to(destination: string, accept?: string) //{
     {

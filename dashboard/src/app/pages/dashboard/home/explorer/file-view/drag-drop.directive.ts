@@ -82,9 +82,11 @@ export class DropDirectoryDirective implements OnInit, OnDestroy {
                 for(const entry of entries) {
                     if (entry.isFile || entry.isDirectory) { // FileSystemEntry
                         try {
-                            await this.fileOperation.upload([entry], currentDir);
+                            if (!await this.fileOperation.upload([entry], currentDir))
+                                break;
                         } catch (e) {
                             console.error(e);
+                            break;
                         }
                     }
                 }

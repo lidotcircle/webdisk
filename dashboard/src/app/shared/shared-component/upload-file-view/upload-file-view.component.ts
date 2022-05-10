@@ -80,7 +80,7 @@ export class UploadFileViewComponent implements OnInit {
         }
     }
 
-    public async upload() //{
+    public async upload(): Promise<boolean> //{
     {
         this.uploadConfirm.subscribe(v => this.uploadedSize += v);
         this.totalSize = 0;
@@ -111,16 +111,21 @@ export class UploadFileViewComponent implements OnInit {
                         message: `upload success, total spend time: ${this.spendTime / 1000}s`, 
                         duration: 3000
                     }).wait();
+
+                    return true;
                 } else {
                     this.notifier.create({
                         message: `stop upload, total spend time: ${this.spendTime / 1000}s`, 
                         duration: 3000
                     }).wait();
+
+                    return false;
                 }
             }
         } catch (err) {
             console.log(err);
             this.notifier.create({message: `upload fail: ${err}`, mtype: NotifierType.Error,duration: 5000}).wait();
+            return false;
         } finally {this.finish = true;}
     } //}
 
