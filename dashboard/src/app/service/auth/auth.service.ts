@@ -51,8 +51,9 @@ export class AuthService {
         this.cancelRefreshTimer();
         const claim = this.jwtToClaim(this.jwt_token);
         const expDate = new Date(claim.exp * 1000);
-        const dueMS = (expDate.getTime() - Date.now()) * 0.8;
+        const dueMS = (expDate.getTime() - Date.now()) * 0.6;
         const refreshDate = new Date(Date.now() + dueMS);
+        console.debug("next refresh: ", refreshDate);
         this.refreshSubscription = timer(refreshDate).subscribe(() => {
             this.refreshJWT();
         });
@@ -119,6 +120,7 @@ export class AuthService {
         }).toPromise() as {jwt: string};
         this.jwt_token = ans.jwt;
         this.sessionStorage.set<string>(StorageKeys.JWT_TOKEN, this.jwt_token);
+        console.debug("refresh jwt at: ", new Date());
         this.setRefreshTimer();
         this.jwtSubject.next(this.jwtToClaim(this.jwt_token));
     }
