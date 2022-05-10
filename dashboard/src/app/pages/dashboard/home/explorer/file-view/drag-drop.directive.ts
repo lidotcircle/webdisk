@@ -1,4 +1,5 @@
-import { Directive, ElementRef, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Directive, ElementRef, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { FileStat } from 'src/app/shared/common';
 import { FileOperationService } from 'src/app/shared/service/file-operation.service';
 
@@ -34,7 +35,7 @@ export class DragItemDirective implements OnInit {
 @Directive({
     selector: '[dropdir]',
 })
-export class DropDirectoryDirective implements OnInit {
+export class DropDirectoryDirective implements OnInit, OnDestroy {
     @Input()
     dropdir: string;
     @Input()
@@ -46,20 +47,31 @@ export class DropDirectoryDirective implements OnInit {
                 private fileOperation: FileOperationService) {
     }
 
+    private subscription: Subscription;
+    ngOnDestroy(): void {
+        this.subscription.unsubscribe();
+    }
+
     ngOnInit(): void {
+        this.subscription = new Subscription();
         const host = this.host.nativeElement as HTMLElement;
         this.acceptDragItem = this.acceptDragItem || host.hasAttribute("accept-drag-item");
 
-        host.addEventListener("dragover", (ev: DragEvent) => {
+        const handleDragOver = async (ev: DragEvent) => {
             if (this.dropdir == null) return;
             ev.stopPropagation();
             ev.preventDefault();
-        });
-        host.addEventListener("drop", async (ev: DragEvent) => {
+        };
+        host.addEventListener("dragover", handleDragOver);
+        this.subscription.add(() => host.removeEventListener("dragover", handleDragOver));
+
+        const handleDrop = async (ev: DragEvent) => {
             if (this.dropdir == null) return;
             ev.stopPropagation();
             ev.preventDefault();
 
+            // avoid inconsistent behavior caused by dropdir change in this asyncrhonous function call
+            const currentDir = this.dropdir;
             const filepath = ev.dataTransfer.getData("path");
             if (filepath == '') {
                 const entries = [];
@@ -70,20 +82,22 @@ export class DropDirectoryDirective implements OnInit {
                 for(const entry of entries) {
                     if (entry.isFile || entry.isDirectory) { // FileSystemEntry
                         try {
-                            await this.fileOperation.upload([entry], this.dropdir);
+                            await this.fileOperation.upload([entry], currentDir);
                         } catch (e) {
                             console.error(e);
                         }
                     }
                 }
                 this.dropdone.next();
-            } else if (filepath != this.dropdir && this.acceptDragItem) {
+            } else if (filepath != currentDir && this.acceptDragItem) {
                 const nf = new FileStat();
                 nf.filename = filepath;
-                if (await this.fileOperation.move([nf], this.dropdir)) {
+                if (await this.fileOperation.move([nf], currentDir)) {
                     this.dropdone.next();
                 }
             }
-        });
+        };
+        host.addEventListener("drop", handleDrop);
+        this.subscription.add(() => host.removeEventListener("drop", handleDrop));
     }
 }
