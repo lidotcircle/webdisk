@@ -10,13 +10,14 @@ import { ToolsComponent } from './tools/tools.component';
 import { ToolComponent } from './tools/tool/tool.component';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { DragItemDirective, DropDirectoryDirective } from './drag-drop.directive';
+import { PathViewerComponent } from './path-viewer/path-viewer.component';
 
 
 @NgModule({
     declarations: [
         FileComponent, FileSortComponent, DetailViewHeaderComponent,
         FileViewComponent, ToolsComponent, ToolComponent,
-        DragItemDirective, DropDirectoryDirective,
+        DragItemDirective, DropDirectoryDirective, PathViewerComponent,
     ],
     imports: [
         CommonModule,

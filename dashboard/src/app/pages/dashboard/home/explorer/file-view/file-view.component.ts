@@ -393,8 +393,12 @@ export class FileViewComponent implements OnInit, OnDestroy {
             case SortByWhat.size:  this.sortBySize(); break;
         }
         if(this.sortReverse) {
-            this.config.reverse = !this.config.reverse;
-            this.reverse();
+            const o = this.files;
+            const nf = [];
+            for(let f of o) {
+                nf.unshift(f);
+            }
+            this.files = nf;
         }
     } //}
 
@@ -758,13 +762,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
     reverse() //{
     {
         this.config.reverse = !this.config.reverse;
-
-        const o = this.files;
-        const nf = [];
-        for(let f of o) {
-            nf.unshift(f);
-        }
-        this.set_files(nf);
+        this.refresh();
     } //}
 
     get FileOrder(): boolean {

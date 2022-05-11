@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, EventEmitter, Output, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, Input, EventEmitter, Output } from '@angular/core';
 import { FileViewStyle } from '../file-view.component';
 
 @Component({
@@ -14,9 +14,6 @@ export class DetailViewHeaderComponent implements OnInit {
 
     @Output('change')
     ViewChange = new EventEmitter();
-
-    @ViewChild('icon')
-    private iconSpace: ElementRef;
 
     constructor() {}
 

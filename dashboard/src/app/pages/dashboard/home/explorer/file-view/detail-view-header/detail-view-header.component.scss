@@ -9,7 +9,7 @@
     align-items: center;
     $basecolor: nb-theme(background-basic-color-1);
     $fcolor: nb-theme(basic-color-1);
-    background: $basecolor;
+    background: darken($basecolor, 5%);
 
     .take-space {
         width: 2em;
@@ -32,7 +32,6 @@
             flex-grow: 1;
             padding: 0.5em;
             font-size: xx-small;
-            background: darken($basecolor, 5%);
         }
 
         .tool {
@@ -52,7 +51,11 @@
                 background-color: darken($basecolor, 10%);
             }
         }
-        
+
+        &:last-child > .vertical-drag {
+            display: none;
+        }
+
         .vertical-drag {
             position: absolute;
             right: 0em;
