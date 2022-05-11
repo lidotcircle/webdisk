@@ -95,8 +95,14 @@ export class FileSystem {
 
     async fileSliceMD5(file: string, position: number, len: number): Promise<string> {
         const md5Digest = crypto.createHash("md5");
-        const buf = await this.read(file,position,len);
-        md5Digest.update(buf);
+        const maxSliceSize = 50 * 1024 * 1024;
+        const endPosition = position + len;
+        while (position < endPosition) {
+            const sliceSize = Math.min(maxSliceSize, endPosition - position);
+            const buf = await this.read(file,position,sliceSize);
+            md5Digest.update(buf);
+            position += sliceSize;
+        }
         return md5Digest.digest('hex');
     }
 

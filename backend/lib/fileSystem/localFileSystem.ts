@@ -111,36 +111,6 @@ export class LocalFileSystem extends FileSystem {
         return ans;
     }
     
-    /*
-    async fileSliceMD5(file: string, position: number, len: number): Promise<string> {
-        const md5Digest = crypto.createHash("md5");
-        const fd = await fs.promises.open(file, "r");
-        const buf = Buffer.alloc(1024 * 1024);
-        let o = 0;
-        while (len > 0) {
-            const n = Math.min(len, buf.byteLength);
-            const nb = (await LocalFileSystem.asyncRead(fd.fd,buf,0,n,position+o)).bytesRead;
-            if (nb < n) {
-                md5Digest.update(Buffer.from(buf,0,nb));
-                // TODO or omit
-                throw new Error("file out of range");
-            } else {
-                if(nb == buf.byteLength) {
-                    md5Digest.update(buf);
-                } else {
-                    let b2 = Buffer.alloc(nb);
-                    buf.copy(b2,0,0,nb);
-                    md5Digest.update(b2);
-                }
-            }
-            len -= n;
-            o += n;
-        }
-        await fd.close();
-        return md5Digest.digest("hex");
-    }
-    */
-
     async mkdir(dir: string) {
         dir = this.resolvePath(dir);
         await fs.promises.mkdir(dir, {recursive: true});
