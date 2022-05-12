@@ -1,4 +1,4 @@
-import { FileStat, FileType } from '../common/file_types';
+import { FileStat, FileType, StorageType } from '../common/file_types';
 import { Readable } from 'stream';
 import { FileSystem, FileSystemType, IFileSystemConfig } from './fileSystem';
 import { prototype as ossprototype, HTTPMethods, ObjectMeta} from 'ali-oss';
@@ -6,6 +6,7 @@ import { constants } from '../constants';
 import assert from 'assert';
 import path from 'path';
 import alioss from 'ali-oss';
+import { warn } from '../../service';
 type OSS = typeof ossprototype;
 class AliOSSFileSystemNotImplemented extends Error {}
 
@@ -64,6 +65,7 @@ export class AliOSSFileSystem extends FileSystem {
         ans.filetype = FileType.reg;
         ans.mode = 623;
         ans.etag = metaData.etag;
+        ans.storageType = StorageType.alioss;
         ans.objectType = metaData.type as OSSObjectType;
 
         const time = new Date(metaData.lastModified).getTime(); 
@@ -77,6 +79,7 @@ export class AliOSSFileSystem extends FileSystem {
         const ans = new AliOSSFileStat();
         ans.size = 4 * 4096;
         ans.mode = 6123;
+        ans.storageType = StorageType.alioss;
         ans.filename = this.resolveObjectNameToFilename(prefix);
         ans.filetype = FileType.dir;
         ans.mtimeMs = Date.now(); 
@@ -97,14 +100,18 @@ export class AliOSSFileSystem extends FileSystem {
 
     async initAliOSS() {
         // check
-        await this.bucket.list({prefix: "", delimiter: '/', "max-keys": 1}, {timeout: 5000});
+        try {
+            await this.bucket.list({prefix: "", delimiter: '/', "max-keys": 1}, {timeout: 5000});
 
-        await this.bucket.putBucketCORS(this.config.data.bucket, [
-            {
-                allowedOrigin: '*',
-                allowedMethod: ['GET', 'PUT']
-            }
-        ]);
+            await this.bucket.putBucketCORS(this.config.data.bucket, [
+                {
+                    allowedOrigin: '*',
+                    allowedMethod: ['GET', 'PUT']
+                }
+            ]);
+        } catch (e) {
+            warn(e);
+        }
     }
 
     async chmod(file: string, mode: number) {

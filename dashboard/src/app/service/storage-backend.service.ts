@@ -3,6 +3,12 @@ import { Injectable } from '@angular/core';
 import { RESTfulAPI } from '../restful';
 
 
+export interface StorageBackend {
+    type: string;
+    directory: string;
+    config: Object
+}
+
 const API = RESTfulAPI.Store;
 @Injectable({
     providedIn: 'root'
@@ -22,7 +28,7 @@ export class StorageBackendService {
         await this.http.delete(API, { params: { directory }}).toPromise();
     }
 
-    public async getStores(): Promise<{type: string, directory: string, config: Object}[]> {
+    public async getStores(): Promise<StorageBackend[]> {
         return await this.http.get(API).toPromise() as any;
     }
 }

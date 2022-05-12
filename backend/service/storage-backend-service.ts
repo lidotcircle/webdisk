@@ -42,7 +42,7 @@ export class StorageBackendService {
             return;
 
         const backends = await this.storageRepo.find();
-        if (backends.length == 0) return;
+        if (backends == null) return;
 
         const config = JSON.parse(JSON.stringify(this.config.filesystem)) as IMultiFileSystemConfig;
         const localSetup = config.data;

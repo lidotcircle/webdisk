@@ -1,3 +1,7 @@
+export enum StorageType {
+    local = 'local',
+    alioss = 'alioss',
+}
 
 export class FileStat {
     dev:         number   = 0;
@@ -14,6 +18,7 @@ export class FileStat {
     mtimeMs:     number   = 0;
     ctimeMs:     number   = 0;
     birthtimeMs: number   = 0;
+    storageType: StorageType = StorageType.local;
     filename:    string   = null;
     filetype:    FileType = FileType.unknown;
 
@@ -28,7 +33,7 @@ export class FileStat {
     get basename(): string {
         if(!this.filename) return null;
         let k = this.filename;
-        if(k.endsWith('/') || k.endsWith('\\')) k = k.substr(0, k.length -1);
+        if(k.endsWith('/') || k.endsWith('\\')) k = k.substring(0, k.length -1);
         const kk = k.split('/');
         return kk[kk.length - 1];
     }

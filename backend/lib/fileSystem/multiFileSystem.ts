@@ -1,4 +1,4 @@
-import { FileStat, FileType } from "../common/file_types";
+import { FileStat, FileType, StorageType } from "../common/file_types";
 import { Readable, Writable } from 'stream';
 import { AliOSSFileSystem, IAliOSSFileSystemConfig } from './aliOssFileSystem';
 import { FileSystem, FileSystemType, IFileSystemConfig } from './fileSystem';
@@ -21,6 +21,13 @@ class FileHandler {
     filename: string;
     filesystem: FileSystem;
     mapping: FSMapping
+}
+
+function fileSystemType2StorageType(ftype: FileSystemType) {
+    switch(ftype) {
+        case FileSystemType.alioss: return StorageType.alioss;
+        default: return StorageType.local;
+    }
 }
 
 export class MultiFileSystem extends FileSystem {
@@ -135,7 +142,7 @@ export class MultiFileSystem extends FileSystem {
         if(!dir.endsWith('/')) dir += '/';
         for(const fs of this.config.data) {
             if(fs.srcPrefix.startsWith(dir) && /[^\\]+\//.test(fs.srcPrefix.substring(dir.length))) {
-                ans.push(this.makeStatFromFSEntryPrefix(fs.srcPrefix));
+                ans.push(this.makeStatFromFSEntryPrefix(fs.srcPrefix, fs.config.type));
             }
         }
 
@@ -184,20 +191,22 @@ export class MultiFileSystem extends FileSystem {
         await hd.filesystem.remover(hd.filename);
     } //}
 
-    private makeStatFromFSEntryPrefix(prefix: string): FileStat //{
+    private makeStatFromFSEntryPrefix(prefix: string, fstype: FileSystemType): FileStat //{
     {
+        const storageType = fileSystemType2StorageType(fstype);
         const ans = new FileStat();
         ans.filename = prefix;
         ans.size = 4 * 1024;
         ans.mode = 623;
         ans.filetype = FileType.dir;
+        ans.storageType = storageType;
         return ans;
     } //}
     async stat(file: string): Promise<FileStat> //{
     {
         const entry = this.isFileSystemEntry(file);
         if(entry) {
-            return this.makeStatFromFSEntryPrefix(entry.srcPrefix);
+            return this.makeStatFromFSEntryPrefix(entry.srcPrefix, entry.config.type);
         }
         const hd = this.resolveToFs(file);
         const ans = await hd.filesystem.stat(hd.filename);

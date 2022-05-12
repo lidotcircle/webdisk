@@ -11,7 +11,7 @@ LocalFileSystem: &LocalFileSystem
     srcPrefix: "/"
     dstPrefix: "~"
 
-MultiFileSystem: &MultiFileSystem
+MultiFileSystemExample: &MultiFileSystem
   type: "multi"
   data:
     - srcPrefix: "/noexists/"
@@ -24,6 +24,14 @@ MultiFileSystem: &MultiFileSystem
           accessKeySecret: ""
           bucket: ""
           secure: true
+    - srcPrefix: "/"
+      dstPrefix: "~"
+      config:
+        type: "local"
+
+MultiFileSystem: &MultiFileSystem
+  type: "multi"
+  data:
     - srcPrefix: "/"
       dstPrefix: "~"
       config:

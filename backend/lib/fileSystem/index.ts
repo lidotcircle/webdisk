@@ -42,6 +42,6 @@ export class __dummy {
     }
 }
 
-export function SetFilesystem(filesystem: FileSystem) {
-    filesystem = filesystem;
+export function SetFilesystem(fs: FileSystem) {
+    filesystem = fs;
 }

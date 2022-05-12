@@ -88,7 +88,7 @@ export class FileComponent implements OnInit {
     }
 
     getItemClass() {
-        let ans = 'file-item ';
+        let ans = `file-item type-${this.file.storageType} `;
         switch(this.viewStyle) {
             case FileViewStyle.bigIcon:    ans += 'big-icon'; break;
             case FileViewStyle.mediumIcon: ans += 'big-icon'; break;

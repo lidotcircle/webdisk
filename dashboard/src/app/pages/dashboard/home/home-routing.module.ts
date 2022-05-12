@@ -3,6 +3,7 @@ import { Routes, RouterModule } from '@angular/router';
 import { NamedLinkComponent } from './named-link/named-link.component';
 import { ExplorerComponent } from './explorer/explorer.component';
 import { HomeComponent } from './home.component';
+import { StorageBackendComponent } from './storage-backend/storage-backend.component';
 
 
 const routes: Routes = [
@@ -22,7 +23,12 @@ const routes: Routes = [
             {
                 path: 'namedlink',
                 component: NamedLinkComponent,
+            },
+            {
+                path: 'storage',
+                component: StorageBackendComponent,
             }
+
         ]
     }
 ];

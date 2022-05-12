@@ -7,6 +7,10 @@
         &:hover {
             background: $color-file-hover;
         }
+
+        &.type-alioss {
+            color: #ff6a00;
+        }
     }
 
     &.select {

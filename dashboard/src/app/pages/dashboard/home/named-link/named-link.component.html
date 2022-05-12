@@ -1,10 +1,10 @@
 
-<div class="link-manager">
-    <div class="search-bar">
+<nb-card accent='primary' class="link-manager">
+    <nb-card-header class="search-bar">
         <app-search-bar-float (searchinput)='onsearchinput($event)' (searchenter)='onsearchenter($event)'></app-search-bar-float>
-    </div>
+    </nb-card-header>
 
-    <div class="entries">
+    <nb-card-body class="entries">
         <div class="entry" *ngFor='let entry of outentries; let i=index;'>
             <table>
                 <tr>
@@ -30,6 +30,6 @@
                 </div>
             </div>
         </div>
-    </div>
-</div>
+    </nb-card-body>
+</nb-card>
 

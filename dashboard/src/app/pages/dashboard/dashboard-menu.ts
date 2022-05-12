@@ -20,6 +20,11 @@ export const WebdiskMenu: NbMenuItem[] = [
                 title: 'namedlink',
                 icon: 'link',
                 link: '/wd/dashboard/home/namedlink',
+            },
+            {
+                title: 'Storage',
+                icon: 'store',
+                link: '/wd/dashboard/home/storage',
             }
         ]
     },
