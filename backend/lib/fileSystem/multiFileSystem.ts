@@ -2,7 +2,7 @@ import { FileStat, FileType } from "../common/file_types";
 import { Readable, Writable } from 'stream';
 import { AliOSSFileSystem, IAliOSSFileSystemConfig } from './aliOssFileSystem';
 import { FileSystem, FileSystemType, IFileSystemConfig } from './fileSystem';
-import { LocalFileSystem } from './localFileSystem';
+import { ILocalFileSystemConfig, LocalFileSystem } from './localFileSystem';
 import { warn } from '../../service/logger-service';
 import path from "path";
 
@@ -11,7 +11,7 @@ export class FSMapping {
     srcPrefix: string;
     dstPrefix: string;
     config: IFileSystemConfig;
-    filesystem: FileSystem;
+    filesystem?: FileSystem;
 }
 export interface IMultiFileSystemConfig extends IFileSystemConfig {
     data: FSMapping[];
@@ -43,7 +43,7 @@ export class MultiFileSystem extends FileSystem {
             try {
                 switch(fs.config.type) {
                     case FileSystemType.local: {
-                        fs.filesystem = new LocalFileSystem(fs.config); 
+                        fs.filesystem = new LocalFileSystem(fs.config as ILocalFileSystemConfig); 
                     } break;
                     case FileSystemType.alioss: {
                         fs.filesystem = new AliOSSFileSystem(fs.config as IAliOSSFileSystemConfig);

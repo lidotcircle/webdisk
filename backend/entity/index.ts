@@ -11,3 +11,4 @@ export * from './Note';
 export * from './NoteTag';
 export * from './NoteJoinNoteTag';
 export * from './NoteHistory';
+export * from './StorageBackend';

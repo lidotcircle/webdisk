@@ -1,7 +1,7 @@
 import "reflect-metadata"
 import assert from "assert";
 import { DataSource } from "typeorm"
-import { User, RefreshToken, InvitationCode, NamedLink, DataRecord, PasswordStore, UserSetting, UserToken, UploadedFile } from '../entity';
+import { User, RefreshToken, InvitationCode, NamedLink, DataRecord, PasswordStore, UserSetting, UserToken, UploadedFile, StorageBackend } from '../entity';
 import { Note, NoteTag, NoteJoinNoteTag, NoteHistory } from '../entity';
 import { QueryDependency, ProvideDependency } from "../lib/di";
 import { PasswordEncoder } from "../service/password-encoder";
@@ -22,7 +22,7 @@ ProvideDependency(DataSource, {
             synchronize: true,
             logging: true,
             entities: [ User, RefreshToken, InvitationCode, NamedLink, DataRecord, PasswordStore, UserSetting, UserToken, UploadedFile,
-                        Note, NoteTag, NoteJoinNoteTag, NoteHistory ],
+                        Note, NoteTag, NoteJoinNoteTag, NoteHistory, StorageBackend ],
             migrations: [],
             subscribers: [],
         });

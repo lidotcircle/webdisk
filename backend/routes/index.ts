@@ -22,6 +22,7 @@ router.use('/apis/user',       jwt_validator, require('./user').default);
 router.use('/apis/note',       jwt_validator, require('./note').default);
 router.use('/apis/passstore',  jwt_validator, require('./passstore').default);
 router.use('/apis/named-link', jwt_validator, require('./namedlinks').default);
+router.use('/apis/store',      jwt_validator, require('./store').default);
 router.use('/apis/stoken',     
            AnyOfNoError(
                createPasswordAuthMiddleware("username", "password"), 

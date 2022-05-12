@@ -35,8 +35,10 @@ function statToStat(fstat: fs.Stats, file: string): FileStat //{
 } //}
 
 export interface ILocalFileSystemConfig extends IFileSystemConfig {
-    srcPrefix?: string;
-    dstPrefix?: string;
+    data?: {
+        srcPrefix?: string;
+        dstPrefix?: string;
+    };
 }
 
 export class LocalFileSystem extends FileSystem {
@@ -62,8 +64,8 @@ export class LocalFileSystem extends FileSystem {
         if(config.type != this.FSType) {
             throw new Error(`Bad filesystem constructor for ${config.type}`);
         }
-        this.srcPrefix = config.srcPrefix || '/';
-        this.dstPrefix = config.dstPrefix || '/';
+        this.srcPrefix = config.data?.srcPrefix || '/';
+        this.dstPrefix = config.data?.dstPrefix || '/';
     }
 
     get FSType(): FileSystemType {return FileSystemType.local;}

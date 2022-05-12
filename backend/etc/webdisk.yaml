@@ -7,8 +7,9 @@ allow_http_redirect: true
 
 LocalFileSystem: &LocalFileSystem
   type: "local"
-  srcPrefix: "/"
-  dstPrefix: "~"
+  data:
+    srcPrefix: "/"
+    dstPrefix: "~"
 
 MultiFileSystem: &MultiFileSystem
   type: "multi"

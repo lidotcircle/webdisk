@@ -53,5 +53,6 @@ export module API {
 
     export const PassStore = API_ADDRESS + '/apis/passstore';
     export const SToken = API_ADDRESS + '/apis/stoken';
+    export const Store = API_ADDRESS + '/apis/store';
 }
 

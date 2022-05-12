@@ -16,6 +16,7 @@ import { CurrentDirectoryService } from 'src/app/shared/service/current-director
 import { PageEvent } from '@angular/material/paginator';
 import { NamedLinkService } from 'src/app/service/user/named-link-service';
 import { DiskDownloadService } from 'src/app/service/disk-download.service';
+import { StorageBackendService } from 'src/app/service/storage-backend.service';
 
 
 /** sortByName */
@@ -154,6 +155,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
                 private fileoperation: FileOperationService,
                 private clipboard: ClipboardService,
                 private router: Router,
+                private storeService: StorageBackendService,
                 private activatedroute: ActivatedRoute,
                 private fileviewer: FileViewerService,
                 private host: ElementRef) {}
@@ -526,8 +528,37 @@ export class FileViewComponent implements OnInit, OnDestroy {
         newFolderEntry.clickCallback = () => {
             this.fileoperation.new_folder(destination);
         }
+
+        const newAliyunOSS = new MenuEntry('New Aliyun OSS');
+        newAliyunOSS.clickCallback = async () => {
+            const cwd = this.currentDirectory.now;
+            const input = await this.messagebox.create({
+                title: 'add aliyun oss bucket',
+                message: '',
+                inputs: [
+                    {name: 'directory', initValue: '', label: 'Directory', type: 'text'},
+                    {name: 'region', initValue: '', label: 'Region', type: 'text'},
+                    {name: 'accessKeyId', initValue: '', label: 'AccessKeyId', type: 'text'},
+                    {name: 'accessKeySecret', initValue: '', label: 'AccessKeySecret', type: 'password'},
+                    {name: 'bucket', initValue: '', label: 'Bucket', type: 'text'},
+                    {name: 'secure', initValue: true, label: 'Secure', type: 'checkbox'},
+                ],
+                buttons: [{name: 'confirm'}, {name: 'cancel'}],
+            }).wait();
+
+            if (!input.closed && input.buttonValue == 0) {
+                const dir = path.pathjoin(cwd, input.inputs['directory']);
+                await this.storeService.addStore('alioss', dir, {
+                    region: input.inputs['region'],
+                    accessKeyId: input.inputs['accessKeyId'],
+                    accessKeySecret: input.inputs['accessKeySecret'],
+                    bucket: input.inputs['bucket'],
+                    secure: !!input.inputs['secure'],
+                });
+            }
+        }
         const newEntry = new MenuEntry('New', 'add');
-        newEntry.subMenus = [newFileEntry, newFolderEntry];
+        newEntry.subMenus = [newFileEntry, newFolderEntry, newAliyunOSS];
         return newEntry;
     } //}
     private createMenuEntry_Share(filename: string) //{
