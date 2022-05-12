@@ -11,14 +11,14 @@ import { CurrentDirectoryService } from 'src/app/shared/service/current-director
     <div *ngIf='showNav' class='path-viewer'>
         <div *ngIf='!editorMode' class="component-container" #cn>
             <span class='home'>
-                <a (click)='gotoEditor()'><nb-icon icon='desktop'></nb-icon></a>
-                <span *ngIf='!overflow'><nb-icon icon='angle-right'></nb-icon></span>
-                <span *ngIf='overflow'> <nb-icon icon='angles-right'></nb-icon></span>
+                <a (click)='gotoEditor()'><nb-icon icon='desktop' pack='fa-solid'></nb-icon></a>
+                <span *ngIf='!overflow'><nb-icon icon='angle-right' pack='fa-solid'></nb-icon></span>
+                <span *ngIf='overflow'> <nb-icon icon='angles-right' pack='fa-solid'></nb-icon></span>
             </span>
 
             <span *ngFor="let component of directory_components; let i = index">
                 <a (click)='handleClick(i)'> {{ component }} </a>
-                <nb-icon class='icon' icon='angle-right'></nb-icon>
+                <nb-icon class='icon' icon='angle-right' pack='fa-solid'></nb-icon>
             </span>
         </div>
         <div *ngIf='editorMode' class='path-editor'>

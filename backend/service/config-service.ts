@@ -3,7 +3,7 @@ import path from 'path';
 import { FileSystemType, IFileSystemConfig } from '../lib/fileSystem/fileSystem';
 import * as yaml from 'js-yaml';
 import { Injectable } from '../lib/di/di';
-import { CopySourcePropertiesAsGetter } from '../lib/utils';
+import { ObjectFreezeRecursively } from '../lib/utils';
 import assert from 'assert';
 
 
@@ -68,23 +68,26 @@ export class Config extends ConfigMap {
                 break;
         }
 
-        const fsconfig = d.filesystem as object;
         const resolveDstHome = (obj: object) => {
             assert(typeof obj === 'object');
             const keys = Object.getOwnPropertyNames(obj);
             for (const key of keys) {
                 const val = obj[key];
                 if (key === 'dstPrefix' && typeof val === 'string') {
-                    obj[key] = resolveHome(val);
+                    let resolved = resolveHome(val);
+                    if (!resolved.endsWith('/'))
+                        resolved += '/';
+                    obj[key] = resolved;
                 } else if (typeof val === 'object') {
                     resolveDstHome(val);
                 }
             }
         }
-        resolveDstHome(fsconfig);
+        resolveDstHome(d.filesystem);
 
         d.sqlite3_database = resolveHome(d.sqlite3_database);
-        CopySourcePropertiesAsGetter(d, this);
+        Object.assign(this, d);
+        ObjectFreezeRecursively(this);
     } //}
     
     initialized(): boolean {return this.__init;}

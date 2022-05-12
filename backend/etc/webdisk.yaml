@@ -24,12 +24,12 @@ MultiFileSystem: &MultiFileSystem
           bucket: ""
           secure: true
     - srcPrefix: "/"
-      dstPrefix: "/"
+      dstPrefix: "~"
       config:
         type: "local"
 
 filesystem:
-    <<: *LocalFileSystem
+    <<: *MultiFileSystem
 
 logger:
   level: 'debug'

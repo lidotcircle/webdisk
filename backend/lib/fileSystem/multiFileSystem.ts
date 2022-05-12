@@ -1,10 +1,10 @@
-import * as crypto from 'crypto';
-
 import { FileStat, FileType } from "../common/file_types";
 import { Readable, Writable } from 'stream';
 import { AliOSSFileSystem, IAliOSSFileSystemConfig } from './aliOssFileSystem';
 import { FileSystem, FileSystemType, IFileSystemConfig } from './fileSystem';
 import { LocalFileSystem } from './localFileSystem';
+import { warn } from '../../service/logger-service';
+import path from "path";
 
 
 export class FSMapping {
@@ -37,20 +37,24 @@ export class MultiFileSystem extends FileSystem {
         for(const fs of this.config.data) {
             if(!fs.srcPrefix.startsWith('/') || !fs.srcPrefix.endsWith('/') || 
                !fs.dstPrefix.startsWith('/') || !fs.dstPrefix.endsWith('/')) {
-                throw new Error(`srcPrefix and dstPrefix should be start and end with '\': '${fs.srcPrefix}', '${fs.dstPrefix}'`);
+                throw new Error(`srcPrefix and dstPrefix should be start and end with '/': '${fs.srcPrefix}', '${fs.dstPrefix}'`);
             }
 
-            switch(fs.config.type) {
-                case FileSystemType.local: {
-                    fs.filesystem = new LocalFileSystem(fs.config); 
-                } break;
-                case FileSystemType.alioss: {
-                    fs.filesystem = new AliOSSFileSystem(fs.config as IAliOSSFileSystemConfig);
-                } break;
-                case FileSystemType.multi: {
-                    fs.filesystem = new MultiFileSystem(fs.config as IMultiFileSystemConfig);
-                } break;
-                default: throw new Error('unknow filesystem type');
+            try {
+                switch(fs.config.type) {
+                    case FileSystemType.local: {
+                        fs.filesystem = new LocalFileSystem(fs.config); 
+                    } break;
+                    case FileSystemType.alioss: {
+                        fs.filesystem = new AliOSSFileSystem(fs.config as IAliOSSFileSystemConfig);
+                    } break;
+                    case FileSystemType.multi: {
+                        fs.filesystem = new MultiFileSystem(fs.config as IMultiFileSystemConfig);
+                    } break;
+                    default: throw new Error('unknow filesystem type');
+                }
+            } catch (e) {
+                warn(e);
             }
         }
     } //}
@@ -62,7 +66,7 @@ export class MultiFileSystem extends FileSystem {
         for(const fs of this.config.data) {
             if(file.startsWith(fs.srcPrefix)) {
                 ans.filesystem = fs.filesystem;
-                ans.filename = fs.dstPrefix + file.substr(fs.srcPrefix.length);
+                ans.filename = path.join(fs.dstPrefix, file.substring(fs.srcPrefix.length));
                 ans.mapping = fs;
                 break;
             }
@@ -89,7 +93,7 @@ export class MultiFileSystem extends FileSystem {
         if(!origin.startsWith(oldp)) {
             throw new Error('unexpected');
         }
-        return newp + origin.substr(oldp.length);
+        return newp + origin.substring(oldp.length);
     } //}
 
     get FSType(): FileSystemType {return FileSystemType.multi;}
@@ -130,7 +134,7 @@ export class MultiFileSystem extends FileSystem {
 
         if(!dir.endsWith('/')) dir += '/';
         for(const fs of this.config.data) {
-            if(fs.srcPrefix.startsWith(dir) && /[^\\]+\//.test(fs.srcPrefix.substr(dir.length))) {
+            if(fs.srcPrefix.startsWith(dir) && /[^\\]+\//.test(fs.srcPrefix.substring(dir.length))) {
                 ans.push(this.makeStatFromFSEntryPrefix(fs.srcPrefix));
             }
         }
