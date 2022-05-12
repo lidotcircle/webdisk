@@ -6,6 +6,6 @@ export class MessageHandler {
     constructor() {}
 
     /** pure virtual function */
-    async handleRequest(dispatcher: MessageGateway, message: BasicMessage) {throw new Error("not implement");}
+    async handleRequest(_dispatcher: MessageGateway, _message: BasicMessage) {throw new Error("not implement");}
 }
 

@@ -1,20 +1,16 @@
 import path from 'path';
-import assert from 'assert';
 import fs from 'fs';
 import util from 'util';
 
 import { DownloadTask } from '../common/db_types';
-import { default as fetch, Response } from 'node-fetch';
+import { default as fetch } from 'node-fetch';
 import { URL } from 'url';
 import { default as mktemp } from 'mktemp';
-import { KEY_DOWNLOAD } from '../database/constants';
 import { error, info } from '../../service';
 import { makeid, pipelineWithTimeout } from '../utils';
-import { pipeline, Readable, Writable } from 'stream';
+import { Readable, Writable } from 'stream';
 import {default as contentDisposition} from 'content-disposition';
 import { AsyncQueryDependency, DIProperty, Injectable } from '../di';
-import { Database, WDDatabase } from '../database/database';
-import { IDBDownload } from '../database';
 import { FileSystem } from '../fileSystem';
 
 
@@ -56,8 +52,7 @@ export async function startTask(usertoken: string, url: string, destination: str
         task.destination += task.name;
     }
 
-    const DB = await AsyncQueryDependency(WDDatabase) as Database;
-    return await DB.CreateNewTask(usertoken, task);
+    return null;
 } //}
 
 type Cancelable = {cancel(): void; canceled: boolean;}
@@ -69,9 +64,6 @@ export class DownloadManager {
     private max_running_tasks: number = 5;
     private m_running_tasks: (DownloadTask & Cancelable)[] = [];
 
-    @DIProperty(WDDatabase)
-    private DB: WDDatabase & IDBDownload;
-
     @DIProperty(FileSystem)
     private filesystem: FileSystem;
 
@@ -82,25 +74,6 @@ export class DownloadManager {
     private async init() //{
     {
         await this.queueNewTasks();
-
-        this.DB.on('insert', (table, sql) => {
-            if(table == KEY_DOWNLOAD) {
-                this.queueNewTasks();
-            }
-        });
-
-        this.DB.on('delete', (table, sql) => {
-            const m = sql.match(/[tT][aA][sS][kK][iI][dD]\s*=\s*'?"?(\d+)/);
-            if(m) {
-                const taskid = Number([1]);
-
-                for(const task of this.m_running_tasks) {
-                    if(task.taskId == taskid) {
-                        task.cancel();
-                    }
-                }
-            }
-        });
     } //}
 
     private async queueNewTasks() //{
@@ -109,7 +82,7 @@ export class DownloadManager {
             return;
         }
 
-        const newtasks = await this.DB.QueryUnfinishTasks(this.max_running_tasks - this.m_running_tasks.length)
+        const newtasks = null;
 
         if(this.m_running_tasks.length >= this.max_running_tasks) {
             return;
@@ -132,7 +105,6 @@ export class DownloadManager {
         }
 
         const t = this.m_running_tasks.splice(n, 1)[0];
-        await this.DB.TaskOver(t.taskId, false);
         await this.queueNewTasks();
     } //}
 
@@ -145,7 +117,6 @@ export class DownloadManager {
         }
 
         const t = this.m_running_tasks.splice(n, 1)[0];
-        await this.DB.TaskOver(t.taskId, true);
         await this.queueNewTasks();
     } //}
 
@@ -219,7 +190,6 @@ export class DownloadManager {
 
             if(task.downloaded - prev > 1024 * 1024 || task.downloaded == task.size) {
                 prev = task.downloaded;
-                this.DB.PushContent(task.taskId, task.downloaded);
             }
         });
 
