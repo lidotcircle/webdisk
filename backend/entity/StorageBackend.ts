@@ -13,7 +13,7 @@ export class StorageBackend {
     @Column()
     userId: number;
 
-    @Column({enum: ["alioss"]})
+    @Column({enum: ["alioss", "webdav"]})
     type: string;
 
     @Column()
