@@ -558,8 +558,54 @@ export class FileViewComponent implements OnInit, OnDestroy {
                 this.currentDirectory.justRefresh();
             }
         }
+
+        const newWebdav = new MenuEntry('New WEBDAV', 'coffee');
+        newWebdav.clickCallback = async () => {
+            const cwd = this.currentDirectory.now;
+            const input = await this.messagebox.create({
+                title: 'add webdav',
+                message: '',
+                inputs: [
+                    {name: 'directory', initValue: '', label: 'Directory', type: 'text'},
+                    {name: 'endpoint', initValue: '', label: 'Endpoint', type: 'text'},
+                    {name: 'authType', initValue: 'password', label: 'Auth', type: 'select', choices: ["none", "password", "digest", "token"]},
+                    {name: 'username', initValue: '', label: 'Username', type: 'text'},
+                    {name: 'password', initValue: '', label: 'Password', type: 'password'},
+                    {name: 'token',    initValue: '', label: 'Token', type: 'text'},
+                ],
+                buttons: [{name: 'confirm'}, {name: 'cancel'}],
+            }).wait();
+
+            if (!input.closed && input.buttonValue == 0) {
+                const dir = path.pathjoin(cwd, input.inputs['directory']);
+                const config = {
+                    remoteUrl: input.inputs['endpoint'],
+                    authType: input.inputs['authType'],
+                };
+                switch (config.authType) {
+                    case 'none': break;
+                    case 'password':
+                    case 'digest':
+                        config['username'] = input.inputs['username'];
+                        config['password'] = input.inputs['password'];
+                        break;
+                    case 'token':
+                        config['token'] = input.inputs['token'];
+                        try {
+                            config['token'] = JSON.parse(input.inputs['token']);
+                        } catch {}
+                        break;
+                    default:
+                        this.toaster.danger("invalid input");
+                        return;
+                }
+                await this.storeService.addStore('webdav', dir, config);
+                this.currentDirectory.justRefresh();
+            }
+        }
+
         const newEntry = new MenuEntry('New', 'add');
-        newEntry.subMenus = [newFileEntry, newFolderEntry, newAliyunOSS];
+        newEntry.subMenus = [newFileEntry, newFolderEntry, newWebdav, newAliyunOSS];
         return newEntry;
     } //}
     private createMenuEntry_Share(filename: string) //{

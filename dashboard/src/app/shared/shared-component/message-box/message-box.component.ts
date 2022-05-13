@@ -4,8 +4,9 @@ import { Component, OnInit, Input } from '@angular/core';
 export class MessageBoxInput {
     label: string;
     name: string;
-    type?: string;
+    type?: 'text' | 'number' | 'password' | 'checkbox' | 'select' | string;
     initValue?: any;
+    choices?: string[];
 }
 
 export enum MatColorType {

@@ -1,46 +1,55 @@
 
 <app-window title='{{title}}' (close)="onClose()" movable [classes]='["window-toolbar"]' bounded>
-<div class="message-box">
+  <div class="message-box">
 
     <form #fs1="ngForm" class='message-box-content' draggable='true' (dragstart)="preventDefaultAndStop($event)" novalidate>
-        <div class="message">{{ message }}</div>
+      <div class="message">{{ message }}</div>
 
-        <div class='divider' *ngIf='inputs != null && message.length > 0'></div>
-        <div class="inputs"  *ngIf='inputs != null'>
-            <div class="input-pair" *ngFor='let inputX of inputs; let i=index;'>
-                <div class='checkbox-pair' *ngIf='inputX.type == "checkbox"'>
-                    <label>{{inputX.label}}</label>
-                    <input type="checkbox" ngDefaultControl [ngModelOptions]='{standalone: true}'
-                           [(ngModel)]='inputs[i].initValue'>
-                </div>
+      <div class='divider' *ngIf='inputs != null && message.length > 0'></div>
+      <div class="inputs"  *ngIf='inputs != null'>
+        <div class="input-pair" *ngFor='let inputX of inputs; let i=index;'>
+          <div class='checkbox-pair' *ngIf='inputX.type == "checkbox"'>
+            <label>{{inputX.label}}</label>
+            <input type="checkbox" ngDefaultControl [ngModelOptions]='{standalone: true}'
+                   [(ngModel)]='inputs[i].initValue'>
+          </div>
 
-                <mat-form-field *ngIf='inputX.type != "checkbox"' hideRequiredMarker>
-                    <mat-label>{{ inputX.label }}</mat-label>
-                    <input matInput type='{{inputX.type}}'
-                           [(ngModel)]='inputs[i].initValue' name='input-{{i}}'>
-                </mat-form-field>
-            </div>
+          <div class='select' *ngIf='inputX.type == "select"'>
+            <label>{{ inputX.label }}</label>
+            <nb-select [(ngModel)]="inputs[i].initValue" name="input-{{i}}">
+              <nb-option *ngFor="let option of inputX.choices || []" [value]="option">
+                {{option}}
+              </nb-option>
+            </nb-select>
+          </div>
+
+          <mat-form-field *ngIf='inputX.type != "checkbox" && inputX.type != "select"' hideRequiredMarker>
+            <mat-label>{{ inputX.label }}</mat-label>
+            <input matInput type='{{inputX.type}}'
+                   [(ngModel)]='inputs[i].initValue' name='input-{{i}}'>
+          </mat-form-field>
         </div>
+      </div>
 
-        <div class="buttons" *ngIf='buttons != null'>
-            <div class="button" *ngFor='let button of buttons; let i=index;'>
-                <button *ngIf='button.btype=="basic"'
-                        mat-button color='{{button.color}}' (click)='onButtonClick(i)'>{{ button.name }}</button>
-                <button *ngIf='button.btype=="raised"'
-                        mat-raised-button color='{{button.color}}' (click)='onButtonClick(i)'>{{ button.name }}</button>
-                <button *ngIf='button.btype=="flat"'
-                        mat-flat-button color='{{button.color}}' (click)='onButtonClick(i)'>{{ button.name }}</button>
-                <button *ngIf='button.btype=="stroked"'
-                     mat-stroked-button color='{{button.color}}' (click)='onButtonClick(i)'>{{ button.name }}</button>
-                <button *ngIf='button.btype=="icon"'
-                        mat-icon-button color='{{button.color}}' (click)='onButtonClick(i)'>{{ button.name }}</button>
-                <button *ngIf='button.btype=="fab"'
-                        mat-fab color='{{button.color}}' (click)='onButtonClick(i)'>{{ button.name }}</button>
-                <button *ngIf='button.btype=="mini-fab"'
-                        mat-min-fab color='{{button.color}}' (click)='onButtonClick(i)'>{{ button.name }}</button>
-            </div>
+      <div class="buttons" *ngIf='buttons != null'>
+        <div class="button" *ngFor='let button of buttons; let i=index;'>
+          <button *ngIf='button.btype=="basic"'
+             mat-button color='{{button.color}}' (click)='onButtonClick(i)'>{{ button.name }}</button>
+          <button *ngIf='button.btype=="raised"'
+             mat-raised-button color='{{button.color}}' (click)='onButtonClick(i)'>{{ button.name }}</button>
+          <button *ngIf='button.btype=="flat"'
+             mat-flat-button color='{{button.color}}' (click)='onButtonClick(i)'>{{ button.name }}</button>
+          <button *ngIf='button.btype=="stroked"'
+             mat-stroked-button color='{{button.color}}' (click)='onButtonClick(i)'>{{ button.name }}</button>
+          <button *ngIf='button.btype=="icon"'
+             mat-icon-button color='{{button.color}}' (click)='onButtonClick(i)'>{{ button.name }}</button>
+          <button *ngIf='button.btype=="fab"'
+             mat-fab color='{{button.color}}' (click)='onButtonClick(i)'>{{ button.name }}</button>
+          <button *ngIf='button.btype=="mini-fab"'
+             mat-min-fab color='{{button.color}}' (click)='onButtonClick(i)'>{{ button.name }}</button>
         </div>
+      </div>
     </form>
-</div>
+  </div>
 </app-window>
 

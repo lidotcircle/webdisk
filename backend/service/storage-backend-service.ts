@@ -32,6 +32,11 @@ export class StorageBackendService {
                     throw new createHttpError.BadRequest('bad config');
                 }
                 return true;
+            case FileSystemType.webdav:
+                if (config["remoteUrl"] == null)
+                    throw new createHttpError.BadRequest('require remote webdav endpoint');
+
+                return true;
             default:
                 throw new createHttpError.BadRequest(`unknown storage type '${type}'`);
         }

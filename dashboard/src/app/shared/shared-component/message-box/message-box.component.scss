@@ -40,14 +40,25 @@
             .input-pair {
                 width: 100%;
 
+                label {
+                    margin: 0em;
+                    padding-right: 0.5em;
+                }
+
+                .select {
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    justify-content: space-between;
+                }
+
                 .checkbox-pair {
                     display: flex;
                     flex-direction: row;
                     align-items: center;
-                    padding: 0.3em 0em 0.3em 0.6em;
 
                     input {
-                        padding: 0em 0em 0em 0.8em;
+                        padding: 0em 0em 0em 1em;
                         width: min-content;
                     }
                 }

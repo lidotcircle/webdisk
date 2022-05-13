@@ -65,6 +65,57 @@ import { NotifierType } from 'src/app/shared/shared-component/notifier/notifier.
                                    (change)='entry.edited=true' (input)='entry.edited=true'/>
                         </div>
                     </div>
+
+                    <div *ngIf='entry.type == "webdav"' class='key-value type-webdav'>
+                        <div class='field'> Endpoint </div>
+                        <div class='value' *ngIf='!entry.config.remoteUrlEdit' (click)='onClick(i, "remoteUrl", $event)'> {{ entry.config.remoteUrl }} </div>
+                        <div class='value input' *ngIf='entry.config.remoteUrlEdit'>
+                            <input type='text' [(ngModel)]='entry.config.remoteUrl'
+                                   (change)='entry.edited=true' (input)='entry.edited=true'
+                                   (blur)='entry.config.remoteUrlEdit=false' (keydown.enter)='entry.config.remoteUrlEdit=false'/>
+                        </div>
+ 
+                        <div class='field'> AuthType </div>
+                        <div class='value'>
+                            <nb-select [(ngModel)]='entry.config.authType' (selectedChange)='entry.edited=true'>
+                                <nb-option value='none'>none</nb-option>
+                                <nb-option value='password'>password</nb-option>
+                                <nb-option value='digest'>digest</nb-option>
+                                <nb-option value='token'>token</nb-option>
+                            </nb-select>
+                        </div>
+
+                       <div *ngIf='entry.config.authType=="password" || entry.config.authType=="digest"' class='field'> Username </div>
+                        <div *ngIf='(entry.config.authType=="password" || entry.config.authType=="digest") && !entry.config.usernameEdit'
+                             class='value' (click)='onClick(i, "username", $event)'> {{ entry.config.username }} </div>
+                        <div *ngIf='(entry.config.authType=="password" || entry.config.authType=="digest") && entry.config.usernameEdit'
+                             class='value input' >
+                            <input type='text' [(ngModel)]='entry.config.username'
+                                   (change)='entry.edited=true' (input)='entry.edited=true'
+                                   (blur)='entry.config.usernameEdit=false' (keydown.enter)='entry.config.usernameEdit=false'/>
+                        </div>
+
+                        <div *ngIf='entry.config.authType=="password" || entry.config.authType=="digest"' class='field'> Password </div>
+                        <div *ngIf='(entry.config.authType=="password" || entry.config.authType=="digest") && !entry.config.passwordEdit'
+                             class='value' (click)='onClick(i, "password", $event)'>
+                            ••••••••
+                        </div>
+                        <div *ngIf='(entry.config.authType=="password" || entry.config.authType=="digest") && entry.config.passwordEdit'
+                             class='value input'>
+                            <input type='password' [(ngModel)]='entry.config.password'
+                                   (change)='entry.edited=true' (input)='entry.edited=true'
+                                   (blur)='entry.config.passwordEdit=false' (keydown.enter)='entry.config.passwordEdit=false'/>
+                        </div>
+
+                        <div *ngIf='entry.config.authType=="token"' class='field'> Token </div>
+                        <div *ngIf='entry.config.authType=="token" && !entry.config.tokenEdit'
+                             class='value' (click)='onClick(i, "token", $event)'> {{ entry.config.token }} </div>
+                        <div *ngIf='entry.config.authType=="token" && entry.config.tokenEdit' class='value input'>
+                            <input type='text' [(ngModel)]='entry.config.token'
+                                   (change)='entry.edited=true' (input)='entry.edited=true'
+                                   (blur)='entry.config.tokenEdit=false' (keydown.enter)='entry.config.tokenEdit=false'/>
+                        </div>
+                    </div>
                 </div>
                 <div class='entry-operation'>
                     <button ghost nbButton status='primary' (click)='onsave(i)' [disabled]='!entry.edited || entry.saving'><nb-icon icon='save'></nb-icon></button>
