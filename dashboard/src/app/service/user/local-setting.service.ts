@@ -19,6 +19,8 @@ class LocalUserSettings {
     File_Upload_ValidateMD5: boolean = true;
     File_Upload_Just_Continue: boolean = false;
     File_Upload_Always_Overwrite: boolean = false;
+    File_Upload_Single_Blob: boolean = true;
+    File_Upload_Single_Blob_Max_Size_M: number = 50;
 
     Explorer_Default_Item_Per_Page: number = 50;
     Explorer_Filesize_Unit_Always_KB: boolean = true;

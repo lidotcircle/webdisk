@@ -259,6 +259,11 @@ class FileManagement extends MessageHandler {
                     checkArgv('s', argv);
                     await this.filesystem.expireUploadSession(argv[0]);
                 } break;
+                case FileRequest.CREATE_FILE_WITH_BUFFER: {
+                    checkArgv('sf', argv);
+                    const filepath = this.resolveUserPath(rootpath, argv[0]);
+                    resp.fm_msg.fm_response = await this.filesystem.createNewFileWithBuffer(filepath, argv[1]);
+                } break;
                 default:
                     resp.error = 'file message bad request';
                     break;

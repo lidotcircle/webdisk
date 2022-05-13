@@ -1,4 +1,4 @@
-import { Component, OnInit, ElementRef, Input } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { FileSystemManagerService } from '../../service/file-system-manager.service';
 import { FileStat } from '../../common';
 import { Observable, Subject } from 'rxjs';
@@ -278,6 +278,15 @@ export class UploadFileViewComponent implements OnInit {
                     return;
                 }
             }
+        }
+
+        if (this.localSettings.File_Upload_Single_Blob &&
+            this.localSettings.File_Upload_Single_Blob_Max_Size_M * 1024 * 1024 >= fileData.size)
+        {
+            const buf = await fileData.arrayBuffer();
+            await this.fileManager.createFileWithBuffer(filename, buf);
+            this.uploadSize.next(buf.byteLength);
+            return;
         }
 
         const slices: { buf?: ArrayBuffer, pos: number, len: number }[] = [];

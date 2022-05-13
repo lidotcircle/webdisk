@@ -1,4 +1,4 @@
-import { MessageType, MessageId, MessageAck, BasicMessage, MessageSource } from './message';
+import { MessageType, BasicMessage, MessageSource } from './message';
 
 export class FileMessage extends BasicMessage {
     public messageType = MessageType.FileManagement;
@@ -28,6 +28,7 @@ export enum FileRequest {
     CREATE_UPLOAD_SESSION = "CREATE_UPLOAD_SESSION",
     UPLOAD_SLICE          = "UPLOAD_SLICE",
     EXPIRE_UPLOAD_SESSION = "EXPIRE_UPLOAD_SESSION",
+    CREATE_FILE_WITH_BUFFER = "CREATE_FILE_WITH_BUFFER",
 }
 
 export class FileRequestMessage extends FileMessage {

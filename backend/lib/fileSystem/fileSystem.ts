@@ -321,6 +321,11 @@ export class FileSystem {
         throw new FileSystemNotImplemented();
     }
 
+    async createNewFileWithBuffer(filename: string, buf: ArrayBuffer): Promise<void> {
+        const reader = Readable.from(Buffer.from(buf));
+        await this.createNewFileWithReadableStream(filename, reader);
+    }
+
     async canRedirect(_filename: string): Promise<boolean> {
         return false;
     }

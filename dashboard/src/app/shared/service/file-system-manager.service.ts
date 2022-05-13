@@ -184,5 +184,13 @@ export class FileSystemManagerService {
             timeout: Math.max(5000, buf.byteLength / (1 * 1024))
         }, file, position, buf);
     }
+
+    async createFileWithBuffer(file: string, buf: ArrayBuffer): Promise<void> {
+        this.absolutePath(file);
+        return await this.sendTo({
+            type: FileRequest.CREATE_FILE_WITH_BUFFER, 
+            timeout: Math.max(5000, buf.byteLength / (0.1 * 1024))
+        }, file, buf);
+    }
 }
 

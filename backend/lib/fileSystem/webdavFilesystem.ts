@@ -121,10 +121,21 @@ export class WebdavFileSystem extends FileSystem {
         throw new WebdavFileSystemNotImplemented();
     }
 
-    async append(_file: string, _buf: ArrayBuffer): Promise<void>
+    async append(file: string, buf: ArrayBuffer): Promise<void>
     {
-        // TODO
-        throw new WebdavFileSystemNotImplemented();
+        let start = 0;
+        try {
+            const stat = await this.stat(file);
+            start = stat.size;
+        } catch {}
+
+        await this.client.customRequest(file, {
+            method: "PUT",
+            data: buf,
+            headers: {
+                "Content-Range": `bytes ${start}-${start + buf.byteLength}/*`
+            },
+        });
     }
 
     async write(_file: string, _position: number, _buf: ArrayBuffer): Promise<number> {
