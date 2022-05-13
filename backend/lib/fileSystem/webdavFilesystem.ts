@@ -133,7 +133,7 @@ export class WebdavFileSystem extends FileSystem {
             method: "PUT",
             data: buf,
             headers: {
-                "Content-Range": `bytes ${start}-${start + buf.byteLength}/*`
+                "Content-Range": `bytes ${start}-${start + buf.byteLength - 1}/*`
             },
         });
     }
@@ -147,7 +147,7 @@ export class WebdavFileSystem extends FileSystem {
         return this.client.createReadStream(filename, {
             range: {
                 start: position,
-                end: position + length,
+                end: position + length - 1,
             },
         });
     }
