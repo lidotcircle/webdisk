@@ -5,6 +5,7 @@ import { FileSystem, FileSystemType } from './fileSystem';
 import { InjectableFactory, QueryDependency } from '../di';
 import { Config, StorageBackendService } from '../../service';
 import { nextTick } from 'process';
+import { IWebdavFileSystemConfig, WebdavFileSystem } from './webdavFilesystem';
 
 export { FileSystem } from './fileSystem';
 
@@ -17,6 +18,7 @@ export class __dummy {
             case FileSystemType.local:  fs = new LocalFileSystem(config.filesystem as ILocalFileSystemConfig); break;
             case FileSystemType.alioss: fs = new AliOSSFileSystem(config.filesystem as IAliOSSFileSystemConfig); break;
             case FileSystemType.multi:  fs = new MultiFileSystem(config.filesystem as IMultiFileSystemConfig); break;
+            case FileSystemType.webdav: fs = new WebdavFileSystem(config.filesystem as IWebdavFileSystemConfig); break;
         }
 
         if(fs == null) {

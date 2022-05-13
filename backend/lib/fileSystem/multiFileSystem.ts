@@ -5,6 +5,7 @@ import { FileSystem, FileSystemType, IFileSystemConfig } from './fileSystem';
 import { ILocalFileSystemConfig, LocalFileSystem } from './localFileSystem';
 import { warn } from '../../service/logger-service';
 import path from "path";
+import { IWebdavFileSystemConfig, WebdavFileSystem } from "./webdavFilesystem";
 
 
 export class FSMapping {
@@ -26,6 +27,7 @@ class FileHandler {
 function fileSystemType2StorageType(ftype: FileSystemType) {
     switch(ftype) {
         case FileSystemType.alioss: return StorageType.alioss;
+        case FileSystemType.webdav: return StorageType.webdav;
         default: return StorageType.local;
     }
 }
@@ -55,6 +57,9 @@ export class MultiFileSystem extends FileSystem {
                     case FileSystemType.alioss: {
                         fs.filesystem = new AliOSSFileSystem(fs.config as IAliOSSFileSystemConfig);
                     } break;
+                    case FileSystemType.webdav: {
+                        fs.filesystem = new WebdavFileSystem(fs.config as IWebdavFileSystemConfig);
+                    } break;
                     case FileSystemType.multi: {
                         fs.filesystem = new MultiFileSystem(fs.config as IMultiFileSystemConfig);
                     } break;
@@ -69,9 +74,10 @@ export class MultiFileSystem extends FileSystem {
     /** first meet */
     private resolveToFs(file: string): FileHandler //{
     {
+        const tfile = file.endsWith('/') ? file + '/' : file;
         const ans = new FileHandler();
         for(const fs of this.config.data) {
-            if(file.startsWith(fs.srcPrefix)) {
+            if(tfile.startsWith(fs.srcPrefix)) {
                 ans.filesystem = fs.filesystem;
                 ans.filename = path.join(fs.dstPrefix, file.substring(fs.srcPrefix.length));
                 ans.mapping = fs;

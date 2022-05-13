@@ -1,6 +1,7 @@
 export enum StorageType {
     local = 'local',
     alioss = 'alioss',
+    webdav = 'webdav',
 }
 
 export class FileStat {

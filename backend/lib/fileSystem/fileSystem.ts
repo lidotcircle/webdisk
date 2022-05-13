@@ -16,7 +16,10 @@ class FileSystemNotImplemented extends Error {
     }
 }
 
-export enum FileSystemType { local = 'local', alioss = 'alioss', multi = 'multi' }
+export enum FileSystemType {
+    local = 'local', alioss = 'alioss', multi = 'multi',
+    webdav = 'webdav',
+}
 export interface IFileSystemConfig {
     type: FileSystemType;
     data?: any;
