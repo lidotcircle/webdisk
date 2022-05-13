@@ -14,23 +14,13 @@ LocalFileSystem: &LocalFileSystem
 MultiFileSystem: &MultiFileSystem
   type: "multi"
   data:
-    - srcPrefix: "/noexists/"
-      dstPrefix: "/"
-      config:
-        type: "alioss"
-        data:
-          region: ""
-          accessKeyId: ""
-          accessKeySecret: ""
-          bucket: ""
-          secure: true
     - srcPrefix: "/"
       dstPrefix: "/"
       config:
         type: "local"
 
 filesystem:
-    <<: *LocalFileSystem
+    <<: *MultiFileSystem
 
 logger:
   level: 'debug'
