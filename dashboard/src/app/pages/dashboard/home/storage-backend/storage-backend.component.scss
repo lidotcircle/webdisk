@@ -1,0 +1,96 @@
+@use 'sass:color' as color;
+@use 'src/app/@theme/styles/themes' as *;
+
+
+@include nb-install-component {
+nb-card-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    overflow-y: auto;
+
+    .scroll-body {
+        width: 100%;
+        height: max-content;
+    }
+
+    .entry {
+        display: grid;
+        grid-template-columns: 1fr min-content;
+        margin: 0.5em;
+        width: 100%;
+        box-shadow: 0pt 0pt 2pt 2pt darken(nb-theme(background-basic-color-1), 5%);
+        padding: 0.5em;
+        border-radius: 0.5em;
+        box-sizing: border-box;
+
+        .entry-info {
+            flex-grow: 1;
+
+            .basic-info {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                padding-bottom: 0.5em;
+                margin-bottom: 0.5em;
+                border-bottom: 1pt solid darken(nb-theme(background-basic-color-1), 20%);
+
+                .directory {
+                    color: nb-theme(text-primary-color);
+                }
+
+                .type {
+                    font-weight: bold;
+                    color: nb-theme(text-danger-color);
+                }
+            }
+
+            .key-value {
+                display: grid;
+                grid-template-columns: 30% 70%;
+                grid-gap: 0.5em;
+
+                @media (min-width: 1500px) {
+                    grid-template-columns: 15% 35% 15% 35%;
+                }
+
+                .field {
+                    font-weight: bold;
+                }
+
+                .value {
+                    cursor: pointer;
+                    margin-right: 1em;
+                    padding-bottom: 0.3em;
+                    border-bottom: 1pt solid transparent;
+                }
+
+                .input {
+                    border-bottom: 1pt solid nb-theme(text-primary-color);
+
+                    input {
+                        padding: 0em;
+                        height: 100%;
+                        width: 100%;
+                        border: none;
+                        outline: none;
+                    }
+                }
+            }
+        }
+
+        .entry-operation {
+            height: 100%;
+            padding-left: 0.5em;
+            margin-left: 0.5em;
+            border-left: 1pt solid darken(nb-theme(background-basic-color-1), 10%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-around;
+        }
+    }
+}
+}

@@ -529,7 +529,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
             this.fileoperation.new_folder(destination);
         }
 
-        const newAliyunOSS = new MenuEntry('New Aliyun OSS');
+        const newAliyunOSS = new MenuEntry('New Aliyun OSS', 'inventory_2');
         newAliyunOSS.clickCallback = async () => {
             const cwd = this.currentDirectory.now;
             const input = await this.messagebox.create({
@@ -555,6 +555,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
                     bucket: input.inputs['bucket'],
                     secure: !!input.inputs['secure'],
                 });
+                this.currentDirectory.justRefresh();
             }
         }
         const newEntry = new MenuEntry('New', 'add');

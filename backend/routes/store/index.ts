@@ -44,7 +44,7 @@ router.delete('/',
 );
 
 router.put('/',
-    body('directory').isInt().withMessage('directory is required'),
+    body('directory').isString().withMessage('directory is required'),
     body('config').isObject().withMessage('storage config is required'),
     async (req, res) => {
         const errors = validationResult(req);

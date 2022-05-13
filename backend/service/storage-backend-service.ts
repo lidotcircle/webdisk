@@ -128,6 +128,7 @@ export class StorageBackendService {
         this.verifyConfig(storage.type, config);
         storage.config = JSON.stringify(config);
         await this.storageRepo.save(storage);
+        await this.resetFilesystem();
     }
 
     async getStorages(username: string): Promise<{type: string, directory: string, config: Object}[]> {
