@@ -74,7 +74,7 @@ export class MultiFileSystem extends FileSystem {
     /** first meet */
     private resolveToFs(file: string): FileHandler //{
     {
-        const tfile = file.endsWith('/') ? file + '/' : file;
+        const tfile = file.endsWith('/') ? file : file + '/';
         const ans = new FileHandler();
         for(const fs of this.config.data) {
             if(tfile.startsWith(fs.srcPrefix)) {

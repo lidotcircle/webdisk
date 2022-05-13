@@ -134,20 +134,18 @@ export class WebdavFileSystem extends FileSystem {
     async createReadableStream(filename: string, position: number, length: number): Promise<Readable>
     {
         return this.client.createReadStream(filename, {
-            headers: {
-                Range: `bytes=${position}-${position + length - 1}`
-            }
+            range: {
+                start: position,
+                end: position + length,
+            },
         });
     }
 
     async createNewFileWithReadableStream(filename: string, reader: Readable): Promise<number>
     {
-        const writer = this.client.createWriteStream(filename, {
-            overwrite: true,
-        });
-        return await pipelineWithTimeout(reader, writer, {
-            writerEnd: true,
-        });
+        if (filename.startsWith('/')) filename = filename.substring(1);
+        const writer = this.client.createWriteStream(filename);
+        return await pipelineWithTimeout(reader, writer);
     }
 
     async canRedirect(_filename: string): Promise<boolean>

@@ -43,8 +43,8 @@ export class AliOSSFileSystem extends FileSystem {
     }
 
     private resolveFilenameToObjectName(filename: string): string {
-        assert.equal(filename.startsWith('/'), true, `bad filename ${filename}`);
-        return filename.substr(1);
+        assert(filename.startsWith('/'), `bad filename ${filename}`);
+        return filename.substring(1);
     }
     private resolveObjectNameToFilename(objectName: string): string {
         return '/' + objectName;
@@ -95,7 +95,7 @@ export class AliOSSFileSystem extends FileSystem {
         const response_header = {
             'Content-Type': content_type
         };
-        return await this.bucket.signatureUrl(objectName, {expires: 3600, method: method, response: response_header as any});
+        return this.bucket.signatureUrl(objectName, {expires: expires, method: method, response: response_header as any});
     }
 
     async initAliOSS() {
@@ -114,7 +114,7 @@ export class AliOSSFileSystem extends FileSystem {
         }
     }
 
-    async chmod(file: string, mode: number) {
+    async chmod(_file: string, _mode: number) {
         throw new AliOSSFileSystemNotImplemented();
     }
 
@@ -154,7 +154,7 @@ export class AliOSSFileSystem extends FileSystem {
                 for(const obj of resp.objects) {
                     if(obj.name.endsWith('/'))
                         continue;
-                    const dst_objname = dst_prefix + obj.name.substr(src_prefix.length);
+                    const dst_objname = dst_prefix + obj.name.substring(src_prefix.length);
                     await this.copy(this.resolveObjectNameToFilename(obj.name),
                                     this.resolveObjectNameToFilename(dst_objname));
                 }
@@ -162,7 +162,7 @@ export class AliOSSFileSystem extends FileSystem {
         }
     } //}
 
-    async execFile(file: string, argv: string[]): Promise<string> {
+    async execFile(_file: string, _argv: string[]): Promise<string> {
         throw new AliOSSFileSystemNotImplemented();
     }
 
@@ -214,7 +214,7 @@ export class AliOSSFileSystem extends FileSystem {
             throw new Error('Bad Entry');
         }
 
-        let s;
+        let s: FileStat;
         try {
             s = await this.stat(dst);
         } catch {}
@@ -250,7 +250,7 @@ export class AliOSSFileSystem extends FileSystem {
                     if(obj.name.endsWith('/')) {
                         await this.bucket.delete(obj.name, {timeout: 5000});
                     } else {
-                        const d = dst_prefix + obj.name.substr(src_prefix.length);
+                        const d = dst_prefix + obj.name.substring(src_prefix.length);
                         await this.movefile(this.resolveObjectNameToFilename(obj.name), 
                                             this.resolveObjectNameToFilename(d));
                     }
@@ -263,7 +263,7 @@ export class AliOSSFileSystem extends FileSystem {
     {
         if(length==0) {
             const st = await this.stat(file);
-            assert.equal(st.size >= position, true);
+            assert(st.size >= position);
             return Buffer.alloc(0);
         }
         const objname = this.resolveFilenameToObjectName(file);
@@ -282,7 +282,7 @@ export class AliOSSFileSystem extends FileSystem {
         const query = {prefix: objname, 'max-keys': 20};
         let cont = true;
 
-        const add = v => {
+        const add = (v: any) => {
             if(v.name != objname) {
                 cont = false;
                 return;
@@ -396,29 +396,29 @@ export class AliOSSFileSystem extends FileSystem {
     async touch(file: string) //{
     {
         try {
-            const fstat = await this.stat(file);
+            await this.stat(file);
             throw new AliOSSFileSystemNotImplemented();
         } catch {
-            await this.bucket.put(this.resolveFilenameToObjectName(file), Buffer.alloc(0));
+             await this.bucket.append(this.resolveFilenameToObjectName(file), Buffer.alloc(0));
         }
     } //}
 
-    async truncate(file: string, len: number) {
+    async truncate(_file: string, _len: number) {
         throw new AliOSSFileSystemNotImplemented();
     }
 
     async append(file: string, buf: ArrayBuffer): Promise<void> //{
     {
         const objname = this.resolveFilenameToObjectName(file);
-        let req = null;
+        let req = { position: '0' };
         try {
             const fstat = await this.stat(file);
-            req = {position: fstat.size};
+            req = {position: `${fstat.size}`};
         } catch {}
         await this.bucket.append(objname, Buffer.from(buf), req);
     } //}
 
-    async write(file: string, position: number, buf: ArrayBuffer): Promise<number> {
+    async write(_file: string, _position: number, _buf: ArrayBuffer): Promise<number> {
         throw new AliOSSFileSystemNotImplemented();
     }
 
@@ -439,7 +439,7 @@ export class AliOSSFileSystem extends FileSystem {
         return resp.res.size;
     } //}
 
-    async canRedirect(filename: string): Promise<boolean> //{
+    async canRedirect(_filename: string): Promise<boolean> //{
     {
         return true;
     } //}
