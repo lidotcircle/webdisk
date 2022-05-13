@@ -3,6 +3,10 @@
 
 
 @include nb-install-component {
+nb-card {
+    height: 100%;
+    margin-bottom: 0em;
+
 nb-card-body {
     display: flex;
     flex-direction: column;
@@ -93,5 +97,6 @@ nb-card-body {
             justify-content: space-around;
         }
     }
+}
 }
 }
