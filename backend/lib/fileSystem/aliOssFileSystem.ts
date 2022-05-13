@@ -370,7 +370,7 @@ export class AliOSSFileSystem extends FileSystem {
 
         { // Directory
             const resp = await this.bucket.list({prefix: prefix + (prefix.endsWith('/') ? '' : '/'), 'max-keys': 1}, {timeout: 3000});
-            if(resp.objects || resp.prefixes) {
+            if((resp.objects && resp.objects.length > 0) || (resp.prefixes && resp.prefixes.length > 0)) {
                 ans = this.prefixToFileStat(prefix);
             }
         }
