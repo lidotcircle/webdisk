@@ -26,6 +26,8 @@ import { LocalSettingService } from 'src/app/service/user/local-setting.service'
                           [(initValue)]='settings.Markdown_Editor_Saving_When_Leave'></app-setting-item>
         <app-setting-item name='Apply Local Patch' type='checkbox' 
                           [(initValue)]='settings.Markdown_Editor_Apply_Local_Patch'></app-setting-item>
+        <app-setting-item name='Attachment directory' [extra]='{ type: "text" }' type='input' 
+                          [(initValue)]='settings.Markdown_Editor_Attachment_Directory'></app-setting-item>
       </div>
     </app-wrapper>
     `,

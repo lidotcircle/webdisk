@@ -17,6 +17,8 @@ import { FileLinkService } from 'src/app/service/file-link.service';
 import { HTMLConvertor, HTMLToken, MdNode, Context, HTMLConvertorMap } from '@toast-ui/editor/types/toastmark';
 import { FileSystemEntryWrapper } from 'src/app/shared/FileSystemEntry';
 import { OpenSystemChooseFilesService } from 'src/app/shared/service/open-system-choose-files.service';
+import { LocalSettingService } from 'src/app/service/user/local-setting.service';
+import { path } from 'src/app/shared/common';
 
 function simulateKey(view: any, keyCode: number, key: string) {
     const event = document.createEvent("Event") as any;
@@ -120,6 +122,10 @@ class UploadPanelComponent extends React.Component<UploadPanelProps, PanelState>
         return this.props.injector.get(NbToastrService);
     }
 
+    private get localSetting(): LocalSettingService {
+        return this.props.injector.get(LocalSettingService);
+    }
+
     private handleDragOver(e: React.DragEvent<HTMLDivElement>) {
         e.preventDefault();
         e.stopPropagation();
@@ -194,16 +200,16 @@ class UploadPanelComponent extends React.Component<UploadPanelProps, PanelState>
 
         try {
             this.changeStateKey('uploading', true);
-            const filedir = `/note-attachment/note${note.id}/`;
+            const filedir = path.pathjoin(this.localSetting.Markdown_Editor_Attachment_Directory, `note${note.id}`);
             const filename = entry.name;
-            if (!await this.fileManager.stat(filedir).then(() => true, () => false)) {
+            if (!await (this.fileManager.stat(filedir).then(() => true, () => false))) {
                 await this.fileManager.mkdir(filedir);
             }
             await this.fileOperation.upload([entry], filedir);
 
-            const fullpath = `${filedir}${filename}`;
-            if (!await this.fileManager.stat(fullpath).then(() => true, () => false)) {
-                throw new Error("file not found");
+            const fullpath = path.pathjoin(filedir, filename);
+            if (!await (this.fileManager.stat(fullpath).then(() => true, () => false))) {
+                this.toastr.warning("uploading maybe failed", "upload");
             }
 
             const link = await this.fileLink.newlink(fullpath, true);

@@ -15,6 +15,7 @@ class LocalUserSettings {
 
     Markdown_Editor_Saving_When_Leave: boolean = true;
     Markdown_Editor_Apply_Local_Patch: boolean = true;
+    Markdown_Editor_Attachment_Directory: string = '/note-attachment/';
 
     File_Upload_ValidateMD5: boolean = true;
     File_Upload_Just_Continue: boolean = false;
