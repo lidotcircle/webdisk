@@ -2,11 +2,14 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { interval, Subject } from 'rxjs';
 import { filter, take, takeUntil } from 'rxjs/operators';
 import { StorageBackend, StorageBackendService } from 'src/app/service/storage-backend.service';
-import { assignTargetEnumProp } from 'src/app/shared/common';
 import { MessageBoxService } from 'src/app/shared/service/message-box.service';
 import { NotifierService } from 'src/app/shared/service/notifier.service';
 import { NotifierType } from 'src/app/shared/shared-component/notifier/notifier.component';
 
+const validConfigKeys = new Set([
+    'region', 'bucket', 'accessKeyId', 'accessKeySecret', 'secure',
+    'encryptionKey', 'username', 'password', 'remoteUrl', 'authType',
+]);
 @Component({
     selector: 'app-storage-backend',
     template: `
@@ -64,6 +67,18 @@ import { NotifierType } from 'src/app/shared/shared-component/notifier/notifier.
                             <input style='width: min-content;' type='checkbox' [(ngModel)]='entry.config.secure'
                                    (change)='entry.edited=true' (input)='entry.edited=true'/>
                         </div>
+
+                        <div class='field'> Encryption Key </div>
+                        <div *ngIf='!entry.config.encryptionKeyEdit'
+                             class='value' (click)='onClick(i, "encryptionKey", $event)'>
+                            {{ entry.config.encryptionKey?.length > 0 ? 'Encrypted' : 'Unencrypted' }}
+                        </div>
+                        <div *ngIf='entry.config.encryptionKeyEdit'
+                             class='value input'>
+                            <input type='password' [(ngModel)]='entry.config.encryptionKey'
+                                   (change)='entry.edited=true' (input)='entry.edited=true'
+                                   (blur)='entry.config.encryptionKeyEdit=false' (keydown.enter)='entry.config.encryptionKeyEdit=false'/>
+                        </div>
                     </div>
 
                     <div *ngIf='entry.type == "webdav"' class='key-value type-webdav'>
@@ -110,11 +125,11 @@ import { NotifierType } from 'src/app/shared/shared-component/notifier/notifier.
                         <div class='field'> Encryption Key </div>
                         <div *ngIf='!entry.config.encryptionKeyEdit'
                              class='value' (click)='onClick(i, "encryptionKey", $event)'>
-                            {{ entry.config.encryptionKey?.length > 0 ? '••••••••' : '' }}
+                            {{ entry.config.encryptionKey?.length > 0 ? 'Encrypted' : 'Unencrypted' }}
                         </div>
                         <div *ngIf='entry.config.encryptionKeyEdit'
                              class='value input'>
-                            <input type='encryptionKey' [(ngModel)]='entry.config.encryptionKey'
+                            <input type='password' [(ngModel)]='entry.config.encryptionKey'
                                    (change)='entry.edited=true' (input)='entry.edited=true'
                                    (blur)='entry.config.encryptionKeyEdit=false' (keydown.enter)='entry.config.encryptionKeyEdit=false'/>
                         </div>
@@ -254,13 +269,17 @@ export class StorageBackendComponent implements OnInit, OnDestroy {
             entry['saving'] = true;
             const config = JSON.parse(JSON.stringify(entry['oldConfig']));
             let changed = false;
-            for (const key in config) {
+            for (const key of validConfigKeys) {
                 if (config[key] !== entry.config[key]) {
                     changed = true;
                     break;
                 }
             }
-            assignTargetEnumProp(entry.config, config);
+            for (const key of validConfigKeys) {
+                if (entry.config[key] != undefined) {
+                    config[key] = entry.config[key];
+                }
+            }
             if (changed) {
                 await this.storeService.changeStoreConfig(entry.directory, config);
             }

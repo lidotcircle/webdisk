@@ -10,6 +10,7 @@ import { IMultiFileSystemConfig, MultiFileSystem } from '../lib/fileSystem/multi
 import { SetFilesystem } from '../lib/fileSystem';
 import { warn } from './logger-service';
 import { FileSystemType } from '../lib/fileSystem/fileSystem';
+import { PasswordEncoder } from './password-encoder';
 
 
 @Injectable({
@@ -20,7 +21,7 @@ export class StorageBackendService {
     @DIProperty(UserService)
     private userService: UserService;
 
-    constructor(private config: Config) {
+    constructor(private config: Config, private passwordEncoder: PasswordEncoder) {
         const dataSource = getDataSource();
         this.storageRepo = dataSource.getRepository(StorageBackend);
     }
@@ -101,6 +102,14 @@ export class StorageBackendService {
         if (!conf.srcPrefix.endsWith('/'))
             conf.srcPrefix += '/';
         conf.srcPrefixOrigin = srcPrefix
+        if (config['encryptionKey']) {
+            const key = config['encryptionKey'];
+            if (typeof key === 'string' && key.length) {
+                config['encryptionKey'] = this.passwordEncoder.encode(config['encryptionKey']);
+            } else {
+                delete config['encryptionKey'];
+            }
+        }
         conf.config = JSON.stringify(config);
 
         await this.storageRepo.save(conf);
@@ -130,6 +139,15 @@ export class StorageBackendService {
         const storage = await this.storageRepo.findOneBy({userId: user.id, srcPrefixOrigin: directory});
         if (!storage) throw new createHttpError.NotFound();
 
+        if (config['encryptionKey']) {
+            const key = config['encryptionKey'];
+            if (typeof key === 'string' && key.length) {
+                config['encryptionKey'] = this.passwordEncoder.encode(config['encryptionKey']);
+            } else {
+                delete config['encryptionKey'];
+            }
+        }
+
         this.verifyConfig(storage.type, config);
         storage.config = JSON.stringify(config);
         await this.storageRepo.save(storage);
@@ -146,10 +164,15 @@ export class StorageBackendService {
             }
         });
         return list.map(store => {
+            const config = JSON.parse(store.config);
+            if (config['encryptionKey']) {
+                config['encryptionKey'] = 'encrypted';
+            }
+
             return {
                 type: store.type,
                 directory: store.srcPrefixOrigin,
-                config: JSON.parse(store.config),
+                config: config,
             }
         });
     }
