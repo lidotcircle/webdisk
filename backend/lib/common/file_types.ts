@@ -20,6 +20,7 @@ export class FileStat {
     ctimeMs:     number   = 0;
     birthtimeMs: number   = 0;
     storageType: StorageType = StorageType.local;
+    encrypted:   boolean  = false;
     filename:    string   = null;
     filetype:    FileType = FileType.unknown;
 

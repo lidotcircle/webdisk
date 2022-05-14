@@ -1,25 +1,17 @@
-import { AliOSSFileSystem, IAliOSSFileSystemConfig } from './aliOssFileSystem';
-import { ILocalFileSystemConfig, LocalFileSystem } from './localFileSystem';
-import { IMultiFileSystemConfig, MultiFileSystem } from './multiFileSystem';
-import { FileSystem, FileSystemType } from './fileSystem';
+import { FileSystemFactory } from './multiFileSystem';
+import { FileSystem } from './fileSystem';
 import { InjectableFactory, QueryDependency } from '../di';
 import { Config, StorageBackendService } from '../../service';
 import { nextTick } from 'process';
-import { IWebdavFileSystemConfig, WebdavFileSystem } from './webdavFilesystem';
 
 export { FileSystem } from './fileSystem';
+
 
 let filesystem: FileSystem;
 export class __dummy {
     @InjectableFactory(FileSystem, { lazy: true })
     filesystem(config: Config) {
-        let fs: FileSystem;
-        switch(config.filesystem.type) {
-            case FileSystemType.local:  fs = new LocalFileSystem(config.filesystem as ILocalFileSystemConfig); break;
-            case FileSystemType.alioss: fs = new AliOSSFileSystem(config.filesystem as IAliOSSFileSystemConfig); break;
-            case FileSystemType.multi:  fs = new MultiFileSystem(config.filesystem as IMultiFileSystemConfig); break;
-            case FileSystemType.webdav: fs = new WebdavFileSystem(config.filesystem as IWebdavFileSystemConfig); break;
-        }
+        const fs: FileSystem = FileSystemFactory(config.filesystem);
 
         if(fs == null) {
             throw new Error(`file system abstraction ${config.filesystem.type} isn't implemented`); 

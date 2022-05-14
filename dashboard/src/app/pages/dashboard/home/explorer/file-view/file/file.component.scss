@@ -15,6 +15,22 @@
         &.type-webdav {
             color: blue;
         }
+
+        .file-icon {
+            position: relative;
+
+            .lock {
+                display: none;
+                position: absolute;
+                left: 0.5em;
+                bottom: -1em;
+                font-size: 1em;
+            }
+        }
+
+        &.encrypted .lock {
+            display: inline !important;
+        }
     }
 
     &.select {

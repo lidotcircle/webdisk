@@ -124,16 +124,6 @@ export class LocalFileSystem extends FileSystem {
         await fs.promises.rename(src, dst);
     }
 
-    static asyncRead = util.promisify(fs.read);
-    async read(file: string, position: number, length: number): Promise<Buffer> {
-        file = this.resolvePath(file);
-        const fd = await fs.promises.open(file, "r");
-        let buf = Buffer.alloc(length);
-        const nb = (await LocalFileSystem.asyncRead(fd.fd, buf, 0, length, position)).bytesRead;
-        await fd.close();
-        return Buffer.from(buf, 0, nb);
-    }
-
     async remove(path: string) {
         path = this.resolvePath(path);
         await fs.promises.unlink(path);

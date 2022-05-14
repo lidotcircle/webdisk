@@ -6,6 +6,35 @@ import { ILocalFileSystemConfig, LocalFileSystem } from './localFileSystem';
 import { warn } from '../../service/logger-service';
 import path from "path";
 import { IWebdavFileSystemConfig, WebdavFileSystem } from "./webdavFilesystem";
+import { EncryptedFileSystem } from "./encryptedFileSystem";
+
+
+export function FileSystemFactory(config: IFileSystemConfig): FileSystem {
+    let filesystem: FileSystem;
+
+    switch(config.type) {
+        case FileSystemType.local: {
+            filesystem = new LocalFileSystem(config as ILocalFileSystemConfig); 
+        } break;
+        case FileSystemType.alioss: {
+            filesystem = new AliOSSFileSystem(config as IAliOSSFileSystemConfig);
+        } break;
+        case FileSystemType.webdav: {
+            filesystem = new WebdavFileSystem(config as IWebdavFileSystemConfig);
+        } break;
+        case FileSystemType.multi: {
+            filesystem = new MultiFileSystem(config as IMultiFileSystemConfig);
+        } break;
+        default: throw new Error('unknow filesystem type');
+    }
+
+    const encryptionKey = config.data?.encryptionKey;
+    if (encryptionKey && encryptionKey != '') {
+        filesystem = new EncryptedFileSystem(filesystem, encryptionKey);
+    }
+
+    return filesystem;
+}
 
 
 export class FSMapping {
@@ -50,21 +79,7 @@ export class MultiFileSystem extends FileSystem {
             }
 
             try {
-                switch(fs.config.type) {
-                    case FileSystemType.local: {
-                        fs.filesystem = new LocalFileSystem(fs.config as ILocalFileSystemConfig); 
-                    } break;
-                    case FileSystemType.alioss: {
-                        fs.filesystem = new AliOSSFileSystem(fs.config as IAliOSSFileSystemConfig);
-                    } break;
-                    case FileSystemType.webdav: {
-                        fs.filesystem = new WebdavFileSystem(fs.config as IWebdavFileSystemConfig);
-                    } break;
-                    case FileSystemType.multi: {
-                        fs.filesystem = new MultiFileSystem(fs.config as IMultiFileSystemConfig);
-                    } break;
-                    default: throw new Error('unknow filesystem type');
-                }
+                fs.filesystem = FileSystemFactory(fs.config);
             } catch (e) {
                 warn(e);
             }

@@ -9,6 +9,7 @@ import { DIProperty } from '../../lib/di';
 import { v4 as uuidv4 } from "uuid";
 import { filter, map } from 'rxjs/operators';
 import { firstValueFrom } from 'rxjs';
+import { stream2buffer } from '../utils';
 
 class FileSystemNotImplemented extends Error {
     constructor() {
@@ -146,8 +147,8 @@ export class FileSystem {
         await this.remover(src);
     } //}
 
-    async read(_file: string, _position: number, _length: number): Promise<Buffer> {
-        throw new FileSystemNotImplemented();
+    async read(file: string, position: number, length: number): Promise<Buffer> {
+        return await stream2buffer(await this.createReadableStream(file, position, length));
     }
 
     /**

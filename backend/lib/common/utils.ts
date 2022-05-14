@@ -1,5 +1,6 @@
 import * as util from 'util';
 export * from './copy_object';
+export * from './forward2Member';
 import { assignTargetEnumProp } from './copy_object';
 
 export function assert(val: boolean) {
