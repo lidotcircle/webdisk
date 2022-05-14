@@ -1,9 +1,9 @@
 import { FileStat, FileType, StorageType } from '../common/file_types';
-import { Readable } from 'stream';
+import { Readable, Transform } from 'stream';
 import { FileSystem, FileSystemType, IFileSystemConfig } from './fileSystem';
 import { createClient, WebDAVClient, AuthType, WebDAVClientOptions, FileStat as WFileStat } from 'webdav';
-import { pipelineWithTimeout, skipTransform, stream2buffer, takeTransform } from '../utils';
-import { Cipher, createCipheriv, createDecipheriv, Decipher, scrypt } from 'crypto';
+import { alignedCipherTransform, pipelineWithTimeout, skipTransform, stream2buffer, takeTransform } from '../utils';
+import { createCipheriv, createDecipheriv, scrypt } from 'crypto';
 import { promisify } from 'util';
 import createHttpError from 'http-errors';
 
@@ -54,18 +54,18 @@ export class WebdavFileSystem extends FileSystem {
         if (!this.encryptionKey?.length) this.encryptionKey = null;
     }
 
-    private async createCipher(): Promise<Cipher> {
+    private async createCipher(): Promise<Transform> {
         const key =  await promisify(scrypt)(this.encryptionKey, 'helloworld', 16);
         const cipher = createCipheriv('aes-128-ecb', key as any, null);
         cipher.setAutoPadding(false);
-        return cipher;
+        return alignedCipherTransform(16, cipher);
     }
     
-    private async createDecipher(): Promise<Decipher> {
+    private async createDecipher(): Promise<Transform> {
         const key =  await promisify(scrypt)(this.encryptionKey, 'helloworld', 16);
         const decipher = createDecipheriv('aes-128-ecb', key as any, null);
         decipher.setAutoPadding(false);
-        return decipher;
+        return alignedCipherTransform(16, decipher);
     }
 
     async chmod(_file: string, _mode: number) {

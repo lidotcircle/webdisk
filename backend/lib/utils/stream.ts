@@ -145,7 +145,7 @@ class TakeTransform extends Transform {
 
     _transform(chunk: Buffer, _encoding: string, callback: TransformCallback): void {
         if (this.take > 0) {
-            if (chunk.length < this.take) {
+            if (chunk.length <= this.take) {
                 this.take -= chunk.length;
             } else {
                 chunk = chunk.slice(0, this.take);
@@ -159,10 +159,44 @@ class TakeTransform extends Transform {
     }
 }
 
+class AlignedCipherTransform extends Transform {
+    private buf: Buffer;
+
+    constructor(private alignedSize: number, private cipher: { update: (buffer: Buffer) =>  Buffer;} ) {
+        super();
+
+        this.buf = Buffer.from('');
+    }
+
+    _transform(chunk: Buffer, _encoding: string, callback: TransformCallback): void {
+        let buf = this.buf.byteLength > 0 ? Buffer.concat([this.buf, chunk]) : chunk;
+
+        if (buf.byteLength >= this.alignedSize) {
+            const len = Math.floor(buf.byteLength / this.alignedSize) * this.alignedSize;
+            const ubuf = len == buf.byteLength ? buf : buf.slice(0, len);
+            this.buf = buf.slice(len);
+            buf = this.cipher.update(ubuf);
+        } else {
+            this.buf = buf;
+            buf = Buffer.from('');
+        }
+
+        callback(null, buf);
+    }
+
+    _flush(callback: TransformCallback): void {
+        callback(null, this.buf);
+    }
+}
+
 export function skipTransform(skip: number) {
     return new SkipTransform(skip);
 }
 
 export function takeTransform(take: number) {
     return new TakeTransform(take);
+}
+
+export function alignedCipherTransform(alignedSize: number, cipher: { update: (buffer: Buffer) => Buffer; }) {
+    return new AlignedCipherTransform(alignedSize, cipher);
 }
