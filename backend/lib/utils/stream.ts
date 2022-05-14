@@ -1,4 +1,4 @@
-import { Readable, Writable } from "stream";
+import { Readable, Transform, TransformCallback, Writable } from "stream";
 
 export async function pipelineWithTimeout( //{
     reader: Readable, 
@@ -102,3 +102,67 @@ export async function pipelineWithTimeout( //{
     });
 } //}
 
+export async function stream2buffer(readable: Readable): Promise<Buffer> {
+    return new Promise<Buffer> ((resolve, reject) => {
+        const _buf = Array <any>();
+
+        readable.on("data", chunk => _buf.push(chunk));
+        readable.on("end", () => resolve(Buffer.concat(_buf)));
+        readable.on("error", err => reject(`error converting stream - ${err}`));
+    });
+}
+
+class SkipTransform extends Transform {
+    private skip: number;
+
+    constructor(skip: number) {
+        super();
+        this.skip = skip;
+    }
+
+    _transform(chunk: Buffer, _encoding: string, callback: TransformCallback): void {
+        if (this.skip > 0) {
+            if (chunk.length <= this.skip) {
+                this.skip -= chunk.length;
+                chunk = Buffer.from('');
+            } else {
+                chunk = chunk.slice(this.skip);
+                this.skip = 0;
+            }
+        }
+
+        callback(null, chunk);
+    }
+}
+
+class TakeTransform extends Transform {
+    private take: number;
+
+    constructor(take: number) {
+        super();
+        this.take = take;
+    }
+
+    _transform(chunk: Buffer, _encoding: string, callback: TransformCallback): void {
+        if (this.take > 0) {
+            if (chunk.length < this.take) {
+                this.take -= chunk.length;
+            } else {
+                chunk = chunk.slice(0, this.take);
+                this.take = 0;
+            }
+        } else {
+            chunk = Buffer.from('');
+        }
+
+        callback(null, chunk);
+    }
+}
+
+export function skipTransform(skip: number) {
+    return new SkipTransform(skip);
+}
+
+export function takeTransform(take: number) {
+    return new TakeTransform(take);
+}

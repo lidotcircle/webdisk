@@ -571,6 +571,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
                     {name: 'authType', initValue: 'password', label: 'Auth', type: 'select', choices: ["none", "password", "digest", "token"]},
                     {name: 'username', initValue: '', label: 'Username', type: 'text'},
                     {name: 'password', initValue: '', label: 'Password', type: 'password'},
+                    {name: 'encryptionKey', initValue: '', label: 'Encryption Key', type: 'password'},
                     {name: 'token',    initValue: '', label: 'Token', type: 'text'},
                 ],
                 buttons: [{name: 'confirm'}, {name: 'cancel'}],
@@ -582,6 +583,9 @@ export class FileViewComponent implements OnInit, OnDestroy {
                     remoteUrl: input.inputs['endpoint'],
                     authType: input.inputs['authType'],
                 };
+                if (input.inputs['encryptionKey']) {
+                    config['encryptionKey'] = input.inputs['encryptionKey'];
+                }
                 switch (config.authType) {
                     case 'none': break;
                     case 'password':

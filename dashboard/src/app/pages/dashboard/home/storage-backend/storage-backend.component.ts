@@ -107,6 +107,18 @@ import { NotifierType } from 'src/app/shared/shared-component/notifier/notifier.
                                    (blur)='entry.config.passwordEdit=false' (keydown.enter)='entry.config.passwordEdit=false'/>
                         </div>
 
+                        <div class='field'> Encryption Key </div>
+                        <div *ngIf='!entry.config.encryptionKeyEdit'
+                             class='value' (click)='onClick(i, "encryptionKey", $event)'>
+                            {{ entry.config.encryptionKey?.length > 0 ? '••••••••' : '' }}
+                        </div>
+                        <div *ngIf='entry.config.encryptionKeyEdit'
+                             class='value input'>
+                            <input type='encryptionKey' [(ngModel)]='entry.config.encryptionKey'
+                                   (change)='entry.edited=true' (input)='entry.edited=true'
+                                   (blur)='entry.config.encryptionKeyEdit=false' (keydown.enter)='entry.config.encryptionKeyEdit=false'/>
+                        </div>
+
                         <div *ngIf='entry.config.authType=="token"' class='field'> Token </div>
                         <div *ngIf='entry.config.authType=="token" && !entry.config.tokenEdit'
                              class='value' (click)='onClick(i, "token", $event)'> {{ entry.config.token }} </div>
