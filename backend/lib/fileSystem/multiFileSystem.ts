@@ -161,9 +161,18 @@ export class MultiFileSystem extends FileSystem {
         }
 
         if(!dir.endsWith('/')) dir += '/';
-        for(const fs of this.config.data) {
-            if(fs.srcPrefix.startsWith(dir) && /[^\\]+\//.test(fs.srcPrefix.substring(dir.length))) {
-                ans.push(this.makeStatFromFSEntryPrefix(fs.srcPrefix, fs.config.type));
+        for (const fs of this.config.data) {
+            if (fs.srcPrefix.startsWith(dir) && /^[^\/]+\/?$/.test(fs.srcPrefix.substring(dir.length))) {
+                const rep = ans.findIndex(v => v.filename == fs.srcPrefix || (v.filename + '/') == fs.srcPrefix);
+                if (rep >= 0)
+                    ans.splice(rep, 1);
+                const entry = this.makeStatFromFSEntryPrefix(fs.srcPrefix, fs.config.type);
+                ans.push(entry);
+                const encryptionKey = fs.config.data?.encryptionKey;
+                const encrypted = !!encryptionKey && encryptionKey != '';
+                if (encrypted) {
+                    entry.encrypted = true;
+                }
             }
         }
 
@@ -221,6 +230,9 @@ export class MultiFileSystem extends FileSystem {
         ans.mode = 623;
         ans.filetype = FileType.dir;
         ans.storageType = storageType;
+        ans.ctimeMs = Date.now();
+        ans.atimeMs = Date.now();
+        ans.mtimeMs = Date.now();
         return ans;
     } //}
     async stat(file: string): Promise<FileStat> //{
