@@ -1,6 +1,10 @@
 @import 'src/app/style/utils.scss';
 @import 'src/app/style/colors.scss';
 
+app-window {
+    z-index: 2;
+}
+
 .message-box {
     display: flex;
     flex-direction: column;
