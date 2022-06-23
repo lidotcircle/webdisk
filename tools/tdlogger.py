@@ -5,9 +5,14 @@ import sys
 import os
 import argparse
 import asyncio
+import regex
+from tqdm import tqdm
 from typing import Tuple, Union, List, Dict
 from aiohttp import ClientSession
 from base64 import decodebytes, encodebytes
+
+
+queue_clear_message = "QUEUE_CLEAR"
 
 
 class TdLogger:
@@ -36,7 +41,7 @@ class TdLogger:
             args += ["--username", self.credential[0], "--password", self.credential[1]]
         else:
             args += ["--grouptoken", self.credential]
-        self._subpipe = Popen(args, stdin=PIPE, text=True)
+        self._subpipe = Popen(args, stdin=PIPE, stderr=PIPE, text=True)
     
     def wait(self):
         if self._subpipe is None:
@@ -44,6 +49,14 @@ class TdLogger:
         
         self.__send_eof()
         self._subpipe.wait()
+    
+    def wait_clear(self):
+        if self._subpipe is None:
+            return
+        while True:
+            msg = self._subpipe.stderr.readline()
+            if msg.strip() == queue_clear_message:
+                break
 
     def __gen(self, data: List[dict]):
         assert len(data) > 0
@@ -147,6 +160,7 @@ class HttpLogger:
         self.__end = False
         self.__API_sdata = "/apis/sdata"
         self.__API_blob =  "/apis/flink"
+        self.__total_msg_length = 0
 
     def getAPI(self, urlpath: str):
         if self.endpoint.endswith("/"):
@@ -209,7 +223,8 @@ class HttpLogger:
 
         fileid = await self.postBlob(session, blob, dst)
         fileurl = self.__API_blob + "/" + fileid
-        await self.postSData(session, json.dumps({ "url": fileurl, "name": blobname }), group)
+        if group is not None and group != "":
+            await self.postSData(session, json.dumps({ "url": fileurl, "name": blobname }), group)
 
     async def readline(self):
         return await asyncio.get_running_loop().run_in_executor(None, sys.stdin.readline)
@@ -217,16 +232,18 @@ class HttpLogger:
     async def __run_fetchmsg(self):
         while True:
             msg = await self.readline()
-            msg = msg.strip()
+            msg = msg and msg.strip()
+            self.__msg_event.set()
             if msg is None or len(msg) == 0:
                 self.__end = True
                 break
-            self.__msg_event.set()
-            msg = msg.strip()
             self.__msg_queue.append(msg)
+            self.__total_msg_length = self.__total_msg_length + 1
 
     async def __run_dispatchmsg(self):
         while True:
+            if len(self.__msg_queue) == 0 and self.__total_msg_length > 0:
+                print(f"\n{queue_clear_message}", file=sys.stderr)
             if (self.__end and len(self.__msg_queue) == 0):
                 break
             if len(self.__msg_queue) == 0:
@@ -270,6 +287,7 @@ parser.add_argument('-m', '--message', type=str, help='message, only for parent 
 parser.add_argument('-r', '--remote_dir', type=str, help='remote direcotry, only for parent mode', default=None)
 parser.add_argument('-f', '--file', type=str, help='file for uploading, only for parent mode', default=None)
 parser.add_argument('-d', '--dir',  type=str, help='directory for uploading, only for parent mode', default=None)
+parser.add_argument('-x', '--pattern', type=str, help='file pattern for directory uploading', default=None)
 
 def child_mode_action(args: argparse.Namespace):
     httplogger = HttpLogger(args.endpoint, args.timeout, 
@@ -305,14 +323,29 @@ def parent_mode_action(args: argparse.Namespace):
         dst = to_slash_path(dst)
         logger.sendBlobFile(args.file, basename, dst, group=logger.default_group)
     elif args.dir is not None:
+        matcher = None
+        if args.pattern is not None:
+            matcher = regex.compile(args.pattern)
+
+        uploading_list = []
         for dir, _, file_basenames in os.walk(args.dir):
             reldir = os.path.relpath(dir, args.dir)
             remote_dst = os.path.abspath(os.path.join(args.remote_dir, reldir))
             for basename in file_basenames:
                 file = os.path.join(dir, basename)
+                if matcher and not matcher.match(file):
+                    continue
                 dst =os.path.join(remote_dst, basename)
                 dst = to_slash_path(dst)
+                uploading_list.append((file, basename, dst))
+                print(f'[{file}] to [{dst}]')
+        
+        with tqdm(total=len(uploading_list)) as pbar:
+            for file, basename, dst in uploading_list:
+                pbar.set_postfix_str(f'sending [{file}] to [{dst}]')
                 logger.sendBlobFile(file, basename, dst, group=logger.default_group)
+                logger.wait_clear()
+                pbar.update(1)
     else:
         print("do nothing")
 
