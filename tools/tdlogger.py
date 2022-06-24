@@ -287,6 +287,7 @@ parser.add_argument('-m', '--message', type=str, help='message, only for parent 
 parser.add_argument('-r', '--remote_dir', type=str, help='remote direcotry, only for parent mode', default=None)
 parser.add_argument('-f', '--file', type=str, help='file for uploading, only for parent mode', default=None)
 parser.add_argument('-d', '--dir',  type=str, help='directory for uploading, only for parent mode', default=None)
+parser.add_argument('-s', '--dir_skipn',  type=int, help='skip first n files, for continuing uploading', default=0)
 parser.add_argument('-x', '--pattern', type=str, help='file pattern for directory uploading', default=None)
 
 def child_mode_action(args: argparse.Namespace):
@@ -324,6 +325,7 @@ def parent_mode_action(args: argparse.Namespace):
         logger.sendBlobFile(args.file, basename, dst, group=logger.default_group)
     elif args.dir is not None:
         matcher = None
+        skipn = args.dir_skipn
         if args.pattern is not None:
             matcher = regex.compile(args.pattern)
 
@@ -341,6 +343,8 @@ def parent_mode_action(args: argparse.Namespace):
                 print(f'[{file}] to [{dst}]')
         
         with tqdm(total=len(uploading_list)) as pbar:
+            uploading_list = uploading_list[skipn:]
+            pbar.update(skipn)
             for file, basename, dst in uploading_list:
                 pbar.set_postfix_str(f'sending [{file}] to [{dst}]')
                 logger.sendBlobFile(file, basename, dst, group=logger.default_group)
