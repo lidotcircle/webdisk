@@ -661,7 +661,11 @@ export class GroupGraphComponent implements OnInit, OnDestroy {
         }
         const book = utils.book_new();
         const worksheet = utils.aoa_to_sheet(data);
-        utils.book_append_sheet(book, worksheet, encodeURIComponent(this.group));
+        let spread_name = encodeURIComponent(this.group);
+        if (spread_name.length > 31) {
+            spread_name  = spread_name.substring(spread_name.length - 31);
+        }
+        utils.book_append_sheet(book, worksheet, spread_name);
         writeFile(book, this.group + '.xlsx');
     }
 
