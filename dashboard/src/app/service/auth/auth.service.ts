@@ -112,17 +112,25 @@ export class AuthService {
         await this.http.post(RESTfulAPI.Auth.signup, req).toPromise();
     }
 
+    private refreshing = false;
     async refreshJWT() {
-        const ans = await this.http.get(RESTfulAPI.Auth.jwt, {
-            params: {
-                "token": this.refresh_token
-            }
-        }).toPromise() as {jwt: string};
-        this.jwt_token = ans.jwt;
-        this.sessionStorage.set<string>(StorageKeys.JWT_TOKEN, this.jwt_token);
-        console.debug("refresh jwt at: ", new Date());
-        this.setRefreshTimer();
-        this.jwtSubject.next(this.jwtToClaim(this.jwt_token));
+        if (this.refreshing) return;
+
+        try {
+            this.refreshing = true;
+            const ans = await this.http.get(RESTfulAPI.Auth.jwt, {
+                params: {
+                    "token": this.refresh_token
+                }
+            }).toPromise() as {jwt: string};
+            this.jwt_token = ans.jwt;
+            this.sessionStorage.set<string>(StorageKeys.JWT_TOKEN, this.jwt_token);
+            console.debug("refresh jwt at: ", new Date());
+            this.setRefreshTimer();
+            this.jwtSubject.next(this.jwtToClaim(this.jwt_token));
+        } finally {
+            this.refreshing = false;
+        }
     }
 
     private jwtToClaim(jwt: string): JwtClaim {
@@ -133,6 +141,14 @@ export class AuthService {
     forgetLogin() {
         this.localstorage.remove(StorageKeys.REFRESH_TOKEN);
         this.sessionStorage.set<string>(StorageKeys.REFRESH_TOKEN, this.refresh_token);
+    }
+
+    async jwtTokenAsync(): Promise<string> {
+        if(this.jwtHelper.isTokenExpired(this.jwt_token)) {
+            await this.refreshJWT();
+        }
+
+        return this.jwt_token;
     }
 
     get jwtToken() {

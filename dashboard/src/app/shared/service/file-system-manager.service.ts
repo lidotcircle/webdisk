@@ -20,11 +20,8 @@ export class FileSystemManagerService {
         window['man'] = this;
     }
 
-    private authWithToken(req: FileRequestMessage){
-        if(this.userService.jwtToken == null)
-            throw new Error('authorization fail');
-
-        req.accessToken = this.userService.jwtToken;
+    private async authWithToken(req: FileRequestMessage){
+        req.accessToken = await this.userService.jwtTokenAsync();
     }
 
     private absolutePath(dst: string) {
@@ -36,7 +33,7 @@ export class FileSystemManagerService {
     private async sendTo(req: {type: FileRequest, timeout?: number}, ...argv: any[]): Promise<any> {
         const reqmsg = new FileRequestMessage();
         reqmsg.messageSource = MessageSource.Request;
-        this.authWithToken(reqmsg);
+        await this.authWithToken(reqmsg);
         reqmsg.fm_msg.fm_request = req.type;
         reqmsg.fm_msg.fm_request_argv = argv;
         let binary: boolean = hasArrayBuffer(argv);

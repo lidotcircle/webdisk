@@ -20,10 +20,7 @@ export class AuthDomainGuard implements CanActivate {
         return new Promise((resolve) => {
             const m = async (): Promise<boolean> => {
                 if(this.authService.isLogin) {
-                    if(this.authService.jwtToken == null) {
-                        await this.authService.refreshJWT();
-                    }
-
+                    await this.authService.jwtTokenAsync();
                     this.router.navigateByUrl('/wd/dashboard');
                     return false;
                 } else {
