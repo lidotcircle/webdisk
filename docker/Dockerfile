@@ -2,7 +2,7 @@ FROM node:16 as builder
 
 WORKDIR /opt/webdisk
 COPY . .
-RUN npm install && cd backend && npm install && cd ../dashboard && npm install
+RUN npm install && cd backend && npm install && cd ../dashboard && npm install --force
 RUN npx gulp release
 
 
