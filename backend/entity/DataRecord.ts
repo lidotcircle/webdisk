@@ -1,24 +1,22 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn } from "typeorm"
-import { User } from "./User"
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, Index } from "typeorm"
+import { DataRecordGroup } from "./DataRecordGroup"
 
 
 @Entity()
 export class DataRecord {
     @PrimaryGeneratedColumn()
-    id: number
+    id: number;
+
+    @Index()
+    @Column()
+    groupId: number;
+
+    @ManyToOne(() => DataRecordGroup, { onDelete: 'CASCADE'})
+    group: Promise<DataRecordGroup>;
 
     @Column()
-    dgroup: string
-
-    @Column()
-    data: string
-
-    @ManyToOne(() => User)
-    user: Promise<User>
-
-    @Column({type: 'int', nullable: true})
-    userId: number | null;
+    data: string;
 
     @CreateDateColumn()
-    createdAt: Date
+    createdAt: Date;
 }

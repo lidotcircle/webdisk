@@ -6,6 +6,7 @@ import { ProvideDependency } from './lib/di';
 import bodyparser from 'body-parser';
 import { HttpError } from 'http-errors';
 import { warn } from './service';
+import compression from 'compression';
 
 const listen_callbacks = [];
 ProvideDependency(null, {
@@ -21,6 +22,7 @@ export async function ExpressAppListen(port: number, host: string, backlog: numb
 
     const app = express();
 
+    app.use(compression());
     app.use(bodyparser.json());
     app.use(bodyparser.urlencoded({ extended: false }));
 

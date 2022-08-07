@@ -6,8 +6,9 @@ import os
 import argparse
 import asyncio
 import regex
+import zlib
 from tqdm import tqdm
-from typing import Tuple, Union, List, Dict
+from typing import Tuple, Union, List
 from aiohttp import ClientSession
 from base64 import decodebytes, encodebytes
 
@@ -16,19 +17,22 @@ queue_clear_message = "QUEUE_CLEAR"
 
 
 class TdLogger:
-    def __init__(self, endpoint: str, default_group: str, sdata_naverage: int, credential: Union[str, Tuple[str,str]], 
-                 timeout: int = 5, group_prefix: str = "", disabled: bool = False):
+    def __init__(self, endpoint: str, default_group: str, bufferQueueSize: int, credential: Union[str, Tuple[str,str]], 
+                 timeout: int = 5, hint_done: bool = False, priority: bool=False, group_prefix: str = "", disabled: bool = False):
         self.endpoint = endpoint
         self.default_group = default_group
-        self.sdataNaverage = sdata_naverage
+        self.bufferQueueSize = bufferQueueSize
         self.timeout = timeout
         self.credential = credential
+        self.hint_done = hint_done
+        self.priority = priority
         self.group_prefix = group_prefix
         self.disabled = disabled
         assert(self.credential != "")
         if not self.disabled:
             self.__start_subprocess()
-        self.__data_list: Dict[str,List[dict]] = { }
+        self.__data_list: List[dict] = []
+        self.__highest_priroty = 9999
 
     def __start_subprocess(self):
         args = [
@@ -37,11 +41,18 @@ class TdLogger:
                     "--endpoint", self.endpoint, 
                     "--timeout", str(self.timeout)
                 ]
+
         if (type(self.credential) == tuple):
             args += ["--username", self.credential[0], "--password", self.credential[1]]
         else:
             args += ["--grouptoken", self.credential]
-        self._subpipe = Popen(args, stdin=PIPE, stderr=PIPE, text=True)
+        
+        if not self.hint_done:
+            args += ["--disable_hint_done"]
+        if self.priority:
+            args += ["--priority"]
+
+        self._subpipe = Popen(args, stdin=PIPE, stderr=PIPE, text=True) if self.hint_done else Popen(args, stdin=PIPE, text=True)
     
     def wait(self):
         if self._subpipe is None:
@@ -51,26 +62,12 @@ class TdLogger:
         self._subpipe.wait()
     
     def wait_clear(self):
-        if self._subpipe is None:
+        if self._subpipe is None or not self.hint_done:
             return
         while True:
             msg = self._subpipe.stderr.readline()
             if msg.strip() == queue_clear_message:
                 break
-
-    def __gen(self, data: List[dict]):
-        assert len(data) > 0
-        if len(data) == 1:
-            return data[0]
-        dataavg = {}
-        for key in data[0]:
-            dataavg[key] = 0
-        for d in data:
-            for key in d:
-                dataavg[key] += d[key]
-        for key in dataavg:
-            dataavg[key] /= len(data)
-        return dataavg
 
     def debug(self, msg: str):
         self.send({"message": msg, "level": "debug"}, group=self.default_group + '-log', direct = True)
@@ -84,28 +81,33 @@ class TdLogger:
     def error(self, msg: str):
         self.send({"message": msg, "level": "error"}, group=self.default_group + '-log', direct = True)
 
-    def send(self, data: dict, group: str = "", direct: bool = False):
+    def send(self, data: dict, group: str = "", direct: bool = False, priority=0):
         group = group if group != "" else self.default_group
-        if not group in self.__data_list:
-            self.__data_list[group] = []
-        queue = self.__data_list[group]
-        queue.append(data)
-        if direct or len(queue) >= self.sdataNaverage:
-            self.__sendSData(self.__gen(queue), group)
-            self.__data_list[group] = []
+        if direct or self.bufferQueueSize < 2:
+            self.__sendSData(data, group, priority)
+        else:
+            self.__data_list.append({'group': group, 'data': data})
+            self.__highest_priroty = min(self.__highest_priroty, priority)
+            if len(self.__data_list) >= self.bufferQueueSize:
+                self.__sendListofSData(self.__data_list)
+                self.__data_list = []
+                self.__highest_priroty = 9999
 
-    def flush(self):
-        for group in self.__data_list:
-            groupdata = self.__data_list[group]
-            if len(groupdata) > 0:
-                self.__sendSData(self.__gen(groupdata), group)
-                self.__data_list[group] = []
+    def flush(self, priority: int=0):
+        if len(self.__data_list) > 0:
+            self.__sendListofSData(self.__data_list)
+            self.__data_list = []
+            self.__highest_priroty = 9999
 
-    def __sendSData(self, data: dict, group: str):
+    def __sendSData(self, data: dict, group: str, priority: int):
         payload = json.dumps({ "data": data, "group": self.group_prefix + group })
-        self.__sendmsg("sdata", payload)
+        self.__sendmsg("sdata", payload, priority)
 
-    def sendBlobFile(self, file: Tuple[str,bytes,io.BytesIO], blobname: str, dst: str, group: str):
+    def __sendListofSData(self, datas: List[dict]):
+        payload = json.dumps(datas)
+        self.__sendmsg("listofsdata", payload, self.__highest_priroty)
+
+    def sendBlobFile(self, file: Tuple[str,bytes,io.BytesIO], blobname: str, dst: str, group: str, priority: int=3):
         data: bytes = None
 
         if isinstance(file, str):
@@ -116,9 +118,9 @@ class TdLogger:
         elif isinstance(file, bytes):
             data = file
 
-        self.sendBlob(data, blobname, dst, group)
+        self.sendBlob(data, blobname, dst, group, priority)
 
-    def sendBlob(self, blob: bytes, blobname: str, dst: str, group: str):
+    def sendBlob(self, blob: bytes, blobname: str, dst: str, group: str, priority: int=3):
         blob_b64 = encodebytes(blob).decode("ascii")
         msg = json.dumps({
             "blobB64": blob_b64,
@@ -126,12 +128,12 @@ class TdLogger:
             "destination": dst,
             "group": self.group_prefix + group,
         })
-        self.__sendmsg("blob", msg)
+        self.__sendmsg("blob", msg, priority)
 
-    def __sendmsg(self, msgtype: str, payload: str):
+    def __sendmsg(self, msgtype: str, payload: str, priority: int):
         if self.disabled:
             return
-        msg = json.dumps({"type": msgtype, "msg": payload})
+        msg = json.dumps({"type": msgtype, "msg": payload, "priority": priority})
         if (self._subpipe.stdin != None):
             try:
                 self._subpipe.stdin.write(msg + "\n")
@@ -150,15 +152,20 @@ class TdLogger:
 class HttpLogger:
     def __init__(self, endpoint: str, timeout: float,
                  grouptoken: str = "",
+                 hint_done: bool = False,
+                 priority: bool = False,
                  username: str = "", password: str = ""):
         self.endpoint = endpoint
         self.timeout = timeout
         self.grouptoken = grouptoken
+        self.hint_done = hint_done
+        self.priority = priority
         self.username = username
         self.password = password
         self.__msg_queue = []
         self.__end = False
         self.__API_sdata = "/apis/sdata"
+        self.__API_listofsdata = "/apis/sdata/list"
         self.__API_blob =  "/apis/flink"
         self.__total_msg_length = 0
 
@@ -177,13 +184,19 @@ class HttpLogger:
             headers["x-grouptoken"] = self.grouptoken or ''
 
     async def postSData(self, session: ClientSession, data: str, group: str):
-        body_data = { "data": data, "group": group }
+        await self.__post_body(self.getAPI(self.__API_sdata), session, {'group': group, 'data': data})
 
-        headers = { }
+    async def postListofSData(self, session: ClientSession, datas: list):
+        await self.__post_body(self.getAPI(self.__API_listofsdata), session, { 'datas': datas })
+
+    async def __post_body(self, url, session: ClientSession, body_data: object):
+        data = bytearray(json.dumps(body_data), 'utf-8')
+        data = zlib.compress(data)
+
+        headers = { 'Content-Type': 'application/json; charset=utf-8', 'Content-Encoding': 'deflate' }
         self.authHeaders(headers)
 
-        url = self.getAPI(self.__API_sdata)
-        async with session.post(url, json=body_data, headers=headers, timeout=self.timeout) as resp:
+        async with session.post(url, data=data, headers=headers, timeout=self.timeout) as resp:
             if resp.status != 200:
                 print("HTTP Error: " + str(resp.status), ", send ", data, " failed")
                 raise Exception("send sdata failed: %s" % (str(resp.status)))
@@ -211,6 +224,15 @@ class HttpLogger:
         group = obj["group"]
         await self.postSData(session, json.dumps(data), group)
 
+    async def handler_listofsdata(self, session: ClientSession, payload: str):
+        obj = json.loads(payload)
+        assert isinstance(obj, list)
+        thelist = []
+        for msg in obj:
+            assert 'group' in msg and 'data' in msg
+            thelist.append({'group': msg["group"], 'data': json.dumps(msg['data'])})
+        await self.postListofSData(session, thelist)
+
     async def handler_blob(self, session: ClientSession, payload: str):
         obj = json.loads(payload)
         group = obj["group"]
@@ -237,12 +259,21 @@ class HttpLogger:
             if msg is None or len(msg) == 0:
                 self.__end = True
                 break
-            self.__msg_queue.append(msg)
+            msgobj = json.loads(msg)
+            msgpriority = msgobj['priority']
+            insert_idx = len(self.__msg_queue)
+            # TODO binary search and linked-list
+            if self.priority:
+                for i in range(len(self.__msg_queue)):
+                    if self.__msg_queue[i]['priority'] > msgpriority:
+                        insert_idx = i
+                        break
+            self.__msg_queue.insert(insert_idx, msgobj)
             self.__total_msg_length = self.__total_msg_length + 1
 
     async def __run_dispatchmsg(self):
         while True:
-            if len(self.__msg_queue) == 0 and self.__total_msg_length > 0:
+            if len(self.__msg_queue) == 0 and self.__total_msg_length > 0 and self.hint_done:
                 print(f"\n{queue_clear_message}", file=sys.stderr)
             if (self.__end and len(self.__msg_queue) == 0):
                 break
@@ -251,17 +282,21 @@ class HttpLogger:
                 self.__msg_event.clear()
             async with ClientSession() as session:
                 while len(self.__msg_queue) > 0:
-                    msg: str = self.__msg_queue.pop(0)
-                    obj = json.loads(msg)
-                    msgtype = obj["type"]
-                    payload = obj["msg"]
+                    msgobj: dict = self.__msg_queue.pop(0)
+                    msgtype = msgobj["type"]
+                    payload = msgobj["msg"]
 
                     try:
                         if msgtype == "blob":
                             await self.handler_blob(session, payload)
                         elif msgtype == "sdata":
                             await self.handler_sdata(session, payload)
+                        elif msgtype == "listofsdata":
+                            await self.handler_listofsdata(session, payload)
+                        else:
+                            raise NotImplemented(f"message type '{msgtype}' is not implemented")
                     except Exception as e:
+                        msg = json.dumps(msgobj)
                         shortmsg = msg[0:min(len(msg), 200)]
                         if len(shortmsg) < len(msg):
                             shortmsg += "..."
@@ -277,9 +312,11 @@ parser = argparse.ArgumentParser(description='Message Logger')
 parser.add_argument('--child_mode', action='store_true', help='switch to child mode, run as waiting parent process message to process')
 parser.add_argument('-a', '--endpoint',   type=str,   help='endpoint to post msg', required=True)
 parser.add_argument('-t', '--timeout',    type=float, help='http request timeout in seconds', default=5)
+parser.add_argument(      '--priority',   action='store_true', help='enalbe message priority')
 parser.add_argument('-u', '--username',   type=str,   help='service username', default=None)
 parser.add_argument('-p', '--password',   type=str,   help='service password', default=None)
 parser.add_argument('-c', '--grouptoken', type=str,   help='service grouptoken', default=None)
+parser.add_argument('--disable_hint_done', action='store_true', help='hint_done: when message be consumed, child process send a message to stderr')
 
 parser.add_argument('-g', '--group', type=str, help='group, only for parent mode', default="")
 parser.add_argument('-l', '--level', type=str, choices=['info', 'debug', 'warn', 'error'], help='message level, only for parent mode', default='info')
@@ -292,6 +329,8 @@ parser.add_argument('-x', '--pattern', type=str, help='file pattern for director
 
 def child_mode_action(args: argparse.Namespace):
     httplogger = HttpLogger(args.endpoint, args.timeout, 
+                            hint_done=not args.disable_hint_done,
+                            priority=args.priority,
                             username=args.username, password=args.password, 
                             grouptoken=args.grouptoken)
     asyncio.run(httplogger.run())
@@ -310,7 +349,7 @@ def parent_mode_action(args: argparse.Namespace):
             fp = fp[2:]
         return fp
 
-    logger = TdLogger(args.endpoint, args.group, 1, credential)
+    logger = TdLogger(args.endpoint, args.group, 1, credential, hint_done=not args.disable_hint_done, priority=args.priority)
     if args.message is not None:
         data = {}
         data['level'] = args.level
@@ -354,6 +393,7 @@ def parent_mode_action(args: argparse.Namespace):
         print("do nothing")
 
     # wait child exit
+    logger.flush()
     logger.wait()
 
 if __name__ == "__main__":

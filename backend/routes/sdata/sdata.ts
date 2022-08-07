@@ -27,6 +27,23 @@ router.post('/', defaultAuth,
     }
 )
 
+router.post('/list', defaultAuth,
+    body('datas').isArray().withMessage("should be an array"),
+    async (req, res) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(422).json({ errors: errors.array() });
+        }
+
+        const { datas } = req.body;
+        const username = getAuthUsername(req);
+
+        const drservice = QueryDependency(DataRecordService);
+        await drservice.insertListofDatas(username, datas);
+        res.status(200).send();
+    }
+)
+
 router.delete('/', defaultAuth,
     query('group').isString().withMessage("group should be a string"),
     async (req, res) => {
