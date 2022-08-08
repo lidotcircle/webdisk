@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { NgxEchartsModule } from 'ngx-echarts';
 import { ChartComponent } from './chart.component';
 import { ChartRoutingModule } from './chart-routing.module';
-import { GroupTableComponent, ButtonsCellComponent } from './group-table/group-table.component';
+import { GroupTableComponent, ButtonsCellComponent, DateComponent } from './group-table/group-table.component';
 import { GroupGraphComponent } from './group-graph/group-graph.component';
 import { NbAlertModule, NbButtonModule, NbCardModule, NbCheckboxModule, NbIconModule, NbInputModule, NbSelectModule, NbSpinnerModule } from '@nebular/theme';
 import { Ng2SmartTableModule } from 'ng2-smart-table';
@@ -25,6 +25,7 @@ import { RecordViewComponent, TableViewComponent } from './table-view/table-view
         GroupGraphComponent,
         TableViewComponent,
         RecordViewComponent,
+        DateComponent,
         ButtonsCellComponent,
         AddDataComponent,
     ],

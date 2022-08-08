@@ -12,8 +12,13 @@ export class DataRecordService {
     constructor(private http: HttpClient) {
     }
 
-    public async getGroups(): Promise<string[]> {
-        return await this.http.get<string[]>(API.groups).toPromise();
+    public async getGroups(sortbyudpate: boolean, desc: boolean): Promise<{createdAt: string, updatedAt: string, group: string}[]> {
+        return await this.http.get<string[]>(API.groups, {
+            params: {
+                sortBy: sortbyudpate ? 'updatedDate' : 'createdDate',
+                order: desc ? 'DESC' : 'ASC',
+            }
+        }).toPromise() as any;
     }
 
     public async deleteGroup(group: string): Promise<void> {

@@ -5,9 +5,9 @@ app-group-table {
     @include Ng2SmartTableClickCell(1);
     @include TableIsEmpty();
 
-    thead [ng-reflect-create-confirm] {
-        td:nth-child(3), td:nth-child(4) {
-            input {
+    thead[ng-reflect-create-confirm] {
+        tr:nth-child(2) {
+            th:nth-child(1), th:nth-child(5) {
                 visibility: hidden;
             }
         }

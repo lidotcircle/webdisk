@@ -3,6 +3,8 @@
       Data Record Groups: {{ sourcecount() }}
       <div class="control-components">
           <div></div>
+          <mat-checkbox (change)='options_change($event)' [(ngModel)]='cb_sortbyupdate'>Sort By Update Date</mat-checkbox>
+          <mat-checkbox (change)='options_change($event)' [(ngModel)]='cb_desc'>Desceding</mat-checkbox>
           <button nbButton size='tiny' status="primary" (click)='refresh_data()'>Refresh</button>
       </div>
     </nb-card-header>

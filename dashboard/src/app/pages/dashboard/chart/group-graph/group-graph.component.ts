@@ -48,7 +48,7 @@ const createdAt_symbol = Symbol("createat");
                 <mat-label>naverage</mat-label>
                 <input (change)='options_change($event)' matInput type="number" min='1' step='1' [(ngModel)]='data_average'>
             </mat-form-field>
-            <button (click)="saveAsXLSX()" class="xlsx-download"><nb-icon icon="download-outline"></nb-icon></button>
+            <button (click)="saveAsXLSX()" class="xlsx-download"><nb-icon icon="download"></nb-icon></button>
         </div>
         <div class="control-components">
             <mat-form-field>

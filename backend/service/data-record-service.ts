@@ -53,8 +53,10 @@ export class DataRecordService {
                 dgroup = new DataRecordGroup();
                 dgroup.dgroup = group;
                 dgroup.userId = user.id;
+                dgroup = await repos.groupRepo.save(dgroup);
+            } else {
+                await repos.groupRepo.update(dgroup.id, {updatedAt: new Date()});
             }
-            dgroup = await repos.groupRepo.save(dgroup);
 
             const dr = new DataRecord();
             dr.data = data;
@@ -89,8 +91,10 @@ export class DataRecordService {
                         dgroup.dgroup = gd.group;
                         dgroup.userId = user.id;
                         dgroup.user = Promise.resolve(user);
+                        dgroup = await repos.groupRepo.save(dgroup);
+                    } else {
+                        await repos.groupRepo.update(dgroup.id, {updatedAt: new Date()});
                     }
-                    dgroup = await repos.groupRepo.save(dgroup);
                     groupcache[gd.group] = dgroup;
                 }
 
@@ -104,7 +108,7 @@ export class DataRecordService {
         });
     }
     
-    public async getGroups(username: string)
+    public async getGroups(username: string, orderByUpdatedAt: boolean=false, ascending: boolean=true)
     {
         const user = await this.userService.getUser(username);
         if (!user)
@@ -113,10 +117,11 @@ export class DataRecordService {
         const groups = await 
             this.groupRepo
             .createQueryBuilder("dr")
-            .select("dr.dgroup")
+            .select("dr")
             .where("dr.user = :user", { user: user.id })
+            .orderBy(`dr.${orderByUpdatedAt ? 'updatedAt' : 'createdAt'}`, ascending ? 'ASC' : 'DESC')
             .getRawMany();
-        return groups.map(d => d["dr_dgroup"]);
+        return groups.map(d => { return { group: d["dr_dgroup"], createdAt: d['dr_createdAt'], updatedAt: d['dr_updatedAt'] }; });
     }
 
     public async getData(username: string, group: string, pageno: number, pagesize: number):

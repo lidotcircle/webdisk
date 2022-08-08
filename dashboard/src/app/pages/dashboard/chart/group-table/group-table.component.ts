@@ -8,6 +8,7 @@ import { ViewCell } from 'ng2-smart-table';
 import { takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import { LocalSettingService } from 'src/app/service/user/local-setting.service';
+import { AsyncLocalStorageService } from 'src/app/shared/service/async-local-storage.service';
 
 
 @Component({
@@ -55,6 +56,32 @@ export class ButtonsCellComponent implements ViewCell, OnInit {
     }
 }
 
+@Component({
+    template: `
+      <div class="date">
+        {{ datestr}}
+      </div>
+    `,
+    styles: [
+    `
+    .date {
+      text-align: center;
+    }
+    `
+    ]
+})
+export class DateComponent implements ViewCell, OnInit {
+    constructor() {}
+
+    @Input() value: string | number;
+    @Input() rowData: { group: string };
+    datestr: string;
+
+    ngOnInit() {
+        const date = new Date(this.value);
+        this.datestr = `${date.toLocaleString()}`;
+    }
+}
 
 type DataType = { group: string };
 @Component({
@@ -69,15 +96,41 @@ export class GroupTableComponent implements OnInit, OnDestroy {
     private destroy$: Subject<void>;
     private pageno: number;
     private pagesize: number;
+    cb_sortbyupdate: boolean = false;
+    cb_desc: boolean = false;
 
     constructor(private toastrService: NbToastrService,
                 private localSetting: LocalSettingService,
+                private localstorage: AsyncLocalStorageService,
                 private router: Router,
                 private windowService: NbWindowService,
                 private activatedRoute: ActivatedRoute,
                 private dataRecordService: DataRecordService)
     {
         this.destroy$ = new Subject();
+    }
+
+    async options_change(_event: any)
+    {
+        this.refresh_data();
+        await this.save_config();
+    }
+
+    private async save_config()
+    {
+        const page_config = {
+            cb_sortbyupdate: this.cb_sortbyupdate,
+            cb_desc: this.cb_desc,
+        };
+        await this.localstorage.set("grouptable_conf", page_config);
+    }
+
+    private async restore_config() {
+        const config = await this.localstorage.get("grouptable_conf") as any;
+        if (!config) return;
+
+        this.cb_sortbyupdate = config.cb_sortbyupdate;
+        this.cb_desc = config.cb_desc;
     }
 
     sourcecount() {
@@ -90,6 +143,7 @@ export class GroupTableComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
         let setuped: boolean = false;
         this.activatedRoute.queryParamMap.subscribe(async params => {
+            await this.restore_config();
             this.pageno = Number(params.get("pageno")) || 1;
             this.pagesize = Number(params.get("pagesize")) || 10
             if (!setuped) {
@@ -155,6 +209,20 @@ export class GroupTableComponent implements OnInit, OnDestroy {
                     type: 'custom',
                     renderComponent: ButtonsCellComponent,
                 },
+                createdAt: {
+                    title: 'CreatedAt',
+                    width: '12em',
+                    filter: true,
+                    type: 'custom',
+                    renderComponent: DateComponent,
+                },
+                updatedAt: {
+                    title: 'LastUpdated',
+                    width: '12em',
+                    filter: true,
+                    type: 'custom',
+                    renderComponent: DateComponent,
+                },
                 group: {
                     title: 'Group',
                     filter: true,
@@ -171,9 +239,9 @@ export class GroupTableComponent implements OnInit, OnDestroy {
 
     private async refresh() {
         try {
-            const groups = await this.dataRecordService.getGroups();
+            const groups = await this.dataRecordService.getGroups(this.cb_sortbyupdate, this.cb_desc);
             if (!this.source) this.init_source();
-            this.source.load(groups.map(v => { return { group: v  }; }));
+            this.source.load(groups);
         } catch (e) {
             this.toastrService.danger(e.message ||  "failed to get group list", "Group");
         }

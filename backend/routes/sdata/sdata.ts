@@ -62,10 +62,14 @@ router.delete('/', defaultAuth,
 )
 
 router.get('/groups', defaultAuth,
+    query("sortBy").optional().isLength({min: 2}),
+    query("order").optional().isLength({min: 2}),
     async (req, res) => {
+        const { sortBy, order } = req.query;
+
         const username = getAuthUsername(req);
         const drservice = QueryDependency(DataRecordService);
-        const groups = await drservice.getGroups(username);
+        const groups = await drservice.getGroups(username, sortBy == 'updatedDate', order == 'ASC');
         res.status(200).json(groups);
     }
 )
