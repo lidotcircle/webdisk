@@ -63,7 +63,7 @@
 
 services:
   backend.webdisk.com:
-    image: whatyoudo/webdisk:1.1.0
+    image: whatyoudo/webdisk:latest
     restart: always
     volumes:
       - wdisk:/disk
