@@ -17,6 +17,7 @@ import { NbCardModule } from '@nebular/theme';
 import { SelectComponent } from './setting-item/select/select.component';
 import { MiscComponent } from './misc/misc.component';
 import { TranslocoRootModule } from 'src/app/transloco-root.module';
+import { ProfilePhotoUploadComponent } from './user-account/profile-photo-upload.component';
 
 
 @NgModule({
@@ -33,6 +34,7 @@ import { TranslocoRootModule } from 'src/app/transloco-root.module';
         InputComponent,
         SelectComponent,
         MiscComponent,
+        ProfilePhotoUploadComponent,
     ],
     imports: [
         CommonModule,

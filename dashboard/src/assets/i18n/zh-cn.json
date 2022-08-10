@@ -15,6 +15,7 @@
     "operation": "操作",
     "Number of Records": "数量",
     "Empty": "空",
+    "empty": "空",
     "Page No.": "页码",
     "Page Size": "分页大小",
     "Load": "加载",
@@ -113,6 +114,7 @@
 
     "Username": "用户名",
     "Register Date": "注册时间",
+    "Avatar": "头像",
     "Modify Password": "修改密码",
     "old password": "旧密码",
     "confirmed new password": "确认新密码",
@@ -238,5 +240,12 @@
     "create named link {{link}} to '{{file}}' fail": "创建命名链接{{link}}到文件{{file}}失败",
     "create named link {{link}} to '{{file}}' success": "成功创建命名链接{{link}}到文件{{file}}",
     "exit": "退出",
-    "Exit": "退出"
+    "Exit": "退出",
+    "image size is too big": "图片过大",
+    "change avatar": "修改头像",
+    "changed avatar!": "头像已修改",
+    "fail to change avatar": "修改头像失败",
+    "Do you confirm delete account ?": "确认删除账户?",
+    "delete user {{user}} success, goodbey.": "成功删除用户{{user}}, 拜拜嘞",
+    "delete user {{user}} fail.": "删除用户{{user}}失败"
 }

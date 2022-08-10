@@ -1,10 +1,14 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { NbWindowService } from '@nebular/theme';
+import { TranslocoService } from '@ngneat/transloco';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { AuthService } from 'src/app/service/auth';
 import { UserBasicInfo, UserService } from 'src/app/service/user';
 import { MessageBoxService } from 'src/app/shared/service/message-box.service';
 import { NotifierService } from 'src/app/shared/service/notifier.service';
 import { NotifierType } from 'src/app/shared/shared-component/notifier/notifier.component';
+import { ProfilePhotoUploadComponent } from './profile-photo-upload.component';
 
 
 @Component({
@@ -13,23 +17,38 @@ import { NotifierType } from 'src/app/shared/shared-component/notifier/notifier.
     styleUrls: ['./user-account.component.scss']
 })
 export class UserAccountComponent implements OnInit, OnDestroy {
+    private destroy$: Subject<void>;
     modifypass = {oldpassword: '', newpassword: '', confirmpass: ''};
     userinfo: UserBasicInfo;
+    avatar: string;
 
     constructor(private authService: AuthService,
                 private userService: UserService,
+                private windowService: NbWindowService,
+                private translocoService: TranslocoService,
                 private notifier: NotifierService,
-                private messagebox: MessageBoxService) { }
-
-    ngOnDestroy(): void {
-        this._user_subscription.unsubscribe();
+                private messagebox: MessageBoxService)
+    {
+        this.destroy$ = new Subject();
     }
 
-    private _user_subscription: Subscription;
+    ngOnDestroy(): void {
+        this.destroy$.next();
+        this.destroy$.complete();
+    }
+
     ngOnInit(): void {
-        this._user_subscription = this.userService.basicInfo.subscribe(info => {
-            this.userinfo = info;
-        });
+        this.userService.basicInfo
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(info => {
+                this.userinfo = info;
+            });
+
+        this.userService.avatar
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(avatar => {
+                this.avatar = avatar;
+            });
     }
 
     get createTime() {
@@ -37,6 +56,37 @@ export class UserAccountComponent implements OnInit, OnDestroy {
             return (new Date(this.userinfo.createdAt)).toLocaleString();
         else
             return '';
+    }
+
+    async editAvatar() {
+        const win = this.windowService.open(ProfilePhotoUploadComponent, {
+            title: this.translocoService.translate('change avatar'),
+            context: {
+                photo: this.avatar
+            },
+            buttons: {
+                minimize: false,
+                maximize: false,
+                fullScreen: false,
+            }
+        });
+        await win.onClose.toPromise();
+
+        if(win.config.context['isConfirmed']) {
+            const photo = win.config.context['photo'];
+
+            try {
+                await this.userService.setAvatar(photo);
+                this.notifier.create({
+                    message: this.translocoService.translate("changed avatar!")
+                });
+            } catch {
+                this.notifier.create({
+                    message: this.translocoService.translate("fail to change avatar"),
+                    mtype: NotifierType.Error}
+                );
+            }
+        }
     }
 
     async changepassword() {
@@ -62,15 +112,15 @@ export class UserAccountComponent implements OnInit, OnDestroy {
 
     async deleteAccount() {
         const ans = await this.messagebox.create({
-            title: 'Delete Account',
-            message: 'Do you confirm delete account ?',
+            title: this.translocoService.translate('Delete Account'),
+            message: this.translocoService.translate('Do you confirm delete account ?'),
             inputs: [
-                {label: `username`, name: 'username', type: 'text'},
-                {label: `password`, name: 'password', type: 'password'},
+                {label: this.translocoService.translate(`username`), name: 'username', type: 'text'},
+                {label: this.translocoService.translate(`password`), name: 'password', type: 'password'},
             ],
             buttons:[
-                {name: 'confirm'},
-                {name: 'cancel'}
+                {name: this.translocoService.translate('confirm')},
+                {name: this.translocoService.translate('cancel')}
             ]
         }).wait();
 
@@ -81,12 +131,16 @@ export class UserAccountComponent implements OnInit, OnDestroy {
         if(!ans.closed && ans.buttonValue == 0) {
             try {
                 await this.userService.deleteAccount(ans.inputs['password']);
-                await this.notifier.create({message: `delete user ${ans.inputs['username']} success, goodbey.`}).wait();
+                await this.notifier.create({
+                    message: this.translocoService.translate('delete user {{user}} success, goodbey.', {user: ans.inputs['username']})
+                }).wait();
                 location.reload();
             } catch (err) {
-                await this.notifier.create({message: `delete user ${ans.inputs['username']} fail.`, mtype: NotifierType.Error}).wait();
+                await this.notifier.create({
+                    message: this.translocoService.translate('delete user {{user}} fail.', {user: ans.inputs['username']}),
+                    mtype: NotifierType.Error
+                }).wait();
             }
         }
     }
 }
-
