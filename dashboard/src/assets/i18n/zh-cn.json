@@ -219,6 +219,24 @@
     "Sharing": "分享",
     "Copied the link to clipboard": "链接已复制到剪切板",
     "can't paste link into clipboard": "复制链接到剪切板失败",
-    "download failed": "下载失败"
-
+    "download failed": "下载失败",
+    "move file": "移动文件",
+    "are you sure move files to {{destination}}?": "确认移动文件到 {{destination}}?",
+    "move {{file}} to {{dst}}": "移动文件{{file}}到{{dst}}",
+    "copy file": "复制文件",
+    "copy {{file}} to {{dst}}": "复制文件{{file}}到{{dst}}",
+    "rename file '{{file}}' fail: {{err}}": "重命名文件 '{{file}}' 失败: {{err}}",
+    "new file": "新建文件",
+    "new folder": "新建文件夹",
+    "new file name": "新文件名",
+    "new folder name": "新文件夹名",
+    "create {{file}} in '{{p}}' fail: {{err}}": "在 {{p}} 上创建文件 {{file}} 失败: {{err}}",
+    "create {{file}} success: {{p}}": "创建文件{{file}}成功: {{p}}",
+    "Are you sure to delete {{file}}?": "确认删除文件 {{file}}?",
+    "Delete '{{file}}' fail: {{err}}": "删除文件'{{file}}'失败: {{err}}",
+    "Delete success!": "删除成功",
+    "create named link {{link}} to '{{file}}' fail": "创建命名链接{{link}}到文件{{file}}失败",
+    "create named link {{link}} to '{{file}}' success": "成功创建命名链接{{link}}到文件{{file}}",
+    "exit": "退出",
+    "Exit": "退出"
 }

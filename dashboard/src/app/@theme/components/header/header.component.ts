@@ -2,11 +2,13 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { NbMediaBreakpointsService, NbMenuService, NbSidebarService, NbThemeService } from '@nebular/theme';
 
 import { LayoutService } from '../../../@core/utils';
-import { filter, map, takeUntil } from 'rxjs/operators';
-import { Subject } from 'rxjs';
+import { mergeAll, filter, map, takeUntil } from 'rxjs/operators';
+import { from, Subject } from 'rxjs';
 import { UserService, UserBasicInfo } from 'src/app/service/user';
 import { AuthService } from 'src/app/service/auth';
 import { Router } from '@angular/router';
+import { TranslocoService } from '@ngneat/transloco';
+import { LocaleService } from 'src/app/service/user/locale.service';
 
 
 @Component({
@@ -40,7 +42,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     ];
 
     currentTheme = 'default';
-    userMenu = [ { title: 'setting' }, { title: 'exit' } ];
+    userMenu = [ { title: 'settings' }, { title: 'exit' } ];
 
     constructor(private sidebarService: NbSidebarService,
         private menuService: NbMenuService,
@@ -49,7 +51,21 @@ export class HeaderComponent implements OnInit, OnDestroy {
         private authService: AuthService,
         private layoutService: LayoutService,
         private breakpointService: NbMediaBreakpointsService,
-        private router: Router) {
+        private translocoService: TranslocoService,
+        private localeService: LocaleService,
+        private router: Router)
+    {
+        from([
+            this.translocoService.events$.pipe(filter(v => v.type == 'translationLoadSuccess')),
+            this.localeService.getLang(), 
+        ])
+            .pipe(mergeAll())
+            .subscribe(() => {
+                this.userMenu = [
+                    { title: this.translocoService.translate('settings') },
+                    { title: this.translocoService.translate('exit') }
+                ];
+            });
     }
 
     ngOnInit() {
@@ -59,10 +75,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
             .pipe(takeUntil(this.destroy$))
             .pipe(filter(({ tag }) => tag == 'user-click'))
             .subscribe(async ({ item: {title} }) => {
-                if(title == 'exit') {
+                if(title == this.userMenu[1].title) {
                     await this.authService.logout();
                     window.location.reload();
-                } else if (title == 'setting') {
+                } else if (title == this.userMenu[0].title) {
                     this.router.navigate(['/wd/dashboard/settings']);
                 }
             });

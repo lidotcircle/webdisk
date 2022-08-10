@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { TranslocoService } from '@ngneat/transloco';
 import { FileStat, FileType } from '../common';
 import { MatButtonType } from '../shared-component/message-box/message-box.component';
 import { NotifierType } from '../shared-component/notifier/notifier.component';
@@ -21,6 +22,7 @@ export class FileOperationService {
                 private messagebox: MessageBoxService,
                 private filesystem: FileSystemManagerService,
                 private uploadservice: UploadSessionService,
+                private translocoService: TranslocoService,
                 private cwd: CurrentDirectoryService,
                 private settings: UserSettingService,
                 private filechooser: OpenSystemChooseFilesService,
@@ -44,11 +46,11 @@ export class FileOperationService {
         let move = this.settings.MoveFolderWithoutConfirm;
         if(!move) {
             const userans = await this.messagebox.create({
-                title: 'move file',
-                message: `are you sure move files to ${destination}`,
+                title: this.translocoService.translate('move file'),
+                message: this.translocoService.translate(`are you sure move files to {{destination}}?`, {destination: destination}),
                 buttons: [
-                    {name: 'Confirm'},
-                    {name: 'Cancel'}
+                    {name: this.translocoService.translate('Confirm')},
+                    {name: this.translocoService.translate('Cancel')}
                 ]
             }).wait();
             move = userans.buttonValue == 0;
@@ -56,13 +58,13 @@ export class FileOperationService {
 
         if(move) {
             let stop = false;
-            const b = this.messageprogress.create({title: 'move file'});
+            const b = this.messageprogress.create({title: this.translocoService.translate('move file')});
             b.registerClose(() => stop = true);
             for(const file of files) {
                 if(stop) {
                     return;
                 }
-                b.pushMessage('move ' + path.basename(file.filename) + ' to ' + destination);
+                b.pushMessage(this.translocoService.translate(`move {{file}} to {{dst}}`, {file: path.basename(file.filename), dst: destination}));
                 const dn = path.pathjoin(destination, path.basename(file.filename));
                 try {
                     await this.filesystem.move(file.filename, dn);
@@ -85,13 +87,13 @@ export class FileOperationService {
     async copy(files: FileStat[], destination: string) //{
     {
         let stop = false;
-        const b = this.messageprogress.create({title: 'copy file'});
+        const b = this.messageprogress.create({title: this.translocoService.translate('copy file')});
         b.registerClose(() => stop = true);
         for(const file of files) {
             if(stop) {
                 return;
             }
-            b.pushMessage('copy ' + path.basename(file.filename) + ' to ' + destination);
+            b.pushMessage(this.translocoService.translate('copy {{file}} to {{dst}}', {file: path.basename(file.filename), dst: destination}));
             const dn = path.pathjoin(destination, path.basename(file.filename));
             try {
                 if(file.filetype == FileType.dir) {
@@ -119,7 +121,7 @@ export class FileOperationService {
         try {
             this.filesystem.move(file.filename, path.pathjoin(dir, newname));
         } catch (err) {
-            this.reportError(`rename file '${file.filename}' fail: ${err}`);
+            this.reportError(this.translocoService.translate(`rename file '{{file}}' fail: {{err}}`, {file: file.filename, err: err}));
         }
     } //}
 
@@ -153,12 +155,15 @@ export class FileOperationService {
     private async new_folderorfile(destination: string, isfile: boolean = true) //{
     {
         const f = isfile ? 'file' : 'folder';
-        const ans = await this.messagebox.create({title: `new ${f}`, message: '', inputs: [
-            {label: `new ${f} name`, name: 'name', type: 'text'}
-        ], buttons: [
-            {name: 'confirm'},
-            {name: 'cancel'}
-        ]}).wait();;
+        const ans = await this.messagebox.create({
+            title: this.translocoService.translate(`new ${f}`),
+            message: '',
+            inputs: [
+                {label: this.translocoService.translate(`new ${f} name`), name: 'name', type: 'text'}
+            ], buttons: [
+                {name: this.translocoService.translate('confirm')},
+                {name: this.translocoService.translate('cancel')}
+            ]}).wait();;
         if(ans.closed || ans.buttonValue == 1 || !ans.inputs['name'] || ans.inputs['name'].length == 0) {
             return;
         } else {
@@ -170,10 +175,10 @@ export class FileOperationService {
                     await this.filesystem.touch(p);
                 }
             } catch(err) {
-                this.reportError(`create ${f} in '${p}' fail: ` + err);
+                this.reportError(this.translocoService.translate(`create {{file}} in '{{p}}' fail: {{err}}`, {file: f, p:p, err: err}));
                 return;
             }
-            this.reportSuccess(`create ${f} success: ${p}`);
+            this.reportSuccess(this.translocoService.translate(`create {{file}} success: {{p}}`, {file: f, p:p}));
             this.cwd.justRefresh();
         }
     } //}
@@ -189,11 +194,13 @@ export class FileOperationService {
     async delete(files: FileStat[]) //{
     {
         const confirmOP = await this.messagebox.create({
-            title: 'Delete',
-            message: `Are you sure to delete ${files.length > 1 ? 'these ' + files.length + ' items' : files[0].basename}`,
+            title: this.translocoService.translate('Delete'),
+            message: this.translocoService.translate(
+                `Are you sure to delete {{file}}?`,
+                {file: (files.length > 1 ? 'these ' + files.length + ' items' : files[0].basename)}),
             buttons: [
-                {name: 'Confirm'},
-                {name: 'Cancel', btype: MatButtonType.Stroked}
+                {name: this.translocoService.translate('Confirm')},
+                {name: this.translocoService.translate('Cancel'), btype: MatButtonType.Stroked}
             ]
         }).wait();
 
@@ -203,14 +210,14 @@ export class FileOperationService {
                     await this.filesystem.remover(file.filename);
                 } catch(err) {
                     await this.notifier.create({
-                        message: `Delete '${file.basename}' fail: ` + err.toString(),
+                        message: this.translocoService.translate(`Delete '{{file}}' fail: {{err}}`, {file: file.basename, err: err}),
                         mtype: NotifierType.Error
                     }).wait();
                     return;
                 }
             }
 
-            await this.notifier.create({message: 'Delete success!'}).wait();
+            await this.notifier.create({message: this.translocoService.translate('Delete success!')}).wait();
             this.cwd.justRefresh();
         }
     } //}
@@ -221,13 +228,13 @@ export class FileOperationService {
             await this.accountManager.newNameEntry(linkname, filename, period);
         } catch(err) {
             await this.notifier.create({
-                message: `create named link ${linkname} to '${filename}' fail`,
+                message: this.translocoService.translate(`create named link {{link}} to '{{file}}' fail`, {link: linkname, file: filename}),
                 mtype: NotifierType.Error
             }).wait();
             return;
         }
         await this.notifier.create({
-            message: `create named link ${linkname} to '${filename}' success`
+            message: this.translocoService.translate(`create named link {{link}} to '{{file}}' success`, {link: linkname, file: filename}),
         }).wait();
     } //}
 }

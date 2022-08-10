@@ -6,7 +6,7 @@ import { LocalSettingService } from 'src/app/service/user/local-setting.service'
 import { TranslocoService } from '@ngneat/transloco';
 import { from, Subject } from 'rxjs';
 import { LocaleService } from 'src/app/service/user/locale.service';
-import { concatAll, filter, takeUntil } from 'rxjs/operators';
+import { filter, mergeAll, takeUntil } from 'rxjs/operators';
 
 
 @Component({
@@ -89,7 +89,7 @@ export class FileComponent implements OnInit, OnDestroy {
             this.localeService.getLang(),
             this.translocoService.events$.pipe(filter(v => v.type == 'translationLoadSuccess'))
         ])
-            .pipe(concatAll())
+            .pipe(mergeAll())
             .pipe(takeUntil(this.destroy$))
             .subscribe(() => {
                 this.directory_text = this.translocoService.translate("Directory");

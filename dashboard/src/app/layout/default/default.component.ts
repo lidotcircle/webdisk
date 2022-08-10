@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { TranslocoService } from '@ngneat/transloco';
 import { from, Subject } from 'rxjs';
-import { concatAll, filter, takeUntil } from 'rxjs/operators';
+import { mergeAll, filter, takeUntil } from 'rxjs/operators';
 import { getWebdiskMenu, MenuItem } from 'src/app/pages/dashboard/dashboard-menu';
 import { WebdiskMenuService } from 'src/app/service/menu/webdisk-menu.service';
 import { LocaleService } from 'src/app/service/user/locale.service';
@@ -34,7 +34,7 @@ export class DefaultComponent implements OnInit, OnDestroy {
             this.translocoService.events$.pipe(filter(v => v.type == 'translationLoadSuccess')),
             this.localeService.getLang()
         ])
-            .pipe(concatAll())
+            .pipe(mergeAll())
             .subscribe(() => {
                 this.menu = getWebdiskMenu(this.translocoService);
                 this.doit(this.menu);
