@@ -1,8 +1,12 @@
-import { Component, Input, OnInit, EventEmitter, Output } from '@angular/core';
+import { Component, Input, OnInit, EventEmitter, Output, OnDestroy } from '@angular/core';
 import { FileStat, FileType } from 'src/app/shared/common';
 import { FileViewStyle } from '../file-view.component';
 import { CurrentDirectoryService } from 'src/app/shared/service/current-directory.service';
 import { LocalSettingService } from 'src/app/service/user/local-setting.service';
+import { TranslocoService } from '@ngneat/transloco';
+import { from, Subject } from 'rxjs';
+import { LocaleService } from 'src/app/service/user/locale.service';
+import { concatAll, filter, takeUntil } from 'rxjs/operators';
 
 
 @Component({
@@ -10,7 +14,7 @@ import { LocalSettingService } from 'src/app/service/user/local-setting.service'
     templateUrl: './file.component.html',
     styleUrls: ['./file.component.scss'],
 })
-export class FileComponent implements OnInit {
+export class FileComponent implements OnInit, OnDestroy {
     @Input('file')
     file: FileStat;
 
@@ -45,8 +49,16 @@ export class FileComponent implements OnInit {
     @Output('menu')
     private menuEmitter = new EventEmitter();
 
+    private directory_text: string = "Directory";
+    private socket_text: string = "Socket";
+    private destroy$: Subject<void>;
     constructor(private cwd: CurrentDirectoryService,
-        private localSetting: LocalSettingService) {}
+                private translocoService: TranslocoService,
+                private localeService: LocaleService,
+                private localSetting: LocalSettingService)
+    {
+        this.destroy$ = new Subject();
+    }
 
     private _icon: string = 'blank';
     get icon() {return this._icon;}
@@ -72,6 +84,22 @@ export class FileComponent implements OnInit {
         } else {
             this._icon = this.file.extension;
         }
+
+        from([
+            this.localeService.getLang(),
+            this.translocoService.events$.pipe(filter(v => v.type == 'translationLoadSuccess'))
+        ])
+            .pipe(concatAll())
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(() => {
+                this.directory_text = this.translocoService.translate("Directory");
+                this.socket_text = this.translocoService.translate("Socket");
+            });
+    }
+
+    ngOnDestroy(): void {
+        this.destroy$.next();
+        this.destroy$.complete();
     }
 
     getPropCSS(order: number, width: number) {
@@ -133,9 +161,9 @@ export class FileComponent implements OnInit {
     get FileType(): string {
         switch(this.file.filetype) {
             case FileType.dir: 
-                return 'Directory';
+                return this.directory_text;
             case FileType.socket:
-                return 'Socket';
+                return this.socket_text;
             default: 
                 return this.extension2type(this.file.extension);
         }

@@ -3,6 +3,7 @@ import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NbAuthService, NbRequestPasswordComponent } from '@nebular/auth';
 import { NbToastrService } from '@nebular/theme';
+import { TranslocoService } from '@ngneat/transloco';
 import { AuthService } from 'src/app/service/auth';
 
 
@@ -18,6 +19,7 @@ export class RequestPasswordComponent extends NbRequestPasswordComponent impleme
     };
 
     constructor(service: NbAuthService, cd: ChangeDetectorRef, router: Router,
+                private translocoService: TranslocoService,
                 private activatedRoute: ActivatedRoute,
                 private toastrService: NbToastrService,
                 private authService: AuthService) { 
@@ -40,9 +42,9 @@ export class RequestPasswordComponent extends NbRequestPasswordComponent impleme
             });
         } catch (err) {
             if (err instanceof HttpErrorResponse) {
-                this.toastrService.danger(err.error, 'Error');
+                this.toastrService.danger(err.error, this.translocoService.translate('Error'));
             } else {
-                this.toastrService.danger(err.message, 'Error');
+                this.toastrService.danger(err.message, this.translocoService.translate('Error'));
             }
         }
     }

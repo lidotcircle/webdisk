@@ -17,6 +17,7 @@ import { PageEvent } from '@angular/material/paginator';
 import { NamedLinkService } from 'src/app/service/user/named-link-service';
 import { DiskDownloadService } from 'src/app/service/disk-download.service';
 import { StorageBackendService } from 'src/app/service/storage-backend.service';
+import { TranslocoService } from '@ngneat/transloco';
 
 
 /** sortByName */
@@ -153,6 +154,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
                 private menuManager: RightMenuManagerService,
                 private messagebox: MessageBoxService,
                 private fileoperation: FileOperationService,
+                private translocoService: TranslocoService,
                 private clipboard: ClipboardService,
                 private router: Router,
                 private storeService: StorageBackendService,
@@ -256,14 +258,18 @@ export class FileViewComponent implements OnInit, OnDestroy {
         });
         const tool_filter = new Tool('Filter', 'search', async () => {
             const ans = await this.messagebox.create({
-                title: 'Search in Current Directory',
+                title: this.translocoService.translate('Search in Current Directory'),
                 message: '',
                 inputs: [
-                    {label: 'filter regex', name: 'filter', type: 'text', initValue: ''}
+                    {
+                        label: this.translocoService.translate('filter regex'),
+                        name: 'filter',
+                        type: 'text',
+                        initValue: ''}
                 ],
                 buttons: [
-                    {name: 'Confirm'},
-                    {name: 'Cancel'}
+                    {name: this.translocoService.translate('Confirm')},
+                    {name: this.translocoService.translate('Cancel')}
                 ]
             }).wait();
 
@@ -288,7 +294,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
         const tool_revert = new Tool('Reverse', 'up-down', () => this.reverse());
         const tool_sortby = new Tool('Sortby', 'arrow-down-short-wide', async () => {
             const ans = await this.messagebox.create({
-                title: 'Sortby',
+                title: this.translocoService.translate('Sortby'),
                 message: '',
                 buttons: [
                     {name: 'Name', clickValue: SortByWhat.name},
@@ -359,7 +365,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
         const refresh = new MenuEntry();
         refresh.clickCallback = () => this.currentDirectory.justRefresh();
         refresh.enable = () => this.currentDirectory.now != null;
-        refresh.entryName = 'Refresh';
+        refresh.entryName = this.translocoService.translate('Refresh');
         refresh.icon = 'refresh';
 
         const newEntry = this.createMenuEntry_New(this.currentDirectory.now);
@@ -450,7 +456,9 @@ export class FileViewComponent implements OnInit, OnDestroy {
         try {
             this.set_files(await this.fileManager.getdir(dir));
         } catch(e) {
-            this.toaster.danger(`Failed to get directory: ${dir}, ${e}`);
+            this.toaster.danger(
+                this.translocoService.translate(`Failed to get directory: {{dir}}, {{e}}`, {dir: dir, e: e}),
+                this.translocoService.translate("Explorer"));
         } finally {
             this.toggle_wait();
         }
@@ -479,7 +487,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
 
     private createMenuEntry_Paste() //{
     {
-        const pasteEntry = new MenuEntry('Paste', 'content_paste');
+        const pasteEntry = new MenuEntry(this.translocoService.translate('Paste'), 'content_paste');
         const pastecwd = this.currentDirectory.now;
         pasteEntry.enable = () => this.clipboard.contenttype == ClipboardContentType.files;
         pasteEntry.clickCallback = () => {
@@ -497,43 +505,43 @@ export class FileViewComponent implements OnInit, OnDestroy {
     {
         const now = this.currentDirectory.now;
 
-        const uploadFileEntry = new MenuEntry('Upload File', 'attach_file');
+        const uploadFileEntry = new MenuEntry(this.translocoService.translate('Upload File'), 'attach_file');
         const refresh = this.currentDirectory.now == destination;
         uploadFileEntry.clickCallback = () => {
             this.fileoperation.filechooser_upload_file_to(destination)
                 .finally(() => refresh ? this.currentDirectory.cd(now) : null);
         }
-        const uploadFilesEntry = new MenuEntry('Upload Files', 'list');
+        const uploadFilesEntry = new MenuEntry(this.translocoService.translate('Upload Files'), 'list');
         uploadFilesEntry.clickCallback = () => {
             this.fileoperation.filechooser_upload_files_to(destination)
                 .finally(() => refresh ? this.currentDirectory.cd(now) : null);
         }
-        const uploadDirEntry = new MenuEntry('Upload Directory', 'folder');
+        const uploadDirEntry = new MenuEntry(this.translocoService.translate('Upload Directory'), 'folder');
         uploadDirEntry.clickCallback = () => {
             this.fileoperation.filechooser_upload_directory_to(destination)
                 .finally(() => refresh ? this.currentDirectory.cd(now) : null);
         }
 
-        const uploadEntry = new MenuEntry('Upload', 'cloud_upload');
+        const uploadEntry = new MenuEntry(this.translocoService.translate('Upload'), 'cloud_upload');
         uploadEntry.subMenus = [uploadFileEntry, uploadFilesEntry, uploadDirEntry];
         return uploadEntry;
     } //}
     private createMenuEntry_New(destination: string) //{
     {
-        const newFileEntry = new MenuEntry('New File', 'add_circle');
+        const newFileEntry = new MenuEntry(this.translocoService.translate('New File'), 'add_circle');
         newFileEntry.clickCallback = () => {
             this.fileoperation.new_file(destination);
         }
-        const newFolderEntry = new MenuEntry('New Folder', 'create_new_folder');
+        const newFolderEntry = new MenuEntry(this.translocoService.translate('New Folder'), 'create_new_folder');
         newFolderEntry.clickCallback = () => {
             this.fileoperation.new_folder(destination);
         }
 
-        const newAliyunOSS = new MenuEntry('New Aliyun OSS', 'inventory_2');
+        const newAliyunOSS = new MenuEntry(this.translocoService.translate('New Aliyun OSS'), 'inventory_2');
         newAliyunOSS.clickCallback = async () => {
             const cwd = this.currentDirectory.now;
             const input = await this.messagebox.create({
-                title: 'add aliyun oss bucket',
+                title: this.translocoService.translate('add aliyun oss bucket'),
                 message: '',
                 inputs: [
                     {name: 'directory', initValue: '', label: 'Directory', type: 'text'},
@@ -559,11 +567,11 @@ export class FileViewComponent implements OnInit, OnDestroy {
             }
         }
 
-        const newWebdav = new MenuEntry('New WEBDAV', 'coffee');
+        const newWebdav = new MenuEntry(this.translocoService.translate('New WEBDAV'), 'coffee');
         newWebdav.clickCallback = async () => {
             const cwd = this.currentDirectory.now;
             const input = await this.messagebox.create({
-                title: 'add webdav',
+                title: this.translocoService.translate('add webdav'),
                 message: '',
                 inputs: [
                     {name: 'directory', initValue: '', label: 'Directory', type: 'text'},
@@ -600,7 +608,10 @@ export class FileViewComponent implements OnInit, OnDestroy {
                         } catch {}
                         break;
                     default:
-                        this.toaster.danger("invalid input");
+                        this.toaster.danger(
+                            this.translocoService.translate("invalid input"),
+                            this.translocoService.translate("WebDAV")
+                        );
                         return;
                 }
                 await this.storeService.addStore('webdav', dir, config);
@@ -608,24 +619,24 @@ export class FileViewComponent implements OnInit, OnDestroy {
             }
         }
 
-        const newEntry = new MenuEntry('New', 'add');
+        const newEntry = new MenuEntry(this.translocoService.translate('New'), 'add');
         newEntry.subMenus = [newFileEntry, newFolderEntry, newWebdav, newAliyunOSS];
         return newEntry;
     } //}
     private createMenuEntry_Share(filename: string) //{
     {
-        const namedlinkEntry = new MenuEntry('Named Link', 'add_circle');
+        const namedlinkEntry = new MenuEntry(this.translocoService.translate('Named Link'), 'add_circle');
         namedlinkEntry.clickCallback = async () => {
             const ans = await this.messagebox.create({
-                title: 'Share File with Named Link',
+                title: this.translocoService.translate('Share File with Named Link'),
                 message: path.basename(filename),
                 inputs: [
-                    {label: 'Named Link', name: 'link', type: 'text', initValue: ''},
-                    {label: 'Valid Period (default: Permanent)', name: 'period', type: 'text', initValue: ''}
+                    {label: this.translocoService.translate('Named Link'), name: 'link', type: 'text', initValue: ''},
+                    {label: this.translocoService.translate('Valid Period (default: Permanent)'), name: 'period', type: 'text', initValue: ''}
                 ],
                 buttons: [
-                    {name: 'Confirm'},
-                    {name: 'Cancel'}
+                    {name: this.translocoService.translate('Confirm')},
+                    {name: this.translocoService.translate('Cancel')}
                 ]
             }).wait();
 
@@ -633,20 +644,26 @@ export class FileViewComponent implements OnInit, OnDestroy {
                 const period = duration2ms(ans.inputs['period']) 
                 const name = ans.inputs['link'];
                 if (!name) {
-                    this.toaster.warning("invalid link name", "named link");
+                    this.toaster.warning(
+                        this.translocoService.translate("invalid link name"),
+                        this.translocoService.translate("named link"));
                     return;
                 }
 
                 try {
                     await this.namedLinkService.createNamedLink(name, filename, period);
-                    this.toaster.info(`create named link success, from ${name} to ${filename}`, "named link");
+                    this.toaster.info(
+                        this.translocoService.translate(`create named link success, from {{name}} to {{filename}}`, {name: name, filename: filename}),
+                        this.translocoService.translate("named link"));
                 } catch (e) {
-                    this.toaster.danger(e || "create named link failed", "named link");
+                    this.toaster.danger(
+                        e || this.translocoService.translate("create named link failed"),
+                        this.translocoService.translate("named link"));
                 }
             }
         };
 
-        const downloadLink = new MenuEntry('Download Link', 'cloud_download');
+        const downloadLink = new MenuEntry(this.translocoService.translate('Download Link'), 'cloud_download');
         downloadLink.clickCallback = async () => {
             const op: string[] = [];
             for(const i in this.select) {
@@ -659,19 +676,25 @@ export class FileViewComponent implements OnInit, OnDestroy {
 
             const urls = await this.downloadService.getDownloadUrls(op)
             if (!urls || urls.length == 0) {
-                this.toaster.danger("generate download url failed", "Sharing");
+                this.toaster.danger(
+                    this.translocoService.translate("generate download url failed"),
+                    this.translocoService.translate("Sharing"));
                 return;
             }
 
             const ans = await this.clipboard.copy(ClipboardContentType.text, urls.join('\n'));
             if (ans) {
-                this.toaster.info('Copied the link to clipboard', "Sharing");
+                this.toaster.info(
+                    this.translocoService.translate('Copied the link to clipboard'),
+                    this.translocoService.translate("Sharing"));
             } else {
-                this.toaster.danger("can paste link into clipboard", "Sharing");
+                this.toaster.danger(
+                    this.translocoService.translate("can't paste link into clipboard"),
+                    this.translocoService.translate("Sharing"));
             }
         };
 
-        const shareEntry = new MenuEntry('Share with', 'link');
+        const shareEntry = new MenuEntry(this.translocoService.translate('Share with'), 'link');
         shareEntry.subMenus = [namedlinkEntry, downloadLink];
         return shareEntry;
     } //}
@@ -680,24 +703,26 @@ export class FileViewComponent implements OnInit, OnDestroy {
         const idx = this.fileslice.findIndex(v => filename == v.filename);
         const sl = [ this.fileslice[idx] ];
 
-        const openAsWithEntry = new MenuEntry('As', 'open_with');
+        const openAsWithEntry = new MenuEntry(this.translocoService.translate('As'), 'open_with');
         openAsWithEntry.clickCallback = async () => {
             const ans = await this.messagebox.create({
-                title: 'open file as',
+                title: this.translocoService.translate('open file as'),
                 message: path.basename(filename),
                 inputs: [
                     {label: 'Filetype', name: 'ft', type: 'text', initValue: 'txt'},
                 ],
                 buttons: [
-                    {name: 'Confirm'},
-                    {name: 'Cancel'}
+                    {name: this.translocoService.translate('Confirm')},
+                    {name: this.translocoService.translate('Cancel')}
                 ]
             }).wait();
 
             if(ans.buttonValue == 0) {
                 const ft = ans.inputs['ft'];
                 if (!this.fileviewer.hasHandler(ft)) {
-                    this.toaster.warning("unknown type", "OpenAs");
+                    this.toaster.warning(
+                        this.translocoService.translate("unknown type"),
+                        this.translocoService.translate("OpenAs"));
                     return;
                 }
 
@@ -705,12 +730,12 @@ export class FileViewComponent implements OnInit, OnDestroy {
             }
         };
 
-        const openAsTxtWithEntry = new MenuEntry('As Txt', 'text_fields');
+        const openAsTxtWithEntry = new MenuEntry(this.translocoService.translate('As Txt'), 'text_fields');
         openAsTxtWithEntry.clickCallback = async () => {
             await this.fileviewer.view(sl, 0, "txt")
         };
 
-        const openEntry = new MenuEntry('Open', 'open_in_new');
+        const openEntry = new MenuEntry(this.translocoService.translate('Open'), 'open_in_new');
         openEntry.subMenus = [openAsTxtWithEntry, openAsWithEntry];
         return openEntry;
     } //}
@@ -743,7 +768,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
             menuType = MenuEntryType.DirMenuClick;
             const chdir = new MenuEntry();
             chdir.clickCallback = () => this.onDoubleClick(n);
-            chdir.entryName = "Open Folder";
+            chdir.entryName = this.translocoService.translate("Open Folder");
             chdir.icon = "folder_open";
             entries.push(chdir);
             entries.push(this.createMenuEntry_Upload(this.fileslice[n].filename));
@@ -761,10 +786,12 @@ export class FileViewComponent implements OnInit, OnDestroy {
                 }
 
                 if (!await this.downloadService.download(op)) {
-                    this.toaster.danger("download failed", "Download");
+                    this.toaster.danger(
+                        this.translocoService.translate("download failed"),
+                        this.translocoService.translate("Download"));
                 }
             }
-            download.entryName = "Download File";
+            download.entryName = this.translocoService.translate("Download File");
             download.icon = "cloud_download";
             entries.push(download);
 
@@ -774,20 +801,25 @@ export class FileViewComponent implements OnInit, OnDestroy {
             entries.push(open);
         }
 
-        const renameEntry = new MenuEntry('Rename', 'create');
+        const renameEntry = new MenuEntry(this.translocoService.translate('Rename'), 'create');
         renameEntry.clickCallback = async () => {
             if (selectFiles.length != 1) return;
             const filestat = selectFiles[0];
 
             const ans = await this.messagebox.create({
-                title: `rename '${filestat.basename}' to`, 
+                title: this.translocoService.translate("rename '{{file}}' to", {file: filestat.basename}), 
                 message: '', 
                 inputs: [
-                    {label: `new filename`, name: 'name', type: 'text'}
+                    {
+                        label: this.translocoService.translate('new filename'),
+                        name: 'name',
+                        type: 'text',
+                        initValue: filestat.basename
+                    }
                 ], 
                 buttons: [
-                    {name: 'confirm'},
-                    {name: 'cancel'}
+                    {name: this.translocoService.translate('confirm')},
+                    {name: this.translocoService.translate('cancel')}
                 ]}).wait();;
             if(ans.closed || ans.buttonValue == 1 || !ans.inputs['name'] || ans.inputs['name'].length == 0) {
                 return;
@@ -797,16 +829,16 @@ export class FileViewComponent implements OnInit, OnDestroy {
             }
         }
 
-        const deleteEntry = new MenuEntry('Delete', 'delete');
+        const deleteEntry = new MenuEntry(this.translocoService.translate('Delete'), 'delete');
         deleteEntry.clickCallback = () => {
             this.fileoperation.delete(selectFiles);
         }
-        const copyEntry = new MenuEntry('Copy', 'content_copy');
+        const copyEntry = new MenuEntry(this.translocoService.translate('Copy'), 'content_copy');
         copyEntry.clickCallback = () => {
             this.clipboard.copy(ClipboardContentType.files, selectFiles);
             this.select = [];
         }
-        const cutEntry = new MenuEntry('Cut', 'content_cut');
+        const cutEntry = new MenuEntry(this.translocoService.translate('Cut'), 'content_cut');
         cutEntry.clickCallback = () => {
             this.clipboard.cut(ClipboardContentType.files, selectFiles);
             this.cuts = selectCopy;
@@ -815,9 +847,7 @@ export class FileViewComponent implements OnInit, OnDestroy {
         const pasteEntry = this.createMenuEntry_Paste();
         this.menuItemSet.paste = true;
 
-        const newEntry = this.createMenuEntry_New(this.currentDirectory.now);
-
-        for(const entry of [newEntry, renameEntry, deleteEntry, copyEntry, cutEntry, pasteEntry]) {
+        for(const entry of [renameEntry, deleteEntry, copyEntry, cutEntry, pasteEntry]) {
             entries.push(entry);
         }
 

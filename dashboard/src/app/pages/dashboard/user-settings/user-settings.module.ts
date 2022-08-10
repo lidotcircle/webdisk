@@ -16,6 +16,7 @@ import { InputComponent } from './setting-item/input/input.component';
 import { NbCardModule } from '@nebular/theme';
 import { SelectComponent } from './setting-item/select/select.component';
 import { MiscComponent } from './misc/misc.component';
+import { TranslocoRootModule } from 'src/app/transloco-root.module';
 
 
 @NgModule({
@@ -37,6 +38,7 @@ import { MiscComponent } from './misc/misc.component';
         CommonModule,
         SharedModule,
         NbCardModule,
+        TranslocoRootModule,
         UserSettingsRoutingModule
     ]
 })

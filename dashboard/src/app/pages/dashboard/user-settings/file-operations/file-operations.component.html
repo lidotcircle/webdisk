@@ -1,20 +1,19 @@
-
 <app-wrapper>
-  <div class='title'><div class='leader'></div><span>File Upload</span></div>
+<ng-container *transloco='let t'>
+  <div class='title'><div class='leader'></div><span>{{ t('File Upload') }}</span></div>
   <div class='panel'>
-    <app-setting-item name='Validate MD5' type='checkbox' [(initValue)]='settings.File_Upload_ValidateMD5'></app-setting-item>
-    <app-setting-item name='Always Overwrite' type='checkbox' [(initValue)]='settings.File_Upload_Just_Continue'></app-setting-item>
-    <app-setting-item name='Just Continue' type='checkbox' [(initValue)]='settings.File_Upload_Always_Overwrite'></app-setting-item>
-    <app-setting-item name='Single Blob' type='checkbox' [(initValue)]='settings.File_Upload_Single_Blob'></app-setting-item>
-    <app-setting-item name='Single Blob Max Size (M)' [extra]='{ min: 1, max: 1024, step: 1, type: "number" }' type='input' 
+    <app-setting-item [name]='t("Validate MD5")' type='checkbox' [(initValue)]='settings.File_Upload_ValidateMD5'></app-setting-item>
+    <app-setting-item [name]='t("Always Overwrite")' type='checkbox' [(initValue)]='settings.File_Upload_Always_Overwrite'></app-setting-item>
+    <app-setting-item [name]='t("Just Continue")' type='checkbox' [(initValue)]='settings.File_Upload_Just_Continue'></app-setting-item>
+    <app-setting-item [name]='t("Single Blob")' type='checkbox' [(initValue)]='settings.File_Upload_Single_Blob'></app-setting-item>
+    <app-setting-item [name]='t("Single Blob Max Size (M)")' [extra]='{ min: 1, max: 1024, step: 1, type: "number" }' type='input' 
                       [(initValue)]='settings.File_Upload_Single_Blob_Max_Size_M'></app-setting-item>
   </div>
 
-  <div class='title'><div class='leader'></div><span>Explorer</span></div>
+  <div class='title'><div class='leader'></div><span>{{ t('Explorer') }}</span></div>
   <div class='panel'>
-    <app-setting-item name='Default Item Per Page' [extra]='{ min: 30, step: 10, type: "number" }' type='input' 
+    <app-setting-item [name]='t("Default Item Per Page")' [extra]='{ min: 30, step: 10, type: "number" }' type='input' 
                       [(initValue)]='settings.Explorer_Default_Item_Per_Page'></app-setting-item>
   </div>
-
+</ng-container>
 </app-wrapper>
-

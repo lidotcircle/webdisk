@@ -5,21 +5,21 @@ import { DataRecordService } from 'src/app/service/data-record.service';
 @Component({
     selector: 'app-add-data',
     template: `
-    <nb-card accent="info">
+    <nb-card accent="info" *transloco='let t'>
       <nb-card-header>
         <mat-form-field>
-            <mat-label>Group</mat-label>
+            <mat-label>{{ t('Group') }}</mat-label>
             <input matInput type="text" [(ngModel)]='group'>
         </mat-form-field>
-        <mat-checkbox [(ngModel)]='cb_clear'>ClearWhenAdded</mat-checkbox>
+        <mat-checkbox [(ngModel)]='cb_clear'>{{ t('Clear When Added') }}</mat-checkbox>
       </nb-card-header>
       <nb-card-body>
         <ngx-monaco-editor [options]="editorOptions" [(ngModel)]="code"></ngx-monaco-editor>
       </nb-card-body>
         <nb-card-footer>
             <button nbButton status="primary" (click)="addData()" [disabled]="inadding"
-                    [nbSpinner]="inadding" nbSpinnerStatus="info">Add</button>
-            <button nbButton status="warning" (click)="code = ''" [disabled]="code == ''">Clear</button>
+                    [nbSpinner]="inadding" nbSpinnerStatus="info">{{ t('Add') }}</button>
+            <button nbButton status="warning" (click)="code = ''" [disabled]="code == ''">{{ t('Clear') }}</button>
         </nb-card-footer>
     </nb-card>
     `,

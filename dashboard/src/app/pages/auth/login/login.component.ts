@@ -3,6 +3,7 @@ import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { NbAuthService, NbLoginComponent } from '@nebular/auth';
 import { NbToastrService } from '@nebular/theme';
+import { TranslocoService } from '@ngneat/transloco';
 import { AuthService } from 'src/app/service/auth';
 
 @Component({
@@ -20,6 +21,7 @@ export class LoginComponent extends NbLoginComponent implements OnInit {
 
     constructor(service: NbAuthService, cd: ChangeDetectorRef, router: Router,
                 private authService: AuthService,
+                private translocoService: TranslocoService,
                 private toastService: NbToastrService) {
         super(service, {}, cd, router);
     }
@@ -34,7 +36,9 @@ export class LoginComponent extends NbLoginComponent implements OnInit {
 
         try {
             await this.authService.login(this.user);
-            this.toastService.show("登录成功, 跳转到首页", "登录", {status: 'primary'});
+            this.toastService.show(
+                this.translocoService.translate("login success, goto front page"),
+                this.translocoService.translate("login"), {status: 'primary'});
             await new Promise(resolve => setTimeout(resolve, 1000));
             this.submitted = true;
             this.router.navigateByUrl('/wd/dashboard');
@@ -43,7 +47,7 @@ export class LoginComponent extends NbLoginComponent implements OnInit {
                 this.authService.forgetLogin();
             }
         } catch (e: any) {
-            let errorMsg = "unknown error";
+            let errorMsg = this.translocoService.translate("unknown error");
             if(e instanceof HttpErrorResponse) {
                 errorMsg = e.error.reason || errorMsg;
             }

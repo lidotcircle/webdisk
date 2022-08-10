@@ -1,10 +1,10 @@
-<nb-card accent='primary'>
+<nb-card accent='primary' *transloco='let t'>
   <nb-card-header>
     <div class='header-center'>
       {{ this.group }}
     </div>
     <div class='header-top'>
-      <div>Number Of Records: {{ source?.count() }}</div>
+      <div>{{ t('Number of Records') }}: {{ source?.count() }}</div>
       <nb-select size='small' (selectedChange)='select_options_change($event)' 
                  status='primary' filled placeholder="DataViewer" [(selected)]='datatype'>
         <nb-option value="text">Text</nb-option>
@@ -19,12 +19,12 @@
     </div>
     <div class='header-top'>
       <mat-form-field>
-        <mat-label>Page No. {{ pagenoinfo }} </mat-label>
+        <mat-label>{{ t('Page No.') }} {{ pagenoinfo }} </mat-label>
         <input [disabled]='!source' (change)='page_options_change($event)'
                matInput type="number" min='1' step='1'[(ngModel)]='pageno'>
       </mat-form-field>
       <mat-form-field>
-        <mat-label>Page Size</mat-label>
+        <mat-label>{{ t('Page Size') }}</mat-label>
         <input [disabled]='!source' (change)='page_options_change($event)'
                matInput type="number" min='1' step='1' [(ngModel)]='pagesize'>
       </mat-form-field>
@@ -32,13 +32,13 @@
   </nb-card-header>
 </nb-card>
 
-<nb-card>
+<nb-card *transloco='let t'>
   <nb-card-body [class]='!source || source.count() == 0 ? "record-length-equal-zero" : ""'>
     <ng2-smart-table [settings]="settings" [source]="source"></ng2-smart-table>
 
     <div class="empty-state">
       <nb-icon icon='archive'></nb-icon>
-      <div class="warning">Empty</div>
+      <div class="warning">{{ t('Empty') }}</div>
     </div>
   </nb-card-body>
 </nb-card>

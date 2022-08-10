@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { TranslocoService } from '@ngneat/transloco';
 import { InvitationService } from 'src/app/service/user/invitation.service';
 import { ClipboardContentType, ClipboardService } from 'src/app/shared/service/clipboard.service';
 import { NotifierService } from 'src/app/shared/service/notifier.service';
@@ -26,6 +27,7 @@ export class SubAccountsComponent implements OnInit {
 
     constructor(private invcodeService: InvitationService,
                 private clipboard: ClipboardService,
+                private translocoService: TranslocoService,
                 private notifier: NotifierService) { }
 
     ngOnInit(): void {
@@ -56,18 +58,25 @@ export class SubAccountsComponent implements OnInit {
     async deleteInvCode(i: number) {
         try {
             await this.invcodeService.deleteInvCode(this.invitations[i]);
-            this.notifier.create({message: 'delete invitation code success'}).wait();
+            this.notifier.create({
+                message: this.translocoService.translate('delete invitation code success')
+            }).wait();
             this.details.splice(i, 1);
             this.indexClassState.splice(i, 1);
             this.refresh();
         } catch {
-            await this.notifier.create({message: 'delete invitation code fail', mtype: NotifierType.Error}).wait();
+            await this.notifier.create({
+                message: this.translocoService.translate('delete invitation code fail'),
+                mtype: NotifierType.Error
+            }).wait();
         }
     }
 
     async copyToClipboard(text: string) {
         await this.clipboard.copy(ClipboardContentType.text, text);
-        await this.notifier.create({message: 'copied invitation code to clipboard'}).wait();
+        await this.notifier.create({
+            message: this.translocoService.translate('copied invitation code to clipboard')
+        }).wait();
     }
 
     private updatePermSetting(n: number) //{
@@ -108,7 +117,7 @@ export class SubAccountsComponent implements OnInit {
             await this.invcodeService.setInvCodePerms(invcode, perm);
         } catch (err) {
             await this.notifier.create({
-                message: `update invitation code permission fail: ${err.message}`, 
+                message: this.translocoService.translate(`update invitation code permission fail: {{msg}}`, {msg: err.message}), 
                 mtype: NotifierType.Error
             }).wait();
         }

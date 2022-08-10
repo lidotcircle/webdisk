@@ -3,6 +3,7 @@ import { NbThemeService } from '@nebular/theme';
 import { Subject } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 import { LocalSettingService } from 'src/app/service/user/local-setting.service';
+import { LocaleService } from 'src/app/service/user/locale.service';
 
 
 @Component({
@@ -13,10 +14,13 @@ import { LocalSettingService } from 'src/app/service/user/local-setting.service'
 export class DisplayComponent implements OnInit, OnDestroy {
     private destroy$: Subject<void> = new Subject<void>();
     currentTheme = 'default';
+    currentLanguage = 'en';
 
     settings: LocalSettingService;
 
-    constructor(private themeService: NbThemeService, private _settings: LocalSettingService)
+    constructor(private themeService: NbThemeService,
+                private localeService: LocaleService,
+                private _settings: LocalSettingService)
     {
         this.settings = this._settings;
     }
@@ -30,6 +34,12 @@ export class DisplayComponent implements OnInit, OnDestroy {
                 takeUntil(this.destroy$),
             )
             .subscribe(themeName => this.currentTheme = themeName);
+
+        this.localeService.getLang()
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(lang => {
+                this.currentLanguage = lang;
+            });
     }
 
     ngOnDestroy() {
@@ -40,4 +50,9 @@ export class DisplayComponent implements OnInit, OnDestroy {
     changeTheme(themeName: string) {
         this.themeService.changeTheme(themeName);
     }
+
+    changeLanguage(lang: string) {
+        this.localeService.setLang(lang, true);
+    }
+
 }

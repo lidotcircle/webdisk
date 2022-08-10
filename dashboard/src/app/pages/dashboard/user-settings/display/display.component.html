@@ -1,41 +1,48 @@
 <app-wrapper>
-  <div class='title'><div class='leader'></div><span>General</span></div>
+<ng-container *transloco='let t'>
+  <div class='title'><div class='leader'></div><span>{{ t('General') }}</span></div>
   <div class='panel'>
     <app-setting-item 
-       name='Theme' type='select'
+       [name]='t("Theme")' type='select'
        (change)='changeTheme($event)' [(initValue)]='currentTheme'
-       [extra]='[ {value: "default", name: "Default"}, {value: "dark", name: "Dark"}, {value: "cosmic", name: "Cosmic"}, {value: "corporate", name: "Corporate"} ]'>
+       [extra]='[ {value: "default", name: t("Default")}, {value: "dark", name: t("Dark")}, {value: "cosmic", name: "Cosmic"}, {value: "corporate", name: "Corporate"} ]'>
+    </app-setting-item>
+
+    <app-setting-item 
+       [name]='t("Language")' type='select'
+       (change)='changeLanguage($event)' [(initValue)]='currentLanguage'
+       [extra]='[ {value: "en", name: "English"}, {value: "zh-cn", name: "简体中文"}]'>
     </app-setting-item>
   </div>
 
-  <div class='title'><div class='leader'></div><span>Explorer</span></div>
+  <div class='title'><div class='leader'></div><span>{{ t('Explorer') }}</span></div>
   <div class='panel'>
-    <app-setting-item name='Always KB' type='checkbox' [(initValue)]='settings.Explorer_Filesize_Unit_Always_KB'></app-setting-item>
-    <app-setting-item name='Directory Navigator' type='checkbox' [(initValue)]='settings.Explorer_Show_Directory_Navigator'></app-setting-item>
+    <app-setting-item [name]='t("Always KB")' type='checkbox' [(initValue)]='settings.Explorer_Filesize_Unit_Always_KB'></app-setting-item>
+    <app-setting-item [name]='t("Directory Navigator")' type='checkbox' [(initValue)]='settings.Explorer_Show_Directory_Navigator'></app-setting-item>
   </div>
 
-  <div class='title'><div class='leader'></div><span>Full Screen Option</span></div>
+  <div class='title'><div class='leader'></div><span>{{ t('Full Screen Option') }}</span></div>
   <div class='panel'>
-    <app-setting-item name='Single Click Entering' type='checkbox' [(initValue)]='settings.Fullscreen_enter_single_click'></app-setting-item>
-    <app-setting-item name='Single Click Exit' type='checkbox' [(initValue)]='settings.Fullscreen_exit_single_click'></app-setting-item>
-    <app-setting-item name='Always Show Exit Button' type='checkbox' [(initValue)]='settings.Fullscreen_exit_button_always_show'></app-setting-item>
+    <app-setting-item [name]='t("Single Click Entering")' type='checkbox' [(initValue)]='settings.Fullscreen_enter_single_click'></app-setting-item>
+    <app-setting-item [name]='t("Single Click Exit")' type='checkbox' [(initValue)]='settings.Fullscreen_exit_single_click'></app-setting-item>
+    <app-setting-item [name]='t("Always Show Exit Button")' type='checkbox' [(initValue)]='settings.Fullscreen_exit_button_always_show'></app-setting-item>
   </div>
 
   <div class='title'><div class='leader'></div><span>Markdown</span></div>
   <div class='panel'>
-    <app-setting-item name='Show TOC' type='checkbox' [(initValue)]='settings.Markdown_Show_TOC'></app-setting-item>
-    <app-setting-item name='Show Heading NO.' type='checkbox' [(initValue)]='settings.Markdown_Show_Heading_NO'></app-setting-item>
-    <app-setting-item name='Fullscreen Viewer Width (%)' [extra]='{ min: 50, max: 100, step: 1, type: "number" }' type='input' 
+    <app-setting-item [name]='t("Show TOC")' type='checkbox' [(initValue)]='settings.Markdown_Show_TOC'></app-setting-item>
+    <app-setting-item [name]='t("Show Heading NO.")' type='checkbox' [(initValue)]='settings.Markdown_Show_Heading_NO'></app-setting-item>
+    <app-setting-item [name]='t("Fullscreen Viewer Width (%)")' [extra]='{ min: 50, max: 100, step: 1, type: "number" }' type='input' 
                       [(initValue)]='settings.Markdown_Fullscreen_Width_Percent'></app-setting-item>
 
   </div>
 
-  <div class='title'><div class='leader'></div><span>Markdown Editor</span></div>
+  <div class='title'><div class='leader'></div><span>{{ t('Markdown Editor') }}</span></div>
   <div class='panel'>
-    <app-setting-item name='Show Buttons' type='checkbox' [(initValue)]='settings.Note_Editor_ShowButtons'></app-setting-item>
-    <app-setting-item name='Save Interval (seconds)' [extra]='{ min: 30, step: 10, type: "number" }' type='input' 
+    <app-setting-item [name]='t("Show Buttons")' type='checkbox' [(initValue)]='settings.Note_Editor_ShowButtons'></app-setting-item>
+    <app-setting-item [name]='t("Save Interval (seconds)")' [extra]='{ min: 30, step: 10, type: "number" }' type='input' 
                       [(initValue)]='settings.Note_Editor_SavingInterval_s'></app-setting-item>
-    <app-setting-item name='Show Patch Length' type='checkbox' [(initValue)]='settings.Note_Editor_ShowPatchLength'></app-setting-item>
+    <app-setting-item [name]='t("Show Patch Length")' type='checkbox' [(initValue)]='settings.Note_Editor_ShowPatchLength'></app-setting-item>
   </div>
-
+</ng-container>
 </app-wrapper>

@@ -1,17 +1,35 @@
 <nb-card status='info'>
   <nb-card-header>
-    settings
+    <span>⚙️</span><span *transloco='let t'>{{ t('settings') }}</span>
   </nb-card-header>
 
   <nb-card-body>
     <div class='nav-container'>
       <div class="settings-nav" #settingsnav>
-        <div class="nav-button" (click)='gotoPanel($event)' data-panel='user-account'> User Account </div>
-        <div class="nav-button" (click)='gotoPanel($event)' data-panel='sub-account'> Sub Accounts </div>
-        <div class="nav-button" (click)='gotoPanel($event)' data-panel='file-operation'> File Operations </div>
-        <div class="nav-button" (click)='gotoPanel($event)' data-panel='display'> Display </div>
-        <div class="nav-button" (click)='gotoPanel($event)' data-panel='misc'> Misc </div>
-        <div class="nav-button" (click)='gotoPanel($event)' data-panel='about'> About </div>
+        <div class="nav-button" (click)='gotoPanel($event)' data-panel='user-account'>
+          <span>👶</span>
+          <span *transloco='let t'> {{ t('User Account') }} </span>
+        </div>
+        <div class="nav-button" (click)='gotoPanel($event)' data-panel='sub-account'>
+          <span>👪</span>
+          <span *transloco='let t'> {{ t('Sub Accounts') }} </span>
+        </div>
+        <div class="nav-button" (click)='gotoPanel($event)' data-panel='file-operation'>
+          <span>📁</span>
+          <span *transloco='let t'> {{ t('File Operations') }} </span>
+        </div>
+        <div class="nav-button" (click)='gotoPanel($event)' data-panel='display'>
+          <span>📺</span>
+          <span *transloco='let t'> {{ t('Display') }} </span>
+        </div>
+        <div class="nav-button" (click)='gotoPanel($event)' data-panel='misc'>
+          <span>🧰</span>
+          <span *transloco='let t'> {{ t('Misc') }} </span>
+        </div>
+        <div class="nav-button" (click)='gotoPanel($event)' data-panel='about'>
+          <span>ℹ️</span>
+          <span *transloco='let t'> {{ t('About') }} </span>
+        </div>
       </div>
     </div>
 

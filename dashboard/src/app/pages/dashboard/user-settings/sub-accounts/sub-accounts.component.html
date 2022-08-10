@@ -1,6 +1,7 @@
 
 <app-wrapper>
-<div class="label">Invitation Code</div>
+<ng-container *transloco='let t'>
+<div class="label">{{ t('Invitation Code') }}</div>
 <div class="invitations">
     <div class="inv-item" *ngFor='let inv of invitations; let i = index;'>
         <div [class]="'summary ' + (indexClassState[i] ? indexClassState[i] : '')">
@@ -15,11 +16,11 @@
             </div>
         </div>
         <div class="detail" *ngIf='details[i]'> 
-            <div class="not-used" *ngIf='!invcodeUsed(i)'>Not in Used</div>
+            <div class="not-used" *ngIf='!invcodeUsed(i)'>{{ t('Not in Used') }}</div>
             <div class="userinfo" *ngIf='invcodeUsed(i)'>
                 <div class="key-value-table">
-                      <div>Username</div> <div>{{details[i][0].username}}</div>
-                      <div>Register Date</div><div>{{ createTime(i) }}</div>
+                      <div>{{ t('Username') }}</div> <div>{{details[i][0].username}}</div>
+                      <div>{{ t('Register Date') }}</div><div>{{ createTime(i) }}</div>
                 </div>
             </div>
 
@@ -30,12 +31,13 @@
 
             <div class="space"></div>
             <button class="button" [disabled]='invcodeUsed(i)'
-                    mat-raised-button color='secondary' (click)='deleteInvCode(i)'>Delete Invitation Code</button>
+                    mat-raised-button color='secondary' (click)='deleteInvCode(i)'>{{ t('Delete Invitation Code') }}</button>
         </div>
     </div>
 </div>
 
 <div class="space"></div>
-<button class="button" mat-raised-button color='primary' (click)='newinv(1)'>Generate New Invitation Code</button>
+<button class="button" mat-raised-button color='primary' (click)='newinv(1)'>{{ t('Generate New Invitation Code') }}</button>
+</ng-container>
 </app-wrapper>
 

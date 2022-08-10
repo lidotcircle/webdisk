@@ -9,13 +9,14 @@ import { takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 import { LocalSettingService } from 'src/app/service/user/local-setting.service';
 import { AsyncLocalStorageService } from 'src/app/shared/service/async-local-storage.service';
+import { TranslocoService } from '@ngneat/transloco';
 
 
 @Component({
     template: `
-      <div class="buttons">
-        <button nbButton status='info' size='tiny' (click)='nav_graph()' outline>Graph</button>
-        <button nbButton status='info' size='tiny' (click)='nav_table()' outline>Table</button>
+      <div class="buttons" *transloco='let t'>
+        <button nbButton status='info' size='tiny' (click)='nav_graph()' outline>{{ t('Graph') }}</button>
+        <button nbButton status='info' size='tiny' (click)='nav_table()' outline>{{ t('Table') }}</button>
       </div>
     `,
     styles: [
@@ -102,6 +103,7 @@ export class GroupTableComponent implements OnInit, OnDestroy {
     constructor(private toastrService: NbToastrService,
                 private localSetting: LocalSettingService,
                 private localstorage: AsyncLocalStorageService,
+                private translocoService: TranslocoService,
                 private router: Router,
                 private windowService: NbWindowService,
                 private activatedRoute: ActivatedRoute,
@@ -188,7 +190,7 @@ export class GroupTableComponent implements OnInit, OnDestroy {
     private setup_settings(pageno: number, pagesize: number) {
         this.settings = {
             actions: {
-                columnTitle: 'operation',
+                columnTitle: this.translocoService.translate('operation'),
                 add: false,
                 edit: false,
                 delete: true,
@@ -203,28 +205,28 @@ export class GroupTableComponent implements OnInit, OnDestroy {
             rowClassFunction: () => 'data-row',
             columns: {
                 buttons: {
-                    title: 'Buttons',
+                    title: this.translocoService.translate('Buttons'),
                     width: '4em',
                     editable: false,
                     type: 'custom',
                     renderComponent: ButtonsCellComponent,
                 },
                 createdAt: {
-                    title: 'CreatedAt',
+                    title: this.translocoService.translate('CreatedAt'),
                     width: '12em',
                     filter: true,
                     type: 'custom',
                     renderComponent: DateComponent,
                 },
                 updatedAt: {
-                    title: 'LastUpdated',
+                    title: this.translocoService.translate('LastUpdated'),
                     width: '12em',
                     filter: true,
                     type: 'custom',
                     renderComponent: DateComponent,
                 },
                 group: {
-                    title: 'Group',
+                    title: this.translocoService.translate('Group'),
                     filter: true,
                     type: 'text',
                 },

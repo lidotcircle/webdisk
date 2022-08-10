@@ -15,6 +15,7 @@ let numberoftableview = 0;
 const tableviews: TableViewComponent[] = [];
 @Component({
     template: `
+    <ng-container *transloco='let t'>
     <ngx-prismjs *ngIf='data_as_code' theme='default-transparent' [code]='data' [language]='datatype'></ngx-prismjs>
     <div         *ngIf='data_as_log' [status]='logStatus'>
        <span [style]='logStyle'>{{ logLevel }}</span>
@@ -22,18 +23,19 @@ const tableviews: TableViewComponent[] = [];
     </div>
     <div         *ngIf='data_as_image' class='col-view'>
         <div *ngIf='!image_loaded' class='row-view'>
-            <button nbButton size='tiny' status="primary" (click)='loadImage()'>Load</button>
+            <button nbButton size='tiny' status="primary" (click)='loadImage()'>{{ t('Load') }}</button>
             <div class='image-name'> {{ imageName }} </div>
         </div>
 
         <div *ngIf='image_loaded' class='col-view'>
             <img [src]='imageUrl'/>
             <div class='row-view'>
-                <button nbButton size='tiny' status="primary" (click)='viewImage()'>View</button>
+                <button nbButton size='tiny' status="primary" (click)='viewImage()'>{{ t('View') }}</button>
                 <div class='image-name'> {{ imageName }} </div>
             </div>
         </div>
     </div>
+    </ng-container>
     `,
     styles: [`
     .col-view {

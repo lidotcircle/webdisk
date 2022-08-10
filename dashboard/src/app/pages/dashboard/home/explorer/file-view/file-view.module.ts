@@ -11,6 +11,7 @@ import { ToolComponent } from './tools/tool/tool.component';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { DragItemDirective, DropDirectoryDirective } from './drag-drop.directive';
 import { PathViewerComponent } from './path-viewer/path-viewer.component';
+import { TranslocoRootModule } from 'src/app/transloco-root.module';
 
 
 @NgModule({
@@ -22,6 +23,7 @@ import { PathViewerComponent } from './path-viewer/path-viewer.component';
     imports: [
         CommonModule,
         SharedModule,
+        TranslocoRootModule,
         MatPaginatorModule,
     ],
     exports: [

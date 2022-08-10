@@ -29,54 +29,54 @@ const createdAt_symbol = Symbol("createat");
 @Component({
     selector: 'app-group-graph',
     template: `
-    <nb-card [nbSpinner]="loading" nbSpinnerStatus="info" accent="info">
+    <nb-card [nbSpinner]="loading" nbSpinnerStatus="info" accent="info" *transloco='let t'>
       <nb-card-header>
         {{ group }}
         <div class="control-components">
-            <mat-checkbox (change)='options_change($event)' [(ngModel)]='cb_zoomSlider'>Zoom Slider</mat-checkbox>
-            <mat-checkbox (change)='options_change($event)' [(ngModel)]='cb_smooth'>Smooth Line</mat-checkbox>
-            <mat-checkbox (change)='options_change($event)' [(ngModel)]='cb_area'>Area</mat-checkbox>
-            <mat-checkbox (change)='options_change($event)' [(ngModel)]='cb_show_yaxis'>yAxis</mat-checkbox>
-            <mat-checkbox (change)='options_change($event)' [(ngModel)]='cb_graph_title'>Title</mat-checkbox>
+            <mat-checkbox (change)='options_change($event)' [(ngModel)]='cb_zoomSlider'>{{ t('Zoom Slider') }}</mat-checkbox>
+            <mat-checkbox (change)='options_change($event)' [(ngModel)]='cb_smooth'>{{ t('Smooth Line') }}</mat-checkbox>
+            <mat-checkbox (change)='options_change($event)' [(ngModel)]='cb_area'>{{ t('Area') }}</mat-checkbox>
+            <mat-checkbox (change)='options_change($event)' [(ngModel)]='cb_show_yaxis'>{{ t('y Axis') }}</mat-checkbox>
+            <mat-checkbox (change)='options_change($event)' [(ngModel)]='cb_graph_title'>{{ t('Title') }}</mat-checkbox>
             <nb-select size='small' (selectedChange)='transform_select_option_change($event)' 
                        status='primary' filled placeholder="Transform" [(selected)]='data_transform'>
-              <nb-option value="Identical">NoTransform</nb-option>
-              <nb-option value="AbsAvgUnitBall">AbsUnitBall</nb-option>
-              <nb-option value="Normalize">Normalize</nb-option>
+              <nb-option value="Identical">{{ t('NoTransform') }}</nb-option>
+              <nb-option value="AbsAvgUnitBall">{{ t('AbsUnitBall') }}</nb-option>
+              <nb-option value="Normalize">{{ t('Normalize') }}</nb-option>
             </nb-select>
             <mat-form-field>
-                <mat-label>naverage</mat-label>
+                <mat-label>{{ t('naverage') }}</mat-label>
                 <input (change)='options_change($event)' matInput type="number" min='1' step='1' [(ngModel)]='data_average'>
             </mat-form-field>
             <button (click)="saveAsXLSX()" class="xlsx-download"><nb-icon icon="download"></nb-icon></button>
         </div>
         <div class="control-components">
             <mat-form-field>
-                <mat-label>X-Axis</mat-label>
+                <mat-label>{{ t('X-Axis') }}</mat-label>
                 <input (change)='options_change($event)' matInput type="text" [(ngModel)]='in_xaxis_name'>
             </mat-form-field>
             <mat-form-field>
-                <mat-label>Y-Axis</mat-label>
+                <mat-label>{{ t('Y-Axis') }}</mat-label>
                 <input (change)='options_change($event)' matInput type="text" [(ngModel)]='in_yaxis_name'>
             </mat-form-field>
             <mat-form-field>
-                <mat-label>skip</mat-label>
+                <mat-label>{{ t('skip') }}</mat-label>
                 <input (change)='options_change($event)' matInput type="number" min='0' step='1' [(ngModel)]='data_skipn'>
             </mat-form-field>
             <div>
-                <label style='margin: 0em; width: 100%; text-align: center;'>Refresh Frequency {{refresh_sec}}s</label>
+                <label style='margin: 0em; width: 100%; text-align: center;'>{{ t('Refresh Frequency') }}{{refresh_sec}}s</label>
                 <mat-slider style='width: 100%;' min='1' max='100' step='1' [(ngModel)]='refresh_sec'></mat-slider>
             </div>
-            <button nbButton size='tiny' status="primary" (click)='select_all_legend()'>select all</button>
-            <button nbButton size='tiny' status="primary" (click)='deselect_all_legend()'>deselect all</button>
-            <button nbButton size='tiny' status="primary" (click)='inverse_legend()'>inverse</button>
+            <button nbButton size='tiny' status="primary" (click)='select_all_legend()'>{{ t('select all') }}</button>
+            <button nbButton size='tiny' status="primary" (click)='deselect_all_legend()'>{{ t('deselect all') }}</button>
+            <button nbButton size='tiny' status="primary" (click)='inverse_legend()'>{{ t('inverse') }}</button>
         </div>
       </nb-card-header>
       <nb-card-body>
         <div *ngIf='!errorMsg && datasize > 0' echarts  style="height: 100%;"
              (chartInit)="onChartInit($event)" [options]="options" [merge]="dynamic_options" class="echart"></div>
         <nb-alert *ngIf='errorMsg' status="danger"><div>{{errorMsg}}</div></nb-alert>
-        <nb-alert *ngIf='!errorMsg && datasize == 0' status="info"><div>Nothing In This Group</div></nb-alert>
+        <nb-alert *ngIf='!errorMsg && datasize == 0' status="info"><div>{{ t('Nothing In This Group') }}</div></nb-alert>
       </nb-card-body>
     </nb-card>
   `,

@@ -1,37 +1,37 @@
-
+<ng-container *transloco='let t'>
 <app-wrapper>
 <div class="userinfo">
     <div class="key-value-table">
-        <div>Username</div> <div>{{userinfo?.username}}</div>
-        <div>Register Date</div><div>{{ createTime }}</div>
+        <div>{{ t('Username') }}</div> <div>{{userinfo?.username}}</div>
+        <div>{{ t('Register Date') }}</div><div>{{ createTime }}</div>
     </div>
 </div>
 
 <div class="seperator"></div>
 
-<div class="label">Modify Password</div>
+<div class="label">{{ t('Modify Password') }}</div>
 <mat-form-field>
-    <mat-label>old passworld</mat-label>
+    <mat-label>{{ t('old password') }}</mat-label>
     <input matInput type='password' [(ngModel)]='modifypass.oldpassword' name='oldpass'>
 </mat-form-field>
 <mat-form-field>
-    <mat-label>new passworld</mat-label>
+    <mat-label>{{ t('new password') }}</mat-label>
     <input matInput type='password' [(ngModel)]='modifypass.newpassword' name='newpass' #newpass='ngModel'>
 </mat-form-field>
 <mat-form-field>
-    <mat-label>confirm new passworld</mat-label>
+    <mat-label>{{ t('confirmed new password') }}</mat-label>
     <input matInput type='password' [(ngModel)]='modifypass.confirmpass' name='confirmpass' #confirmpass='ngModel'>
 </mat-form-field>
 <button class="button" mat-raised-button color='primary' (click)='changepassword()'>
-    Confirm
+    {{ t('Confirm') }}
 </button>
 
 <div class="seperator"></div>
 
-<button class="button" mat-raised-button color='primary' (click)='logout()'>Logout</button>
+<button class="button" mat-raised-button color='primary' (click)='logout()'>{{ t('Logout') }}</button>
 
 <div class="space"></div>
-<button class="button" mat-raised-button color='primary' (click)='deleteAccount()'>Delete Account</button>
+<button class="button" mat-raised-button color='primary' (click)='deleteAccount()'>{{ t('Delete Account') }}</button>
 
 </app-wrapper>
-
+</ng-container>

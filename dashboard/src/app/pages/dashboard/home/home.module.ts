@@ -9,6 +9,7 @@ import { DirectoryTreeComponent } from './explorer/directory-tree/directory-tree
 import { NamedLinkComponent } from './named-link/named-link.component';
 import { HomeComponent } from './home.component';
 import { StorageBackendComponent } from './storage-backend/storage-backend.component';
+import { TranslocoRootModule } from 'src/app/transloco-root.module';
 
 
 @NgModule({
@@ -17,6 +18,7 @@ import { StorageBackendComponent } from './storage-backend/storage-backend.compo
         CommonModule,
         HomeRoutingModule,
         SharedModule,
+        TranslocoRootModule,
         FileViewModule
     ]
 })

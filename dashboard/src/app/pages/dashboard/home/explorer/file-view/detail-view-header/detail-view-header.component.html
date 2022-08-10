@@ -1,9 +1,9 @@
-
+<ng-container *transloco='let t'>
 <div class="detail-view-style" *ngIf="viewStyle == 'detail'">
     <div class="take-space" #icon></div>
 
     <div class="detail-view-prop name-prop" [style]='getPropCSS("name")'>
-        <div class="field">Name</div>
+        <div class="field">{{ t('Name') }}</div>
         <div class="tool">
             <div class="vertical"></div>
             <span class="material-icons maticon">expand_more</span>
@@ -12,7 +12,7 @@
         <div class="vertical-drag"></div>
     </div>
     <div class="detail-view-prop date-prop" [style]='getPropCSS("date")'>
-        <div class="field">Date Modified</div>
+        <div class="field">{{ t('Date Modified') }}</div>
         <div class="tool">
             <div class="vertical"></div>
             <span class="material-icons maticon">expand_more</span>
@@ -21,7 +21,7 @@
         <div class="vertical-drag"></div>
     </div>
     <div class="detail-view-prop type-prop" [style]='getPropCSS("type")'>
-        <div class="field">Type</div>
+        <div class="field">{{ t('Type') }}</div>
         <div class="tool">
             <div class="vertical"></div>
             <span class="material-icons maticon">expand_more</span>
@@ -30,7 +30,7 @@
         <div class="vertical-drag"></div>
     </div>
     <div class="detail-view-prop size-prop" [style]='getPropCSS("mode")'>
-        <div class="field">Size</div>
+        <div class="field">{{ t('Size') }}</div>
         <div class="tool">
             <div class="vertical"></div>
             <span class="material-icons maticon">expand_more</span>
@@ -39,7 +39,7 @@
         <div class="vertical-drag"></div>
     </div>
     <div class="detail-view-prop mode-prop" [style]='getPropCSS("mode")'>
-        <div class="field">Mode</div>
+        <div class="field">{{ t('Mode') }}</div>
         <div class="tool">
             <div class="vertical"></div>
             <span class="material-icons maticon">expand_more</span>
@@ -48,4 +48,4 @@
         <div class="vertical-drag"></div>
     </div>
 </div>
-
+</ng-container>
