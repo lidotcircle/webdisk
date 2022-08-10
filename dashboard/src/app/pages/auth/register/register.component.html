@@ -1,4 +1,5 @@
-<h1 id="title" class="title">signup</h1>
+<ng-container *transloco='let t'>
+<h1 id="title" class="title">{{ t('signup') }}</h1>
 
 <nb-alert *ngIf="showMessages?.error && errors?.length && !submitted" outline="danger" role="alert">
   <p class="alert-title"><b>Oh snap!</b></p>
@@ -17,13 +18,13 @@
 <form (ngSubmit)="register()" #form="ngForm" aria-labelledby="title">
 
   <div class="form-control-group">
-    <label class="label" for="input-name">username:</label>
+    <label class="label" for="input-name">{{ t('username') }}:</label>
     <input nbInput
            [(ngModel)]="user.username"
            #username="ngModel"
            id="input-name"
            name="username"
-           placeholder="username"
+           [placeholder]="t('username')"
            autofocus
            pattern='[a-zA-Z]\w{2,31}'
            fullWidth
@@ -35,23 +36,23 @@
            [attr.aria-invalid]="username.invalid && username.touched ? true : null">
     <ng-container *ngIf="username.invalid && username.touched">
       <p class="caption status-danger" *ngIf="username.errors?.required">
-        username is required!
+        {{ t('username is required!') }}
       </p>
       <p class="caption status-danger" *ngIf="username.errors?.minlength || username.errors?.maxlength">
-        username should be 2-32 characters long!
+        {{ t('username should be 2-32 characters long!') }}
       </p>
     </ng-container>
   </div>
 
   <div class="form-control-group">
-      <label class="label" for="input-password">password:</label>
+      <label class="label" for="input-password">{{ t('password') }}:</label>
       <input nbInput
              [(ngModel)]="user.password"
            #password="ngModel"
            type="password"
            id="input-password"
            name="password"
-           placeholder="password"
+           [placeholder]="t('password')"
            fullWidth
            fieldSize="large"
            [status]="password.dirty ? (password.invalid  ? 'danger' : 'success') : 'basic'"
@@ -60,23 +61,23 @@
            [attr.aria-invalid]="password.invalid && password.touched ? true : null">
     <ng-container *ngIf="password.invalid && password.touched">
       <p class="caption status-danger" *ngIf="password.errors?.required">
-        password is required!
+        {{ t('password is required!') }}
       </p>
       <p class="caption status-danger" *ngIf="password.errors?.minlength || password.errors?.maxlength">
-        password should be 6-32 characters long!
+        {{ t('password should be 6-32 characters long!') }}
       </p>
     </ng-container>
   </div>
 
   <div class="form-control-group">
-    <label class="label" for="input-invcode">invitation code:</label>
+    <label class="label" for="input-invcode">{{ t('invitation code') }}:</label>
     <input nbInput
            [(ngModel)]="user.invitecode"
            #invcode="ngModel"
            id="input-invcode"
            name="invcode"
            pattern="[a-zA-Z0-9\-]+"
-           placeholder="invitation code"
+           [placeholder]="t('invitation code')"
            fullWidth
            fieldSize="large"
            [status]="invcode.dirty ? (invcode.invalid  ? 'danger' : 'success') : 'basic'"
@@ -84,23 +85,23 @@
            [attr.aria-invalid]="invcode.invalid && invcode.touched ? true : null">
     <ng-container *ngIf="invcode.invalid && invcode.touched">
       <p class="caption status-danger" *ngIf="invcode.errors?.required">
-        invitation code is required!
+        {{ t('invitation code is required!') }}
       </p>
       <p class="caption status-danger" *ngIf="invcode.errors?.pattern">
-        invalid invitation code!
+        {{ t('invalid invitation code!') }}
       </p>
     </ng-container>
   </div>
 
   <div class="form-control-group">
-    <label class="label" for="input-re-password">confirmed password:</label>
+    <label class="label" for="input-re-password">{{ t('confirmed password') }}:</label>
     <input nbInput
            [(ngModel)]="confirmPassword"
            #rePass="ngModel"
            type="password"
            id="input-re-password"
            name="rePass"
-           placeholder="password"
+           [placeholder]="t('password')"
            fullWidth
            fieldSize="large"
            [status]="rePass.dirty ? (rePass.invalid || password.value != rePass.value  ? 'danger' : 'success') : 'basic'"
@@ -108,10 +109,10 @@
            [attr.aria-invalid]="rePass.invalid && rePass.touched ? true : null">
     <ng-container *ngIf="rePass.touched">
       <p class="caption status-danger" *ngIf="rePass.errors?.required">
-        confirmed password is required!
+        {{ t('confirmed password is required!') }}
       </p>
       <p class="caption status-danger" *ngIf="user.password != confirmPassword && !rePass.errors?.required">
-        password does not match the confirm password.
+        {{ t('password does not match the confirm password.') }}
       </p>
     </ng-container>
   </div>
@@ -122,11 +123,11 @@
           size="large"
           [disabled]="!form.valid || user.password != confirmPassword"
           [class.btn-pulse]="submitted">
-    signup
+    {{ t('signup') }}
   </button>
 </form>
 
 <section class="another-action" aria-label="Sign in">
-  has an account? <a class="text-link" routerLink="../login">login</a>
+  {{ t('has an account?') }} <a class="text-link" routerLink="../login">{{ t('login') }}</a>
 </section>
-
+</ng-container>

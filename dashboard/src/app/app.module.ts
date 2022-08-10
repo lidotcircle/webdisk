@@ -19,6 +19,7 @@ import {
 } from '@nebular/theme';
 import { CoreModule } from './@core/core.module';
 import { InterceptorProviders } from './core/http';
+import { TranslocoRootModule } from './transloco-root.module';
 
 
 @NgModule({
@@ -41,6 +42,7 @@ import { InterceptorProviders } from './core/http';
         NbChatModule.forRoot(),
         ThemeModule.forRoot(),
         MatIconModule,
+        TranslocoRootModule,
     ],
     providers: [...InterceptorProviders],
     bootstrap: [AppComponent]

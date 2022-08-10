@@ -1,4 +1,5 @@
-<h1 id="title" class="title">Login</h1>
+<ng-container *transloco='let t'>
+<h1 id="title" class="title">{{ t('Login') }}</h1>
 
 <nb-alert *ngIf="showMessages?.error && errors?.length && !submitted" outline="danger" role="alert">
     <ul class="alert-message-list">
@@ -15,7 +16,7 @@
 <form (ngSubmit)="login()" #form="ngForm" aria-labelledby="title">
 
     <div class="form-control-group">
-        <label class="label" for="input-username">username:</label>
+      <label class="label" for="input-username">{{ t('username') }}:</label>
         <input nbInput
                fullWidth
                [(ngModel)]="user.username"
@@ -23,7 +24,7 @@
                name="username"
                id="input-username"
                pattern=".{2,}"
-               placeholder="username"
+               [placeholder]="t('username')"
                fieldSize="large"
                autofocus
                [status]="username.dirty ? (username.invalid  ? 'danger' : 'success') : 'basic'"
@@ -31,18 +32,18 @@
                [attr.aria-invalid]="username.invalid && username.touched ? true : null">
         <ng-container *ngIf="username.invalid && username.touched">
             <p class="caption status-danger" *ngIf="username.errors?.required">
-            please enter your username!
+            {{ t('please enter your username!') }}
             </p>
             <p class="caption status-danger" *ngIf="username.errors?.pattern">
-            please enter a valid username!
+            {{ t('please enter a valid username!') }}
             </p>
         </ng-container>
     </div>
 
     <div class="form-control-group">
         <span class="label-with-link">
-            <label class="label" for="input-password">password:</label>
-            <a class="forgot-password caption-2" routerLink="../request-password">forget?</a>
+            <label class="label" for="input-password">{{ t('password') }}:</label>
+            <a class="forgot-password caption-2" routerLink="../request-password">{{ t('forget') }}?</a>
         </span>
         <input nbInput
                fullWidth
@@ -51,7 +52,7 @@
                name="password"
                type="password"
                id="input-password"
-               placeholder="password"
+               [placeholder]="t('password')"
                fieldSize="large"
                [status]="password.dirty ? (password.invalid  ? 'danger' : 'success') : 'basic'"
                required
@@ -59,17 +60,17 @@
                [attr.aria-invalid]="password.invalid && password.touched ? true : null">
         <ng-container *ngIf="password.invalid && password.touched ">
             <p class="caption status-danger" *ngIf="password.errors?.required">
-            please enter your password!
+            {{ t('please enter your password!') }}
             </p>
             <p class="caption status-danger" *ngIf="password.errors?.minlength">
-            password must be at least 6 characters!
+            {{ t('password must be at least 6 characters!') }}
             </p>
         </ng-container>
     </div>
 
     <div class="form-control-group accept-group">
         <nb-checkbox name="rememberMe" [(ngModel)]="rememberMe" *ngIf="enableRememberMe">
-          remember login status
+            {{ t('remember login status') }}
         </nb-checkbox>
     </div>
 
@@ -79,11 +80,11 @@
             size="large"
             [disabled]="submitted || !form.valid"
             [class.btn-pulse]="submitted">
-        Login
+        {{ t('Login') }}
     </button>
 </form>
 
 <section class="another-action" aria-label="Register">
-    <p> without an account? <a class="text-link" routerLink="../signup">signup</a></p>
+    <p> {{ t('without an account?') }} <a class="text-link" routerLink="../signup">{{ t('signup') }}</a></p>
 </section>
-
+</ng-container>

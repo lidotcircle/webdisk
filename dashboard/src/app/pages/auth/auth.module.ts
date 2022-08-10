@@ -10,6 +10,7 @@ import { RequestPasswordComponent } from './request-password/request-password.co
 import { NbInputModule, NbButtonModule, NbCheckboxModule, NbCardModule } from '@nebular/theme';
 import { FormsModule } from '@angular/forms';
 import { NbEvaIconsModule } from '@nebular/eva-icons';
+import { TranslocoRootModule } from 'src/app/transloco-root.module';
 
 
 @NgModule({
@@ -24,6 +25,7 @@ import { NbEvaIconsModule } from '@nebular/eva-icons';
         NbButtonModule,
         NbCheckboxModule,
         NbEvaIconsModule,
+        TranslocoRootModule,
     ],
 })
 export class AuthModule { }

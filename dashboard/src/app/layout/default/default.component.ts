@@ -1,8 +1,10 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
-import { WebdiskMenu, MenuItem } from 'src/app/pages/dashboard/dashboard-menu';
+import { TranslocoService } from '@ngneat/transloco';
+import { from, Subject } from 'rxjs';
+import { concatAll, filter, takeUntil } from 'rxjs/operators';
+import { getWebdiskMenu, MenuItem } from 'src/app/pages/dashboard/dashboard-menu';
 import { WebdiskMenuService } from 'src/app/service/menu/webdisk-menu.service';
+import { LocaleService } from 'src/app/service/user/locale.service';
 
 @Component({
     selector: 'ngx-default-layout',
@@ -14,15 +16,27 @@ import { WebdiskMenuService } from 'src/app/service/menu/webdisk-menu.service';
 })
 export class DefaultComponent implements OnInit, OnDestroy {
     private destroy$: Subject<void>;
-    private allmenu = WebdiskMenu;
-    menu = JSON.parse(JSON.stringify(WebdiskMenu));
+    menu = [];
 
-    constructor(private menuService: WebdiskMenuService) {
+    constructor(private menuService: WebdiskMenuService,
+                private translocoService: TranslocoService,
+                private localeService: LocaleService)
+    {
         this.destroy$ = new Subject();
         this.menuService.menuOnReady()
             .pipe(takeUntil(this.destroy$))
             .subscribe(() => {
-                this.menu = JSON.parse(JSON.stringify(this.allmenu));
+                this.menu = getWebdiskMenu(this.translocoService);
+                this.doit(this.menu);
+            });
+
+        from([
+            this.translocoService.events$.pipe(filter(v => v.type == 'translationLoadSuccess')),
+            this.localeService.getLang()
+        ])
+            .pipe(concatAll())
+            .subscribe(() => {
+                this.menu = getWebdiskMenu(this.translocoService);
                 this.doit(this.menu);
             });
     }

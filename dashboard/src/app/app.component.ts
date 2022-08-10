@@ -3,6 +3,7 @@ import { MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
 import { NbIconLibraries, NbThemeService } from '@nebular/theme';
 import { map } from 'rxjs/operators';
+import { LocaleService } from './service/user/locale.service';
 import { AsyncLocalStorageService } from './shared/service/async-local-storage.service';
 import { MousePointerService } from './shared/service/mouse-pointer.service';
 import { rootViewContainerRefSymbol } from './shared/utils';
@@ -54,6 +55,7 @@ export class AppComponent {
                 private nbIconLibraries: NbIconLibraries,
                 private localstorage: AsyncLocalStorageService,
                 private mousePointerService: MousePointerService,
+                private localeService: LocaleService,
                 private domSanitizer: DomSanitizer) 
     {
         window[rootViewContainerRefSymbol] = this.bodyContainer;
@@ -71,6 +73,8 @@ export class AppComponent {
         })
 
         this.nbIconLibraries.setDefaultPack('fa-solid');
+
+        this.localeService.bootstrap();
     }
 
     private async themeStoreRecovery()

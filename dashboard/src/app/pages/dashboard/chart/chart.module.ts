@@ -16,6 +16,7 @@ import { AddDataComponent } from './add-data/add-data.component';
 import { MonacoEditorModule } from 'ngx-monaco-editor';
 import { SharedModule } from 'src/app/shared/shared.module';
 import { RecordViewComponent, TableViewComponent } from './table-view/table-view.component';
+import { TranslocoRootModule } from 'src/app/transloco-root.module';
 
 
 @NgModule({
@@ -51,6 +52,7 @@ import { RecordViewComponent, TableViewComponent } from './table-view/table-view
         NgxEchartsModule.forRoot({
             echarts: () => import('echarts')
         }),
+        TranslocoRootModule,
     ]
 })
 export class ChartModule { }

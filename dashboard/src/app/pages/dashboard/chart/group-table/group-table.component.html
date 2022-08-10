@@ -1,11 +1,11 @@
-<nb-card accent='info'>
+<nb-card accent='info' *transloco='let t'>
     <nb-card-header>
-      Data Record Groups: {{ sourcecount() }}
+      {{ t('Data Record Groups') }}: {{ sourcecount() }}
       <div class="control-components">
           <div></div>
-          <mat-checkbox (change)='options_change($event)' [(ngModel)]='cb_sortbyupdate'>Sort By Update Date</mat-checkbox>
-          <mat-checkbox (change)='options_change($event)' [(ngModel)]='cb_desc'>Desceding</mat-checkbox>
-          <button nbButton size='tiny' status="primary" (click)='refresh_data()'>Refresh</button>
+          <mat-checkbox (change)='options_change($event)' [(ngModel)]='cb_sortbyupdate'>{{ t('Sort By Update Date') }}</mat-checkbox>
+          <mat-checkbox (change)='options_change($event)' [(ngModel)]='cb_desc'>{{ t('Desceding') }}</mat-checkbox>
+          <button nbButton size='tiny' status="primary" (click)='refresh_data()'>{{ t('Refresh') }}</button>
       </div>
     </nb-card-header>
     <nb-card-body [class]='sourcecount() == 0 ? "record-length-equal-zero" : ""'>
