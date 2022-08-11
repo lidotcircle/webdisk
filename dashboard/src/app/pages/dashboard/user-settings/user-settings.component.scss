@@ -65,6 +65,7 @@ nb-card {
             width: 20%;
             min-width: max-content;
             background-color: darken($basecolor, 5%);
+            cursor: pointer;
 
             .nav-button {
                 background-color: darken($basecolor, 5%);

@@ -247,5 +247,6 @@
     "fail to change avatar": "修改头像失败",
     "Do you confirm delete account ?": "确认删除账户?",
     "delete user {{user}} success, goodbey.": "成功删除用户{{user}}, 拜拜嘞",
-    "delete user {{user}} fail.": "删除用户{{user}}失败"
+    "delete user {{user}} fail.": "删除用户{{user}}失败",
+    "unmatched username": "用户名不匹配"
 }

@@ -135,11 +135,15 @@ export class UserAccountComponent implements OnInit, OnDestroy {
             ]
         }).wait();
 
-        if (ans.inputs['username'] != this.userinfo.username) {
-            await this.notifier.create({message: `unmatched username`, mtype: NotifierType.Error}).wait();
-            return;
-        }
         if(!ans.closed && ans.buttonValue == 0) {
+            if (ans.inputs['username'] != this.userinfo.username) {
+                await this.notifier.create({
+                    message: this.translocoService.translate(`unmatched username`),
+                    mtype: NotifierType.Error
+                }).wait();
+                return;
+            }
+
             try {
                 await this.userService.deleteAccount(ans.inputs['password']);
                 await this.notifier.create({
