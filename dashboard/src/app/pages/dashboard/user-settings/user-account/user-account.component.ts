@@ -74,9 +74,13 @@ export class UserAccountComponent implements OnInit, OnDestroy {
 
         if(win.config.context['isConfirmed']) {
             const photo = win.config.context['photo'];
-
             try {
-                await this.userService.setAvatar(photo);
+                if (typeof photo == 'string') {
+                    await this.userService.setAvatar(photo);
+                } else if (photo instanceof ArrayBuffer) {
+                    await this.userService.setAvatarBlob(photo);
+                }
+
                 this.notifier.create({
                     message: this.translocoService.translate("changed avatar!")
                 });
@@ -87,6 +91,13 @@ export class UserAccountComponent implements OnInit, OnDestroy {
                 );
             }
         }
+    }
+
+    async refreshAvatar() {
+        await this.userService.refreshAvatar();
+        this.notifier.create({
+            message: this.translocoService.translate("Refresh")
+        });
     }
 
     async changepassword() {

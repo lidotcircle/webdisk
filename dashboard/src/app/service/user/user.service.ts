@@ -127,22 +127,49 @@ export class UserService {
         });
     }
 
-    private async refreshAvatar() {
+    async refreshAvatar() {
+        let avatar = null;
+
         try {
-            const { avatar } = await this.http.get(RESTfulAPI.User.avatar).toPromise() as { avatar: string };
-            if (avatar != null && avatar != "")
-                this.save_avatar(avatar);
-            this._avatar = avatar == "" ? defaultProfileImage : avatar;
-            this.avatar_subject.next(this._avatar);
-        } catch {
-            this.avatar_subject.next(null);
+            const ans = await this.http.get(RESTfulAPI.User.avatarBlob, {responseType: "arraybuffer"}).toPromise();
+            avatar = 'data:image/jpeg;base64,' + this.arrayBufferToBase64(ans);
+        } catch {}
+
+        if (avatar == null) {
+            try {
+                const ans = await this.http.get(RESTfulAPI.User.avatar).toPromise() as { avatar: string };
+                avatar = ans.avatar;
+            } catch {}
         }
+
+        if (avatar != null && avatar != "")
+            this.save_avatar(avatar);
+        this._avatar = avatar == "" ? defaultProfileImage : avatar;
+        this.avatar_subject.next(this._avatar);
     }
 
     public async setAvatar(avatar: string) {
         await this.http.post(RESTfulAPI.User.avatar, { avatar: avatar }).toPromise();
         this._avatar = avatar;
+        this.save_avatar(this._avatar);
         this.avatar_subject.next(avatar);
+    }
+
+    public async setAvatarBlob(avatar: ArrayBuffer) {
+        await this.http.post(RESTfulAPI.User.avatarBlob, avatar).toPromise();
+        this._avatar = 'data:image/jpeg;base64,' + this.arrayBufferToBase64(avatar);
+        this.save_avatar(this._avatar);
+        this.avatar_subject.next(this._avatar);
+    }
+
+    private arrayBufferToBase64(buffer: ArrayBuffer): string {
+        let binary = '';
+        let bytes = new Uint8Array( buffer );
+        let len = bytes.byteLength;
+        for (let i = 0; i < len; i++) {
+            binary += String.fromCharCode( bytes[ i ] );
+        }
+        return window.btoa( binary );
     }
 
     private async refreshFrontendSetting() {

@@ -90,10 +90,19 @@ export class ProfilePhotoUploadComponent implements OnInit {
         if (event.type != 'paste') return;
         if (event.clipboardData.items.length == 0) return;
         const firstItem = event.clipboardData.items[0];
-        if (firstItem.kind != 'file' || !firstItem.type.startsWith("image")) return;
 
-        const file = firstItem.getAsFile();
-        await this.uploadPhoseFile(file);
+        if (firstItem.kind == 'file' && firstItem.type.startsWith("image")) {
+            const file = firstItem.getAsFile();
+            await this.uploadImageFile(file);
+        } else if (firstItem.kind == 'string' && firstItem.type == 'text/plain') {
+            const url: string = await new Promise(resolve => firstItem.getAsString(resolve));
+            try {
+                new URL(url);
+            } catch {
+                return;
+            }
+            this.uploadImageURL(url);
+        }
     }
 
     ngOnInit() {
@@ -115,10 +124,10 @@ export class ProfilePhotoUploadComponent implements OnInit {
 
     async uploadPhoto() {
         const file = await this.fileChooser.getFile(".png,.jpg,.gif");
-        await this.uploadPhoseFile(file.file);
+        await this.uploadImageFile(file.file);
     }
 
-    private async uploadPhoseFile(file: File) {
+    private async uploadImageFile(file: File) {
         const buffer = await file.slice().arrayBuffer();
         if(buffer.byteLength > 5 * 1024 * 1024) {
             this.toastService.danger(
@@ -127,9 +136,16 @@ export class ProfilePhotoUploadComponent implements OnInit {
         } else {
             this.isUploaded = true;
             this.photo = 'data:' + file.type + ';base64,' + this.arrayBufferToBase64(buffer);
-            this.windowRef.config.context['photo'] = this.photo;
+            this.windowRef.config.context['photo'] = buffer;
         }
     }
+
+    private uploadImageURL(imgURL: string) {
+        this.isUploaded = true;
+        this.photo = imgURL;
+        this.windowRef.config.context['photo'] = imgURL;
+    }
+
 
     private arrayBufferToBase64(buffer: ArrayBuffer): string {
         let binary = '';

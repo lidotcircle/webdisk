@@ -5,8 +5,9 @@
         <div>{{ t('Username') }}</div> <div>{{userinfo?.username}}</div>
         <div>{{ t('Register Date') }}</div><div>{{ createTime }}</div>
         <div>{{ t('Avatar') }}</div>
-        <div (click)='editAvatar()' class='avatar'>
-            <nb-user [onlyPicture]="true" [picture]="avatar"></nb-user>
+        <div class='avatar'>
+            <nb-user (click)='editAvatar()' [onlyPicture]="true" [picture]="avatar"></nb-user>
+            <button class="button" mat-mini-fab color='primary' (click)='refreshAvatar()'><nb-icon icon='refresh'></nb-icon></button>
         </div>
     </div>
 </div>

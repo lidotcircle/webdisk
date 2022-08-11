@@ -20,6 +20,7 @@ export module API {
         export const password = API_ADDRESS + '/apis/user/basic-info/password';
         export const basicInfo = API_ADDRESS + '/apis/user/basic-info';
         export const avatar = API_ADDRESS + '/apis/user/avatar';
+        export const avatarBlob = API_ADDRESS + '/apis/user/avatar/blob';
         export const frontendSetting = API_ADDRESS + '/apis/user/setting/frontend';
 
         export const InvCode = API_ADDRESS + '/apis/user/invite-code';
