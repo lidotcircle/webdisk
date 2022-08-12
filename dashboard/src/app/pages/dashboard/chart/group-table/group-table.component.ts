@@ -10,6 +10,7 @@ import { Subject } from 'rxjs';
 import { LocalSettingService } from 'src/app/service/user/local-setting.service';
 import { AsyncLocalStorageService } from 'src/app/shared/service/async-local-storage.service';
 import { TranslocoService } from '@ngneat/transloco';
+import { KKWindowsService } from 'src/app/shared/shared-component/kkwindows/kk-windows.service';
 
 
 @Component({
@@ -94,6 +95,7 @@ type DataType = { group: string };
 export class GroupTableComponent implements OnInit, OnDestroy {
     settings: any;
     source: LocalDataSource;
+    private groups: {createdAt: string, updatedAt: string, group: string}[];
     private destroy$: Subject<void>;
     private pageno: number;
     private pagesize: number;
@@ -106,6 +108,7 @@ export class GroupTableComponent implements OnInit, OnDestroy {
                 private translocoService: TranslocoService,
                 private router: Router,
                 private windowService: NbWindowService,
+                private kkwindows: KKWindowsService,
                 private activatedRoute: ActivatedRoute,
                 private dataRecordService: DataRecordService)
     {
@@ -242,6 +245,7 @@ export class GroupTableComponent implements OnInit, OnDestroy {
     private async refresh() {
         try {
             const groups = await this.dataRecordService.getGroups(this.cb_sortbyupdate, this.cb_desc);
+            this.groups = groups;
             if (!this.source) this.init_source();
             this.source.load(groups);
         } catch (e) {
@@ -273,6 +277,24 @@ export class GroupTableComponent implements OnInit, OnDestroy {
         } catch (err) {
             this.toastrService.danger(err.message || "failed to delete group", "Group");
             event.confirm.reject();
+        }
+    }
+
+    inBackup: boolean;
+    async backup_all() {
+        if (this.inBackup) return;
+        try {
+            this.inBackup = true;
+            if (!this.groups || this.groups.length == 0) {
+                this.toastrService.danger(
+                    this.translocoService.translate("nothing to download"),
+                    this.translocoService.translate("Group"));
+            }
+
+            const url = await this.dataRecordService.backupDataLink(this.groups.map(x => x.group));
+            await this.kkwindows.fetchContent(url);
+        } finally { 
+            this.inBackup = false;
         }
     }
 }

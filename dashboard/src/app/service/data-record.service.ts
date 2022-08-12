@@ -54,5 +54,18 @@ export class DataRecordService {
             }
         }).toPromise();
     }
+
+    public async backupDataLink(groups: string[], duration_ms = 2 * 60 * 60 * 1000): Promise<string> {
+        const ans = await this.http.post<{backupid: string}>(API.backup, {
+            groups: groups,
+            duration: duration_ms,
+        }).toPromise();
+
+        if (!ans.backupid) {
+            throw new Error('invalid response');
+        }
+
+        return `${API.backup}?backupid=${ans.backupid}`;
+    }
 }
 

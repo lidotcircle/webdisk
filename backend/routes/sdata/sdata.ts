@@ -1,8 +1,10 @@
 import express from 'express';
 import { query, body, validationResult } from 'express-validator';
-import { DataRecordService } from '../../service';
+import { DataRecordService, SimpleExpiredStoreService } from '../../service';
 import { QueryDependency } from '../../lib/di';
 import { createPasswordAuthMiddleware, getAuthUsername, defaultJWTAuthMiddleware, AnyOfNoError } from '../../middleware';
+import { v4 as uuidv4 } from "uuid";
+import createHttpError from 'http-errors';
 
 const router = express.Router();
 export default router;
@@ -107,5 +109,47 @@ router.get('/alldata', defaultAuth,
         const skip = req.query.skip || 0;
         const result = await drservice.getAllData(username, req.query.group, skip);
         res.status(200).json(result);
+    }
+)
+
+router.post('/backup', defaultAuth,
+    body('groups').isArray().withMessage("should be an array"),
+    body('duration').isInt({max: 7 * 24 * 60 * 60 * 1000, min: 60 * 1000}).withMessage("should be an integer"),
+    async (req, res) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(422).json({ errors: errors.array() });
+        }
+
+        const { groups, duration } = req.body;
+        const username = getAuthUsername(req);
+
+        const valueStore = QueryDependency(SimpleExpiredStoreService);
+        const key = uuidv4();
+        valueStore.setval(key, {groups, username}, duration);
+
+        res.status(200).json({backupid: key});
+    }
+)
+
+router.get('/backup',
+    query('backupid').isString().withMessage("backupid is required"),
+    async (req, res) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(422).json({ errors: errors.array() });
+        }
+
+        const { backupid } = req.query;
+        const valueStore = QueryDependency(SimpleExpiredStoreService);
+        const info = valueStore.getval<any>(backupid);
+        if (!info) {
+            throw new createHttpError.BadRequest("invalid backup id");
+        }
+        const { username, groups } = info;
+
+        const drservice = QueryDependency(DataRecordService);
+        const buf = await drservice.backupData(username, groups)
+        res.status(200).send(buf);
     }
 )

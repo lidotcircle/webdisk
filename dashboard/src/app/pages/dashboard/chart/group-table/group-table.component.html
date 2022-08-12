@@ -5,6 +5,7 @@
           <div></div>
           <mat-checkbox (change)='options_change($event)' [(ngModel)]='cb_sortbyupdate'>{{ t('Sort By Update Date') }}</mat-checkbox>
           <mat-checkbox (change)='options_change($event)' [(ngModel)]='cb_desc'>{{ t('Desceding') }}</mat-checkbox>
+          <button nbButton size='tiny' status="primary" [disabled]='sourcecount() == 0 || inBackup' (click)='backup_all()'>{{ t('Backup All Data') }}</button>
           <button nbButton size='tiny' status="primary" (click)='refresh_data()'>{{ t('Refresh') }}</button>
       </div>
     </nb-card-header>

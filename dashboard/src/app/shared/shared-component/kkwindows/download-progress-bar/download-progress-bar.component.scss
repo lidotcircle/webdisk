@@ -1,0 +1,26 @@
+@import 'src/app/style/colors.scss';
+@import 'src/app/style/utils.scss';
+
+.outer {
+    width: 100%;
+    height: 1.3em;
+    position: relative;
+    background-color: lighten($color-bg-popwin, 30%);
+    border-radius: 1em;
+
+    .inner {
+        height: 100%;
+        background-color: $color-bg-progress;
+        border-radius: 1em;
+    }
+
+    .percent {
+        position: absolute;
+        top: 0em;
+        width: 100%;
+        height: 100%;
+        text-align: center;
+        @include no-select();
+    }
+}
+

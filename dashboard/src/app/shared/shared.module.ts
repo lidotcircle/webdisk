@@ -11,6 +11,7 @@ import { FormsModule } from '@angular/forms';
 import { SharedComponentModule } from './shared-component/shared-component.module';
 import { SharedDirectiveModule } from './shared-directive/shared-directive.module';
 import { SwiperModule } from 'swiper/angular';
+import { KkwindowsModule } from './shared-component/kkwindows/kkwindows.module';
 
 
 @NgModule({
@@ -43,6 +44,7 @@ import { SwiperModule } from 'swiper/angular';
         NbInputModule,
         NbButtonModule,
         NbCheckboxModule,
+        KkwindowsModule,
     ]
 })
 export class SharedModule { }

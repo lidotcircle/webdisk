@@ -45,6 +45,7 @@ export module API {
         export const groupData = API_ADDRESS + '/apis/sdata/data';
         export const groupAllData = API_ADDRESS + '/apis/sdata/alldata';
         export const record = API_ADDRESS + '/apis/sdata';
+        export const backup = API_ADDRESS + '/apis/sdata/backup';
     }
 
     export module FileLink {

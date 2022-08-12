@@ -3,6 +3,7 @@ import { EntityManager, Repository } from "typeorm";
 import { DataRecord, DataRecordGroup } from '../entity';
 import { DIProperty, Injectable } from '../lib/di';
 import { UserService } from "./user-service";
+import { gzip } from 'zlib';
 import createError from "http-errors";
 
 
@@ -196,5 +197,39 @@ export class DataRecordService {
             .where("dgroup = :group", { group: group })
             .andWhere("userId = :userId", { userId: user.id })
             .execute();
+    }
+
+    public async backupData(username: string, require_groups: string[]): Promise<Buffer>
+    {
+        const user = await this.userService.getUser(username);
+        if (!user)
+            throw createError(404, `User ${username} not found`);
+
+        const require_groups_set = new Set<string>();
+        for (const g of require_groups) require_groups_set.add(g);
+
+        const groups = await this.groupRepo.find({
+            where: {
+                userId: user.id,
+            }
+        });
+        if (groups.length == 0) {
+            return Buffer.from('');
+        }
+
+        const allobj = {};
+        for (const group of groups) {
+            if (!require_groups_set.has(group.dgroup))
+                continue;
+
+            const records = (await this.drRepo.find(
+                {
+                    where: { groupId: group.id }, order: { id: "ASC" },
+                }
+            )).map(data => { return {data: data.data, createdAt: data.createdAt.getTime()}; });
+            allobj[group.dgroup] = records;
+        }
+        const ans = (await new Promise(resolve => gzip(JSON.stringify(allobj, null, 0), (_, r) => resolve(r)))) as Buffer;
+        return ans;
     }
 }
