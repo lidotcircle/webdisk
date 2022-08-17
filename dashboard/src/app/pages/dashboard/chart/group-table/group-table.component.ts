@@ -101,6 +101,7 @@ export class GroupTableComponent implements OnInit, OnDestroy {
     private pagesize: number;
     cb_sortbyupdate: boolean = false;
     cb_desc: boolean = false;
+    cb_regex_filter: boolean = false;
 
     constructor(private toastrService: NbToastrService,
                 private localSetting: LocalSettingService,
@@ -126,6 +127,7 @@ export class GroupTableComponent implements OnInit, OnDestroy {
         const page_config = {
             cb_sortbyupdate: this.cb_sortbyupdate,
             cb_desc: this.cb_desc,
+            cb_regex_filter: this.cb_regex_filter,
         };
         await this.localstorage.set("grouptable_conf", page_config);
     }
@@ -136,6 +138,7 @@ export class GroupTableComponent implements OnInit, OnDestroy {
 
         this.cb_sortbyupdate = config.cb_sortbyupdate;
         this.cb_desc = config.cb_desc;
+        this.cb_regex_filter = config.cb_regex_filter;
     }
 
     sourcecount() {
@@ -158,6 +161,10 @@ export class GroupTableComponent implements OnInit, OnDestroy {
             }
             if (this.source) {
                 const paging: {page: number, perPage: number} = this.source.getPaging();
+                const max_page = Math.ceil(this.source.count() / paging.perPage);
+                if (max_page < this.pageno) {
+                    this.pageno = max_page || 1;
+                }
                 if (paging.page != this.pageno || paging.perPage != this.pagesize) {
                     this.source.setPaging(this.pageno, this.pagesize, true);
                 }
@@ -191,6 +198,18 @@ export class GroupTableComponent implements OnInit, OnDestroy {
     }
 
     private setup_settings(pageno: number, pagesize: number) {
+        const filterFunction = (text: string, f: string) => {
+            if (this.cb_regex_filter) {
+                try {
+                    return text.match(new RegExp(f));
+                } catch {
+                    return false;
+                }
+            } else {
+                return text.includes(f);
+            }
+        }
+
         this.settings = {
             actions: {
                 columnTitle: this.translocoService.translate('operation'),
@@ -218,6 +237,7 @@ export class GroupTableComponent implements OnInit, OnDestroy {
                     title: this.translocoService.translate('CreatedAt'),
                     width: '12em',
                     filter: true,
+                    filterFunction: filterFunction,
                     type: 'custom',
                     renderComponent: DateComponent,
                 },
@@ -225,12 +245,14 @@ export class GroupTableComponent implements OnInit, OnDestroy {
                     title: this.translocoService.translate('LastUpdated'),
                     width: '12em',
                     filter: true,
+                    filterFunction: filterFunction,
                     type: 'custom',
                     renderComponent: DateComponent,
                 },
                 group: {
                     title: this.translocoService.translate('Group'),
                     filter: true,
+                    filterFunction: filterFunction,
                     type: 'text',
                 },
             },
