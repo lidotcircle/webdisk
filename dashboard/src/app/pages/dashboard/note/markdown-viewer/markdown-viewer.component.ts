@@ -19,6 +19,7 @@ import { emojiConvertor } from 'src/app/shared/shared-component/toast-ui/EmojiPl
 import { inlineLatexConvertor } from 'src/app/shared/shared-component/toast-ui/LatexPlugin';
 import { LocalSettingService } from 'src/app/service/user/local-setting.service';
 import AttachmentPlugin from '../markdown-editor/upload-plugin';
+import { WebdiskLayoutService } from 'src/app/layout/webdisk-layout.service';
 declare const require: any;
 const Parser = require('@toast-ui/toastmark').Parser;
 
@@ -83,6 +84,8 @@ function text2HTML(text: string): string {
                     status='primary' size='small' ghost nbButton (click)='fullscreen()'><nb-icon icon='expand' pack='fas'></nb-icon></button>
             <button nbTooltip="screenshot" nbTooltipStatus="primary"
                     status='primary' size='small' ghost nbButton [disabled]='inScreenshoting' (click)='saveAsImage()'><nb-icon icon='image' pack='fas'></nb-icon></button>
+            <button nbTooltip="print" nbTooltipStatus="primary"
+                    status='primary' size='small' ghost nbButton (click)='print()'><nb-icon icon='print' pack='fas'></nb-icon></button>
             <button nbTooltip="history" nbTooltipStatus="primary"
                     status='primary' size='small' ghost nbButton (click)='gotoHistory()'><nb-icon icon='history' pack='fas'></nb-icon></button>
             <button nbTooltip="delete" nbTooltipStatus="danger"
@@ -171,6 +174,7 @@ export class MarkdownViewerComponent implements OnInit, OnDestroy {
                 private nbthemeService: NbThemeService,
                 private host: ElementRef,
                 private settings: LocalSettingService,
+                private layoutServie: WebdiskLayoutService,
                 private activatedRoute: ActivatedRoute)
     {
         this.theme = nbThemeIsDark(this.nbthemeService.currentTheme) ? 'dark' : 'light';
@@ -364,5 +368,12 @@ export class MarkdownViewerComponent implements OnInit, OnDestroy {
         } finally {
             this.inScreenshoting = false;
         }
+    }
+
+    print() {
+        const showing = this.layoutServie.showing();
+        this.layoutServie.hide();
+        window.print();
+        if (showing) this.layoutServie.show();
     }
 }

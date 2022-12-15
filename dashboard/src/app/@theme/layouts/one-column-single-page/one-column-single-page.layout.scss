@@ -11,6 +11,10 @@
 nb-layout > .scrollable-container > .layout
 {
     height: 100vh;
+    @media print {
+        height: max-content;
+        overflow: visible;
+    }
 
     .columns {
         max-width: 100%;

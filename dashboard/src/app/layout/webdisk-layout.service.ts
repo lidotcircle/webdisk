@@ -95,6 +95,12 @@ export class WebdiskLayoutService {
             animation: fadein 0.5s linear forwards;
         }
 
+        @media print {
+            .fullscreen-exit-button {
+                display: none;
+            }
+        }
+
         .fullscreen-exit-button:hover {
             background: #eee;
         }
@@ -214,5 +220,9 @@ export class WebdiskLayoutService {
             subscriber.next(!this.subscription);
             return this.statusSubject.subscribe(subscriber);
         });
+    }
+
+    showing() {
+        return this.subscription == null;
     }
 }

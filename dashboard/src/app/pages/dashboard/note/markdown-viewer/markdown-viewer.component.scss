@@ -8,6 +8,10 @@ nb-card {
     height: 100%;
 
     nb-card-header {
+        @media print {
+            display: none;
+        }
+
         .title {
             width: 100%;
             text-align: center;
@@ -132,6 +136,10 @@ nb-card {
     }
 
     nb-card-footer {
+        @media print {
+            display: none;
+        }
+
         display: flex;
         flex-direction: row;
         flex-wrap: wrap;
