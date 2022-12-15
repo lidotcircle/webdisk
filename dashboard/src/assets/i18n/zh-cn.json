@@ -250,5 +250,6 @@
     "delete user {{user}} fail.": "删除用户{{user}}失败",
     "unmatched username": "用户名不匹配",
     "Backup All Data": "备份全部数据",
-    "nothing to download": "无数据"
+    "nothing to download": "无数据",
+    "Regex Filter": "正则表达式过滤器"
 }

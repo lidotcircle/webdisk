@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { NbWindowService } from '@nebular/theme';
+import { SNWindowService } from '../snwindow/snwindow.service';
 import { DownloadProgressBarComponent } from './download-progress-bar/download-progress-bar.component';
 import { KkwindowsModule } from './kkwindows.module';
 
@@ -8,12 +9,15 @@ import { KkwindowsModule } from './kkwindows.module';
     providedIn: KkwindowsModule
 })
 export class KKWindowsService{
-    constructor(private windowService: NbWindowService) {}
+    constructor(private windowService: NbWindowService,
+                private snwindow: SNWindowService) {}
 
     public async fetchContent(url: string) {
+        const ans = this.snwindow.open(DownloadProgressBarComponent);
+        debugger;
+
         const win = this.windowService.open(DownloadProgressBarComponent, {
         });
-        debugger;
         win.componentRef.instance.content;
 
         const resp = await fetch(url);

@@ -75,7 +75,7 @@ router.get('/blob',
         if (Buffer.from(avatar, 'base64').toString('base64') === avatar) {
             res.send(Buffer.from(avatar, "base64"));
         } else {
-            throw new createError.BadRequest();
+            res.status(200).send();
         }
     }
 );

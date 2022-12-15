@@ -132,6 +132,9 @@ export class UserService {
 
         try {
             const ans = await this.http.get(RESTfulAPI.User.avatarBlob, {responseType: "arraybuffer"}).toPromise();
+            if (ans == null || (ans instanceof ArrayBuffer && ans.byteLength == 0)) {
+                throw Error();
+            }
             avatar = 'data:image/jpeg;base64,' + this.arrayBufferToBase64(ans);
         } catch {}
 

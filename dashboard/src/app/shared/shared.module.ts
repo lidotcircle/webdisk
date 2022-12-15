@@ -12,6 +12,7 @@ import { SharedComponentModule } from './shared-component/shared-component.modul
 import { SharedDirectiveModule } from './shared-directive/shared-directive.module';
 import { SwiperModule } from 'swiper/angular';
 import { KkwindowsModule } from './shared-component/kkwindows/kkwindows.module';
+import { SNWindowModule } from './shared-component/snwindow/snwindow.module';
 
 
 @NgModule({
@@ -45,6 +46,7 @@ import { KkwindowsModule } from './shared-component/kkwindows/kkwindows.module';
         NbButtonModule,
         NbCheckboxModule,
         KkwindowsModule,
+        SNWindowModule,
     ]
 })
 export class SharedModule { }
